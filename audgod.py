@@ -92,6 +92,7 @@ import json
 import logging
 import argparse
 import plistlib
+import datetime
 
 from string import Template
 from enum import Enum, unique
@@ -119,6 +120,7 @@ class AudioProcessor(object):
     class PropertySource(Enum):
        COMMAND = 'command'
        NOTEFILE = 'notefile'
+       FILENAME = 'filename'
        DIRECTORY = 'directory'
 
     DEFAULT_SOURCES = [source for source in PropertySource]
@@ -265,7 +267,7 @@ class AudioProcessor(object):
         self.__output_file = output_file
         self.__logger = logging.getLogger()
         self.__logger.setLevel(log_level)
-        eyed3.log.setLevel(logging.ERROR)
+        eyed3.log.setLevel(log_level)
 
     def __resolve_fields(self, fields):
         ret = list(filter(None, fields.split(',')))
@@ -558,12 +560,16 @@ class AudioProcessor(object):
     def output_genre(cls, genre):
         if genre is None:
             return None
+        if isinstance(genre, str):
+            return genre
         return genre.name
 
     @classmethod
     def output_comments(cls, comments):
         if comments is None:
             return None
+        if isinstance(comments, str):
+            return comments
         ret = ''
         for i in range(len(comments)):
             ret += comments[i].text
@@ -575,6 +581,8 @@ class AudioProcessor(object):
     def output_track_num(cls, track_num):
         if track_num is None:
             return None
+        if isinstance(track_num, str):
+            return track_num
         return str(track_num)
 
     @classmethod
@@ -1621,58 +1629,63 @@ class AudioProcessor(object):
                 else:
                     pass
 
-    def export_xml(self):
-        def _current_time():
-            return time.strftime('%Y-%m-%dT%H:%M:%SZ', time.localtime())
+    def export_itunes_plist(self):
+        def _current_time() -> str:
+            return datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
 
-        def _generate_persistent_id():
+        def _generate_persistent_id() -> str:
             return str(uuid.uuid4()).replace('-', '')[:16].upper()
 
+        def _get_itunes_version(itunes_version_plist) -> str:
+            with open(itunes_version_plist, 'rb') as f:
+                plist = plistlib.load(f)
+                origin_version = plist.get('SourceVersion', '')
+                if origin_version:
+                    pos = len(origin_version) % 3
+                    if pos == 0:
+                        pos = 3
+                    formatted_version = str(int(origin_version[0:pos]))
+                    while pos < len(origin_version):
+                        formatted_version += '.{}'.format(str(int(origin_version[pos:pos+3])))
+                        pos += 3
+                    return formatted_version.rstrip('.0')
+            return '1.0'
+
         itunes_version, itunes_folder = self.itunes_options
-        date = _current_time()
-        library_persistent_id = _generate_persistent_id()
-        xml = Template('''
-<?xml version="1.0" encoding="UTF-8"?>
+        plist_content = Template('''
+<?xml version="${xml_version}" encoding="${xml_encoding}"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
+<plist version="${plist_version}">
 <dict>
-    <key>Major Version</key><integer>1</integer>
-    <key>Minor Version</key><integer>1</integer>
-    <key>Date</key><date>${date}</date>
+    <key>Major Version</key><integer>${major_version}</integer>
+    <key>Minor Version</key><integer>${minor_version}</integer>
+    <key>Date</key><date>${created_date}</date>
     <key>Application Version</key><string>${itunes_version}</string>
-    <key>Features</key><integer>5</integer>
-    <key>Show Content Ratings</key><true/>
+    <key>Features</key><integer>${features}</integer>
+    <key>Show Content Ratings</key><${show_content_ratings}/>
     <key>Music Folder</key><string>${itunes_folder}</string>
     <key>Library Persistent ID</key><string>${library_persistent_id}</string>
     <key>Tracks</key>
-    <dict>
-        <key>536</key>
-        <dict>
-            <key>Track ID</key><integer>536</integer>
-            <key>Name</key><string>bboy danny</string>
-            <key>Artist</key><string>新旭</string>
-            <key>Album</key><string>Holy Bgm</string>
-            <key>Genre</key><string>Explosive</string>
-            <key>Kind</key><string>MPEG audio file</string>
-            <key>Size</key><integer>6797692</integer>
-            <key>Total Time</key><integer>169691</integer>
-            <key>Date Modified</key><date>2021-04-22T09:47:27Z</date>
-            <key>Date Added</key><date>2021-04-15T17:16:05Z</date>
-            <key>Bit Rate</key><integer>320</integer>
-            <key>Sample Rate</key><integer>44100</integer>
-            <key>Persistent ID</key><string>2004BAD0A3E3CA9A</string>
-            <key>Track Type</key><string>File</string>
-            <key>Location</key><string>file:///Users/Zichoole/Music/iTunes/iTunes%20Media/Music/%E6%96%B0%E6%97%AD/Holy%20Bgm/bboy%20danny.mp3</string>
-            <key>File Folder Count</key><integer>5</integer>
-            <key>Library Folder Count</key><integer>1</integer>
-        </dict>
-    </dict>
+    <dict>${tracks}</dict>
     <key>Playlists</key>
-    <array></array>
+    <array>${playlists}</array>
 </dict>
 </plist>
-        ''').safe_substitute({
-        })
+        ''').safe_substitute(dict(
+            xml_version = '1.0',
+            xml_encoding = 'UTF-8',
+            plist_version = '1.0',
+            major_version = '1',
+            minor_version = '1',
+            created_date = _current_time(),
+            itunes_version = _get_itunes_version(self.itunes_options.itunes_version_plist),
+            features = '5',
+            show_content_ratings = 'true',
+            itunes_folder = self.itunes_options.itunes_folder,
+            library_persistent_id = _generate_persistent_id(),
+            tracks = '',
+            playlists = '',
+        ))
 
 
 def main():
@@ -1699,7 +1712,7 @@ def main():
             'export-artworks',
             'organize-files',
             'export-markdown',
-            'export-xml',
+            'export-itunes-plist',
             'convert-qmc0',
             'convert-kmx',
             'convert-mp4',
@@ -1923,8 +1936,8 @@ def main():
         processor.organize_files()
     elif args.action == 'export-markdown':
         processor.export_markdown()
-    elif args.action == 'export-xml':
-        processor.export_xml()
+    elif args.action == 'export-itunes-plist':
+        processor.export_itunes_plist()
     elif args.action == 'convert-qmc0':
         pass
     elif args.action == 'convert-kmx':

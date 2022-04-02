@@ -1,0 +1,3 @@
+#!/usr/bin/env zsh
+
+pipenv run python audgod.py "$@"
