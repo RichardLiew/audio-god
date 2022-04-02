@@ -210,6 +210,12 @@ class AudioProcessor(object):
     ALL_FIELDS = [prop for prop in AudioProperty]
 
 
+    DEFAULT_ITUNES_VERSION_PLIST = '/System/Applications/Music.app/Contents/version.plist'
+    DEFAULT_ITUNES_FOLDER = '{}/Music/iTunes'.format(os.environ['HOME'])
+    DEFAULT_ITUNES_MEDIA_FOLDER = '{}/iTunes\ Media'.format(DEFAULT_ITUNES_FOLDER)
+    DEFAULT_ITUNES_LIBRARY_PLIST = '{}/Library.xml'.format(DEFAULT_ITUNES_MEDIA_FOLDER)
+
+
     def __init__(
         self,
         notes_file,
@@ -223,6 +229,11 @@ class AudioProcessor(object):
         display_options=[
             1, None, None, None, None, None, True,
             DisplayStyle.TABLED.value,
+        ],
+        itunes_options=[
+            DEFAULT_ITUNES_VERSION_PLIST,
+            DEFAULT_ITUNES_MEDIA_FOLDER,
+            DEFAULT_ITUNES_LIBRARY_PLIST,
         ],
         artwork_path=None,
         filename_pattern='%{artist} # %{title}',
@@ -262,6 +273,7 @@ class AudioProcessor(object):
         }
         self.__data_format = self.DataFormat(data_format)
         self.__display_options = self.__rewrite_options(display_options)
+        self.__itunes_options = itunes_options
         self.__artwork_path = artwork_path
         self.__organize_type = AudioProcessor.OrganizeType(organize_type)
         self.__output_file = output_file
@@ -324,6 +336,10 @@ class AudioProcessor(object):
     @property
     def display_options(self):
         return self.__display_options
+
+    @property
+    def itunes_options(self):
+        return self.__itunes_options
 
     @property
     def output_file(self):
@@ -1651,7 +1667,8 @@ class AudioProcessor(object):
                     return formatted_version.rstrip('.0')
             return '1.0'
 
-        itunes_version, itunes_folder = self.itunes_options
+        itunes_version_plist, itunes_media_folder, itunes_library_plist = self.itunes_options
+
         plist_content = Template('''
 <?xml version="${xml_version}" encoding="${xml_encoding}"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -1663,7 +1680,7 @@ class AudioProcessor(object):
     <key>Application Version</key><string>${itunes_version}</string>
     <key>Features</key><integer>${features}</integer>
     <key>Show Content Ratings</key><${show_content_ratings}/>
-    <key>Music Folder</key><string>${itunes_folder}</string>
+    <key>Music Folder</key><string>${itunes_media_folder}</string>
     <key>Library Persistent ID</key><string>${library_persistent_id}</string>
     <key>Tracks</key>
     <dict>${tracks}</dict>
@@ -1678,10 +1695,10 @@ class AudioProcessor(object):
             major_version = '1',
             minor_version = '1',
             created_date = _current_time(),
-            itunes_version = _get_itunes_version(self.itunes_options.itunes_version_plist),
+            itunes_version = _get_itunes_version(itunes_version_plist),
             features = '5',
             show_content_ratings = 'true',
-            itunes_folder = self.itunes_options.itunes_folder,
+            itunes_media_folder = itunes_media_folder,
             library_persistent_id = _generate_persistent_id(),
             tracks = '',
             playlists = '',
@@ -1892,6 +1909,33 @@ def main():
         help='level of logger',
     )
 
+    parser.add_argument(
+        '--itunes-version-plist', '-t',
+        type=str,
+        required=False,
+        default=AudioProcessor.DEFAULT_ITUNES_VERSION_PLIST,
+        dest='itunes_version_plist',
+        help='the version plist file of itunes or apple music',
+    )
+
+    parser.add_argument(
+        '--itunes-media-folder', '-u',
+        type=str,
+        required=False,
+        default=AudioProcessor.DEFAULT_ITUNES_MEDIA_FOLDER,
+        dest='itunes_media_folder',
+        help='the media folder of itunes or apple music',
+    )
+
+    parser.add_argument(
+        '--itunes-library-plist', '-y',
+        type=str,
+        required=False,
+        default=AudioProcessor.DEFAULT_ITUNES_LIBRARY_PLIST,
+        dest='itunes_library_plist',
+        help='the library plist file of itunes or apple music',
+    )
+
     args = parser.parse_args()
 
     processor = AudioProcessor(
@@ -1912,6 +1956,11 @@ def main():
             json.loads(args.align) if args.align else {},
             args.numbered,
             args.style,
+        ],
+        itunes_options=[
+            args.itunes_version_plist,
+            args.itunes_media_folder,
+            args.itunes_library_plist,
         ],
         artwork_path=args.artwork_path,
         filename_pattern=args.filename_pattern,
