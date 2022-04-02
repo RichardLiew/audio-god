@@ -1704,6 +1704,10 @@ class AudioProcessor(object):
             playlists = '',
         ))
 
+        with open(itunes_library_plist, mode='w', encoding='utf-8') as f:
+            f.write(plist_content.strip())
+            f.flush()
+
 
 def main():
     parser = argparse.ArgumentParser(
