@@ -89,6 +89,7 @@ import math
 import time
 import uuid
 import json
+import urllib
 import logging
 import argparse
 import plistlib
@@ -105,6 +106,10 @@ from prettytable import PrettyTable
 
 
 class AudioProcessor(object):
+    DIV_CHAR = '#'
+    ORI_DIV_CHAR = '-'
+
+
     @unique
     class AudioType(Enum):
        VALID = 'valid'
@@ -212,7 +217,7 @@ class AudioProcessor(object):
 
     DEFAULT_ITUNES_VERSION_PLIST = '/System/Applications/Music.app/Contents/version.plist'
     DEFAULT_ITUNES_FOLDER = '{}/Music/iTunes'.format(os.environ['HOME'])
-    DEFAULT_ITUNES_MEDIA_FOLDER = '{}/iTunes\ Media'.format(DEFAULT_ITUNES_FOLDER)
+    DEFAULT_ITUNES_MEDIA_FOLDER = '{}/iTunes Media'.format(DEFAULT_ITUNES_FOLDER)
     DEFAULT_ITUNES_LIBRARY_PLIST = '{}/Library.xml'.format(DEFAULT_ITUNES_MEDIA_FOLDER)
 
 
@@ -236,7 +241,7 @@ class AudioProcessor(object):
             DEFAULT_ITUNES_LIBRARY_PLIST,
         ],
         artwork_path=None,
-        filename_pattern='%{artist} # %{title}',
+        filename_pattern='%{artist} ' + DIV_CHAR + ' %{title}',
         output_file=None,
         organize_type=OrganizeType.ITUNED.value,
         log_level=logging.DEBUG,
@@ -805,8 +810,9 @@ class AudioProcessor(object):
 
     @classmethod
     def generate_key(cls, artist, title):
-        return '{}#{}'.format(
+        return '{}{}{}'.format(
             cls.format_artist(artist.strip()),
+            cls.DIV_CHAR,
             cls.format_title(title.strip()),
         ).upper()
 
@@ -816,9 +822,9 @@ class AudioProcessor(object):
             raise Exception('Invalid name of audio <{}>!'.format(audio))
         name, _ = os.path.splitext(os.path.basename(audio))
         name = name.strip()
-        if name.count('#') == 1:
-            return cls.generate_key(*name.split('#'))
-        return cls.generate_key(*name.split('-'))
+        if name.count(cls.DIV_CHAR) == 1:
+            return cls.generate_key(*name.split(cls.DIV_CHAR))
+        return cls.generate_key(*name.split(cls.ORI_DIV_CHAR))
 
     def __load_ignored(self):
         if not self.ignored_file:
@@ -1014,14 +1020,14 @@ class AudioProcessor(object):
         name = name.strip()
         if not name:
             return False
-        if name.count('#') > 1 or not name:
+        if name.count(AudioProcessor.DIV_CHAR) > 1 or not name:
             return False
-        if name.count('#') == 1 and (name[0] == '#' or name[-1] == '#'):
+        if name.count(AudioProcessor.DIV_CHAR) == 1 and (name[0] == AudioProcessor.DIV_CHAR or name[-1] == AudioProcessor.DIV_CHAR):
             return False
-        if name.count('#') == 0:
-            if name.count('-') != 1:
+        if name.count(AudioProcessor.DIV_CHAR) == 0:
+            if name.count(AudioProcessor.ORI_DIV_CHAR) != 1:
                 return False
-            if name[0] == '-' or name[-1] == '-':
+            if name[0] == AudioProcessor.ORI_DIV_CHAR or name[-1] == AudioProcessor.ORI_DIV_CHAR:
                 return False
         return True
 
@@ -1646,11 +1652,25 @@ class AudioProcessor(object):
                     pass
 
     def export_itunes_plist(self):
+        itunes_version_plist, itunes_media_folder, itunes_library_plist = self.itunes_options
+
+        def _format_time(timestamp) -> str:
+            return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%SZ')
+
         def _current_time() -> str:
-            return datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+            return _format_time(time.time())
 
         def _generate_persistent_id() -> str:
             return str(uuid.uuid4()).replace('-', '')[:16].upper()
+
+        def _encode(src) -> str:
+            return urllib.parse.quote(src, safe='/', encoding='utf-8', errors=None)
+
+        def _encode_location(location) -> str:
+            return 'file://{}'.format(_encode(location))
+
+        def _encode_folder(folder) -> str:
+            return '{}/'.format(_encode_location(folder))
 
         def _get_itunes_version(itunes_version_plist) -> str:
             with open(itunes_version_plist, 'rb') as f:
@@ -1667,9 +1687,14 @@ class AudioProcessor(object):
                     return formatted_version.rstrip('.0')
             return '1.0'
 
-        itunes_version_plist, itunes_media_folder, itunes_library_plist = self.itunes_options
+        def _pack_tracks() -> str:
+            return '1\n2\n3'
 
-        plist_content = Template('''
+        def _pack_playlists() -> str:
+            return '3\n4\n5'
+
+        def _pack_plist() -> str:
+            return Template('''
 <?xml version="${xml_version}" encoding="${xml_encoding}"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="${plist_version}">
@@ -1688,31 +1713,31 @@ class AudioProcessor(object):
     <array>${playlists}</array>
 </dict>
 </plist>
-        ''').safe_substitute(dict(
-            xml_version = '1.0',
-            xml_encoding = 'UTF-8',
-            plist_version = '1.0',
-            major_version = '1',
-            minor_version = '1',
-            created_date = _current_time(),
-            itunes_version = _get_itunes_version(itunes_version_plist),
-            features = '5',
-            show_content_ratings = 'true',
-            itunes_media_folder = itunes_media_folder,
-            library_persistent_id = _generate_persistent_id(),
-            tracks = '',
-            playlists = '',
-        ))
+            '''.strip() + '\n').safe_substitute(dict(
+                xml_version = '1.0',
+                xml_encoding = 'UTF-8',
+                plist_version = '1.0',
+                major_version = '1',
+                minor_version = '1',
+                created_date = _current_time(),
+                itunes_version = _get_itunes_version(itunes_version_plist),
+                features = '5',
+                show_content_ratings = 'true',
+                itunes_media_folder = _encode_folder(itunes_media_folder),
+                library_persistent_id = _generate_persistent_id(),
+                tracks = ('\n' + _pack_tracks()).replace('\n', '\n'+' '*8) + '\n' + ' '*4,
+                playlists = ('\n' + _pack_playlists()).replace('\n', '\n'+' '*8) + '\n' + ' '*4,
+            ))
 
         with open(itunes_library_plist, mode='w', encoding='utf-8') as f:
-            f.write(plist_content.strip())
+            f.write(_pack_plist())
             f.flush()
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='the processor for audios',
-        epilog='Keep thinking ...',
+        description='🎻 Processor for audios 🎸',
+        epilog='🤔 Thinking ...',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
@@ -1863,7 +1888,7 @@ def main():
         help='display style for audios',
     )
     parser.add_argument(
-        '--data-format',
+        '--data-format', '-t',
         type=str,
         choices=[x.value for x in AudioProcessor.DataFormat],
         required=False,
@@ -1888,15 +1913,15 @@ def main():
         help='path to export artworks',
     )
     parser.add_argument(
-        '--filename-pattern',
+        '--filename-pattern', '-m',
         type=str,
         required=False,
-        default='%{artist} # %{title}',
+        default='%{artist} ' + AudioProcessor.DIV_CHAR + ' %{title}',
         dest='filename_pattern',
         help='filename pattern to rename audios',
     )
     parser.add_argument(
-        '--organize-type',
+        '--organize-type', '-g',
         type=str,
         choices=[x.value for x in AudioProcessor.OrganizeType],
         required=False,
@@ -1914,7 +1939,7 @@ def main():
     )
 
     parser.add_argument(
-        '--itunes-version-plist', '-t',
+        '--itunes-version-plist', '-q',
         type=str,
         required=False,
         default=AudioProcessor.DEFAULT_ITUNES_VERSION_PLIST,
@@ -1923,7 +1948,7 @@ def main():
     )
 
     parser.add_argument(
-        '--itunes-media-folder', '-u',
+        '--itunes-media-folder', '-s',
         type=str,
         required=False,
         default=AudioProcessor.DEFAULT_ITUNES_MEDIA_FOLDER,
@@ -1932,7 +1957,7 @@ def main():
     )
 
     parser.add_argument(
-        '--itunes-library-plist', '-y',
+        '--itunes-library-plist', '-2',
         type=str,
         required=False,
         default=AudioProcessor.DEFAULT_ITUNES_LIBRARY_PLIST,
