@@ -7,6 +7,7 @@ name = "pypi"
 eyed3 = "*"
 prettytable = "*"
 mdutils = "*"
+treelib = "*"
 
 [dev-packages]
 

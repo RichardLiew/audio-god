@@ -102,6 +102,8 @@ import eyed3
 from eyed3.id3 import Genre, frames
 from eyed3.id3.tag import CommentsAccessor
 
+from treelib import Tree, Node
+
 from prettytable import PrettyTable
 
 
@@ -257,6 +259,7 @@ class AudioProcessor(object):
         ]
         self.__notes = ([], {}, {})
         self.__audios = ([], [], [], [], set(), set())
+        self.__grouped_audios = Tree(tree=None, deep=False, node_class=None, identifier=None)
         self.__ignored_set = set()
         self.__format_functions = {
             field.value: getattr(
@@ -281,6 +284,7 @@ class AudioProcessor(object):
         self.__itunes_options = itunes_options
         self.__artwork_path = artwork_path
         self.__organize_type = AudioProcessor.OrganizeType(organize_type)
+        self.__filename_pattern = filename_pattern
         self.__output_file = output_file
         self.__logger = logging.getLogger()
         self.__logger.setLevel(log_level)
@@ -367,6 +371,10 @@ class AudioProcessor(object):
         return self.__audios_source
 
     @property
+    def grouped_audios(self):
+        return self.__grouped_audios
+
+    @property
     def properties(self):
         return self.__properties
 
@@ -389,6 +397,10 @@ class AudioProcessor(object):
     @property
     def organize_type(self):
         return self.__organize_type
+
+    @property
+    def filename_pattern(self):
+        return self.__filename_pattern
 
     @property
     def ignored_set(self):
@@ -1688,10 +1700,63 @@ class AudioProcessor(object):
             return '1.0'
 
         def _pack_tracks() -> str:
-            return '1\n2\n3'
+            return Template('''
+<key>536</key>
+<dict>
+	<key>Track ID</key><integer>536</integer>
+	<key>Name</key><string>bboy danny</string>
+	<key>Artist</key><string>新旭</string>
+	<key>Album</key><string>Holy Bgm</string>
+	<key>Genre</key><string>Explosive</string>
+	<key>Kind</key><string>MPEG audio file</string>
+	<key>Size</key><integer>6797692</integer>
+	<key>Total Time</key><integer>169691</integer>
+	<key>Date Modified</key><date>2021-04-22T09:47:27Z</date>
+	<key>Date Added</key><date>2021-04-15T17:16:05Z</date>
+	<key>Bit Rate</key><integer>320</integer>
+	<key>Sample Rate</key><integer>44100</integer>
+	<key>Persistent ID</key><string>2004BAD0A3E3CA9A</string>
+	<key>Track Type</key><string>File</string>
+	<key>Location</key><string>file:///Users/Zichoole/Music/iTunes/iTunes%20Media/Music/%E6%96%B0%E6%97%AD/Holy%20Bgm/bboy%20danny.mp3</string>
+	<key>File Folder Count</key><integer>5</integer>
+	<key>Library Folder Count</key><integer>1</integer>
+</dict>
+            '''.strip().replace(' '*4, '\t')).safe_substitute(dict(
+            ))
 
         def _pack_playlists() -> str:
-            return '3\n4\n5'
+            return Template('''
+<dict>
+	<key>Name</key><string>Chinese</string>
+	<key>Description</key><string></string>
+	<key>Playlist ID</key><integer>4323</integer>
+	<key>Playlist Persistent ID</key><string>5FDC1EDE16DE9643</string>
+	<key>Parent Persistent ID</key><string>20A3545EE4358FFB</string>
+	<key>All Items</key><true/>
+	<key>Playlist Items</key>
+	<array>
+		<dict>
+			<key>Track ID</key><integer>1184</integer>
+		</dict>
+		<dict>
+			<key>Track ID</key><integer>1178</integer>
+		</dict>
+		<dict>
+			<key>Track ID</key><integer>1172</integer>
+		</dict>
+		<dict>
+			<key>Track ID</key><integer>1169</integer>
+		</dict>
+		<dict>
+			<key>Track ID</key><integer>1181</integer>
+		</dict>
+		<dict>
+			<key>Track ID</key><integer>1175</integer>
+		</dict>
+	</array>
+</dict>
+            '''.strip().replace(' '*4, '\t')).safe_substitute(dict(
+            ))
 
         def _pack_plist() -> str:
             return Template('''
@@ -1713,7 +1778,7 @@ class AudioProcessor(object):
     <array>${playlists}</array>
 </dict>
 </plist>
-            '''.strip() + '\n').safe_substitute(dict(
+            '''.strip().replace(' '*4, '\t') + '\n').safe_substitute(dict(
                 xml_version = '1.0',
                 xml_encoding = 'UTF-8',
                 plist_version = '1.0',
@@ -1725,8 +1790,8 @@ class AudioProcessor(object):
                 show_content_ratings = 'true',
                 itunes_media_folder = _encode_folder(itunes_media_folder),
                 library_persistent_id = _generate_persistent_id(),
-                tracks = ('\n' + _pack_tracks()).replace('\n', '\n'+' '*8) + '\n' + ' '*4,
-                playlists = ('\n' + _pack_playlists()).replace('\n', '\n'+' '*8) + '\n' + ' '*4,
+                tracks = '\n{}'.format(_pack_tracks()).replace('\n', '\n\t\t')+'\n\t',
+                playlists = '\n{}'.format(_pack_playlists()).replace('\n', '\n\t\t')+'\n\t',
             ))
 
         with open(itunes_library_plist, mode='w', encoding='utf-8') as f:
