@@ -1097,7 +1097,6 @@ class AudioProcessor(object):
             if type_ == self.AudiosTreeNodeType.TRACK:
                 continue
             node.data[3] = parent.data[2]
-            playlist_id += 1
 
     def __check_extension(self, audio):
         _, ext = os.path.splitext(os.path.basename(audio))
@@ -1727,6 +1726,8 @@ class AudioProcessor(object):
     def export_itunes_plist(self):
         itunes_version_plist, itunes_media_folder, itunes_library_plist = self.itunes_options
 
+        self.__fill_audios_tree()
+
         def _format_time(timestamp) -> str:
             return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%SZ')
 
@@ -1783,37 +1784,49 @@ class AudioProcessor(object):
             ))
 
         def _pack_playlists() -> str:
+            result = ''
+            for node in self.audios_tree.all_nodes():
+                if node.is_root():
+                    continue
+                node_type, _, _, _ = node.data
+                if node_type == self.AudiosTreeNodeType.TRACK:
+                    continue
+                result += _pack_playlist(node)
+            return result
+
+        def _pack_simple_tracks(node) -> str:
+            result, tracks = '', self.audios_tree.leaves(node.identifier)
+            for track in tracks:
+                _, track_id, _, _ = track.data
+                result += Template('''
+<dict>
+    <key>Track ID</key><integer>${track_id}</integer>
+</dict>
+            '''.strip().replace(' '*4, '\t') + '\n').safe_substitute(dict(
+                track_id=track_id,
+            ))
+            return result
+
+        def _pack_playlist(node) -> str:
+            node_type, id, pid, ppid = node.data
             return Template('''
 <dict>
-	<key>Name</key><string>Chinese</string>
+	<key>Name</key><string>${name}</string>
 	<key>Description</key><string></string>
-	<key>Playlist ID</key><integer>4323</integer>
-	<key>Playlist Persistent ID</key><string>5FDC1EDE16DE9643</string>
-	<key>Parent Persistent ID</key><string>20A3545EE4358FFB</string>
-	<key>All Items</key><true/>
-	<key>Playlist Items</key>
-	<array>
-		<dict>
-			<key>Track ID</key><integer>1184</integer>
-		</dict>
-		<dict>
-			<key>Track ID</key><integer>1178</integer>
-		</dict>
-		<dict>
-			<key>Track ID</key><integer>1172</integer>
-		</dict>
-		<dict>
-			<key>Track ID</key><integer>1169</integer>
-		</dict>
-		<dict>
-			<key>Track ID</key><integer>1181</integer>
-		</dict>
-		<dict>
-			<key>Track ID</key><integer>1175</integer>
-		</dict>
-	</array>
+	<key>Playlist ID</key><integer>${playlist_id}</integer>
+	<key>Playlist Persistent ID</key><string>${playlist_persistent_id}</string>
+''' + '' if not ppid else '''    <key>Parent Persistent ID</key><string>${parent_persistent_id}</string>
+''' + '''    <key>All Items</key><true/>
+''' + '' if node_type != self.AudiosTreeNodeType.FOLDER else '''    <key>Folder</key><true/>
+''' + '''    <key>Playlist Items</key>
+	<array>${tracks}</array>
 </dict>
-            '''.strip().replace(' '*4, '\t')).safe_substitute(dict(
+            '''.strip().replace(' '*4, '\t') + '\n').safe_substitute(dict(
+                name=node.tag,
+                playlist_id=id,
+                playlist_persistent_id=pid,
+                parent_persistent_id=ppid,
+                tracks=_pack_simple_tracks(node),
             ))
 
         def _pack_plist() -> str:
