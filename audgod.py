@@ -153,6 +153,13 @@ class AudioProcessor(object):
        GROUPED = 'grouped'
 
 
+    @unique
+    class AudiosTreeNodeType(Enum):
+       FOLDER = 'folder'
+       PLAYLIST = 'playlist'
+       TRACK = 'track'
+
+
     AUDIO_PROPERTIES = {
         'title': '歌曲名',
         'artist': '歌手名',
@@ -223,6 +230,10 @@ class AudioProcessor(object):
     DEFAULT_ITUNES_LIBRARY_PLIST = '{}/Library.xml'.format(DEFAULT_ITUNES_MEDIA_FOLDER)
 
 
+    AUDIOS_TREE_ROOT_TAG = '--root--'
+    AUDIOS_TREE_ROOT_NID = AUDIOS_TREE_ROOT_TAG
+
+
     def __init__(
         self,
         notes_file,
@@ -259,7 +270,8 @@ class AudioProcessor(object):
         ]
         self.__notes = ([], {}, {})
         self.__audios = ([], [], [], [], set(), set())
-        self.__grouped_audios = Tree(tree=None, deep=False, node_class=None, identifier=None)
+        self.__audios_tree = Tree(tree=None, deep=False, node_class=None, identifier=None)
+        self.audios_tree.create_node(self.AUDIOS_TREE_ROOT_TAG, self.AUDIOS_TREE_ROOT_NID)
         self.__ignored_set = set()
         self.__format_functions = {
             field.value: getattr(
@@ -371,8 +383,8 @@ class AudioProcessor(object):
         return self.__audios_source
 
     @property
-    def grouped_audios(self):
-        return self.__grouped_audios
+    def audios_tree(self):
+        return self.__audios_tree
 
     @property
     def properties(self):
@@ -954,7 +966,10 @@ class AudioProcessor(object):
                 ))
 
     def __load_audios(self):
-        for audio in self.source_audios:
+        self.__load_ignored()
+
+        audios = self.source_audios
+        for audio in audios:
             self.logger.debug('Loading <{}> ...'.format(audio))
             _type = self.__check_audio(audio)
             if _type == self.AudioType.INVALID_EXT:
@@ -994,11 +1009,11 @@ class AudioProcessor(object):
             'Matched: {}, '
             'NotMatched: {}\n'.format(
                 len(self.invalid_ext_audios) \
-                + len(self.invalid_name_audios) \
-                + len(self.omitted_audios) \
-                + len(self.ignored_audios) \
-                + len(self.matched_audios) \
-                + len(self.notmatched_audios),
+                    + len(self.invalid_name_audios) \
+                    + len(self.omitted_audios) \
+                    + len(self.ignored_audios) \
+                    + len(self.matched_audios) \
+                    + len(self.notmatched_audios),
                 len(self.invalid_ext_audios) + len(self.invalid_name_audios),
                 len(self.invalid_ext_audios),
                 len(self.invalid_name_audios),
@@ -1021,6 +1036,68 @@ class AudioProcessor(object):
             self.logger.info('\nNot Matched Audios:')
             for audio in self.notmatched_audios:
                 self.logger.info('\t{}'.format(audio))
+
+    def __fill_audios_tree(self) -> None:
+        self.__load_audios()
+        track_id, audios = 0, self.concerned_audios
+
+        for audio in audios:
+            track_id += 1
+            track_persistent_id = self.generate_persistent_id()
+            audio_object = eyed3.load(audio)
+            grouping = self.__fetch_from_audio(
+                audio_object, self.AudioProperty.GROUPING, False, False,
+            )
+            if not grouping:
+                raise Exception('Invalid grouping of <{}>'.format(audio))
+            for group in grouping.split('|'):
+                group = group.sub(r'\/+', r'\/', group).rstrip('/')
+                if not group:
+                    continue
+                items = list(filter(lambda x: x, group.split('/')))
+                if not items:
+                    continue
+                items = [self.AUDIOS_TREE_ROOT_NID] + items
+                subtree = Tree()
+                for i in range(len(items)):
+                    tag, nid, parent = items[i], items[i], None if i == 0 else items[i-1]
+                    node_type = self.AudiosTreeNodeType.FOLDER
+                    if i == len(items) - 1:
+                        node_type = self.AudiosTreeNodeType.PLAYLIST
+                    subtree.create_node(
+                        tag, nid, parent=parent,
+                        data=[node_type, -1, '', ''],
+                    )
+                subtree.create_node(
+                    audio,
+                    self.generate_persistent_id(),
+                    parent=items[-1],
+                    data=[self.AudiosTreeNodeType.TRACK, track_id, track_persistent_id, audio_object],
+                )
+                self.audios_tree.merge(self.AUDIOS_TREE_ROOT_NID, subtree)
+
+        playlist_id = 1
+        for node in self.audios_tree.all_nodes():
+            if node.is_root():
+                continue
+            playlist_persistent_id = self.generate_persistent_id()
+            type_, _, _, _ = node.data
+            if type_ == self.AudiosTreeNodeType.TRACK:
+                continue
+            node.data[1], node.data[2] = playlist_id, playlist_persistent_id
+            playlist_id += 1
+
+        for node in self.audios_tree.all_nodes():
+            parent = self.audios_tree.parent(node.identifier)
+            if parent is None:
+                continue
+            if parent.is_root():
+                continue
+            node_type, _, _, _ = node.data
+            if type_ == self.AudiosTreeNodeType.TRACK:
+                continue
+            node.data[3] = parent.data[2]
+            playlist_id += 1
 
     def __check_extension(self, audio):
         _, ext = os.path.splitext(os.path.basename(audio))
@@ -1107,12 +1184,10 @@ class AudioProcessor(object):
 
     def fill_properties(self):
         self.__load_notes()
-        self.__load_ignored()
         self.__load_audios()
         self.__fill_audio_properties()
 
     def format_properties(self):
-        self.__load_ignored()
         self.__load_audios()
         audios = self.concerned_audios
         self.logger.warning('\n{}\n'.format('#' * 78))
@@ -1133,7 +1208,6 @@ class AudioProcessor(object):
         class StringTemplate(Template):
             delimiter = '%'
 
-        self.__load_ignored()
         self.__load_audios()
         audios = self.concerned_audios
         for audio in audios:
@@ -1151,7 +1225,6 @@ class AudioProcessor(object):
             os.rename('{}/{}'.format(_path, _old), '{}/{}'.format(_path, _new))
 
     def export_artworks(self):
-        self.__load_ignored()
         self.__load_audios()
         audios = self.concerned_audios
         for audio in audios:
@@ -1171,7 +1244,6 @@ class AudioProcessor(object):
     def organize_files(self):
         if not self.audio_root:
             raise Exception('Invalid audio root!')
-        self.__load_ignored()
         self.__load_audios()
         audios = self.concerned_audios
         for audio in audios:
@@ -1268,7 +1340,6 @@ class AudioProcessor(object):
         #                                 time.localtime(tag.file_info.atime))))
         #print("# {}".format('=' * 78))
 
-        self.__load_ignored()
         self.__load_audios()
 
         results, audios = [], self.concerned_audios
@@ -1646,22 +1717,12 @@ class AudioProcessor(object):
         )
 
     def export_markdown(self):
-        self.__load_ignored()
         self.__load_audios()
+        pass
 
-        results = {}
-        for audio in audios:
-            audio_object = eyed3.load(audio)
-            grouping = self.__fetch_from_audio(
-                audio_object, self.AudioProperty.GROUPING, False, False,
-            )
-            if not grouping:
-                raise Exception('Invalid grouping of <{}>'.format(audio))
-            for group in grouping.split('/'):
-                if group not in results.keys():
-                    results[group]
-                else:
-                    pass
+    @staticmethod
+    def generate_persistent_id() -> str:
+        return str(uuid.uuid4()).replace('-', '')[:16].upper()
 
     def export_itunes_plist(self):
         itunes_version_plist, itunes_media_folder, itunes_library_plist = self.itunes_options
@@ -1671,9 +1732,6 @@ class AudioProcessor(object):
 
         def _current_time() -> str:
             return _format_time(time.time())
-
-        def _generate_persistent_id() -> str:
-            return str(uuid.uuid4()).replace('-', '')[:16].upper()
 
         def _encode(src) -> str:
             return urllib.parse.quote(src, safe='/', encoding='utf-8', errors=None)
@@ -1789,7 +1847,7 @@ class AudioProcessor(object):
                 features = '5',
                 show_content_ratings = 'true',
                 itunes_media_folder = _encode_folder(itunes_media_folder),
-                library_persistent_id = _generate_persistent_id(),
+                library_persistent_id = self.generate_persistent_id(),
                 tracks = '\n{}'.format(_pack_tracks()).replace('\n', '\n\t\t')+'\n\t',
                 playlists = '\n{}'.format(_pack_playlists()).replace('\n', '\n\t\t')+'\n\t',
             ))
