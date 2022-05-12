@@ -119,7 +119,7 @@ class TreeX(Tree):
             else:
                 raise ValueError('Must define "nid" under which new tree is merged.')
 
-    def __move_node(self, source, dentinate):
+    def __move_nodes(self, srcs, dest):
         if len(source) == 1:
             self.move_node(''.join(source), dentinate)
         else:
@@ -133,7 +133,7 @@ class TreeX(Tree):
             tags.append(i.tag)
         return tags
 
-    def compareSameFloorAndRemoveDupliNode(tree,nodeTag):
+    def compareSameFloorAndRemoveDupliNode(tree, nid):
         dupltiNodeTag = []
         firstNodeTag = ""
         if tree.children(nodeTag):
