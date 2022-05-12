@@ -107,7 +107,7 @@ from treelib import Tree
 from prettytable import PrettyTable
 
 
-class NewTree(Tree):
+class TreeX(Tree):
     def merge(self, nid, new_tree, deep=False) -> None:
         if new_tree.root is None:
             return
@@ -359,7 +359,7 @@ class AudioProcessor(object):
         ]
         self.__notes = ([], {}, {})
         self.__audios = ([], [], [], [], set(), set())
-        self.__audios_tree = Tree(tree=None, deep=False, node_class=None, identifier=None)
+        self.__audios_tree = TreeX(tree=None, deep=False, node_class=None, identifier=None)
         self.audios_tree.create_node(self.AUDIOS_TREE_ROOT_TAG, self.AUDIOS_TREE_ROOT_NID)
         self.__ignored_set = set()
         self.__format_functions = {
@@ -1150,7 +1150,7 @@ class AudioProcessor(object):
                 if not items:
                     continue
                 items = [self.AUDIOS_TREE_ROOT_NID] + items
-                subtree = Tree()
+                subtree = TreeX()
                 for i in range(len(items)):
                     tag, nid, parent = items[i], items[i], None if i == 0 else items[i-1]
                     node_type = self.AudiosTreeNodeType.FOLDER
