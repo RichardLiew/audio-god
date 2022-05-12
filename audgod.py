@@ -102,9 +102,95 @@ import eyed3
 from eyed3.id3 import Genre, frames
 from eyed3.id3.tag import CommentsAccessor
 
-from treelib import Tree, Node
+from treelib import Tree
 
 from prettytable import PrettyTable
+
+
+class NewTree(Tree):
+    def merge(self, nid, new_tree, deep=False) -> None:
+        if new_tree.root is None:
+            return
+        if nid is None:
+            if self.root is None:
+                new_tree_root = new_tree[new_tree.root]
+                self.add_node(new_tree_root)
+                nid = new_tree.root
+            else:
+                raise ValueError('Must define "nid" under which new tree is merged.')
+
+    def __move_node(self, source, dentinate):
+        if len(source) == 1:
+            self.move_node(''.join(source), dentinate)
+        else:
+            for var in source:
+                self.move_node(var, dentinate)
+
+    def __get_children_node_tag(self, nodeTag):
+        childrenNodeTag = tree.children(nodeTag)
+        tags = []
+        for i in childrenNodeTag:
+            tags.append(i.tag)
+        return tags
+
+    def compareSameFloorAndRemoveDupliNode(tree,nodeTag):
+        dupltiNodeTag = []
+        firstNodeTag = ""
+        if tree.children(nodeTag):
+            nodeCount = len(tree.children(nodeTag))
+            tempValue = []
+            for m in range(nodeCount):
+                # print("tempValue",tempValue)
+                nodeValue = tree.children(nodeTag)[m]
+                if len(tempValue)==0:
+                    tempValue.append(nodeValue.data.num)
+                    firstNodeTag = nodeValue.tag
+                else:
+                    if nodeValue.data.num in tempValue:
+                        dupltiNodeTag.append(nodeValue.tag)
+                        # print("dupltiNodeTag",dupltiNodeTag)
+                        if hasMultiLeafs(tree,nodeValue.tag):
+                            adjustNode = getChildrenNodeTag(tree,nodeValue.tag)
+                            moveNode(tree,adjustNode,firstNodeTag)
+                    else:
+                        tempValue.append(nodeValue.data.num)
+        # print(dupltiNodeTag)
+        return dupltiNodeTag
+
+    def hasMultiLeafs(tree,nodeTag):
+        count = len(tree.children(nodeTag))
+        if count>=1:
+            return True
+        else:
+            return False
+
+    def main():
+        #createTree()
+        # tree.show()
+        #print("---------------refactor below-------------------")
+
+        removeNode = []
+        treeStruct =tree.to_json()
+        for floor in range(tree.depth()):
+            if floor == 0:
+                nodeTag = "root"
+            else:
+                nodeTag = "child"+str(floor)
+                levelCount = treeStruct.count(nodeTag)
+                horizontalTempNodeTag = "child"
+                for horizontal in range(levelCount):
+                    horizontalTempNodeTag = horizontalTempNodeTag+str(floor)
+                    if tree.contains(horizontalTempNodeTag) and hasMultiLeafs(tree,horizontalTempNodeTag):
+                        removeNode.extend(compareSameFloorAndRemoveDupliNode(tree,horizontalTempNodeTag))
+                    else:
+                        continue
+
+            removeNode.extend(compareSameFloorAndRemoveDupliNode(tree,nodeTag))
+
+        for i in set(removeNode):
+            # print(set(removeNode))
+            tree.remove_node(i)
+        return tree.show(data_property="num")
 
 
 class AudioProcessor(object):
