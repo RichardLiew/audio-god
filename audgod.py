@@ -1057,7 +1057,7 @@ class AudioProcessor(object):
                     'Empty grouping of <{}>, use <{}> instead!'.format(audio, self.AUDIO_DEFAULT_GROUPING),
                 )
             for group in grouping.split('|'):
-                group = group.sub(r'\/+', r'\/', group).rstrip('/')
+                group = re.sub(r'\/+', r'\/', group).rstrip('/')
                 if not group:
                     continue
                 items = list(filter(lambda x: x, group.split('/')))
@@ -1766,39 +1766,30 @@ class AudioProcessor(object):
 
         def _pack_track(track) -> str:
             _, track_id, persistent_id, audio_object = track.data
-
             title = self.__fetch_from_audio(
                 audio_object, self.AudioProperty.TITLE, False, False,
             )
-
             album = self.__fetch_from_audio(
                 audio_object, self.AudioProperty.ALBUM, False, False,
             )
-
             album_artist = self.__fetch_from_audio(
                 audio_object, self.AudioProperty.ALBUM_ARTIST, False, False,
             )
-
             artist = self.__fetch_from_audio(
                 audio_object, self.AudioProperty.ARTIST, False, False,
             )
-
             genre = self.__fetch_from_audio(
                 audio_object, self.AudioProperty.GENRE, False, False,
             )
-
             size = self.__fetch_from_audio(
                 audio_object, self.AudioProperty.SIZE, False, False,
             )
-
             duration = self.__fetch_from_audio(
                 audio_object, self.AudioProperty.DURATION, False, False,
             )
-
             bit_rate = self.__fetch_from_audio(
                 audio_object, self.AudioProperty.BIT_RATE, False, False,
             )
-
             sample_freq = self.__fetch_from_audio(
                 audio_object, self.AudioProperty.SAMPLE_FREQ, False, False,
             )
@@ -1849,11 +1840,20 @@ class AudioProcessor(object):
                 library_folder_count='-1',
             ))
 
+        def _unique_tracks(tracks) -> list:
+            results, track_set = [], set()
+            for track in tracks:
+                if track.tag in track_set:
+                    continue
+                results.append(track)
+                track_set.add(track.tag)
+            return results
+
         def _pack_tracks() -> str:
             result = ''
-            nodes = self.audios_tree.leaves()
-            for node in nodes:
-                result += _pack_track(node)
+            tracks = _unique_tracks(self.audios_tree.leaves())
+            for track in tracks:
+                result += _pack_track(track)
             return result
 
         def _pack_playlists() -> str:
@@ -1868,7 +1868,7 @@ class AudioProcessor(object):
             return result
 
         def _pack_simple_tracks(node) -> str:
-            result, tracks = '', self.audios_tree.leaves(node.identifier)
+            result, tracks = '', _unique_tracks(self.audios_tree.leaves(node.identifier))
             for track in tracks:
                 _, track_id, _, _ = track.data
                 result += Template('''
