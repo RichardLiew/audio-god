@@ -172,7 +172,7 @@ class AudioProcessor(object):
         'publisher': '出版公司',
         'mtime': '修改时间',
         'duration': '时长',
-        'bit_rate_str': '比特率',
+        'bit_rate': '比特率',
         'sample_freq': '采样率',
         'mode': '模式',
         'size': '文件大小',
