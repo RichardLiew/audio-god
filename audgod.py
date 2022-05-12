@@ -1758,30 +1758,97 @@ class AudioProcessor(object):
                     return formatted_version.rstrip('.0')
             return '1.0'
 
-        def _pack_tracks() -> str:
+        def _pack_track(track) -> str:
+            _, track_id, persistent_id, audio_object = track.data
+
+            title = self.__fetch_from_audio(
+                audio_object, self.AudioProperty.TITLE, False, False,
+            )
+
+            album = self.__fetch_from_audio(
+                audio_object, self.AudioProperty.ALBUM, False, False,
+            )
+
+            album_artist = self.__fetch_from_audio(
+                audio_object, self.AudioProperty.ALBUM_ARTIST, False, False,
+            )
+
+            artist = self.__fetch_from_audio(
+                audio_object, self.AudioProperty.ARTIST, False, False,
+            )
+
+            genre = self.__fetch_from_audio(
+                audio_object, self.AudioProperty.GENRE, False, False,
+            )
+
+            size = self.__fetch_from_audio(
+                audio_object, self.AudioProperty.SIZE, False, False,
+            )
+
+            duration = self.__fetch_from_audio(
+                audio_object, self.AudioProperty.DURATION, False, False,
+            )
+
+            bit_rate = self.__fetch_from_audio(
+                audio_object, self.AudioProperty.BIT_RATE, False, False,
+            )
+
+            sample_freq = self.__fetch_from_audio(
+                audio_object, self.AudioProperty.SAMPLE_FREQ, False, False,
+            )
+
+            fullname = track.tag
+            current_time = _current_time()
+
             return Template('''
-<key>536</key>
+<key>${track_id}</key>
 <dict>
-	<key>Track ID</key><integer>536</integer>
-	<key>Name</key><string>bboy danny</string>
-	<key>Artist</key><string>新旭</string>
-	<key>Album</key><string>Holy Bgm</string>
-	<key>Genre</key><string>Explosive</string>
-	<key>Kind</key><string>MPEG audio file</string>
-	<key>Size</key><integer>6797692</integer>
-	<key>Total Time</key><integer>169691</integer>
-	<key>Date Modified</key><date>2021-04-22T09:47:27Z</date>
-	<key>Date Added</key><date>2021-04-15T17:16:05Z</date>
-	<key>Bit Rate</key><integer>320</integer>
-	<key>Sample Rate</key><integer>44100</integer>
-	<key>Persistent ID</key><string>2004BAD0A3E3CA9A</string>
-	<key>Track Type</key><string>File</string>
-	<key>Location</key><string>file:///Users/Zichoole/Music/iTunes/iTunes%20Media/Music/%E6%96%B0%E6%97%AD/Holy%20Bgm/bboy%20danny.mp3</string>
-	<key>File Folder Count</key><integer>5</integer>
-	<key>Library Folder Count</key><integer>1</integer>
+	<key>Track ID</key><integer>${track_id}</integer>
+	<key>Name</key><string>${name}</string>
+	<key>Album</key><string>${album}</string>
+    <key>Album Artist</key><string>${album_artist}</string>
+	<key>Artist</key><string>${artist}</string>
+	<key>Genre</key><string>${genre}</string>
+	<key>Kind</key><string>${kind}</string>
+	<key>Size</key><integer>${size}</integer>
+	<key>Total Time</key><integer>${total_time}</integer>
+	<key>Date Modified</key><date>${date_modified}</date>
+	<key>Date Added</key><date>${date_added}</date>
+	<key>Bit Rate</key><integer>${bit_rate}</integer>
+	<key>Sample Rate</key><integer>${sample_rate}</integer>
+	<key>Persistent ID</key><string>${persistent_id}</string>
+	<key>Track Type</key><string>${track_type}</string>
+	<key>Location</key><string>${location}</string>
+	<key>File Folder Count</key><integer>${file_folder_count}</integer>
+	<key>Library Folder Count</key><integer>${library_folder_count}</integer>
 </dict>
-            '''.strip().replace(' '*4, '\t')).safe_substitute(dict(
+            '''.strip().replace(' '*4, '\t') + '\n').safe_substitute(dict(
+                track_id=track_id,
+                name=title,
+                album=album,
+                album_artist=album_artist,
+                artist=artist,
+                genre=genre,
+                kind='MPEG audio file',
+                size=size,
+                total_time=duration,
+                date_modified=current_time,
+                date_added=current_time,
+                bit_rate=bit_rate,
+                sample_rate=sample_freq,
+                persistent_id=persistent_id,
+                track_type='File',
+                location=fullname,
+                file_folder_count='-1',
+                library_folder_count='-1',
             ))
+
+        def _pack_tracks() -> str:
+            result = ''
+            nodes = self.audios_tree.leaves()
+            for node in nodes:
+                result += _pack_track(node)
+            return result
 
         def _pack_playlists() -> str:
             result = ''
@@ -1812,20 +1879,23 @@ class AudioProcessor(object):
             return Template('''
 <dict>
 	<key>Name</key><string>${name}</string>
-	<key>Description</key><string></string>
+	<key>Description</key><string>${description}</string>
 	<key>Playlist ID</key><integer>${playlist_id}</integer>
 	<key>Playlist Persistent ID</key><string>${playlist_persistent_id}</string>
 ''' + '' if not ppid else '''    <key>Parent Persistent ID</key><string>${parent_persistent_id}</string>
-''' + '''    <key>All Items</key><true/>
-''' + '' if node_type != self.AudiosTreeNodeType.FOLDER else '''    <key>Folder</key><true/>
+''' + '''    <key>All Items</key><${show_all_items}/>
+''' + '' if node_type != self.AudiosTreeNodeType.FOLDER else '''    <key>Folder</key><${is_folder}/>
 ''' + '''    <key>Playlist Items</key>
 	<array>${tracks}</array>
 </dict>
             '''.strip().replace(' '*4, '\t') + '\n').safe_substitute(dict(
                 name=node.tag,
+                description='',
                 playlist_id=id,
                 playlist_persistent_id=pid,
                 parent_persistent_id=ppid,
+                show_all_items='true',
+                is_folder='true',
                 tracks=_pack_simple_tracks(node),
             ))
 
