@@ -234,6 +234,9 @@ class AudioProcessor(object):
     AUDIOS_TREE_ROOT_NID = AUDIOS_TREE_ROOT_TAG
 
 
+    AUDIO_DEFAULT_GROUPING = 'Default'
+
+
     def __init__(
         self,
         notes_file,
@@ -1049,7 +1052,10 @@ class AudioProcessor(object):
                 audio_object, self.AudioProperty.GROUPING, False, False,
             )
             if not grouping:
-                raise Exception('Invalid grouping of <{}>'.format(audio))
+                grouping = self.AUDIO_DEFAULT_GROUPING
+                self.logger.warning(
+                    'Empty grouping of <{}>, use <{}> instead!'.format(audio, self.AUDIO_DEFAULT_GROUPING),
+                )
             for group in grouping.split('|'):
                 group = group.sub(r'\/+', r'\/', group).rstrip('/')
                 if not group:
