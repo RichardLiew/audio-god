@@ -1793,10 +1793,10 @@ class AudioProcessor(object):
             return urllib.parse.quote(src, safe='/', encoding='utf-8', errors=None)
 
         def _encode_location(location) -> str:
-            return 'file://{}'.format(_encode(location))
-
-        def _encode_folder(folder) -> str:
-            return '{}/'.format(_encode_location(folder))
+            ret = 'file://{}'.format(_encode(location))
+            if os.path.isfile(ret):
+                return ret
+            return '{}/'.format(ret)
 
         def _get_itunes_version(itunes_version_plist) -> str:
             with open(itunes_version_plist, 'rb') as f:
@@ -1986,7 +1986,7 @@ class AudioProcessor(object):
                 itunes_version = _get_itunes_version(itunes_version_plist),
                 features = '5',
                 show_content_ratings = 'true',
-                itunes_media_folder = _encode_folder(itunes_media_folder),
+                itunes_media_folder = _encode_location(itunes_media_folder),
                 library_persistent_id = self.generate_persistent_id(),
                 tracks = '\n{}'.format(_pack_tracks()).replace('\n', '\n\t\t')+'\n\t',
                 playlists = '\n{}'.format(_pack_playlists()).replace('\n', '\n\t\t')+'\n\t',
