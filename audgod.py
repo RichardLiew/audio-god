@@ -1146,8 +1146,8 @@ class AudioProcessor(object):
             if node.is_root():
                 continue
             playlist_persistent_id = self.generate_persistent_id()
-            type_, _, _, _ = node.data
-            if type_ == self.AudiosTreeNodeType.TRACK:
+            node_type, _, _, _ = node.data
+            if node_type == self.AudiosTreeNodeType.TRACK:
                 continue
             node.data[1], node.data[2] = playlist_id, playlist_persistent_id
             playlist_id += 1
@@ -1159,7 +1159,7 @@ class AudioProcessor(object):
             if parent.is_root():
                 continue
             node_type, _, _, _ = node.data
-            if type_ == self.AudiosTreeNodeType.TRACK:
+            if node_type == self.AudiosTreeNodeType.TRACK or node_type == self.AudiosTreeNodeType.ROOT:
                 continue
             node.data[3] = parent.data[2]
 
