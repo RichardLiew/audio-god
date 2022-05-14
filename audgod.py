@@ -1921,6 +1921,8 @@ class AudioProcessor(object):
             for track in tracks:
                 if track.identifier == self.AUDIOS_TREE_ROOT_NID:
                     continue
+                if not isinstance(track.data, list):
+                    continue
                 if track.data[0] != self.AudiosTreeNodeType.TRACK:
                     continue
                 result += _pack_track(track)
