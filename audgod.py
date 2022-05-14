@@ -109,13 +109,20 @@ from prettytable import PrettyTable
 
 class TreeX(Tree):
     def merge(self, nid, new_tree, deep=False) -> None:
+        if not (isinstance(new_tree, Tree) or isinstance(new_tree, TreeX)):
+            raise Exception('The new tree to merge is not a valid tree.')
+
+        if new_tree is None:
+            return
+
         if new_tree.root is None:
             return
+
         if nid is None:
             if self.root is None:
-                new_tree_root = new_tree[new_tree.root]
-                self.add_node(new_tree_root)
-                nid = new_tree.root
+                self.add_node(new_tree[new_tree.root])
+                for child in new_tree.children(new_tree.root):
+                    self.paste(nid=self.root, new_tree=new_tree.subtree(child.identifier), deep=deep)
             else:
                 raise ValueError('Must define "nid" under which new tree is merged.')
 
@@ -133,7 +140,7 @@ class TreeX(Tree):
             tags.append(i.tag)
         return tags
 
-    def compareSameFloorAndRemoveDupliNode(tree, nid):
+    def compareSameFloorAndRemoveDupliNode(self, nid):
         dupltiNodeTag = []
         firstNodeTag = ""
         if tree.children(nodeTag):
