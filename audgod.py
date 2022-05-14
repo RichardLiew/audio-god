@@ -1933,7 +1933,7 @@ class AudioProcessor(object):
             ))
             return _repack_plist(result)
 
-        def _pack_library(node) -> str:
+        def _pack_library() -> str:
             result = Template(_format_template('''
 <dict>
 	<key>Name</key><string>${name}</string>
