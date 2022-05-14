@@ -121,23 +121,27 @@ class TreeX(Tree):
         if nid is None:
             if self.root is None:
                 self.add_node(new_tree[new_tree.root])
-                for child in new_tree.children(new_tree.root):
-                    self.paste(nid=self.root, new_tree=new_tree.subtree(child.identifier), deep=deep)
-            else:
-                if not self.contains(nid):
-                    raise Exception('Node <{}> is not in the tree!'.format(nid))
-                
-                if nid != new_tree.root:
-                    raise Exception('Current node not same with the root of new tree.')
+            nid = self.root
+        #    for child in new_tree.children(new_tree.root):
+        #        self.paste(nid=self.root, new_tree=new_tree.subtree(child.identifier), deep=deep)
+        if not self.contains(nid):
+            raise Exception('Node <{}> is not in the tree!'.format(nid))
+        
+        if nid != new_tree.root:
+            raise Exception('Current node not same with the root of new tree.')
 
-                childs, new_childs = self.children(nid), new_tree.children(nid)
-                new_subtrees = [new_tree.subtree(child.identifier) for child in new_childs]
+        childs, new_childs = self.children(nid), new_tree.children(nid)
+        new_subtrees = [new_tree.subtree(child.identifier) for child in new_childs]
 
-                if not childs:
-                    for subtree in new_subtrees:
-                        self.paste(nid=nid, new_tree=subtree, deep=deep)
-                else:
-                    pass
+        if not childs:
+            for new_subtree in new_subtrees:
+                self.paste(nid=nid, new_tree=new_subtree, deep=deep)
+        else:
+            for new_child in new_childs:
+                if new_child.identifier not in [child.identifier for child in childs]:
+                    self.paste(nid=nid, new_tree=new_tree.subtree(new_child.identifier), deep=deep)
+                    continue
+                self.merge(new_child.identifier, new_tree.subtree(new_child.identifier), deep=deep)
 
     def __move_nodes(self, srcs, dest):
         if len(source) == 1:
