@@ -1931,6 +1931,12 @@ class AudioProcessor(object):
         def _pack_simple_tracks(node) -> str:
             result, tracks = '', _unique_tracks(self.audios_tree.leaves(node.identifier))
             for track in tracks:
+                if track.identifier == self.AUDIOS_TREE_ROOT_NID:
+                    continue
+                if not isinstance(track.data, list):
+                    continue
+                if track.data[0] != self.AudiosTreeNodeType.TRACK:
+                    continue
                 _, track_id, _, _ = track.data
                 result += Template(_format_template('''
 <dict>
