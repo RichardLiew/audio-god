@@ -150,50 +150,51 @@ class AudioProcessor(object):
 
     @unique
     class AudioType(Enum):
-       VALID = 'valid'
-       MATCHED = 'matched'
-       NOTMATCHED = 'notmatched'
-       OMITTED = 'omitted'
-       IGNORED = 'ignored'
-       INVALID_EXT = 'invalid-ext'
-       INVALID_NAME = 'invalid-name'
+        VALID = 'valid'
+        MATCHED = 'matched'
+        NOTMATCHED = 'notmatched'
+        OMITTED = 'omitted'
+        IGNORED = 'ignored'
+        INVALID_EXT = 'invalid-ext'
+        INVALID_NAME = 'invalid-name'
 
 
     @unique
     class PropertySource(Enum):
-       COMMAND = 'command'
-       NOTEFILE = 'notefile'
-       FILENAME = 'filename'
-       DIRECTORY = 'directory'
+        COMMAND = 'command'
+        NOTEFILE = 'notefile'
+        FILENAME = 'filename'
+        DIRECTORY = 'directory'
 
     DEFAULT_SOURCES = [source for source in PropertySource]
 
 
     @unique
     class DisplayStyle(Enum):
-       TABLED = 'tabled'
-       COMPACT = 'compact'
-       VERTICAL = 'vertical'
+        TABLED = 'tabled'
+        COMPACT = 'compact'
+        VERTICAL = 'vertical'
 
 
     @unique
     class DataFormat(Enum):
-       ORIGINAL = 'original'
-       FORMATTED = 'formatted'
-       OUTPUTTED = 'outputted'
+        ORIGINAL = 'original'
+        FORMATTED = 'formatted'
+        OUTPUTTED = 'outputted'
 
 
     @unique
     class OrganizeType(Enum):
-       ITUNED = 'ituned'
-       GROUPED = 'grouped'
+        ITUNED = 'ituned'
+        GROUPED = 'grouped'
 
 
     @unique
     class AudiosTreeNodeType(Enum):
-       FOLDER = 'folder'
-       PLAYLIST = 'playlist'
-       TRACK = 'track'
+        ROOT = 'root'
+        FOLDER = 'folder'
+        PLAYLIST = 'playlist'
+        TRACK = 'track'
 
 
     AUDIO_PROPERTIES = {
@@ -269,7 +270,7 @@ class AudioProcessor(object):
     AUDIOS_TREE_ROOT_TAG = '--root--'
     AUDIOS_TREE_ROOT_NID = AUDIOS_TREE_ROOT_TAG
     
-    AUDIO_DEFAULT_GROUPING = 'Default'
+    AUDIO_DEFAULT_GROUPING = 'Default/1/2/3'
 
     DEFAULT_TRACK_INITIAL_ID = 601
     DEFAULT_PLAYLIST_INITIAL_ID = 3001
@@ -1111,7 +1112,7 @@ class AudioProcessor(object):
                     'Empty grouping of <{}>, use <{}> instead!'.format(audio, self.AUDIO_DEFAULT_GROUPING),
                 )
             for group in grouping.split('|'):
-                group = re.sub(r'\/+', r'\/', group).rstrip('/')
+                group = re.sub(r'\/+', r'/', group).rstrip('/')
                 if not group:
                     continue
                 items = list(filter(lambda x: x, group.split('/')))
@@ -1120,9 +1121,12 @@ class AudioProcessor(object):
                 items = [self.AUDIOS_TREE_ROOT_NID] + items
                 subtree = TreeX()
                 for i in range(len(items)):
-                    tag, nid, parent = items[i], items[i], None if i == 0 else items[i-1]
+                    tag, nid = items[i], items[i]
+                    parent = None if i == 0 else items[i-1]
                     node_type = self.AudiosTreeNodeType.FOLDER
-                    if i == len(items) - 1:
+                    if i == 0:
+                        node_type = self.AudiosTreeNodeType.ROOT
+                    elif i == len(items) - 1:
                         node_type = self.AudiosTreeNodeType.PLAYLIST
                     subtree.create_node(
                         tag, nid, parent=parent,
