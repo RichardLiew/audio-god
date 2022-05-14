@@ -268,9 +268,11 @@ class AudioProcessor(object):
 
     AUDIOS_TREE_ROOT_TAG = '--root--'
     AUDIOS_TREE_ROOT_NID = AUDIOS_TREE_ROOT_TAG
-
-
+    
     AUDIO_DEFAULT_GROUPING = 'Default'
+
+    DEFAULT_TRACK_INITIAL_ID = 601
+    DEFAULT_PLAYLIST_INITIAL_ID = 3001
 
 
     def __init__(
@@ -291,6 +293,8 @@ class AudioProcessor(object):
             DEFAULT_ITUNES_VERSION_PLIST,
             DEFAULT_ITUNES_MEDIA_FOLDER,
             DEFAULT_ITUNES_LIBRARY_PLIST,
+            DEFAULT_TRACK_INITIAL_ID,
+            DEFAULT_PLAYLIST_INITIAL_ID,
         ],
         artwork_path=None,
         filename_pattern='%{artist} ' + DIV_CHAR + ' %{title}',
@@ -1091,10 +1095,9 @@ class AudioProcessor(object):
 
     def __fill_audios_tree(self) -> None:
         self.__load_audios()
-        track_id, audios = 0, self.concerned_audios
+        track_id, audios = self.TRACK_INITIAL_ID, self.concerned_audios
 
         for audio in audios:
-            track_id += 1
             track_persistent_id = self.generate_persistent_id()
             audio_object = eyed3.load(audio)
             grouping = self.__fetch_from_audio(
@@ -1130,8 +1133,9 @@ class AudioProcessor(object):
                     data=[self.AudiosTreeNodeType.TRACK, track_id, track_persistent_id, audio_object],
                 )
                 self.audios_tree.merge(self.AUDIOS_TREE_ROOT_NID, subtree)
+            track_id += 1
 
-        playlist_id = 1
+        playlist_id = self.PLAYLIST_INITIAL_ID
         for node in self.audios_tree.all_nodes():
             if node.is_root():
                 continue
@@ -1779,7 +1783,8 @@ class AudioProcessor(object):
         return str(uuid.uuid4()).replace('-', '')[:16].upper()
 
     def export_itunes_plist(self):
-        itunes_version_plist, itunes_media_folder, itunes_library_plist = self.itunes_options
+        itunes_version_plist, itunes_media_folder, itunes_library_plist, \
+            track_initial_id, playlist_initial_id = self.itunes_options
 
         self.__fill_audios_tree()
 
@@ -1928,6 +1933,31 @@ class AudioProcessor(object):
             ))
             return _repack_plist(result)
 
+        def _pack_library(node) -> str:
+            result = Template(_format_template('''
+<dict>
+	<key>Name</key><string>${name}</string>
+	<key>Description</key><string>${description}</string>
+    <key>Master</key><${master}/>
+	<key>Playlist ID</key><integer>${playlist_id}</integer>
+	<key>Playlist Persistent ID</key><string>${playlist_persistent_id}</string>
+    <key>Visible</key><${visible}/>
+    <key>All Items</key><${show_all_items}/>
+    <key>Playlist Items</key>
+	<array>${tracks}</array>
+</dict>
+            ''')).safe_substitute(dict(
+                name='Library',
+                description='',
+                master='true',
+                playlist_id='65',
+                playlist_persistent_id=self.generate_persistent_id(),
+                visible='false',
+                show_all_items='true',
+                tracks=_pack_simple_tracks(self.audios_tree[self.audios_tree.root]),
+            ))
+            return result
+
         def _pack_playlist(node) -> str:
             node_type, id, pid, ppid = node.data
             result = Template(_format_template('''
@@ -1955,7 +1985,7 @@ class AudioProcessor(object):
             return result
 
         def _pack_playlists() -> str:
-            result = ''
+            result = _pack_library()
             for node in self.audios_tree.all_nodes():
                 if node.is_root():
                     continue
@@ -2236,6 +2266,24 @@ def main():
         dest='itunes_library_plist',
         help='the library plist file of itunes or apple music',
     )
+    
+    parser.add_argument(
+        '--track-initial-id', '-6',
+        type=int,
+        required=False,
+        default=AudioProcessor.DEFAULT_TRACK_INITIAL_ID,
+        dest='track_initial_id',
+        help='initial id of tracks for itunes plist file',
+    )
+    
+    parser.add_argument(
+        '--playlist-initial-id', '-8',
+        type=int,
+        required=False,
+        default=AudioProcessor.DEFAULT_PLAYLIST_INITIAL_ID,
+        dest='playlist_initial_id',
+        help='initial id of playlists for itunes plist file',
+    )
 
     args = parser.parse_args()
 
@@ -2262,6 +2310,8 @@ def main():
             args.itunes_version_plist,
             args.itunes_media_folder,
             args.itunes_library_plist,
+            args.track_initial_id,
+            args.playlist_initial_id,
         ],
         artwork_path=args.artwork_path,
         filename_pattern=args.filename_pattern,
