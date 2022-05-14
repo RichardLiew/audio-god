@@ -1806,6 +1806,10 @@ class AudioProcessor(object):
             return '{}/'.format(ret)
 
         def _escape_characters(content) -> str:
+            if not content:
+                return content
+            if not isinstance(content, str):
+                raise Exception('<{}> not string type!'.format(content))
             return content.replace('&', '&#38;')\
                           .replace('<', '&#60;')\
                           .replace('>', '&#62;')
