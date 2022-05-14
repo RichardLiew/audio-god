@@ -1919,6 +1919,10 @@ class AudioProcessor(object):
             result = ''
             tracks = _unique_tracks(self.audios_tree.leaves())
             for track in tracks:
+                if track.identifier == self.AUDIOS_TREE_ROOT_NID:
+                    continue
+                if track.data[0] != self.AudiosTreeNodeType.TRACK:
+                    continue
                 result += _pack_track(track)
             return _repack_plist(result)
 
