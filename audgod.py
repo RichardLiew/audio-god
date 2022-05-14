@@ -649,6 +649,14 @@ class AudioProcessor(object):
         return genre.name
 
     @classmethod
+    def output_bit_rate(cls, bit_rate):
+        if bit_rate is None:
+            return None
+        if isinstance(bit_rate, tuple):
+            bit_rate = bit_rate[1]
+        return '{} kb/s'.format(bit_rate)
+
+    @classmethod
     def output_comments(cls, comments):
         if comments is None:
             return None
@@ -829,6 +837,8 @@ class AudioProcessor(object):
         ret, filename = None, audio_object.tag.file_info.name
         if field == AudioProcessor.AudioProperty.GENRE:
             ret = audio_object.tag.genre.name
+        elif field == AudioProcessor.AudioProperty.BIT_RATE:
+            ret = audio_object.info.bit_rate[1]
         elif field == AudioProcessor.AudioProperty.TRACK_NUM:
             ret = audio_object.tag.track_num
         elif field == AudioProcessor.AudioProperty.DURATION:
@@ -856,6 +866,9 @@ class AudioProcessor(object):
                     ret = None
                 else:
                     ret = (len(audio_object.tag.images), ret if ret else '')
+            #elif field == AudioProcessor.AudioProperty.GROUPING:
+            #    if not ret:
+            #        ret = self.AUDIO_DEFAULT_GROUPING
         else:
             if hasattr(audio_object.tag, field.value):
                 ret = getattr(audio_object.tag, field.value)
@@ -1089,7 +1102,7 @@ class AudioProcessor(object):
             )
             if not grouping:
                 grouping = self.AUDIO_DEFAULT_GROUPING
-                self.logger.warning(
+                self.logger.debug(
                     'Empty grouping of <{}>, use <{}> instead!'.format(audio, self.AUDIO_DEFAULT_GROUPING),
                 )
             for group in grouping.split('|'):
@@ -1820,8 +1833,10 @@ class AudioProcessor(object):
             size = self.__fetch_from_audio(
                 audio_object, self.AudioProperty.SIZE, False, False,
             )
-            duration = self.__fetch_from_audio(
-                audio_object, self.AudioProperty.DURATION, False, False,
+            duration = int(
+                round(self.__fetch_from_audio(
+                    audio_object, self.AudioProperty.DURATION, False, False,
+                ), 3) * 1000,
             )
             bit_rate = self.__fetch_from_audio(
                 audio_object, self.AudioProperty.BIT_RATE, False, False,
@@ -1830,7 +1845,7 @@ class AudioProcessor(object):
                 audio_object, self.AudioProperty.SAMPLE_FREQ, False, False,
             )
 
-            fullname = track.tag
+            fullname = _encode_location(track.tag)
             current_time = _current_time()
 
             return Template('''
