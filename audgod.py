@@ -270,7 +270,7 @@ class AudioProcessor(object):
     AUDIOS_TREE_ROOT_TAG = '--root--'
     AUDIOS_TREE_ROOT_NID = AUDIOS_TREE_ROOT_TAG
     
-    AUDIO_DEFAULT_GROUPING = 'Default/1/2/3'
+    AUDIO_DEFAULT_GROUPING = 'Default'
 
     DEFAULT_TRACK_INITIAL_ID = 601
     DEFAULT_PLAYLIST_INITIAL_ID = 3001
@@ -1111,6 +1111,24 @@ class AudioProcessor(object):
                 self.logger.debug(
                     'Empty grouping of <{}>, use <{}> instead!'.format(audio, self.AUDIO_DEFAULT_GROUPING),
                 )
+
+            ###############################################################################################
+            
+            import random
+            aaa = random.randint(1, 1000)
+            if aaa % 5 == 0:
+                grouping = '1/2/3/4/5/6'
+            elif aaa % 5 == 1:
+                grouping = '1/2/3/8/9'
+            elif aaa % 5 == 2:
+                grouping = '1/2/3/5/7'
+            elif aaa % 5 == 3:
+                grouping = '1/2'
+            elif aaa % 5 == 4:
+                grouping = '1/2/3/5/9'
+
+            ###############################################################################################
+
             for group in grouping.split('|'):
                 group = re.sub(r'\/+', r'/', group).rstrip('/')
                 if not group:
