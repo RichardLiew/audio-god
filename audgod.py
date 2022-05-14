@@ -1975,7 +1975,7 @@ class AudioProcessor(object):
                 name='Library',
                 description=_escape_characters(''),
                 master='true',
-                playlist_id='65',
+                playlist_id=-1,
                 playlist_persistent_id=self.generate_persistent_id(),
                 visible='false',
                 show_all_items='true',
