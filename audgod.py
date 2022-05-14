@@ -840,9 +840,11 @@ class AudioProcessor(object):
                            formatted=False, outputted=False):
         ret, filename = None, audio_object.tag.file_info.name
         if field == AudioProcessor.AudioProperty.GENRE:
-            ret = audio_object.tag.genre.name
+            if audio_object.tag.genre is not None:
+                ret = audio_object.tag.genre.name
         elif field == AudioProcessor.AudioProperty.BIT_RATE:
-            ret = audio_object.info.bit_rate[1]
+            if isinstance(audio_object.info.bit_rate, tuple):
+                ret = audio_object.info.bit_rate[1]
         elif field == AudioProcessor.AudioProperty.TRACK_NUM:
             ret = audio_object.tag.track_num
         elif field == AudioProcessor.AudioProperty.DURATION:
@@ -2273,7 +2275,7 @@ def main():
         required=False,
         default=AudioProcessor.DEFAULT_TRACK_INITIAL_ID,
         dest='track_initial_id',
-        help='initial id of tracks for itunes plist file',
+        help='initial id of tracks for itunes or apple music plist file',
     )
     
     parser.add_argument(
@@ -2282,7 +2284,7 @@ def main():
         required=False,
         default=AudioProcessor.DEFAULT_PLAYLIST_INITIAL_ID,
         dest='playlist_initial_id',
-        help='initial id of playlists for itunes plist file',
+        help='initial id of playlists for itunes or apple music plist file',
     )
 
     args = parser.parse_args()

@@ -20,3 +20,4 @@ parse format output 的参数需要统一下逻辑
 歌手、专辑、歌曲名中包含的&符号在归一化时前后要预留空格
 完善 help 信息，将所有可能的场景对应的命令写入帮助信息里
 读取apple music 配置文件，找到itunes media 文件夹，并将导出plist里的相关路径都修改为此
+所有日志输出好像都没按照loglevel执行，单独处理下eye3的日志设置
