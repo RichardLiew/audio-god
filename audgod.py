@@ -1799,7 +1799,7 @@ class AudioProcessor(object):
 
         def _encode_location(location) -> str:
             ret = 'file://{}'.format(_encode(location))
-            if os.path.isfile(ret):
+            if os.path.isfile(location):
                 return ret
             return '{}/'.format(ret)
 
