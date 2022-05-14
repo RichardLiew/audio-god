@@ -1813,6 +1813,13 @@ class AudioProcessor(object):
                     return formatted_version.rstrip('.0')
             return '1.0'
 
+        def _format_template(template) -> str:
+            return template.strip().replace(' '*4, '\t') + '\n'
+
+        def _repack_plist(content) -> str:
+            result = '\n{}'.format(content).replace('\n', '\n\t\t')
+            return result[:-1]
+
         def _pack_track(track) -> str:
             _, track_id, persistent_id, audio_object = track.data
             title = self.__fetch_from_audio(
@@ -1848,7 +1855,7 @@ class AudioProcessor(object):
             fullname = _encode_location(track.tag)
             current_time = _current_time()
 
-            return Template('''
+            result = Template(_format_template('''
 <key>${track_id}</key>
 <dict>
 	<key>Track ID</key><integer>${track_id}</integer>
@@ -1870,7 +1877,7 @@ class AudioProcessor(object):
 	<key>File Folder Count</key><integer>${file_folder_count}</integer>
 	<key>Library Folder Count</key><integer>${library_folder_count}</integer>
 </dict>
-            '''.strip().replace(' '*4, '\t') + '\n').safe_substitute(dict(
+            ''')).safe_substitute(dict(
                 track_id=track_id,
                 name=title,
                 album=album,
@@ -1890,6 +1897,7 @@ class AudioProcessor(object):
                 file_folder_count='-1',
                 library_folder_count='-1',
             ))
+            return result
 
         def _unique_tracks(tracks) -> list:
             results, track_set = [], set()
@@ -1905,6 +1913,45 @@ class AudioProcessor(object):
             tracks = _unique_tracks(self.audios_tree.leaves())
             for track in tracks:
                 result += _pack_track(track)
+            return _repack_plist(result)
+
+        def _pack_simple_tracks(node) -> str:
+            result, tracks = '', _unique_tracks(self.audios_tree.leaves(node.identifier))
+            for track in tracks:
+                _, track_id, _, _ = track.data
+                result += Template(_format_template('''
+<dict>
+    <key>Track ID</key><integer>${track_id}</integer>
+</dict>
+            ''')).safe_substitute(dict(
+                track_id=track_id,
+            ))
+            return _repack_plist(result)
+
+        def _pack_playlist(node) -> str:
+            node_type, id, pid, ppid = node.data
+            result = Template(_format_template('''
+<dict>
+	<key>Name</key><string>${name}</string>
+	<key>Description</key><string>${description}</string>
+	<key>Playlist ID</key><integer>${playlist_id}</integer>
+	<key>Playlist Persistent ID</key><string>${playlist_persistent_id}</string>
+''' + ('' if not ppid else '''    <key>Parent Persistent ID</key><string>${parent_persistent_id}</string>
+''') + '''    <key>All Items</key><${show_all_items}/>
+''' + ('' if node_type != self.AudiosTreeNodeType.FOLDER else '''    <key>Folder</key><${is_folder}/>
+''') + '''    <key>Playlist Items</key>
+	<array>${tracks}</array>
+</dict>
+            ''')).safe_substitute(dict(
+                name=node.tag,
+                description='',
+                playlist_id=id,
+                playlist_persistent_id=pid,
+                parent_persistent_id=ppid,
+                show_all_items='true',
+                is_folder='true',
+                tracks=_pack_simple_tracks(node),
+            ))
             return result
 
         def _pack_playlists() -> str:
@@ -1916,48 +1963,10 @@ class AudioProcessor(object):
                 if node_type == self.AudiosTreeNodeType.TRACK:
                     continue
                 result += _pack_playlist(node)
-            return result
-
-        def _pack_simple_tracks(node) -> str:
-            result, tracks = '', _unique_tracks(self.audios_tree.leaves(node.identifier))
-            for track in tracks:
-                _, track_id, _, _ = track.data
-                result += Template('''
-<dict>
-    <key>Track ID</key><integer>${track_id}</integer>
-</dict>
-            '''.strip().replace(' '*4, '\t') + '\n').safe_substitute(dict(
-                track_id=track_id,
-            ))
-            return result
-
-        def _pack_playlist(node) -> str:
-            node_type, id, pid, ppid = node.data
-            return Template('''
-<dict>
-	<key>Name</key><string>${name}</string>
-	<key>Description</key><string>${description}</string>
-	<key>Playlist ID</key><integer>${playlist_id}</integer>
-	<key>Playlist Persistent ID</key><string>${playlist_persistent_id}</string>
-''' + '' if not ppid else '''    <key>Parent Persistent ID</key><string>${parent_persistent_id}</string>
-''' + '''    <key>All Items</key><${show_all_items}/>
-''' + '' if node_type != self.AudiosTreeNodeType.FOLDER else '''    <key>Folder</key><${is_folder}/>
-''' + '''    <key>Playlist Items</key>
-	<array>${tracks}</array>
-</dict>
-            '''.strip().replace(' '*4, '\t') + '\n').safe_substitute(dict(
-                name=node.tag,
-                description='',
-                playlist_id=id,
-                playlist_persistent_id=pid,
-                parent_persistent_id=ppid,
-                show_all_items='true',
-                is_folder='true',
-                tracks=_pack_simple_tracks(node),
-            ))
+            return _repack_plist(result)
 
         def _pack_plist() -> str:
-            return Template('''
+            return Template(_format_template('''
 <?xml version="${xml_version}" encoding="${xml_encoding}"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="${plist_version}">
@@ -1976,7 +1985,7 @@ class AudioProcessor(object):
     <array>${playlists}</array>
 </dict>
 </plist>
-            '''.strip().replace(' '*4, '\t') + '\n').safe_substitute(dict(
+            ''')).safe_substitute(dict(
                 xml_version = '1.0',
                 xml_encoding = 'UTF-8',
                 plist_version = '1.0',
@@ -1988,8 +1997,8 @@ class AudioProcessor(object):
                 show_content_ratings = 'true',
                 itunes_media_folder = _encode_location(itunes_media_folder),
                 library_persistent_id = self.generate_persistent_id(),
-                tracks = '\n{}'.format(_pack_tracks()).replace('\n', '\n\t\t')+'\n\t',
-                playlists = '\n{}'.format(_pack_playlists()).replace('\n', '\n\t\t')+'\n\t',
+                tracks = _pack_tracks(),
+                playlists = _pack_playlists(),
             ))
 
         with open(itunes_library_plist, mode='w', encoding='utf-8') as f:

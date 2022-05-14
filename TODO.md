@@ -19,3 +19,4 @@ parse format output 的参数需要统一下逻辑
 在导出和加载itunes plist功能时，加入对mac系统和itunes版本的判断
 歌手、专辑、歌曲名中包含的&符号在归一化时前后要预留空格
 完善 help 信息，将所有可能的场景对应的命令写入帮助信息里
+读取apple music 配置文件，找到itunes media 文件夹，并将导出plist里的相关路径都修改为此
