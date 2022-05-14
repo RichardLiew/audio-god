@@ -108,7 +108,7 @@ from prettytable import PrettyTable
 
 
 class TreeX(Tree):
-    def merge(self, nid, new_tree, deep=False) -> None:
+    def perfect_merge(self, nid, new_tree, deep=False) -> None:
         if not (isinstance(new_tree, Tree) or isinstance(new_tree, TreeX)):
             raise Exception('The new tree to merge is not a valid tree.')
 
@@ -140,7 +140,7 @@ class TreeX(Tree):
                 if new_child.identifier not in [child.identifier for child in childs]:
                     self.paste(nid=nid, new_tree=new_tree.subtree(new_child.identifier), deep=deep)
                     continue
-                self.merge(new_child.identifier, new_tree.subtree(new_child.identifier), deep=deep)
+                self.perfect_merge(new_child.identifier, new_tree.subtree(new_child.identifier), deep=deep)
 
 
 class AudioProcessor(object):
