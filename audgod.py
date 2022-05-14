@@ -124,7 +124,10 @@ class TreeX(Tree):
                 for child in new_tree.children(new_tree.root):
                     self.paste(nid=self.root, new_tree=new_tree.subtree(child.identifier), deep=deep)
             else:
-                raise ValueError('Must define "nid" under which new tree is merged.')
+                if not self.contains(nid):
+                    raise Exception('Node <{}> is not in the tree!'.format(nid))
+                if nid != new_tree.root:
+                    raise Exception('Current node not same with root of new tree.')
 
     def __move_nodes(self, srcs, dest):
         if len(source) == 1:
