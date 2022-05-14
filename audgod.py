@@ -125,11 +125,13 @@ class TreeX(Tree):
         
         if not self.contains(nid):
             raise Exception('Node <{}> is not in the tree!'.format(nid))
-        
-        if nid != new_tree.root:
-            raise Exception('Current node not same with the root of new tree.')
 
-        childs, new_childs = self.children(nid), new_tree.children(nid)
+        current_node = self.audios_tree[nid]
+
+        if current_node.tag != new_tree[new_tree.root].tag:
+            raise Exception('Current node not same with root of new tree.')
+
+        childs, new_childs = self.children(nid), new_tree.children(new_tree.root)
         new_subtrees = [new_tree.subtree(child.identifier) for child in new_childs]
 
         if not childs:
@@ -137,7 +139,7 @@ class TreeX(Tree):
                 self.paste(nid=nid, new_tree=new_subtree, deep=deep)
         else:
             for new_child in new_childs:
-                if new_child.identifier not in [child.identifier for child in childs]:
+                if new_child.tag not in [child.tag for child in childs]:
                     self.paste(nid=nid, new_tree=new_tree.subtree(new_child.identifier), deep=deep)
                     continue
                 self.perfect_merge(new_child.identifier, new_tree.subtree(new_child.identifier), deep=deep)
@@ -1139,7 +1141,7 @@ class AudioProcessor(object):
                 items = [self.AUDIOS_TREE_ROOT_NID] + items
                 subtree = TreeX()
                 for i in range(len(items)):
-                    tag, nid = items[i], items[i]
+                    tag, nid = items[i], self.generate_persistent_id()
                     parent = None if i == 0 else items[i-1]
                     node_type = self.AudiosTreeNodeType.FOLDER
                     if i == 0:
