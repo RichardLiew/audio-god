@@ -1805,6 +1805,11 @@ class AudioProcessor(object):
                 return ret
             return '{}/'.format(ret)
 
+        def _escape_characters(content) -> str:
+            return content.replace('&', '&#38;')\
+                          .replace('<', '&#60;')\
+                          .replace('>', '&#62;')
+
         def _get_itunes_version(itunes_version_plist) -> str:
             with open(itunes_version_plist, 'rb') as f:
                 plist = plistlib.load(f)
@@ -1886,11 +1891,11 @@ class AudioProcessor(object):
 </dict>
             ''')).safe_substitute(dict(
                 track_id=track_id,
-                name=title,
-                album=album,
-                album_artist=album_artist,
-                artist=artist,
-                genre=genre,
+                name=_escape_characters(title),
+                album=_escape_characters(album),
+                album_artist=_escape_characters(album_artist),
+                artist=_escape_characters(artist),
+                genre=_escape_characters(genre),
                 kind='MPEG audio file',
                 size=size,
                 total_time=duration,
@@ -1962,7 +1967,7 @@ class AudioProcessor(object):
 </dict>
             ''')).safe_substitute(dict(
                 name='Library',
-                description='',
+                description=_escape_characters(''),
                 master='true',
                 playlist_id='65',
                 playlist_persistent_id=self.generate_persistent_id(),
@@ -1987,8 +1992,8 @@ class AudioProcessor(object):
 	<array>${tracks}</array>
 </dict>
             ''')).safe_substitute(dict(
-                name=node.tag,
-                description='',
+                name=_escape_characters(node.tag),
+                description=_escape_characters(''),
                 playlist_id=id,
                 playlist_persistent_id=pid,
                 parent_persistent_id=ppid,
