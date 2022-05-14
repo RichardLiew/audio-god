@@ -1095,7 +1095,7 @@ class AudioProcessor(object):
 
     def __fill_audios_tree(self) -> None:
         self.__load_audios()
-        track_id, audios = self.TRACK_INITIAL_ID, self.concerned_audios
+        track_id, audios = self.DEFAULT_TRACK_INITIAL_ID, self.concerned_audios
 
         for audio in audios:
             track_persistent_id = self.generate_persistent_id()
@@ -1135,7 +1135,7 @@ class AudioProcessor(object):
                 self.audios_tree.merge(self.AUDIOS_TREE_ROOT_NID, subtree)
             track_id += 1
 
-        playlist_id = self.PLAYLIST_INITIAL_ID
+        playlist_id = self.DEFAULT_PLAYLIST_INITIAL_ID
         for node in self.audios_tree.all_nodes():
             if node.is_root():
                 continue
