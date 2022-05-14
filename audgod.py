@@ -126,8 +126,18 @@ class TreeX(Tree):
             else:
                 if not self.contains(nid):
                     raise Exception('Node <{}> is not in the tree!'.format(nid))
+                
                 if nid != new_tree.root:
-                    raise Exception('Current node not same with root of new tree.')
+                    raise Exception('Current node not same with the root of new tree.')
+
+                childs, new_childs = self.children(nid), new_tree.children(nid)
+                new_subtrees = [new_tree.subtree(child.identifier) for child in new_childs]
+
+                if not childs:
+                    for subtree in new_subtrees:
+                        self.paste(nid=nid, new_tree=subtree, deep=deep)
+                else:
+                    pass
 
     def __move_nodes(self, srcs, dest):
         if len(source) == 1:
