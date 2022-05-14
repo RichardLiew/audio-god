@@ -1812,7 +1812,9 @@ class AudioProcessor(object):
                 raise Exception('<{}> not string type!'.format(content))
             return content.replace('&', '&#38;')\
                           .replace('<', '&#60;')\
-                          .replace('>', '&#62;')
+                          .replace('>', '&#62;')\
+                          .replace("'", '&#39;')\
+                          .replace('"', '&#34;')
 
         def _get_itunes_version(itunes_version_plist) -> str:
             with open(itunes_version_plist, 'rb') as f:
