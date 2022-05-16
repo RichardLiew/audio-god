@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import re
-import os
 
-from enum import Enum
+import re
+import uuid
+
+from enum import Enum, unique
 
 from treelib import Tree
 
@@ -52,12 +53,67 @@ class TreeX(Tree):
                 )
 
 
+trees = [
+    '1/2/3/4/5/6|1/2/3/4/5/9',
+    '1/2/3/8/9',
+    '1/2/3/5/7',
+    '1/2',
+    '1/2/3/5/9',
+]
 
-t = TreeX()
-t.create_node('1', '1', parent=None)
-t.create_node('2', '2', parent='1')
-t.create_node('3', '3', parent='2')
-t.create_node('4', '4', parent='3')
-t.create_node('5', '5', parent='4')
-t.create_node('6', '6', parent='5')
-t.show()
+class self():
+    @unique
+    class AudiosTreeNodeType(Enum):
+        ROOT = 'root'
+        FOLDER = 'folder'
+        PLAYLIST = 'playlist'
+        TRACK = 'track'
+
+    AUDIOS_TREE_ROOT_TAG = '--root-tag--'
+    AUDIOS_TREE_ROOT_NID = '--root-nid--'
+
+    @staticmethod
+    def generate_persistent_id() -> str:
+        return str(uuid.uuid4()).replace('-', '')[:16].upper()
+
+    audios_tree = None
+
+self.audios_tree = TreeX()
+self.audios_tree.create_node(self.AUDIOS_TREE_ROOT_TAG, self.AUDIOS_TREE_ROOT_NID)
+audio = 'COMMON-TAG'
+track_id = track_persistent_id = audio_object = None
+
+for grouping in trees:
+    for group in grouping.split('|'):
+        group = re.sub(r'\/+', r'/', group).rstrip('/')
+        if not group:
+            continue
+        tags = list(filter(lambda x: x, group.split('/')))
+        if not tags:
+            continue
+        tags = [self.AUDIOS_TREE_ROOT_TAG] + tags
+        subtree = TreeX()
+        last_nid = self.AUDIOS_TREE_ROOT_NID
+        for i in range(len(tags)):
+            tag, nid = tags[i], self.generate_persistent_id()
+            parent = None if i == 0 else last_nid
+            node_type = self.AudiosTreeNodeType.FOLDER
+            if i == 0:
+                node_type = self.AudiosTreeNodeType.ROOT
+                nid = self.AUDIOS_TREE_ROOT_NID
+            elif i == len(tags) - 1:
+                node_type = self.AudiosTreeNodeType.PLAYLIST
+            subtree.create_node(
+                tag, nid, parent=parent,
+                data=[node_type, -1, nid, parent],
+            )
+            last_nid = nid
+        subtree.create_node(
+            audio,
+            self.generate_persistent_id(),
+            parent=last_nid,
+            data=[self.AudiosTreeNodeType.TRACK, track_id, track_persistent_id, audio_object],
+        )
+        self.audios_tree.perfect_merge(self.AUDIOS_TREE_ROOT_NID, subtree, deep=False)
+
+self.audios_tree.show()
