@@ -126,16 +126,17 @@ class TreeX(Tree):
         if not self.contains(nid):
             raise Exception('Node <{}> is not in the tree!'.format(nid))
 
-        current_node = self.audios_tree[nid]
+        current_node = self[nid]
 
         if current_node.tag != new_tree[new_tree.root].tag:
             raise Exception('Current node not same with root of new tree.')
 
-        child_tags = [child.tag for child in self.children(nid)]
+        childs = self.children(nid)
+        child_tags = [child.tag for child in childs]
         new_childs = new_tree.children(new_tree.root)
         new_subtrees = [new_tree.subtree(child.identifier) for child in new_childs]
 
-        if not child_tags:
+        if not childs:
             for new_subtree in new_subtrees:
                 self.paste(nid=nid, new_tree=new_subtree, deep=deep)
         else:
@@ -144,7 +145,7 @@ class TreeX(Tree):
                     self.paste(nid=nid, new_tree=new_tree.subtree(new_child.identifier), deep=deep)
                     continue
                 self.perfect_merge(
-                    child_tags[child_tags.index(new_child.tag)].identifier,
+                    childs[child_tags.index(new_child.tag)].identifier,
                     new_tree.subtree(new_child.identifier),
                     deep=deep,
                 )
@@ -485,14 +486,14 @@ class AudioProcessor(object):
     def source_audios(self):
         src, recursive = self.audios_source
         if not os.path.exists(src):
-            raise Exception('Source <{}> not exists!'.format(src))
+            self.logger.fatal('Source <{}> not exists!'.format(src))
         src = os.path.abspath(src)
         if os.path.isfile(src):
             if not self.__check_extension(src):
-                raise Exception('Source <{}> invalid extension!'.format(src))
+                self.logger.fatal('Source <{}> invalid extension!'.format(src))
             return [src]
         if not os.path.isdir(src):
-            raise Exception('Source <{}> not a directory!'.format(src))
+            self.logger.fatal('Source <{}> not a directory!'.format(src))
         ret = []
         if recursive:
             for _root, _dirs, _files in os.walk(src):
@@ -834,7 +835,7 @@ class AudioProcessor(object):
                             mime_type='image/{}'.format(ext[1:].lower()),
                         )
                     else:
-                        raise Exception(
+                        self.logger.fatal(
                             'Audio <{}> has invalid artwork "{}"'.format(
                                 audio_object.file_info.name, value,
                             ),
@@ -909,7 +910,7 @@ class AudioProcessor(object):
     @classmethod
     def generate_key_by_audio(cls, audio):
         if not cls.__check_name(audio):
-            raise Exception('Invalid name of audio <{}>!'.format(audio))
+            self.logger.fatal('Invalid name of audio <{}>!'.format(audio))
         name, _ = os.path.splitext(os.path.basename(audio))
         name = name.strip()
         if name.count(cls.DIV_CHAR) == 1:
@@ -1167,7 +1168,7 @@ class AudioProcessor(object):
                     parent=last_nid,
                     data=[self.AudiosTreeNodeType.TRACK, track_id, track_persistent_id, audio_object],
                 )
-                self.audios_tree.merge(self.AUDIOS_TREE_ROOT_NID, subtree, deep=False)
+                self.audios_tree.perfect_merge(self.AUDIOS_TREE_ROOT_NID, subtree, deep=False)
             track_id += 1
 
         playlist_id = playlist_initial_id
@@ -1335,7 +1336,7 @@ class AudioProcessor(object):
 
     def organize_files(self):
         if not self.audio_root:
-            raise Exception('Invalid audio root!')
+            self.logger.fatal('Invalid audio root!')
         self.__load_audios()
         audios = self.concerned_audios
         for audio in audios:
@@ -1345,19 +1346,19 @@ class AudioProcessor(object):
                     audio_object, self.AudioProperty.ARTIST, False, False,
                 )
                 if not artist:
-                    raise Exception('Invalid artist of <{}>'.format(audio))
+                    self.logger.fatal('Invalid artist of <{}>'.format(audio))
                 album = self.__fetch_from_audio(
                     audio_object, self.AudioProperty.ALBUM, False, False,
                 )
                 if not album:
-                    raise Exception('Invalid album of <{}>'.format(audio))
+                    self.logger.fatal('Invalid album of <{}>'.format(audio))
                 dir_ = '{}/{}/{}'.format(self.audio_root, artist, album)
             else:
                 grouping = self.__fetch_from_audio(
                     audio_object, self.AudioProperty.GROUPING, False, False,
                 )
                 if not grouping:
-                    raise Exception('Invalid grouping of <{}>'.format(audio))
+                    self.logger.fatal('Invalid grouping of <{}>'.format(audio))
                 dir_ = '{}/{}'.format(self.audio_root, grouping)
             os.makedirs(dir_, exist_ok=True)
             newname = '{}/{}'.format(dir_, os.path.basename(audio))
@@ -1482,7 +1483,7 @@ class AudioProcessor(object):
             for i, field in enumerate(fields_to_show):
                 index = fields.index(field)
                 if index < 0:
-                    raise Exception('Invalid field <{}>!'.format(field))
+                    self.logger.fatal('Invalid field <{}>!'.format(field))
                 if index != i:
                     fields[i], fields[index] = \
                             fields[index], fields[i]
@@ -1562,7 +1563,7 @@ class AudioProcessor(object):
                             for _field in filter(None, _fields.split(',')):
                                 index = fields.index(_field.strip())
                                 if index < 0:
-                                    raise Exception(
+                                    self.logger.fatal(
                                         'Invalid field <%s> when filter!' % (
                                             _field,
                                         ),
@@ -1576,7 +1577,7 @@ class AudioProcessor(object):
                                         list(rows_set), index, *parameters,
                                     ))
                         else:
-                            raise Exception(
+                            self.logger.fatal(
                                 'Invalid function <{}>!'.format(function),
                             )
                     rows = [list(row) for row in list(rows_set)]
@@ -1599,7 +1600,7 @@ class AudioProcessor(object):
                     for _field in reversed(list(filter(None, _fields.split(',')))):
                         index = fields.index(_field.strip())
                         if index < 0:
-                            raise Exception(
+                            self.logger.fatal(
                                 'Invalid field <{}> when sort!'.format(_field),
                             )
                         function = sort_functions['default']
@@ -1840,7 +1841,7 @@ class AudioProcessor(object):
             if not content:
                 return content
             if not isinstance(content, str):
-                raise Exception('<{}> not string type!'.format(content))
+                self.logger.fatal('<{}> not string type!'.format(content))
             return content.replace('&', '&#38;')\
                           .replace('<', '&#60;')\
                           .replace('>', '&#62;')\
@@ -2022,7 +2023,8 @@ class AudioProcessor(object):
 	<key>Description</key><string>${description}</string>
 	<key>Playlist ID</key><integer>${playlist_id}</integer>
 	<key>Playlist Persistent ID</key><string>${playlist_persistent_id}</string>
-''' + ('' if not ppid else '''    <key>Parent Persistent ID</key><string>${parent_persistent_id}</string>
+''' + ('' if (not ppid) or ppid == self.AUDIOS_TREE_ROOT_NID else \
+'''    <key>Parent Persistent ID</key><string>${parent_persistent_id}</string>
 ''') + '''    <key>All Items</key><${show_all_items}/>
 ''' + ('' if node_type != self.AudiosTreeNodeType.FOLDER else '''    <key>Folder</key><${is_folder}/>
 ''') + '''    <key>Playlist Items</key>
