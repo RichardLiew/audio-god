@@ -907,15 +907,14 @@ class AudioProcessor(object):
             cls.format_title(title.strip()),
         ).upper()
 
-    @classmethod
-    def generate_key_by_audio(cls, audio):
-        if not cls.__check_name(audio):
+    def generate_key_by_audio(self, audio):
+        if not self.__check_name(audio):
             self.logger.fatal('Invalid name of audio <{}>!'.format(audio))
         name, _ = os.path.splitext(os.path.basename(audio))
         name = name.strip()
-        if name.count(cls.DIV_CHAR) == 1:
-            return cls.generate_key(*name.split(cls.DIV_CHAR))
-        return cls.generate_key(*name.split(cls.ORI_DIV_CHAR))
+        if name.count(self.DIV_CHAR) == 1:
+            return self.generate_key(*name.split(self.DIV_CHAR))
+        return self.generate_key(*name.split(self.ORI_DIV_CHAR))
 
     def __load_ignored(self):
         if not self.ignored_file:
