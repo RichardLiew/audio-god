@@ -352,7 +352,8 @@ class AudioProcessor(object):
         self.__output_file = output_file
         self.__logger = logging.getLogger()
         self.__logger.setLevel(log_level)
-        eyed3.log.setLevel(log_level)
+        #eyed3.log.setLevel(log_level)
+        eyed3.log.setLevel(logging.ERROR)
 
     def __resolve_fields(self, fields):
         ret = list(filter(None, fields.split(',')))
