@@ -1069,14 +1069,12 @@ class AudioProcessor(object):
 
         self.logger.warning(
             'Total Audios: {}\n\n'
-            'Invalid Audios: {}, '
-            'Invalid Extension Audios: {}, '
-            'Invalid Name Audios: {}\n'
+            'Invalid Audios: {} '
+            '(Invalid Extension Audios: {}, Invalid Name Audios: {})\n'
             'Omitted Audios: {}\n'
             'Ignored Audios: {}\n'
-            'Valid Audios: {}, '
-            'Matched: {}, '
-            'NotMatched: {}\n'.format(
+            'Valid Audios: {} '
+            '(Matched: {}, NotMatched: {})\n'.format(
                 len(self.invalid_ext_audios) \
                     + len(self.invalid_name_audios) \
                     + len(self.omitted_audios) \
