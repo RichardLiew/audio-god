@@ -122,7 +122,7 @@ class TreeX(Tree):
             if self.root is None:
                 self.add_node(new_tree[new_tree.root])
             nid = self.root
-        
+
         if not self.contains(nid):
             raise Exception('Node <{}> is not in the tree!'.format(nid))
 
