@@ -1106,6 +1106,7 @@ class AudioProcessor(object):
 
     def __fill_audios_tree(self) -> None:
         self.__load_audios()
+
         _, _, _, track_initial_id, playlist_initial_id = self.itunes_options
         track_id, audios = track_initial_id, self.concerned_audios
 
@@ -1120,24 +1121,6 @@ class AudioProcessor(object):
                 self.logger.debug(
                     'Empty grouping of <{}>, use <{}> instead!'.format(audio, self.AUDIO_DEFAULT_GROUPING),
                 )
-
-            ###############################################################################################
-            
-            import random
-            aaa = random.randint(1, 1000)
-            if aaa % 5 == 0:
-                grouping = '1/2/3/4/5/6|1/2/3/4/5/9'
-            elif aaa % 5 == 1:
-                grouping = '1/2/3/8/9'
-            elif aaa % 5 == 2:
-                grouping = '1/2/3/5/7'
-            elif aaa % 5 == 3:
-                grouping = '1/2'
-            elif aaa % 5 == 4:
-                grouping = '1/2/3/5/9'
-
-            ###############################################################################################
-
             for group in grouping.split('|'):
                 group = re.sub(r'\/+', r'/', group).rstrip('/')
                 if not group:
@@ -1150,16 +1133,15 @@ class AudioProcessor(object):
                 last_nid = self.AUDIOS_TREE_ROOT_NID
                 for i in range(len(tags)):
                     tag, nid = tags[i], self.generate_persistent_id()
-                    parent = None if i == 0 else last_nid
-                    node_type = self.AudiosTreeNodeType.FOLDER
+                    parent, node_type = last_nid, self.AudiosTreeNodeType.FOLDER
                     if i == 0:
-                        node_type = self.AudiosTreeNodeType.ROOT
                         nid = self.AUDIOS_TREE_ROOT_NID
+                        parent, node_type = None, self.AudiosTreeNodeType.ROOT
                     elif i == len(tags) - 1:
                         node_type = self.AudiosTreeNodeType.PLAYLIST
                     subtree.create_node(
                         tag, nid, parent=parent,
-                        data=[node_type, -1, nid, parent],
+                        data=[node_type, -1, nid, ''],
                     )
                     last_nid = nid
                 subtree.create_node(
@@ -1181,16 +1163,16 @@ class AudioProcessor(object):
             node.data[1] = playlist_id
             playlist_id += 1
 
-        #for node in self.audios_tree.all_nodes():
-        #    parent = self.audios_tree.parent(node.identifier)
-        #    if parent is None:
-        #        continue
-        #    if parent.is_root():
-        #        continue
-        #    node_type, _, _, _ = node.data
-        #    if node_type == self.AudiosTreeNodeType.TRACK or node_type == self.AudiosTreeNodeType.ROOT:
-        #        continue
-        #    node.data[3] = parent.data[2]
+        for node in self.audios_tree.all_nodes():
+            parent = self.audios_tree.parent(node.identifier)
+            if parent is None:
+                continue
+            if parent.is_root():
+                continue
+            node_type, _, _, _ = node.data
+            if node_type == self.AudiosTreeNodeType.TRACK or node_type == self.AudiosTreeNodeType.ROOT:
+                continue
+            node.data[3] = parent.identifier
 
     def __check_extension(self, audio):
         _, ext = os.path.splitext(os.path.basename(audio))
