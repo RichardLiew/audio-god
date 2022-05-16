@@ -142,7 +142,11 @@ class TreeX(Tree):
                 if new_child.tag not in [child.tag for child in childs]:
                     self.paste(nid=nid, new_tree=new_tree.subtree(new_child.identifier), deep=deep)
                     continue
-                self.perfect_merge(new_child.identifier, new_tree.subtree(new_child.identifier), deep=deep)
+                self.perfect_merge(
+                    childs[[child.tag for child in childs].index(new_child.tag)].identifier,
+                    new_tree.subtree(new_child.identifier),
+                    deep=deep,
+                )
 
 
 class AudioProcessor(object):
