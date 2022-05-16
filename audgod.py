@@ -131,19 +131,20 @@ class TreeX(Tree):
         if current_node.tag != new_tree[new_tree.root].tag:
             raise Exception('Current node not same with root of new tree.')
 
-        childs, new_childs = self.children(nid), new_tree.children(new_tree.root)
+        child_tags = [child.tag for child in self.children(nid)]
+        new_childs = new_tree.children(new_tree.root)
         new_subtrees = [new_tree.subtree(child.identifier) for child in new_childs]
 
-        if not childs:
+        if not child_tags:
             for new_subtree in new_subtrees:
                 self.paste(nid=nid, new_tree=new_subtree, deep=deep)
         else:
             for new_child in new_childs:
-                if new_child.tag not in [child.tag for child in childs]:
+                if new_child.tag not in child_tags:
                     self.paste(nid=nid, new_tree=new_tree.subtree(new_child.identifier), deep=deep)
                     continue
                 self.perfect_merge(
-                    childs[[child.tag for child in childs].index(new_child.tag)].identifier,
+                    child_tags[child_tags.index(new_child.tag)].identifier,
                     new_tree.subtree(new_child.identifier),
                     deep=deep,
                 )
