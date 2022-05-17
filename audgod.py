@@ -594,6 +594,7 @@ class AudioProcessor(object):
                  .replace('——', '-')
         ret = re.sub(r'([\(\[\<\|])', r' \1', ret)
         ret = re.sub(r'([\)\]\>\|:,;\!\?])', r'\1 ', ret)
+        ret = re.sub(r'([\&])', r' \1 ', ret)
         ret = re.sub(r'[ \t]+', r' ', ret).strip()
         ret = re.sub(r'([\)\]\>\|]) ([:,;\.\!\?])', r'\1\2', ret)
         return ret

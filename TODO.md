@@ -6,18 +6,18 @@
 将常用命令写到印象笔记
 命令行 单个 - 的参数重新分配
 思考如何处理同一首歌可以存在于多个歌单的情景，并在markdown文件中体现出来，软连接？
-parse format output 的参数需要统一下逻辑
+- [x] parse format output 的参数需要统一下逻辑
 导出 markdown 色彩版和简单版
 支持解析 markdown 和普通 notes 两种方式
 去除 Markdown 中的链接下划线
 去除依赖库，改为嵌入到本文件的相关代码
 封装成docker，并传到 github 以及 dockerhub 上，并添加 actions
 过滤和排序对 artwork 的单独处理
-读入和导出applemusic xml格式文件
+读入和导出 apple music xml 格式文件
 支持属性输入由文件名决定
 支持将多个歌手创作的同一首歌加入所有歌手的列表中，同时，多个歌手列表保留
 在导出和加载itunes plist功能时，加入对mac系统和itunes版本的判断
 歌手、专辑、歌曲名中包含的&符号在归一化时前后要预留空格
 完善 help 信息，将所有可能的场景对应的命令写入帮助信息里
-读取apple music 配置文件，找到itunes media 文件夹，并将导出plist里的相关路径都修改为此
-所有日志输出好像都没按照loglevel执行，单独处理下eye3的日志设置
+- [x] 读取apple music 配置文件，找到itunes media 文件夹，并将导出plist里的相关路径都修改为此
+- [x] 所有日志输出好像都没按照loglevel执行，单独处理下eye3的日志设置
