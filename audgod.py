@@ -1793,7 +1793,7 @@ class AudioProcessor(object):
         )
 
     def export_markdown(self):
-        self.__load_audios()
+        self.__fill_audios_tree()
         pass
 
     @staticmethod
