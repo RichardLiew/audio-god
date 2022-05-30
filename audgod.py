@@ -168,9 +168,16 @@ class AudioProcessor(object):
 
 
     @unique
+    class PropertyFileSourceType(Enum):
+        NOTE = 'note'
+        JSON = 'json'
+        MARKDOWN = 'markdown'
+        PLIST = 'plist'
+    
+    @unique
     class PropertySource(Enum):
         COMMAND = 'command'
-        NOTEFILE = 'notefile'
+        FILE = 'file'
         FILENAME = 'filename'
         DIRECTORY = 'directory'
 
@@ -302,7 +309,7 @@ class AudioProcessor(object):
 
     def __init__(
         self,
-        notes_file,
+        source_file,
         ignored_file,
         audios_root,
         audios_source,
@@ -327,7 +334,7 @@ class AudioProcessor(object):
         organize_type=OrganizeType.ITUNED.value,
         log_level=logging.DEBUG,
     ):
-        self.__notes_file = notes_file
+        self.__source_file = source_file
         self.__ignored_file = ignored_file
         self.__audios_root = audios_root
         self.__audios_source = audios_source
@@ -336,7 +343,7 @@ class AudioProcessor(object):
         self.__fields = [
             self.AudioProperty(x) for x in self.__resolve_fields(fields)
         ]
-        self.__notes = ([], {}, {})
+        self.__clauses = ([], {}, {})
         self.__audios = ([], [], [], [], set(), set())
         self.__audios_tree = TreeX(tree=None, deep=False, node_class=None, identifier=None)
         self.audios_tree.create_node(self.AUDIOS_TREE_ROOT_TAG, self.AUDIOS_TREE_ROOT_NID)
@@ -438,8 +445,8 @@ class AudioProcessor(object):
         return self.__output_file
 
     @property
-    def notes_file(self):
-        return self.__notes_file
+    def source_file(self):
+        return self.__source_file
 
     @property
     def ignored_file(self):
@@ -490,16 +497,16 @@ class AudioProcessor(object):
         return self.__ignored_set
 
     @property
-    def invalid_notes(self):
-        return self.__notes[0]
+    def invalid_clauses(self):
+        return self.__clauses[0]
 
     @property
-    def valid_notes(self):
-        return self.__notes[1]
+    def valid_clauses(self):
+        return self.__clauses[1]
 
     @property
-    def repeated_notes(self):
-        return self.__notes[2]
+    def repeated_clauses(self):
+        return self.__clauses[2]
 
     @property
     def source_audios(self):
@@ -767,9 +774,9 @@ class AudioProcessor(object):
                     if _value is not None:
                         ret = _value
                         break
-            elif source == self.PropertySource.NOTEFILE:
+            elif source == self.PropertySource.FILE:
                 key = self.generate_key_by_audio(audio)
-                _value = self.valid_notes.get(key, {}).get(field.value, None)
+                _value = self.valid_clauses.get(key, {}).get(field.value, None)
                 if _value is not None:
                     ret = _value
                     break
@@ -950,12 +957,32 @@ class AudioProcessor(object):
                 if line:
                     self.ignored_set.add(os.path.abspath(line))
 
-    def __load_notes(self):
-        if not self.notes_file:
+    def __load_properties_from_file(self):
+        if not self.source_file:
             return
-        if not os.path.exists(self.notes_file):
-            if self.notes_file in ['notes.txt', './notes.txt']:
-                return
+        if not os.path.exists(self.source_file):
+            self.logger.fatal('Source file <{}> not exists!'.format(self.source_file))
+        _, ext = os.path.splitext(os.path.basename(self.source_file))
+        ext = ext[1:].lower()
+        if ext in ['json']:
+            self.__load_json_source()
+        elif ext in ['md', 'markdown']:
+            self.__load_markdown_source()
+        elif ext in ['xml', 'plist']:
+            self.__load_plist_source()
+        else:
+            self.__load_note_source()
+
+    def __load_json_source(self):
+        pass
+
+    def __load_markdown_source(self):
+        pass
+
+    def __load_plist_source(self):
+        pass
+
+    def __load_note_source(self):
         fields_pattern = '|'.join(
             list(self.AUDIO_CN_PROPERTIES.keys()) + \
             list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
@@ -966,12 +993,12 @@ class AudioProcessor(object):
             fields_pattern,
         )
 
-        _notes = {}
-        with open(self.notes_file, 'r', encoding='utf-8') as f:
+        _clauses = {}
+        with open(self.source_file, 'r', encoding='utf-8') as f:
             for line in f:
                 _line = re.sub(prefix_pattern, r'\1:', line, re.IGNORECASE)
                 if re.match(entire_pattern, _line, re.IGNORECASE) is None:
-                    self.invalid_notes.append(line)
+                    self.invalid_clauses.append(line)
                     continue
                 _line = re.sub(
                     r'^[ \t]{{0,}}(({}))[:：]'.format(fields_pattern),
@@ -990,67 +1017,67 @@ class AudioProcessor(object):
                     k, v = [item.strip() for item in kv.split(':')]
                     k = self.AUDIO_CN_PROPERTY_SYNONYMS.get(k, k).lower()
                     if k not in [field.value for field in self.ALL_FIELDS]:
-                        self.invalid_notes.append(line)
+                        self.invalid_clauses.append(line)
                         continue
                     result[k] = v
                 title = result.get(self.AudioProperty.TITLE.value, None)
                 if not title:
-                    self.invalid_notes.append(line)
+                    self.invalid_clauses.append(line)
                     continue
                 artist = result.get(self.AudioProperty.ARTIST.value, None)
                 if not artist:
-                    self.invalid_notes.append(line)
+                    self.invalid_clauses.append(line)
                     continue
                 key = self.generate_key(artist, title)
-                if key in _notes:
-                    _notes[key].append(result)
+                if key in _clauses:
+                    _clauses[key].append(result)
                 else:
-                    _notes[key] = [result]
+                    _clauses[key] = [result]
 
-        self.valid_notes.update({
-            key: _notes[key][0]
-            for key in _notes
-            if len(_notes[key]) == 1
+        self.valid_clauses.update({
+            key: _clauses[key][0]
+            for key in _clauses
+            if len(_clauses[key]) == 1
         })
 
-        self.repeated_notes.update({
-            key: _notes[key]
-            for key in _notes
-            if len(_notes[key]) > 1
+        self.repeated_clauses.update({
+            key: _clauses[key]
+            for key in _clauses
+            if len(_clauses[key]) > 1
         })
 
         self.logger.warning('\n{}\n'.format('#' * 78))
 
         self.logger.warning(
-            'Total Notes: {}\n\n'
-            'Valid Notes: {}, '
-            'Invalid Notes: {}, '
-            'Repeated Notes: {}\n'.format(
-                len(self.valid_notes) \
-                + len(self.invalid_notes) \
+            'Total Clauses: {}\n\n'
+            'Valid Clauses: {}, '
+            'Invalid Clauses: {}, '
+            'Repeated Clauses: {}\n'.format(
+                len(self.valid_clauses) \
+                + len(self.invalid_clauses) \
                 + len([
                     item
-                    for value in self.repeated_notes.values()
+                    for value in self.repeated_clauses.values()
                     for item in value
                 ]),
-                len(self.valid_notes),
-                len(self.invalid_notes),
+                len(self.valid_clauses),
+                len(self.invalid_clauses),
                 len([
                     item
-                    for value in self.repeated_notes.values()
+                    for value in self.repeated_clauses.values()
                     for item in value
                 ]),
             )
         )
-        if len(self.invalid_notes) > 0:
-            self.logger.info('\nInvalid Notes:')
-            for item in self.invalid_notes:
+        if len(self.invalid_clauses) > 0:
+            self.logger.info('\nInvalid Clauses:')
+            for item in self.invalid_clauses:
                 self.logger.info('\t{}'.format(item))
-        if len(self.repeated_notes) > 0:
-            self.logger.info('\nRepeated Notes:')
-            for key in self.repeated_notes:
+        if len(self.repeated_clauses) > 0:
+            self.logger.info('\nRepeated Clauses:')
+            for key in self.repeated_clauses:
                 self.logger.info('\t{}: [{}]'.format(
-                    key, '｜'.join(self.repeated_notes[key]),
+                    key, '｜'.join(self.repeated_clauses[key]),
                 ))
 
     def __load_audios(self):
@@ -1077,7 +1104,7 @@ class AudioProcessor(object):
                 self.logger.debug(self.AudioType.IGNORED.value)
                 continue
             key = self.generate_key_by_audio(audio)
-            if key in self.valid_notes:
+            if key in self.valid_clauses:
                 self.matched_audios.add(audio)
                 self.logger.debug(self.AudioType.MATCHED.value)
             else:
@@ -1259,7 +1286,7 @@ class AudioProcessor(object):
 
     def format_notes(self):
         lines = []
-        with open(self.notes_file, 'r', encoding='utf-8') as f:
+        with open(self.source_file, 'r', encoding='utf-8') as f:
             for line in f:
                 pos = line.find('歌曲名：')
                 if pos < 0:
@@ -1267,17 +1294,17 @@ class AudioProcessor(object):
                     if pos < 0:
                         continue
                 lines.append(line[pos:].strip())
-        tmp_file = self.notes_file + '.tmp'
+        tmp_file = self.source_file + '.tmp'
         with open(tmp_file, 'w', encoding='utf-8') as f:
             for i in range(len(lines)):
                 f.write(lines[i])
                 if i < len(lines) - 1:
                     f.write('\n')
-        os.remove(self.notes_file)
-        os.rename(tmp_file, self.notes_file)
+        os.remove(self.source_file)
+        os.rename(tmp_file, self.source_file)
 
     def fill_properties(self):
-        self.__load_notes()
+        self.__load_properties_from_file()
         self.__load_audios()
         self.__fill_audio_properties()
 
@@ -1810,10 +1837,6 @@ class AudioProcessor(object):
             self.output_file,
         )
 
-    def export_markdown(self):
-        self.__fill_audios_tree()
-        pass
-
     @staticmethod
     def generate_persistent_id() -> str:
         return str(uuid.uuid4()).replace('-', '')[:16].upper()
@@ -2118,7 +2141,6 @@ def main():
             'display-audios',
             'export-artworks',
             'organize-files',
-            'export-markdown',
             'export-itunes-plist',
             'convert-qmc0',
             'convert-kmx',
@@ -2129,12 +2151,12 @@ def main():
         help='actions you want to process',
     )
     parser.add_argument(
-        '--notes-file', '-f',
+        '--source-file', '-f',
         type=str,
         required=False,
-        default='./notes.txt',
-        dest='notes_file',
-        help='notes file to match',
+        default='./source.txt',
+        dest='source_file',
+        help='source file to match',
     )
     parser.add_argument(
         '--ignored-file', '-i',
@@ -2347,7 +2369,7 @@ def main():
     args = parser.parse_args()
 
     processor = AudioProcessor(
-        notes_file=args.notes_file,
+        source_file=args.source_file,
         ignored_file=args.ignored_file,
         audios_root=args.audios_root,
         audios_source=(args.audios_source, args.recursive),

@@ -18,3 +18,5 @@
 在导出和加载itunes plist功能时，加入对mac系统和itunes版本的判断
 完善 help 信息，将所有可能的场景对应的命令写入帮助信息里
 export-json, export-markdown 功能完善
+重新审视 Plist 生成逻辑，field做成可配，并引用新的域结构
+export 逻辑里，仿照 import 逻辑去配合 filesources 做
