@@ -206,37 +206,53 @@ class AudioProcessor(object):
 
 
     AUDIO_PROPERTIES = {
-        'title': '歌曲名',
-        'artist': '歌手名',
-        'album': '专辑名',
-        'album_artist': '专辑出品人',
-        'genre': '流派',
-        'comments': '备注',
-        'track_num': '音轨号',
-        'composer': '作曲人',
-        'publisher': '出版公司',
-        'mtime': '修改时间',
-        'duration': '时长',
-        'bit_rate': '比特率',
-        'sample_freq': '采样率',
-        'mode': '模式',
-        'size': '文件大小',
-        'name': '文件名',
-        'path': '文件路径',
-        'selected': '已选择',
-        'liked': '喜欢',
-        'rating': '评分',
-        'grouping': '分组',
-        'artwork': '封面',
+        'title': (('歌曲名', 'Name'), 'string'),
+        'artist': (('歌手名', 'Artist'), 'string'),
+        'album': (('专辑名', 'Album'), 'string'),
+        'album_artist': (('专辑出品人', 'Album Artist'), 'string'),
+        'genre': (('流派', 'Genre'), 'string'),
+        'comments': (('备注', 'Comments'), 'string'),
+        'track_num': (('音轨号', 'Track Number'), 'integer'),
+        'composer': (('作曲人', 'Composer'), 'string'),
+        'publisher': (('出版公司', 'Publisher'), 'string'),
+        'mtime': (('修改时间', 'Date Modified'), 'date'),
+        'duration': (('时长', 'Total Time'), 'integer'),
+        'bit_rate': (('比特率', 'Bit Rate'), 'integer'),
+        'sample_freq': (('采样率', 'Sample Rate'), 'integer'),
+        'mode': (('模式', 'Mode'), 'string'),
+        'size': (('文件大小', 'Size'), 'integer'),
+        'name': (('文件名', 'File Name'), 'string'),
+        'path': (('文件路径', 'File Directory'), 'string'),
+        'selected': (('已选择', 'Selected'), 'boolean'),
+        'liked': (('喜欢', 'Liked'), 'boolean'),
+        'rating': (('评分', 'Rating'), 'integer'),
+        'grouping': (('分组', 'Grouping'), 'string'),
+        'artwork': (('封面', 'Artwork'), 'string'),
     }
 
-    AUDIO_PROPERTY_SYNONYMS = {
-        value: key for key, value in AUDIO_PROPERTIES.items()
+    AUDIO_CN_PROPERTIES = {
+        key: value[0][0] for key, value in AUDIO_PROPERTY_SET.items()
+    }
+
+    AUDIO_CN_PROPERTY_SYNONYMS = {
+        value: key for key, value in AUDIO_CN_PROPERTIES.items()
+    }
+
+    AUDIO_EN_PROPERTIES = {
+        key: value[0][1] for key, value in AUDIO_PROPERTY_SET.items()
+    }
+
+    AUDIO_EN_PROPERTY_SYNONYMS = {
+        value: key for key, value in AUDIO_EN_PROPERTIES.items()
+    }
+
+    AUDIO_PROPERTY_TYPES = {
+        key: value[1] for key, value in AUDIO_PROPERTY_SET.items()
     }
 
     AudioProperty = unique(Enum(
         'AudioProperty', {
-            prop.upper(): prop for prop in AUDIO_PROPERTIES.keys()
+            prop.upper(): prop for prop in AUDIO_CN_PROPERTIES.keys()
         },
     ))
 
@@ -939,8 +955,8 @@ class AudioProcessor(object):
             if self.notes_file in ['notes.txt', './notes.txt']:
                 return
         fields_pattern = '|'.join(
-            list(self.AUDIO_PROPERTIES.keys()) + \
-            list(self.AUDIO_PROPERTY_SYNONYMS.keys()),
+            list(self.AUDIO_CN_PROPERTIES.keys()) + \
+            list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
         )
         prefix_pattern = r'^.*(({}))[:：]'.format(fields_pattern)
         entire_pattern = \
@@ -970,7 +986,7 @@ class AudioProcessor(object):
                 result = {}
                 for kv in _line.split('|'):
                     k, v = [item.strip() for item in kv.split(':')]
-                    k = self.AUDIO_PROPERTY_SYNONYMS.get(k, k).lower()
+                    k = self.AUDIO_CN_PROPERTY_SYNONYMS.get(k, k).lower()
                     if k not in [field.value for field in self.ALL_FIELDS]:
                         self.invalid_notes.append(line)
                         continue
@@ -1420,7 +1436,7 @@ class AudioProcessor(object):
 
         results, audios = [], self.concerned_audios
         all_fields = [
-            (field.value, self.AUDIO_PROPERTIES[field.value])
+            (field.value, self.AUDIO_CN_PROPERTIES[field.value])
             for field in self.ALL_FIELDS
         ]
         formatted, outputted = True, True
@@ -1895,7 +1911,7 @@ class AudioProcessor(object):
 	<key>Name</key><string>${name}</string>
 	<key>Album</key><string>${album}</string>
     <key>Album Artist</key><string>${album_artist}</string>
-	<key>Artist</key><string>${artist}</string>
+	<key>Artist
 	<key>Genre</key><string>${genre}</string>
 	<key>Kind</key><string>${kind}</string>
 	<key>Size</key><integer>${size}</integer>
@@ -2006,7 +2022,7 @@ class AudioProcessor(object):
 	<key>Description</key><string>${description}</string>
 	<key>Playlist ID</key><integer>${playlist_id}</integer>
 	<key>Playlist Persistent ID</key><string>${playlist_persistent_id}</string>
-''' + ('' if (not ppid) or ppid == self.AUDIOS_TREE_ROOT_NID else \
+''' + ('' if (not ppid) or (ppid == self.AUDIOS_TREE_ROOT_NID) else \
 '''    <key>Parent Persistent ID</key><string>${parent_persistent_id}</string>
 ''') + '''    <key>All Items</key><${show_all_items}/>
 ''' + ('' if node_type != self.AudiosTreeNodeType.FOLDER else '''    <key>Folder</key><${is_folder}/>
