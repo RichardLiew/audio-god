@@ -231,7 +231,7 @@ class AudioProcessor(object):
     }
 
     AUDIO_CN_PROPERTIES = {
-        key: value[0][0] for key, value in AUDIO_PROPERTY_SET.items()
+        key: value[0][0] for key, value in AUDIO_PROPERTIES.items()
     }
 
     AUDIO_CN_PROPERTY_SYNONYMS = {
@@ -239,7 +239,7 @@ class AudioProcessor(object):
     }
 
     AUDIO_EN_PROPERTIES = {
-        key: value[0][1] for key, value in AUDIO_PROPERTY_SET.items()
+        key: value[0][1] for key, value in AUDIO_PROPERTIES.items()
     }
 
     AUDIO_EN_PROPERTY_SYNONYMS = {
