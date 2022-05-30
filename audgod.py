@@ -247,7 +247,7 @@ class AudioProcessor(object):
     }
 
     AUDIO_PROPERTY_TYPES = {
-        key: value[1] for key, value in AUDIO_PROPERTY_SET.items()
+        key: value[1] for key, value in AUDIO_PROPERTIES.items()
     }
 
     AudioProperty = unique(Enum(
