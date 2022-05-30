@@ -17,3 +17,4 @@
 支持将多个歌手创作的同一首歌加入所有歌手的列表中，同时，多个歌手列表保留
 在导出和加载itunes plist功能时，加入对mac系统和itunes版本的判断
 完善 help 信息，将所有可能的场景对应的命令写入帮助信息里
+export-json, export-markdown 功能完善

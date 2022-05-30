@@ -611,6 +611,8 @@ class AudioProcessor(object):
         ret = re.sub(r'([\(\[\<\|])', r' \1', ret)
         ret = re.sub(r'([\)\]\>\|:,;\!\?])', r'\1 ', ret)
         ret = re.sub(r'([\&])', r' \1 ', ret)
+        # 依据情况而定，看看有必要将下面正则激活
+        #ret = re.sub(r'[ \t]{0,}&[ \t]{0,}', r' & ', ret)
         ret = re.sub(r'[ \t]+', r' ', ret).strip()
         ret = re.sub(r'([\)\]\>\|]) ([:,;\.\!\?])', r'\1\2', ret)
         return ret
@@ -2391,10 +2393,12 @@ def main():
         processor.export_artworks()
     elif args.action == 'organize-files':
         processor.organize_files()
-    elif args.action == 'export-markdown':
-        processor.export_markdown()
     elif args.action == 'export-itunes-plist':
         processor.export_itunes_plist()
+    elif args.action == 'export-markdown':
+        pass
+    elif args.action == 'export-json':
+        pass
     elif args.action == 'convert-qmc0':
         pass
     elif args.action == 'convert-kmx':
