@@ -20,3 +20,4 @@
 export-json, export-markdown 功能完善
 重新审视 Plist 生成逻辑，field做成可配，并引用新的域结构
 export 逻辑里，仿照 import 逻辑去配合 filesources 做
+FILENAME 作为属性数据源的逻辑还没有梳理
