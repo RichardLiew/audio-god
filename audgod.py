@@ -1863,8 +1863,10 @@ class AudioProcessor(object):
         return str(uuid.uuid4()).replace('-', '')[:16].upper()
 
     def export(self):
-        self.__fill_audios_tree()
         filetype = self.recognize_filetype(self.output_file) 
+        if filetype == self.PropertySourceFileType.NONE:
+            self.logger.fatal('Output file is empty when export!')
+        self.__fill_audios_tree()
         if filetype == self.PropertySourceFileType.JSON:
             self.__export_json()
         elif filetype == self.PropertySourceFileType.MARKDOWN:
