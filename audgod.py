@@ -168,12 +168,13 @@ class AudioProcessor(object):
 
 
     @unique
-    class PropertySourceFileType(Enum):
+    class OutputType(Enum):
         NONE = 'none'
         JSON = 'json'
         MARKDOWN = 'markdown'
         PLIST = 'plist'
         NOTE = 'note'
+        DISPLAY = 'display'
     
     @unique
     class PropertySource(Enum):
@@ -888,8 +889,7 @@ class AudioProcessor(object):
         audio_object.tag.save()
 
     # Use AudioProperty type field here, you won't to check field parameter.
-    def __fetch_from_audio(self, audio_object, field,
-                           formatted=False, outputted=False):
+    def fetch(self, audio_object, field):
         ret, filename = None, audio_object.tag.file_info.name
         if field == AudioProcessor.AudioProperty.GENRE:
             if audio_object.tag.genre is not None:
@@ -934,12 +934,17 @@ class AudioProcessor(object):
                 ret = getattr(audio_object.info, field.value)
             elif hasattr(audio_object.tag.file_info, field.value):
                 ret = getattr(audio_object.tag.file_info, field.value)
+        return ret
+    
+    def fetchx(self, audio_object, field,
+               formatted=False, output_type=OutputType.NONE):
+        ret = self.fetch(audio_object, field)
         if ret is None:
             return None
         if formatted:
             ret = self.format_functions[field.value](ret)
-        if outputted:
-            ret = self.output_functions[field.value](ret)
+        if output_type != self.OutputType.NONE:
+            ret = self.output_functions[field.value](ret, output_type)
         return ret
 
     @classmethod
@@ -989,29 +994,29 @@ class AudioProcessor(object):
     @classmethod
     def recognize_filetype(cls, file):
         if not file:
-            return cls.PropertySourceFileType.NONE
+            return cls.OutputType.NONE
         _, ext = os.path.splitext(os.path.basename(file))
         ext = ext[1:].lower()
         if ext in ['json']:
-            return cls.PropertySourceFileType.JSON
+            return cls.OutputType.JSON
         if ext in ['md', 'markdown']:
-            return cls.PropertySourceFileType.MARKDOWN
+            return cls.OutputType.MARKDOWN
         if ext in ['xml', 'plist']:
-            return cls.PropertySourceFileType.PLIST
-        return cls.PropertySourceFileType.NOTE
+            return cls.OutputType.PLIST
+        return cls.OutputType.NOTE
 
     def __load_properties_from_file(self):
         if not os.path.exists(self.source_file):
             self.logger.fatal('Source file <{}> not exists!'.format(self.source_file))
 
         _clauses, filetype = {}, self.recognize_filetype(self.source_file) 
-        if filetype == self.PropertySourceFileType.NONE:
+        if filetype in [self.OutputType.NONE, self.OutputType.DISPLAY]:
             return
-        elif filetype == self.PropertySourceFileType.JSON:
+        elif filetype == self.OutputType.JSON:
             _clauses = self.__import_json()
-        elif filetype == self.PropertySourceFileType.MARKDOWN:
+        elif filetype == self.OutputType.MARKDOWN:
             _clauses = self.__import_markdown()
-        elif filetype == self.PropertySourceFileType.PLIST:
+        elif filetype == self.OutputType.PLIST:
             _clauses = self.__import_plist()
         else:
             _clauses = self.__import_note()
@@ -1192,9 +1197,7 @@ class AudioProcessor(object):
         for audio in audios:
             track_persistent_id = self.generate_persistent_id()
             audio_object = eyed3.load(audio)
-            grouping = self.__fetch_from_audio(
-                audio_object, self.AudioProperty.GROUPING, False, False,
-            )
+            grouping = self.fetchx(audio_object, self.AudioProperty.GROUPING)
             if not grouping:
                 grouping = self.AUDIO_DEFAULT_GROUPING
                 self.logger.debug(
@@ -1349,9 +1352,7 @@ class AudioProcessor(object):
             self.logger.debug('Formatting <{}> ...'.format(audio))
             audio_object = eyed3.load(audio)
             for field in self.fields:
-                property_ = self.__fetch_from_audio(
-                    audio_object, field, True, False,
-                )
+                property_ = self.fetchx(audio_object, field, True)
                 if property_ is not None:
                     self.__assign_to_audio(audio_object, field, property_, True)
         self.logger.warning(
@@ -1369,8 +1370,8 @@ class AudioProcessor(object):
             _old = os.path.basename(audio)
             _, ext = os.path.splitext(_old)
             _new = StringTemplate(self.filename_pattern).safe_substitute({
-                field.value: self.__fetch_from_audio(
-                    audio_object, field, True, False
+                field.value: self.fetchx(
+                    audio_object, field, True,
                 ) for field in self.ALL_FIELDS
             }) + ext.lower()
             if _old == _new:
@@ -1403,21 +1404,15 @@ class AudioProcessor(object):
         for audio in audios:
             audio_object = eyed3.load(audio)
             if self.organize_type == self.OrganizeType.ITUNED:
-                artist = self.__fetch_from_audio(
-                    audio_object, self.AudioProperty.ARTIST, False, False,
-                )
+                artist = self.fetchx(audio_object, self.AudioProperty.ARTIST)
                 if not artist:
                     self.logger.fatal('Invalid artist of <{}>'.format(audio))
-                album = self.__fetch_from_audio(
-                    audio_object, self.AudioProperty.ALBUM, False, False,
-                )
+                album = self.fetchx(audio_object, self.AudioProperty.ALBUM)
                 if not album:
                     self.logger.fatal('Invalid album of <{}>'.format(audio))
                 dir_ = '{}/{}/{}'.format(self.audio_root, artist, album)
             else:
-                grouping = self.__fetch_from_audio(
-                    audio_object, self.AudioProperty.GROUPING, False, False,
-                )
+                grouping = self.fetchx(audio_object, self.AudioProperty.GROUPING)
                 if not grouping:
                     self.logger.fatal('Invalid grouping of <{}>'.format(audio))
                 dir_ = '{}/{}'.format(self.audio_root, grouping)
@@ -1501,18 +1496,18 @@ class AudioProcessor(object):
             (field.value, self.AUDIO_CN_PROPERTIES[field.value])
             for field in self.ALL_FIELDS
         ]
-        formatted, outputted = True, True
+        formatted, output_type = True, self.OutputType.DISPLAY
         if self.data_format == self.DataFormat.ORIGINAL:
-            formatted, outputted = False, False
+            formatted, output_type = False, self.OutputType.NONE
         elif self.data_format == self.DataFormat.FORMATTED:
-            formatted, outputted = True, False
+            formatted, output_type = True, self.OutputType.NONE
         elif self.data_format == self.DataFormat.OUTPUTTED:
-            formatted, outputted = True, True
+            formatted, output_type = True, self.OutputType.DISPLAY
         for audio in audios:
             audio_object = eyed3.load(audio)
             results.append([
-                self.__fetch_from_audio(
-                    audio_object, self.AudioProperty(x[0]), formatted, outputted,
+                self.fetchx(
+                    audio_object, self.AudioProperty(x[0]), formatted, output_type,
                 )
                 for x in all_fields
             ])
@@ -1876,16 +1871,16 @@ class AudioProcessor(object):
 
     def export(self):
         filetype = self.recognize_filetype(self.output_file) 
-        if filetype == self.PropertySourceFileType.NONE:
+        if filetype == self.OutputType.NONE:
             self.logger.fatal('Output file is empty when export!')
         self.__fill_audios_tree()
-        if filetype == self.PropertySourceFileType.JSON:
+        if filetype == self.OutputType.JSON:
             self.__export_json()
-        elif filetype == self.PropertySourceFileType.MARKDOWN:
+        elif filetype == self.OutputType.MARKDOWN:
             self.__export_markdown()
-        elif filetype == self.PropertySourceFileType.PLIST:
+        elif filetype == self.OutputType.PLIST:
             self.__export_plist()
-        elif filetype == self.PropertySourceFileType.NOTE:
+        elif filetype == self.OutputType.NOTE:
             self.__export_note()
 
     def __export_json(self):
@@ -1956,35 +1951,38 @@ class AudioProcessor(object):
             _, track_id, persistent_id, audio_object = track.data
 
             for field in self.ITUNED_FIELDS:
-                value = self.__fetch_from_audio(audio_object, field, False, False)
+                value = self.fetchx(audio_object, field)
+                value = self.output_functions[field.value](
+                    value, filetype=self.OutputType.PLIST,
+                )
 
-            title = self.__fetch_from_audio(
+            title = self.fetchx(
                 audio_object, self.AudioProperty.TITLE, False, False,
             )
-            album = self.__fetch_from_audio(
+            album = self.fetchx(
                 audio_object, self.AudioProperty.ALBUM, False, False,
             )
-            album_artist = self.__fetch_from_audio(
+            album_artist = self.fetchx(
                 audio_object, self.AudioProperty.ALBUM_ARTIST, False, False,
             )
-            artist = self.__fetch_from_audio(
+            artist = self.fetchx(
                 audio_object, self.AudioProperty.ARTIST, False, False,
             )
-            genre = self.__fetch_from_audio(
+            genre = self.fetchx(
                 audio_object, self.AudioProperty.GENRE, False, False,
             )
-            size = self.__fetch_from_audio(
+            size = self.fetchx(
                 audio_object, self.AudioProperty.SIZE, False, False,
             )
             duration = int(
-                round(self.__fetch_from_audio(
+                round(self.fetchx(
                     audio_object, self.AudioProperty.DURATION, False, False,
                 ), 3) * 1000,
             )
-            bit_rate = self.__fetch_from_audio(
+            bit_rate = self.fetchx(
                 audio_object, self.AudioProperty.BIT_RATE, False, False,
             )
-            sample_freq = self.__fetch_from_audio(
+            sample_freq = self.fetchx(
                 audio_object, self.AudioProperty.SAMPLE_FREQ, False, False,
             )
 
