@@ -996,13 +996,13 @@ class AudioProcessor(object):
         if filetype == self.PropertySourceFileType.NONE:
             return
         elif filetype == self.PropertySourceFileType.JSON:
-            _clauses = self.__load_json_source()
+            _clauses = self.__import_json()
         elif filetype == self.PropertySourceFileType.MARKDOWN:
-            _clauses = self.__load_markdown_source()
+            _clauses = self.__import_markdown()
         elif filetype == self.PropertySourceFileType.PLIST:
-            _clauses = self.__load_plist_source()
+            _clauses = self.__import_plist()
         else:
-            _clauses = self.__load_note_source()
+            _clauses = self.__import_note()
         
         self.valid_clauses.update({
             key: _clauses[key][0]
@@ -1050,16 +1050,16 @@ class AudioProcessor(object):
                     key, '｜'.join(self.repeated_clauses[key]),
                 ))
 
-    def __load_json_source(self):
+    def __import_json(self):
         pass
 
-    def __load_markdown_source(self):
+    def __import_markdown(self):
         pass
 
-    def __load_plist_source(self):
+    def __import_plist(self):
         pass
 
-    def __load_note_source(self):
+    def __import_note(self):
         fields_pattern = '|'.join(
             list(self.AUDIO_CN_PROPERTIES.keys()) + \
             list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
