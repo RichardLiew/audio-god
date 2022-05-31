@@ -25,3 +25,4 @@ load_json, load_markdown, load_plist
 对所有output函数针对不同类型给予不同的处理
 output table 样式整合到  所有export 洛基中
 convert-qmc0, convert-kmx, convert-mp4
+plist 文件里的 kind， track_type，file_folder_count， library_folder_count 设置规则需要重新审视下

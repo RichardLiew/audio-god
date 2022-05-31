@@ -290,6 +290,18 @@ class AudioProcessor(object):
         AudioProperty.ARTWORK,
     ]
 
+    ITUNED_FIELDS = [
+        AudioProperty.TITLE,
+        AudioProperty.ARTIST,
+        AudioProperty.ALBUM,
+        AudioProperty.ALBUM_ARTIST,
+        AudioProperty.GENRE,
+        AudioProperty.SIZE,
+        AudioProperty.DURATION,
+        AudioProperty.BIT_RATE,
+        AudioProperty.SAMPLE_FREQ,
+    ]
+
     ALL_FIELDS = [prop for prop in AudioProperty]
 
 
@@ -1885,34 +1897,38 @@ class AudioProcessor(object):
     def __export_note(self):
         pass
 
+    @staticmethod
+    def format_time(timestamp) -> str:
+        return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    @classmethod
+    def current_time(cls) -> str:
+        return cls.format_time(time.time())
+
+    @staticmethod
+    def encode(src) -> str:
+        return urllib.parse.quote(src, safe='/', encoding='utf-8', errors=None)
+
+    @classmethod
+    def encode_location(cls, location) -> str:
+        ret = 'file://{}'.format(cls.encode(location))
+        if os.path.isfile(location):
+            return ret
+        return '{}/'.format(ret)
+
+    def escape_characters(self, content) -> str:
+        if not content:
+            return content
+        if not isinstance(content, str):
+            self.logger.fatal('<{}> not string type!'.format(content))
+        return content.replace('&', '&#38;')\
+                      .replace('<', '&#60;')\
+                      .replace('>', '&#62;')\
+                      .replace("'", '&#39;')\
+                      .replace('"', '&#34;')
+
     def __export_plist(self):
         itunes_version_plist, itunes_media_folder, _, _ = self.itunes_options
-
-        def _format_time(timestamp) -> str:
-            return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%SZ')
-
-        def _current_time() -> str:
-            return _format_time(time.time())
-
-        def _encode(src) -> str:
-            return urllib.parse.quote(src, safe='/', encoding='utf-8', errors=None)
-
-        def _encode_location(location) -> str:
-            ret = 'file://{}'.format(_encode(location))
-            if os.path.isfile(location):
-                return ret
-            return '{}/'.format(ret)
-
-        def _escape_characters(content) -> str:
-            if not content:
-                return content
-            if not isinstance(content, str):
-                self.logger.fatal('<{}> not string type!'.format(content))
-            return content.replace('&', '&#38;')\
-                          .replace('<', '&#60;')\
-                          .replace('>', '&#62;')\
-                          .replace("'", '&#39;')\
-                          .replace('"', '&#34;')
 
         def _get_itunes_version(itunes_version_plist) -> str:
             with open(itunes_version_plist, 'rb') as f:
@@ -1938,6 +1954,10 @@ class AudioProcessor(object):
 
         def _pack_track(track) -> str:
             _, track_id, persistent_id, audio_object = track.data
+
+            for field in self.ITUNED_FIELDS:
+                value = self.__fetch_from_audio(audio_object, field, False, False)
+
             title = self.__fetch_from_audio(
                 audio_object, self.AudioProperty.TITLE, False, False,
             )
@@ -1968,9 +1988,6 @@ class AudioProcessor(object):
                 audio_object, self.AudioProperty.SAMPLE_FREQ, False, False,
             )
 
-            fullname = _encode_location(track.tag)
-            current_time = _current_time()
-
             result = Template(_format_template('''
 <key>${track_id}</key>
 <dict>
@@ -1980,13 +1997,13 @@ class AudioProcessor(object):
     <key>Album Artist</key><string>${album_artist}</string>
 	<key>Artist
 	<key>Genre</key><string>${genre}</string>
-	<key>Kind</key><string>${kind}</string>
 	<key>Size</key><integer>${size}</integer>
 	<key>Total Time</key><integer>${total_time}</integer>
 	<key>Date Modified</key><date>${date_modified}</date>
-	<key>Date Added</key><date>${date_added}</date>
 	<key>Bit Rate</key><integer>${bit_rate}</integer>
 	<key>Sample Rate</key><integer>${sample_rate}</integer>
+	<key>Date Added</key><date>${date_added}</date>
+	<key>Kind</key><string>${kind}</string>
 	<key>Persistent ID</key><string>${persistent_id}</string>
 	<key>Track Type</key><string>${track_type}</string>
 	<key>Location</key><string>${location}</string>
@@ -1995,21 +2012,21 @@ class AudioProcessor(object):
 </dict>
             ''')).safe_substitute(dict(
                 track_id=track_id,
-                name=_escape_characters(title),
-                album=_escape_characters(album),
-                album_artist=_escape_characters(album_artist),
-                artist=_escape_characters(artist),
-                genre=_escape_characters(genre),
-                kind='MPEG audio file',
+                name=self.escape_characters(title),
+                album=self.escape_characters(album),
+                album_artist=self.escape_characters(album_artist),
+                artist=self.escape_characters(artist),
+                genre=self.escape_characters(genre),
                 size=size,
                 total_time=duration,
                 date_modified=current_time,
-                date_added=current_time,
                 bit_rate=bit_rate,
                 sample_rate=sample_freq,
+                date_added=self.current_time(),
+                kind='MPEG audio file',
                 persistent_id=persistent_id,
                 track_type='File',
-                location=fullname,
+                location=self.encode_location(track.tag),
                 file_folder_count='-1',
                 library_folder_count='-1',
             ))
@@ -2071,7 +2088,7 @@ class AudioProcessor(object):
 </dict>
             ''')).safe_substitute(dict(
                 name='Library',
-                description=_escape_characters(''),
+                description=self.escape_characters(''),
                 master='true',
                 playlist_id=-1,
                 playlist_persistent_id=self.generate_persistent_id(),
@@ -2097,8 +2114,8 @@ class AudioProcessor(object):
 	<array>${tracks}</array>
 </dict>
             ''')).safe_substitute(dict(
-                name=_escape_characters(node.tag),
-                description=_escape_characters(''),
+                name=self.escape_characters(node.tag),
+                description=self.escape_characters(''),
                 playlist_id=id,
                 playlist_persistent_id=pid,
                 parent_persistent_id=ppid,
@@ -2145,11 +2162,11 @@ class AudioProcessor(object):
                 plist_version = '1.0',
                 major_version = '1',
                 minor_version = '1',
-                created_date = _current_time(),
+                created_date = self.current_time(),
                 itunes_version = _get_itunes_version(itunes_version_plist),
                 features = '5',
                 show_content_ratings = 'true',
-                itunes_media_folder = _encode_location(itunes_media_folder),
+                itunes_media_folder = self.encode_location(itunes_media_folder),
                 library_persistent_id = self.generate_persistent_id(),
                 tracks = _pack_tracks(),
                 playlists = _pack_playlists(),
