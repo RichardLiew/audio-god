@@ -168,11 +168,12 @@ class AudioProcessor(object):
 
 
     @unique
-    class PropertyFileSourceType(Enum):
-        NOTE = 'note'
+    class PropertySourceFileType(Enum):
+        NONE = 'none'
         JSON = 'json'
         MARKDOWN = 'markdown'
         PLIST = 'plist'
+        NOTE = 'note'
     
     @unique
     class PropertySource(Enum):
@@ -306,6 +307,8 @@ class AudioProcessor(object):
     DEFAULT_TRACK_INITIAL_ID = 601
     DEFAULT_PLAYLIST_INITIAL_ID = 3001
 
+    DEFAULT_EXTENSIONS = ['mp3']
+
 
     def __init__(
         self,
@@ -314,7 +317,7 @@ class AudioProcessor(object):
         audios_root,
         audios_source,
         properties={},
-        extensions=['mp3'],
+        extensions=DEFAULT_EXTENSIONS,
         fields=[field.value for field in CORE_FIELDS],
         data_format=DataFormat.OUTPUTTED.value,
         display_options=[
@@ -324,7 +327,6 @@ class AudioProcessor(object):
         itunes_options=[
             DEFAULT_ITUNES_VERSION_PLIST,
             DEFAULT_ITUNES_MEDIA_FOLDER,
-            DEFAULT_ITUNES_LIBRARY_PLIST,
             DEFAULT_TRACK_INITIAL_ID,
             DEFAULT_PLAYLIST_INITIAL_ID,
         ],
@@ -972,20 +974,32 @@ class AudioProcessor(object):
         else:
             final_clauses[key] = [hashed_clause]
 
-    def __load_properties_from_file(self):
-        if not self.source_file:
-            return
+    @classmethod
+    def recognize_filetype(cls, file):
+        if not file:
+            return cls.PropertySourceFileType.NONE
+        _, ext = os.path.splitext(os.path.basename(file))
+        ext = ext[1:].lower()
+        if ext in ['json']:
+            return cls.PropertySourceFileType.JSON
+        if ext in ['md', 'markdown']:
+            return cls.PropertySourceFileType.MARKDOWN
+        if ext in ['xml', 'plist']:
+            return cls.PropertySourceFileType.PLIST
+        return cls.PropertySourceFileType.NOTE
 
+    def __load_properties_from_file(self):
         if not os.path.exists(self.source_file):
             self.logger.fatal('Source file <{}> not exists!'.format(self.source_file))
-        
-        _, ext = os.path.splitext(os.path.basename(self.source_file))
-        _clauses, ext = {}, ext[1:].lower()
-        if ext in ['json']:
+
+        _clauses, filetype = {}, self.recognize_filetype(self.source_file) 
+        if filetype == self.PropertySourceFileType.NONE:
+            return
+        elif filetype == self.PropertySourceFileType.JSON:
             _clauses = self.__load_json_source()
-        elif ext in ['md', 'markdown']:
+        elif filetype == self.PropertySourceFileType.MARKDOWN:
             _clauses = self.__load_markdown_source()
-        elif ext in ['xml', 'plist']:
+        elif filetype == self.PropertySourceFileType.PLIST:
             _clauses = self.__load_plist_source()
         else:
             _clauses = self.__load_note_source()
@@ -1352,7 +1366,7 @@ class AudioProcessor(object):
             _path = os.path.dirname(audio)
             os.rename('{}/{}'.format(_path, _old), '{}/{}'.format(_path, _new))
 
-    def export_artworks(self):
+    def derive_artworks(self):
         self.__load_audios()
         audios = self.concerned_audios
         for audio in audios:
@@ -1399,7 +1413,7 @@ class AudioProcessor(object):
             newname = '{}/{}'.format(dir_, os.path.basename(audio))
             os.rename(audio, newname)
 
-    def display_audios(self):
+    def display(self):
         #print("# {}".format('=' * 78))
         #print("Track Name:     {}".format(tag.title))
         #print("Track Artist:   {}".format(tag.artist))
@@ -1848,10 +1862,29 @@ class AudioProcessor(object):
     def generate_persistent_id() -> str:
         return str(uuid.uuid4()).replace('-', '')[:16].upper()
 
-    def export_itunes_plist(self):
-        itunes_version_plist, itunes_media_folder, itunes_library_plist, _, _ = self.itunes_options
-
+    def export(self):
         self.__fill_audios_tree()
+        filetype = self.recognize_filetype(self.output_file) 
+        if filetype == self.PropertySourceFileType.JSON:
+            self.__export_json()
+        elif filetype == self.PropertySourceFileType.MARKDOWN:
+            self.__export_markdown()
+        elif filetype == self.PropertySourceFileType.PLIST:
+            self.__export_plist()
+        elif filetype == self.PropertySourceFileType.NOTE:
+            self.__export_note()
+
+    def __export_json(self):
+        pass
+
+    def __export_markdown(self):
+        pass
+
+    def __export_note(self):
+        pass
+
+    def __export_plist(self):
+        itunes_version_plist, itunes_media_folder, _, _ = self.itunes_options
 
         def _format_time(timestamp) -> str:
             return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -2120,9 +2153,12 @@ class AudioProcessor(object):
                 playlists = _pack_playlists(),
             ))
 
-        with open(itunes_library_plist, mode='w', encoding='utf-8') as f:
+        with open(self.output_file, mode='w', encoding='utf-8') as f:
             f.write(_pack_plist())
             f.flush()
+
+    def convert(self):
+        pass
 
 
 def main():
@@ -2145,13 +2181,11 @@ def main():
             'fill-properties',
             'format-properties',
             'rename-audios',
-            'display-audios',
-            'export-artworks',
+            'derive-artworks',
             'organize-files',
-            'export-itunes-plist',
-            'convert-qmc0',
-            'convert-kmx',
-            'convert-mp4',
+            'display',
+            'export',
+            'convert',
         ],
         required=True,
         dest='action',
@@ -2207,7 +2241,7 @@ def main():
         '--extensions', '-e',
         type=str,
         required=False,
-        default='mp3',
+        default=','.join(AudioProcessor.DEFAULT_EXTENSIONS),
         dest='extensions',
         help='valid extensions of audios',
     )
@@ -2327,7 +2361,6 @@ def main():
         dest='log_level',
         help='level of logger',
     )
-
     parser.add_argument(
         '--itunes-version-plist', '-q',
         type=str,
@@ -2336,7 +2369,6 @@ def main():
         dest='itunes_version_plist',
         help='the version plist file of itunes or apple music',
     )
-
     parser.add_argument(
         '--itunes-media-folder', '-s',
         type=str,
@@ -2345,16 +2377,6 @@ def main():
         dest='itunes_media_folder',
         help='the media folder of itunes or apple music',
     )
-
-    parser.add_argument(
-        '--itunes-library-plist', '-2',
-        type=str,
-        required=False,
-        default=AudioProcessor.DEFAULT_ITUNES_LIBRARY_PLIST,
-        dest='itunes_library_plist',
-        help='the library plist file of itunes or apple music',
-    )
-    
     parser.add_argument(
         '--track-initial-id', '-6',
         type=int,
@@ -2363,7 +2385,6 @@ def main():
         dest='track_initial_id',
         help='initial id of tracks for itunes or apple music plist file',
     )
-    
     parser.add_argument(
         '--playlist-initial-id', '-8',
         type=int,
@@ -2397,7 +2418,6 @@ def main():
         itunes_options=[
             args.itunes_version_plist,
             args.itunes_media_folder,
-            args.itunes_library_plist,
             args.track_initial_id,
             args.playlist_initial_id,
         ],
@@ -2416,26 +2436,18 @@ def main():
         processor.format_properties()
     elif args.action == 'rename-audios':
         processor.rename_audios()
-    elif args.action == 'display-audios':
-        processor.display_audios()
-    elif args.action == 'export-artworks':
-        processor.export_artworks()
+    elif args.action == 'display':
+        processor.display()
+    elif args.action == 'derive-artworks':
+        processor.derive_artworks()
     elif args.action == 'organize-files':
         processor.organize_files()
-    elif args.action == 'export-itunes-plist':
-        processor.export_itunes_plist()
-    elif args.action == 'export-markdown':
-        pass
-    elif args.action == 'export-json':
-        pass
-    elif args.action == 'convert-qmc0':
-        pass
-    elif args.action == 'convert-kmx':
-        pass
-    elif args.action == 'convert-mp4':
-        pass
+    elif args.action == 'export':
+        processor.export()
+    elif args.action == 'convert':
+        processor.convert()
     else:
-        print('Nothing to do!')
+        print('Need a valid action parameter!')
 
 
 if __name__ == '__main__':

@@ -22,3 +22,6 @@ export-json, export-markdown 功能完善
 export 逻辑里，仿照 import 逻辑去配合 filesources 做
 FILENAME 作为属性数据源的逻辑还没有梳理
 load_json, load_markdown, load_plist
+对所有output函数针对不同类型给予不同的处理
+output table 样式整合到  所有export 洛基中
+convert-qmc0, convert-kmx, convert-mp4
