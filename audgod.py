@@ -2217,7 +2217,7 @@ class AudioGod(object):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='🎻 Processor for audios 🎸',
+        description='🎻 God for audios 🎸',
         epilog='🤔 Thinking ...',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
@@ -2225,7 +2225,7 @@ def main():
     parser.add_argument(
         '--version', '-v',
         action='version',
-        version='Audio Processor 1.0',
+        version='Audio God 1.0',
     )
     parser.add_argument(
         '--action', '-a',
@@ -2450,7 +2450,7 @@ def main():
 
     args = parser.parse_args()
 
-    processor = AudioGod(
+    god = AudioGod(
         source_file=args.source_file,
         ignored_file=args.ignored_file,
         audios_root=args.audios_root,
@@ -2483,23 +2483,23 @@ def main():
     )
 
     if args.action == 'format-notes':
-        processor.format_notes()
+        god.format_notes()
     elif args.action == 'fill-properties':
-        processor.fill_properties()
+        god.fill_properties()
     elif args.action == 'format-properties':
-        processor.format_properties()
+        god.format_properties()
     elif args.action == 'rename-audios':
-        processor.rename_audios()
+        god.rename_audios()
     elif args.action == 'display':
-        processor.display()
+        god.display()
     elif args.action == 'derive-artworks':
-        processor.derive_artworks()
+        god.derive_artworks()
     elif args.action == 'organize-files':
-        processor.organize_files()
+        god.organize_files()
     elif args.action == 'export':
-        processor.export()
+        god.export()
     elif args.action == 'convert':
-        processor.convert()
+        god.convert()
     else:
         print('Need a valid action parameter!')
 
