@@ -175,7 +175,7 @@ class AudioGod(object):
         PLIST = 'plist'
         NOTE = 'note'
         DISPLAY = 'display'
-    
+
     @unique
     class PropertySource(Enum):
         COMMAND = 'command'
@@ -1005,7 +1005,7 @@ class AudioGod(object):
             elif hasattr(audio_object.tag.file_info, field.value):
                 ret = getattr(audio_object.tag.file_info, field.value)
         return ret
-    
+
     def fetchx(self, audio_object, field,
                formatted=False, output_type=OutputType.NONE):
         ret = self.fetch(audio_object, field)
@@ -1090,7 +1090,7 @@ class AudioGod(object):
             _clauses = self.__import_plist()
         else:
             _clauses = self.__import_note()
-        
+
         self.valid_clauses.update({
             key: _clauses[key][0]
             for key in _clauses
@@ -1185,7 +1185,7 @@ class AudioGod(object):
                         continue
                     result[k] = v
                 self.process_clause(line, result, _clauses)
-        
+
         return _clauses
 
     def __load_audios(self):
@@ -2047,7 +2047,7 @@ class AudioGod(object):
 <key>${track_id}</key>
 <dict>
 	<key>Track ID</key><integer>${track_id}</integer>
-    ${properties}
+	${properties}
 	<key>Date Added</key><date>${date_added}</date>
 	<key>Kind</key><string>${kind}</string>
 	<key>Persistent ID</key><string>${persistent_id}</string>
@@ -2103,7 +2103,7 @@ class AudioGod(object):
                 _, track_id, _, _ = track.data
                 result += Template(_format_template('''
 <dict>
-    <key>Track ID</key><integer>${track_id}</integer>
+	<key>Track ID</key><integer>${track_id}</integer>
 </dict>
             ''')).safe_substitute(dict(
                 track_id=track_id,
@@ -2115,12 +2115,12 @@ class AudioGod(object):
 <dict>
 	<key>Name</key><string>${name}</string>
 	<key>Description</key><string>${description}</string>
-    <key>Master</key><${master}/>
+	<key>Master</key><${master}/>
 	<key>Playlist ID</key><integer>${playlist_id}</integer>
 	<key>Playlist Persistent ID</key><string>${playlist_persistent_id}</string>
-    <key>Visible</key><${visible}/>
-    <key>All Items</key><${show_all_items}/>
-    <key>Playlist Items</key>
+	<key>Visible</key><${visible}/>
+	<key>All Items</key><${show_all_items}/>
+	<key>Playlist Items</key>
 	<array>${tracks}</array>
 </dict>
             ''')).safe_substitute(dict(
@@ -2144,10 +2144,10 @@ class AudioGod(object):
 	<key>Playlist ID</key><integer>${playlist_id}</integer>
 	<key>Playlist Persistent ID</key><string>${playlist_persistent_id}</string>
 ''' + ('' if (not ppid) or (ppid == self.AUDIOS_TREE_ROOT_NID) else \
-'''    <key>Parent Persistent ID</key><string>${parent_persistent_id}</string>
-''') + '''    <key>All Items</key><${show_all_items}/>
-''' + ('' if node_type != self.AudiosTreeNodeType.FOLDER else '''    <key>Folder</key><${is_folder}/>
-''') + '''    <key>Playlist Items</key>
+'''\t<key>Parent Persistent ID</key><string>${parent_persistent_id}</string>
+''') + '''\t<key>All Items</key><${show_all_items}/>
+''' + ('' if node_type != self.AudiosTreeNodeType.FOLDER else '''\t<key>Folder</key><${is_folder}/>
+''') + '''\t<key>Playlist Items</key>
 	<array>${tracks}</array>
 </dict>
             ''')).safe_substitute(dict(
@@ -2179,18 +2179,18 @@ class AudioGod(object):
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="${plist_version}">
 <dict>
-    <key>Major Version</key><integer>${major_version}</integer>
-    <key>Minor Version</key><integer>${minor_version}</integer>
-    <key>Date</key><date>${created_date}</date>
-    <key>Application Version</key><string>${itunes_version}</string>
-    <key>Features</key><integer>${features}</integer>
-    <key>Show Content Ratings</key><${show_content_ratings}/>
-    <key>Music Folder</key><string>${itunes_media_folder}</string>
-    <key>Library Persistent ID</key><string>${library_persistent_id}</string>
-    <key>Tracks</key>
-    <dict>${tracks}</dict>
-    <key>Playlists</key>
-    <array>${playlists}</array>
+	<key>Major Version</key><integer>${major_version}</integer>
+	<key>Minor Version</key><integer>${minor_version}</integer>
+	<key>Date</key><date>${created_date}</date>
+	<key>Application Version</key><string>${itunes_version}</string>
+	<key>Features</key><integer>${features}</integer>
+	<key>Show Content Ratings</key><${show_content_ratings}/>
+	<key>Music Folder</key><string>${itunes_media_folder}</string>
+	<key>Library Persistent ID</key><string>${library_persistent_id}</string>
+	<key>Tracks</key>
+	<dict>${tracks}</dict>
+	<key>Playlists</key>
+	<array>${playlists}</array>
 </dict>
 </plist>
             ''')).safe_substitute(dict(
