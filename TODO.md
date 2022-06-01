@@ -26,3 +26,4 @@ load_json, load_markdown, load_plist
 output table 样式整合到  所有export 洛基中
 convert-qmc0, convert-kmx, convert-mp4
 plist 文件里的 kind， track_type，file_folder_count， library_folder_count 设置规则需要重新审视下
+所有 export ，都要支持指定 fields , 并统一参数和逻辑

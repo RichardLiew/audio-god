@@ -305,6 +305,14 @@ class AudioProcessor(object):
 
     ALL_FIELDS = [prop for prop in AudioProperty]
 
+    FIELDS = {
+        'default': DEFAULT_FIELDS,
+        'zip': ZIP_FIELDS,
+        'core': CORE_FIELDS,
+        'ituned': ITUNED_FIELDS,
+        'all': ALL_FIELDS,
+    }
+
 
     DEFAULT_ITUNES_VERSION_PLIST = '/System/Applications/Music.app/Contents/version.plist'
     DEFAULT_ITUNES_FOLDER = '{}/Music/iTunes'.format(os.environ['HOME'])
@@ -314,7 +322,7 @@ class AudioProcessor(object):
 
     AUDIOS_TREE_ROOT_TAG = '--root-tag--'
     AUDIOS_TREE_ROOT_NID = '--root-nid--'
-    
+
     AUDIO_DEFAULT_GROUPING = 'Default'
 
     DEFAULT_TRACK_INITIAL_ID = 601
@@ -396,14 +404,19 @@ class AudioProcessor(object):
         )
 
     def __resolve_fields(self, fields):
-        ret = list(filter(None, fields.split(',')))
-        try:
-            index = ret.index('cores')
-            ret = ret[0:index] + \
-                    [x.value for x in self.CORE_FIELDS] + \
-                    ret[index+1:]
-        except:
-            pass
+        fields_ = list(filter(None, fields.split(',')))
+        for key in self.FIELDS.keys():
+            try:
+                index = fields_.index(key)
+                fields_ = fields_[0:index] + \
+                        [x.value for x in self.FIELDS[key]] + \
+                        fields_[index+1:]
+            except:
+                pass
+        ret = []
+        for field in fields_:
+            if field not in ret:
+                ret.append(field)
         return ret
 
     def __rewrite_options(self, options):
@@ -416,9 +429,10 @@ class AudioProcessor(object):
         numbered = options[6]
         style = self.DisplayStyle(options[7])
 
-        if 'cores' in filter_.keys():
-            key = ','.join([x.value for x in self.CORE_FIELDS])
-            filter_[key] = filter_.pop('cores')
+        for key in self.FIELDS.keys():
+            if key in filter_.keys():
+                keyword = ','.join([x.value for x in self.FIELDS[key]])
+                filter_[keyword] = filter_.pop(key)
 
         return [
             page_number,
@@ -1950,41 +1964,62 @@ class AudioProcessor(object):
         def _pack_track(track) -> str:
             _, track_id, persistent_id, audio_object = track.data
 
+            sub_result = ''
             for field in self.ITUNED_FIELDS:
                 value = self.fetchx(audio_object, field)
                 value = self.output_functions[field.value](
-                    value, filetype=self.OutputType.PLIST,
+                    value, output_type=self.OutputType.PLIST,
                 )
+                sub_result += '<key>{key}</key>'.format(
+                    key=self.AUDIO_EN_PROPERTIES[field.value],
+                )
+                type_ = self.AUDIO_PROPERTY_TYPES[field.value]
+                if type_ != 'boolean':
+                    sub_result += '<{type}>{value}</{type}>'.format(
+                        value=value,
+                        type=self.AUDIO_PROPERTY_TYPES[field.value],
+                    )
+                elif value == 'true':
+                    sub_result += '<true/>'
+                sub_result += '\n'
 
-            title = self.fetchx(
-                audio_object, self.AudioProperty.TITLE, False, False,
-            )
-            album = self.fetchx(
-                audio_object, self.AudioProperty.ALBUM, False, False,
-            )
-            album_artist = self.fetchx(
-                audio_object, self.AudioProperty.ALBUM_ARTIST, False, False,
-            )
-            artist = self.fetchx(
-                audio_object, self.AudioProperty.ARTIST, False, False,
-            )
-            genre = self.fetchx(
-                audio_object, self.AudioProperty.GENRE, False, False,
-            )
-            size = self.fetchx(
-                audio_object, self.AudioProperty.SIZE, False, False,
-            )
-            duration = int(
-                round(self.fetchx(
-                    audio_object, self.AudioProperty.DURATION, False, False,
-                ), 3) * 1000,
-            )
-            bit_rate = self.fetchx(
-                audio_object, self.AudioProperty.BIT_RATE, False, False,
-            )
-            sample_freq = self.fetchx(
-                audio_object, self.AudioProperty.SAMPLE_FREQ, False, False,
-            )
+            ############################################################################################################
+            ############################################################################################################
+            ############################################################################################################
+            ############################################################################################################
+            #title = self.fetchx(
+            #    audio_object, self.AudioProperty.TITLE, False, False,
+            #)
+            #album = self.fetchx(
+            #    audio_object, self.AudioProperty.ALBUM, False, False,
+            #)
+            #album_artist = self.fetchx(
+            #    audio_object, self.AudioProperty.ALBUM_ARTIST, False, False,
+            #)
+            #artist = self.fetchx(
+            #    audio_object, self.AudioProperty.ARTIST, False, False,
+            #)
+            #genre = self.fetchx(
+            #    audio_object, self.AudioProperty.GENRE, False, False,
+            #)
+            #size = self.fetchx(
+            #    audio_object, self.AudioProperty.SIZE, False, False,
+            #)
+            #duration = int(
+            #    round(self.fetchx(
+            #        audio_object, self.AudioProperty.DURATION, False, False,
+            #    ), 3) * 1000,
+            #)
+            #bit_rate = self.fetchx(
+            #    audio_object, self.AudioProperty.BIT_RATE, False, False,
+            #)
+            #sample_freq = self.fetchx(
+            #    audio_object, self.AudioProperty.SAMPLE_FREQ, False, False,
+            #)
+            ############################################################################################################
+            ############################################################################################################
+            ############################################################################################################
+            ############################################################################################################
 
             result = Template(_format_template('''
 <key>${track_id}</key>
@@ -1993,7 +2028,7 @@ class AudioProcessor(object):
 	<key>Name</key><string>${name}</string>
 	<key>Album</key><string>${album}</string>
     <key>Album Artist</key><string>${album_artist}</string>
-	<key>Artist
+	<key>Artist</key><string>${artist}</string>
 	<key>Genre</key><string>${genre}</string>
 	<key>Size</key><integer>${size}</integer>
 	<key>Total Time</key><integer>${total_time}</integer>
@@ -2266,9 +2301,9 @@ def main():
         '--fields', '-u',
         type=str,
         required=False,
-        default='cores',
+        default='core',
         dest='fields',
-        help='fields of audio to process, all fields: [{}], cores: [{}]'.format(
+        help='fields of audio to process, all fields: [{}], core: [{}]'.format(
             ' '.join([x.value for x in AudioProcessor.ALL_FIELDS]),
             ' '.join([x.value for x in AudioProcessor.CORE_FIELDS]),
         ),
