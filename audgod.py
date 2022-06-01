@@ -151,7 +151,7 @@ class TreeX(Tree):
                 )
 
 
-class AudioProcessor(object):
+class AudioGod(object):
     DIV_CHAR = '#'
     ORI_DIV_CHAR = '-'
 
@@ -395,7 +395,7 @@ class AudioProcessor(object):
         self.__display_options = self.__rewrite_options(display_options)
         self.__itunes_options = itunes_options
         self.__artwork_path = artwork_path
-        self.__organize_type = AudioProcessor.OrganizeType(organize_type)
+        self.__organize_type = AudioGod.OrganizeType(organize_type)
         self.__filename_pattern = filename_pattern
         self.__output_file = output_file
         self.__logger = logging.getLogger()
@@ -963,22 +963,22 @@ class AudioProcessor(object):
     # Use AudioProperty type field here, you won't to check field parameter.
     def fetch(self, audio_object, field):
         ret, filename = None, audio_object.tag.file_info.name
-        if field == AudioProcessor.AudioProperty.GENRE:
+        if field == AudioGod.AudioProperty.GENRE:
             if audio_object.tag.genre is not None:
                 ret = audio_object.tag.genre.name
-        elif field == AudioProcessor.AudioProperty.TRACK_NUM:
+        elif field == AudioGod.AudioProperty.TRACK_NUM:
             ret = audio_object.tag.track_num
-        elif field == AudioProcessor.AudioProperty.DURATION:
+        elif field == AudioGod.AudioProperty.DURATION:
             ret = audio_object.info.time_secs
-        elif field == AudioProcessor.AudioProperty.MTIME:
+        elif field == AudioGod.AudioProperty.MTIME:
             ret = audio_object.tag.file_info.mtime
-        elif field == AudioProcessor.AudioProperty.SIZE:
+        elif field == AudioGod.AudioProperty.SIZE:
             ret = audio_object.info.size_bytes
-        elif field == AudioProcessor.AudioProperty.NAME:
+        elif field == AudioGod.AudioProperty.NAME:
             ret = os.path.basename(filename)
-        elif field == AudioProcessor.AudioProperty.PATH:
+        elif field == AudioGod.AudioProperty.PATH:
             ret = os.path.dirname(filename)
-        elif field == AudioProcessor.AudioProperty.COMMENTS:
+        elif field == AudioGod.AudioProperty.COMMENTS:
             ret = audio_object.tag.comments
         elif field in self.ZIP_FIELDS:
             comments = audio_object.tag.comments
@@ -988,12 +988,12 @@ class AudioProcessor(object):
                     ret = json.loads(comments).get(field.value, None)
                 except:
                     pass
-            if field == AudioProcessor.AudioProperty.ARTWORK:
+            if field == AudioGod.AudioProperty.ARTWORK:
                 if len(audio_object.tag.images) == 0 and not ret:
                     ret = None
                 else:
                     ret = (len(audio_object.tag.images), ret if ret else '')
-            #elif field == AudioProcessor.AudioProperty.GROUPING:
+            #elif field == AudioGod.AudioProperty.GROUPING:
             #    if not ret:
             #        ret = self.AUDIO_DEFAULT_GROUPING
         else:
@@ -1335,14 +1335,14 @@ class AudioProcessor(object):
         name = name.strip()
         if not name:
             return False
-        if name.count(AudioProcessor.DIV_CHAR) > 1 or not name:
+        if name.count(AudioGod.DIV_CHAR) > 1 or not name:
             return False
-        if name.count(AudioProcessor.DIV_CHAR) == 1 and (name[0] == AudioProcessor.DIV_CHAR or name[-1] == AudioProcessor.DIV_CHAR):
+        if name.count(AudioGod.DIV_CHAR) == 1 and (name[0] == AudioGod.DIV_CHAR or name[-1] == AudioGod.DIV_CHAR):
             return False
-        if name.count(AudioProcessor.DIV_CHAR) == 0:
-            if name.count(AudioProcessor.ORI_DIV_CHAR) != 1:
+        if name.count(AudioGod.DIV_CHAR) == 0:
+            if name.count(AudioGod.ORI_DIV_CHAR) != 1:
                 return False
-            if name[0] == AudioProcessor.ORI_DIV_CHAR or name[-1] == AudioProcessor.ORI_DIV_CHAR:
+            if name[0] == AudioGod.ORI_DIV_CHAR or name[-1] == AudioGod.ORI_DIV_CHAR:
                 return False
         return True
 
@@ -1589,7 +1589,7 @@ class AudioProcessor(object):
             fields_to_show = options[4] if options[4] else []
             align_ = options[5] if options[5] else {}
             numbered = options[6]
-            style = AudioProcessor.DisplayStyle(options[7])
+            style = AudioGod.DisplayStyle(options[7])
 
             cn_fields_to_show = [dict(pair_fields)[x] for x in fields_to_show]
             fields = [x[0] for x in pair_fields]
@@ -1760,7 +1760,7 @@ class AudioProcessor(object):
             )
 
             def _wrap_table(table_string, start=1, numbered=True,
-                            style=AudioProcessor.DisplayStyle.TABLED):
+                            style=AudioGod.DisplayStyle.TABLED):
 
                 def _xlen_(s):
                     length = len(s)
@@ -1864,7 +1864,7 @@ class AudioProcessor(object):
                         )
                         index += 1
 
-                if style != AudioProcessor.DisplayStyle.TABLED:
+                if style != AudioGod.DisplayStyle.TABLED:
                     beg = result.find('|\n+', 0)
                     end = result.find('|\n+', beg+3)
                     result = result[:beg+2] + result[end+2:]
@@ -1874,7 +1874,7 @@ class AudioProcessor(object):
                     result = re.sub(r'\|[ \t\n]{0,}$', r'\n', result)
                     result = re.sub(r'\|\n\|', r'\n', result)
 
-                if style == AudioProcessor.DisplayStyle.VERTICAL:
+                if style == AudioGod.DisplayStyle.VERTICAL:
                     _result= result
                     result = '\n'
                     result += '#' * 78
@@ -2295,7 +2295,7 @@ def main():
         '--extensions', '-e',
         type=str,
         required=False,
-        default=','.join(AudioProcessor.DEFAULT_EXTENSIONS),
+        default=','.join(AudioGod.DEFAULT_EXTENSIONS),
         dest='extensions',
         help='valid extensions of audios',
     )
@@ -2306,8 +2306,8 @@ def main():
         default='core',
         dest='fields',
         help='fields of audio to process, all fields: [{}], core: [{}]'.format(
-            ' '.join([x.value for x in AudioProcessor.ALL_FIELDS]),
-            ' '.join([x.value for x in AudioProcessor.CORE_FIELDS]),
+            ' '.join([x.value for x in AudioGod.ALL_FIELDS]),
+            ' '.join([x.value for x in AudioGod.CORE_FIELDS]),
         ),
     )
     parser.add_argument(
@@ -2359,18 +2359,18 @@ def main():
     parser.add_argument(
         '--style', '-w',
         type=str,
-        choices=[x.value for x in AudioProcessor.DisplayStyle],
+        choices=[x.value for x in AudioGod.DisplayStyle],
         required=False,
-        default=AudioProcessor.DisplayStyle.TABLED.value,
+        default=AudioGod.DisplayStyle.TABLED.value,
         dest='style',
         help='display style for audios',
     )
     parser.add_argument(
         '--data-format', '-t',
         type=str,
-        choices=[x.value for x in AudioProcessor.DataFormat],
+        choices=[x.value for x in AudioGod.DataFormat],
         required=False,
-        default=AudioProcessor.DataFormat.OUTPUTTED.value,
+        default=AudioGod.DataFormat.OUTPUTTED.value,
         dest='data_format',
         help='the data format for audios to display',
     )
@@ -2394,16 +2394,16 @@ def main():
         '--filename-pattern', '-m',
         type=str,
         required=False,
-        default='%{artist} ' + AudioProcessor.DIV_CHAR + ' %{title}',
+        default='%{artist} ' + AudioGod.DIV_CHAR + ' %{title}',
         dest='filename_pattern',
         help='filename pattern to rename audios',
     )
     parser.add_argument(
         '--organize-type', '-g',
         type=str,
-        choices=[x.value for x in AudioProcessor.OrganizeType],
+        choices=[x.value for x in AudioGod.OrganizeType],
         required=False,
-        default=AudioProcessor.OrganizeType.ITUNED.value,
+        default=AudioGod.OrganizeType.ITUNED.value,
         dest='organize_type',
         help='type of file organization',
     )
@@ -2419,7 +2419,7 @@ def main():
         '--itunes-version-plist', '-q',
         type=str,
         required=False,
-        default=AudioProcessor.DEFAULT_ITUNES_VERSION_PLIST,
+        default=AudioGod.DEFAULT_ITUNES_VERSION_PLIST,
         dest='itunes_version_plist',
         help='the version plist file of itunes or apple music',
     )
@@ -2427,7 +2427,7 @@ def main():
         '--itunes-media-folder', '-s',
         type=str,
         required=False,
-        default=AudioProcessor.DEFAULT_ITUNES_MEDIA_FOLDER,
+        default=AudioGod.DEFAULT_ITUNES_MEDIA_FOLDER,
         dest='itunes_media_folder',
         help='the media folder of itunes or apple music',
     )
@@ -2435,7 +2435,7 @@ def main():
         '--track-initial-id', '-6',
         type=int,
         required=False,
-        default=AudioProcessor.DEFAULT_TRACK_INITIAL_ID,
+        default=AudioGod.DEFAULT_TRACK_INITIAL_ID,
         dest='track_initial_id',
         help='initial id of tracks for itunes or apple music plist file',
     )
@@ -2443,14 +2443,14 @@ def main():
         '--playlist-initial-id', '-8',
         type=int,
         required=False,
-        default=AudioProcessor.DEFAULT_PLAYLIST_INITIAL_ID,
+        default=AudioGod.DEFAULT_PLAYLIST_INITIAL_ID,
         dest='playlist_initial_id',
         help='initial id of playlists for itunes or apple music plist file',
     )
 
     args = parser.parse_args()
 
-    processor = AudioProcessor(
+    processor = AudioGod(
         source_file=args.source_file,
         ignored_file=args.ignored_file,
         audios_root=args.audios_root,
