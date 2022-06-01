@@ -385,7 +385,9 @@ class AudioProcessor(object):
         }
         self.__output_functions = {
             field.value: getattr(
-                self, 'output_{}'.format(field.value), lambda x: x,
+                self,
+                'output_{}'.format(field.value),
+                lambda x, y=self.OutputType.NONE: x,
             )
             for field in self.ALL_FIELDS
         }
@@ -712,52 +714,103 @@ class AudioProcessor(object):
         return ret
 
     @classmethod
-    def output_genre(cls, genre):
-        if genre is None:
-            return None
-        if isinstance(genre, str):
-            return genre
-        return genre.name
-
-    @classmethod
-    def output_bit_rate(cls, bit_rate):
-        if bit_rate is None:
-            return None
-        if isinstance(bit_rate, tuple):
-            bit_rate = bit_rate[1]
-        return '{} kb/s'.format(bit_rate)
-
-    @classmethod
-    def output_comments(cls, comments):
-        if comments is None:
-            return None
-        if isinstance(comments, str):
-            return comments
-        ret = ''
-        for i in range(len(comments)):
-            ret += comments[i].text
-            if i < len(comments) - 1:
-                ret += '\n'
+    def output_title(cls, title, output_type=OutputType.NONE):
+        if not title:
+            return ''
+        ret = title
+        if output_type == cls.OutputType.PLIST:
+            ret = cls.escape_characters(ret)
         return ret
 
     @classmethod
-    def output_track_num(cls, track_num):
-        if track_num is None:
-            return None
-        if isinstance(track_num, str):
-            return track_num
-        return str(track_num)
+    def output_album(cls, album, output_type=OutputType.NONE):
+        if not album:
+            return ''
+        ret = album
+        if output_type == cls.OutputType.PLIST:
+            ret = cls.escape_characters(ret)
+        return ret
 
     @classmethod
-    def output_artwork(cls, artwork):
-        if artwork is None:
-            return None
+    def output_album_artist(cls, album_artist, output_type=OutputType.NONE):
+        if not album_artist:
+            return ''
+        ret = album_artist
+        if output_type == cls.OutputType.PLIST:
+            ret = cls.escape_characters(ret)
+        return ret
+
+    @classmethod
+    def output_artist(cls, artist, output_type=OutputType.NONE):
+        if not artist:
+            return ''
+        ret = artist
+        if output_type == cls.OutputType.PLIST:
+            ret = cls.escape_characters(ret)
+        return ret
+
+    @classmethod
+    def output_genre(cls, genre, output_type=OutputType.NONE):
+        if not genre:
+            return ''
+        ret = genre
+        if isinstance(genre, Genre):
+            ret = genre.name
+        if output_type == cls.OutputType.PLIST:
+            ret = cls.escape_characters(ret)
+        return ret
+
+    @classmethod
+    def output_bit_rate(cls, bit_rate, output_type=OutputType.NONE):
+        if not bit_rate:
+            return ''
+        if isinstance(bit_rate, tuple):
+            bit_rate = bit_rate[1]
+        if output_type in [cls.OutputType.NONE, cls.OutputType.PLIST]:
+            return bit_rate
+        return '{} kb/s'.format(bit_rate)
+
+    @classmethod
+    def output_sample_freq(cls, sample_freq, output_type=OutputType.NONE):
+        if not sample_freq:
+            return ''
+        return sample_freq
+
+    @classmethod
+    def output_comments(cls, comments, output_type=OutputType.NONE):
+        if not comments:
+            return ''
+        if isinstance(comments, CommentsAccessor):
+            ret = ''
+            for i in range(len(comments)):
+                ret += comments[i].text
+                if i < len(comments) - 1:
+                    ret += '\n'
+            return ret
+        return comments
+
+    @classmethod
+    def output_track_num(cls, track_num, output_type=OutputType.NONE):
+        if not track_num:
+            return ''
+        if isinstance(track_num, tuple):
+            return str(track_num)
+        return track_num
+
+    @classmethod
+    def output_artwork(cls, artwork, output_type=OutputType.NONE):
+        if not artwork:
+            return ''
         return artwork
 
     @classmethod
-    def output_duration(cls, duration):
-        if duration is None:
-            return None
+    def output_duration(cls, duration, output_type=OutputType.NONE):
+        if not duration:
+            duration = 0.0
+        if output_type == cls.OutputType.NONE:
+            return duration
+        elif output_type == cls.OutputType.PLIST:
+            return int(round(duration, 3) * 1000)
         s = duration
         m, s = divmod(s, 60)
         h, m = divmod(m, 60)
@@ -767,9 +820,12 @@ class AudioProcessor(object):
         )
 
     @classmethod
-    def output_size(cls, size, suffix='B'):
-        if size is None:
-            return None
+    def output_size(cls, size, output_type=OutputType.NONE):
+        if not size:
+            return '0'
+        if output_type in [cls.OutputType.NONE, cls.OutputType.PLIST]:
+            return size
+        suffix='B'
         for unit in ['','K','M','G','T','P','E','Z']:
             if abs(size) < 1024.0:
                 return "%3.1f%s%s" % (size, unit, suffix)
@@ -777,9 +833,11 @@ class AudioProcessor(object):
         return "%.1f%s%s" % (size, 'Y', suffix)
 
     @classmethod
-    def output_mtime(cls, mtime):
-        if mtime is None:
-            return None
+    def output_mtime(cls, mtime, output_type=OutputType.NONE):
+        if not mtime:
+            return ''
+        if output_type == cls.OutputType.PLIST:
+            return cls.format_utc(mtime)
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(mtime))
 
     def __fetch_from_outside(self, audio, field):
@@ -908,9 +966,6 @@ class AudioProcessor(object):
         if field == AudioProcessor.AudioProperty.GENRE:
             if audio_object.tag.genre is not None:
                 ret = audio_object.tag.genre.name
-        elif field == AudioProcessor.AudioProperty.BIT_RATE:
-            if isinstance(audio_object.info.bit_rate, tuple):
-                ret = audio_object.info.bit_rate[1]
         elif field == AudioProcessor.AudioProperty.TRACK_NUM:
             ret = audio_object.tag.track_num
         elif field == AudioProcessor.AudioProperty.DURATION:
@@ -1907,12 +1962,12 @@ class AudioProcessor(object):
         pass
 
     @staticmethod
-    def format_time(timestamp) -> str:
+    def format_utc(timestamp) -> str:
         return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%SZ')
 
     @classmethod
     def current_time(cls) -> str:
-        return cls.format_time(time.time())
+        return cls.format_utc(time.time())
 
     @staticmethod
     def encode(src) -> str:
@@ -1964,77 +2019,33 @@ class AudioProcessor(object):
         def _pack_track(track) -> str:
             _, track_id, persistent_id, audio_object = track.data
 
-            sub_result = ''
-            for field in self.ITUNED_FIELDS:
-                value = self.fetchx(audio_object, field)
-                value = self.output_functions[field.value](
-                    value, output_type=self.OutputType.PLIST,
-                )
-                sub_result += '<key>{key}</key>'.format(
-                    key=self.AUDIO_EN_PROPERTIES[field.value],
-                )
-                type_ = self.AUDIO_PROPERTY_TYPES[field.value]
-                if type_ != 'boolean':
-                    sub_result += '<{type}>{value}</{type}>'.format(
-                        value=value,
-                        type=self.AUDIO_PROPERTY_TYPES[field.value],
+            def _pack_properties() -> str:
+                ret = ''
+                for field in self.fields:
+                    ret += ' ' * 4
+                    value = self.fetchx(audio_object, field)
+                    value = self.output_functions[field.value](
+                        value, output_type=self.OutputType.PLIST,
                     )
-                elif value == 'true':
-                    sub_result += '<true/>'
-                sub_result += '\n'
-
-            ############################################################################################################
-            ############################################################################################################
-            ############################################################################################################
-            ############################################################################################################
-            #title = self.fetchx(
-            #    audio_object, self.AudioProperty.TITLE, False, False,
-            #)
-            #album = self.fetchx(
-            #    audio_object, self.AudioProperty.ALBUM, False, False,
-            #)
-            #album_artist = self.fetchx(
-            #    audio_object, self.AudioProperty.ALBUM_ARTIST, False, False,
-            #)
-            #artist = self.fetchx(
-            #    audio_object, self.AudioProperty.ARTIST, False, False,
-            #)
-            #genre = self.fetchx(
-            #    audio_object, self.AudioProperty.GENRE, False, False,
-            #)
-            #size = self.fetchx(
-            #    audio_object, self.AudioProperty.SIZE, False, False,
-            #)
-            #duration = int(
-            #    round(self.fetchx(
-            #        audio_object, self.AudioProperty.DURATION, False, False,
-            #    ), 3) * 1000,
-            #)
-            #bit_rate = self.fetchx(
-            #    audio_object, self.AudioProperty.BIT_RATE, False, False,
-            #)
-            #sample_freq = self.fetchx(
-            #    audio_object, self.AudioProperty.SAMPLE_FREQ, False, False,
-            #)
-            ############################################################################################################
-            ############################################################################################################
-            ############################################################################################################
-            ############################################################################################################
+                    ret += '<key>{key}</key>'.format(
+                        key=self.AUDIO_EN_PROPERTIES[field.value],
+                    )
+                    type_ = self.AUDIO_PROPERTY_TYPES[field.value]
+                    if type_ != 'boolean':
+                        ret += '<{type}>{value}</{type}>'.format(
+                            value=value,
+                            type=self.AUDIO_PROPERTY_TYPES[field.value],
+                        )
+                    elif value == 'true':
+                        ret += '<true/>'
+                    ret += '\n'
+                return ret.strip()
 
             result = Template(_format_template('''
 <key>${track_id}</key>
 <dict>
 	<key>Track ID</key><integer>${track_id}</integer>
-	<key>Name</key><string>${name}</string>
-	<key>Album</key><string>${album}</string>
-    <key>Album Artist</key><string>${album_artist}</string>
-	<key>Artist</key><string>${artist}</string>
-	<key>Genre</key><string>${genre}</string>
-	<key>Size</key><integer>${size}</integer>
-	<key>Total Time</key><integer>${total_time}</integer>
-	<key>Date Modified</key><date>${date_modified}</date>
-	<key>Bit Rate</key><integer>${bit_rate}</integer>
-	<key>Sample Rate</key><integer>${sample_rate}</integer>
+    ${properties}
 	<key>Date Added</key><date>${date_added}</date>
 	<key>Kind</key><string>${kind}</string>
 	<key>Persistent ID</key><string>${persistent_id}</string>
@@ -2045,16 +2056,7 @@ class AudioProcessor(object):
 </dict>
             ''')).safe_substitute(dict(
                 track_id=track_id,
-                name=self.escape_characters(title),
-                album=self.escape_characters(album),
-                album_artist=self.escape_characters(album_artist),
-                artist=self.escape_characters(artist),
-                genre=self.escape_characters(genre),
-                size=size,
-                total_time=duration,
-                date_modified=current_time,
-                bit_rate=bit_rate,
-                sample_rate=sample_freq,
+                properties=_pack_properties(),
                 date_added=self.current_time(),
                 kind='MPEG audio file',
                 persistent_id=persistent_id,
