@@ -301,6 +301,7 @@ class AudioGod(object):
         AudioProperty.DURATION,
         AudioProperty.BIT_RATE,
         AudioProperty.SAMPLE_FREQ,
+        AudioProperty.MTIME,
     ]
 
     ALL_FIELDS = [prop for prop in AudioProperty]
@@ -1260,7 +1261,7 @@ class AudioGod(object):
     def __fill_audios_tree(self) -> None:
         self.__load_audios()
 
-        _, _, _, track_initial_id, playlist_initial_id = self.itunes_options
+        _, _, track_initial_id, playlist_initial_id = self.itunes_options
         track_id, audios = track_initial_id, self.concerned_audios
 
         for audio in audios:
@@ -1980,16 +1981,17 @@ class AudioGod(object):
             return ret
         return '{}/'.format(ret)
 
-    def escape_characters(self, content) -> str:
+    @staticmethod
+    def escape_characters(content):
         if not content:
             return content
-        if not isinstance(content, str):
-            self.logger.fatal('<{}> not string type!'.format(content))
-        return content.replace('&', '&#38;')\
+        if isinstance(content, str):
+            return content.replace('&', '&#38;')\
                       .replace('<', '&#60;')\
                       .replace('>', '&#62;')\
                       .replace("'", '&#39;')\
                       .replace('"', '&#34;')
+        return content
 
     def __export_plist(self):
         itunes_version_plist, itunes_media_folder, _, _ = self.itunes_options
@@ -2022,7 +2024,7 @@ class AudioGod(object):
             def _pack_properties() -> str:
                 ret = ''
                 for field in self.fields:
-                    ret += ' ' * 4
+                    ret += '\t'
                     value = self.fetchx(audio_object, field)
                     value = self.output_functions[field.value](
                         value, output_type=self.OutputType.PLIST,
