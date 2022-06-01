@@ -2305,9 +2305,11 @@ def main():
         required=False,
         default='core',
         dest='fields',
-        help='fields of audio to process, all fields: [{}], core: [{}]'.format(
-            ' '.join([x.value for x in AudioGod.ALL_FIELDS]),
-            ' '.join([x.value for x in AudioGod.CORE_FIELDS]),
+        help='fields of audio to process: {}'.format(
+            '; '.join([
+                '({}: {})'.format(key, ','.join([f.value for f in fields]))
+                for key, fields in AudioGod.FIELDS.items()
+            ]),
         ),
     )
     parser.add_argument(
