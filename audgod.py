@@ -2217,7 +2217,7 @@ class AudioGod(object):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='🎻 God for audios 🎸',
+        description='🎻 God of audios 🎸',
         epilog='🤔 Thinking ...',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
