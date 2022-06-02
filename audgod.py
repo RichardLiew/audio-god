@@ -1603,7 +1603,7 @@ class AudioGod(object):
                     for _field in filter(None, _fields.split(',')):
                         _field = _field.strip()
                         if _field:
-                            align_[_field] = (h if h else 'l', v if v else 'c')
+                            align_[_field] = (h if h else 'l', v if v else 'm')
 
             swaps = []
             for i, field in enumerate(fields_to_show):
@@ -1626,7 +1626,7 @@ class AudioGod(object):
 
             for field in table.field_names:
                 table.align[field] = 'l'
-                table.valign[field] = 'c'
+                table.valign[field] = 'm'
                 if align_:
                     if field in align_.keys():
                         table.align[field], table.valign[field] = align_[field]
@@ -2220,7 +2220,7 @@ class AudioGod(object):
 def usage():
     return Template('''
 
-Common commands show below:
+General commands show below:
 
     1. Show help information:
         ${cmd} -h/--help
@@ -2238,18 +2238,18 @@ Common commands show below:
         ${cmd} \\
             --action=fill-properties \\
             --audios-source=${music} \\
-            --extensions=mp3 \\
+            --extensions=mp3,aac \\
             --recursive \\
             --ignored-file=${local}/ignored.txt \\
             --source-file=${local}/notes.txt \\
             --audios-root=${music} \\
             --properties=\\'{ \\
                 "default": \\{ \\
-                    "sources": ["command", "file", "directory", "filename"], \\
+                    "sources": ["command"], #(note: command/file/directory/filename) \\
                     "value": "" \\
                 \\}, \\
                 "genre": \\{ \\
-                    "sources": ["command", "file", "directory", "filename"], \\
+                    "sources": ["command", "file"], #(note: command/file/directory/filename) \\
                     "value": "Pop" \\
                 \\} \\
             \\}' \\
@@ -2259,7 +2259,7 @@ Common commands show below:
         ${cmd} \\
             --action=format-properties \\
             --audios-source=${music} \\
-            --extensions=mp3 \\
+            --extensions=mp3,aac \\
             --recursive \\
             --ignored-file=${local}/ignored.txt \\
             --log-level=DEBUG
@@ -2268,7 +2268,7 @@ Common commands show below:
         ${cmd} \\
             --action=rename-audios \\
             --audios-source=${music} \\
-            --extensions=mp3 \\
+            --extensions=mp3,aac \\
             --recursive \\
             --ignored-file=${local}/ignored.txt \\
             --filename-pattern="@{artist} # @{title}" \\
@@ -2278,7 +2278,7 @@ Common commands show below:
         ${cmd} \\
             --action=organize-files \\
             --audios-source=${music} \\
-            --extensions=mp3 \\
+            --extensions=mp3,aac \\
             --recursive \\
             --ignored-file=${local}/ignored.txt \\
             --organize-type=grouped \\
@@ -2288,7 +2288,7 @@ Common commands show below:
         ${cmd} \\
             --action=derive-artworks \\
             --audios-source=${music} \\
-            --extensions=mp3 \\
+            --extensions=mp3,aac \\
             --recursive \\
             --ignored-file=${local}/ignored.txt \\
             --artwork-path=${music}/artworks \\
@@ -2298,7 +2298,7 @@ Common commands show below:
         ${cmd} \\
             --action=display \\
             --audios-source=${music} \\
-            --extensions=mp3 \\
+            --extensions=mp3,aac \\
             --recursive \\
             --ignored-file=${local}/ignored.txt \\
             --fields=core \\
@@ -2307,16 +2307,15 @@ Common commands show below:
             --sort='[["title,artist", true], ["genre", false]]' \\
             --filter='\\{ \\
                 "_options": \\{ \\
-                    "relation": "and" \\
+                    "relation": "and" #(note: and/or) \\
                 \\}, \\
                 "title,core": \\{ \\
-                    "function": "search", \\
+                    "function": "search", #(note: equal/search/empty) \\
                     "parameters": ["a", true, false] \\
                 \\} \\
             \\}' \\
             --align='\\{ \\
-                "title,artist": \\{ \\
-                \\} \\
+                "title,artist": "l:m" #(note: align=l/c/r, valign=t/m/b) \\
             \\}' \\
             --style=tabled \\
             --data-format=outputted \\
@@ -2328,7 +2327,7 @@ Common commands show below:
         ${cmd} \\
             --action=export \\
             --audios-source=${music} \\
-            --extensions=mp3 \\
+            --extensions=mp3,aac \\
             --recursive \\
             --ignored-file=${local}/ignored.txt \\
             --fields=ituned \\
@@ -2343,7 +2342,7 @@ Common commands show below:
         ${cmd} \\
             --action=export \\
             --audios-source=${music} \\
-            --extensions=mp3 \\
+            --extensions=mp3,aac \\
             --recursive \\
             --ignored-file=${local}/ignored.txt \\
             --fields=all \\
@@ -2354,14 +2353,14 @@ Common commands show below:
         ${cmd} \\
             --action=convert \\
             --audios-source=${music} \\
-            --extensions=mp3 \\
+            --extensions=mp3,aac \\
             --recursive \\
             --ignored-file=${local}/ignored.txt \\
             --log-level=DEBUG
 
 ------------------------------------------------------------------------------
 
-Common steps:
+General steps:
     No.1: Download songs, and make sure that file named with "artist-title";
     No.2: Add detail of songs to notes and grouped;
     No.3: Format notes;
@@ -2579,6 +2578,16 @@ def main():
     parser.add_argument(
         '--log-level', '-l',
         type=str,
+        choices=[
+            'NOTSET',
+            'DEBUG',
+            'INFO',
+            'WARN',
+            'WARNING',
+            'ERROR',
+            'FATAL',
+            'CRITICAL',
+        ],
         required=False,
         default='DEBUG',
         dest='log_level',
