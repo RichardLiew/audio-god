@@ -2314,7 +2314,10 @@ Common commands show below:
                     "parameters": ["a", true, false] \\
                 \\} \\
             \\}' \\
-            --align= \\
+            --align='\\{ \\
+                "title,artist": \\{ \\
+                \\} \\
+            \\}' \\
             --style=tabled \\
             --data-format=outputted \\
             --numbered \\
