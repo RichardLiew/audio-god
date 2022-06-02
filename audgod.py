@@ -1597,8 +1597,7 @@ class AudioGod(object):
             fields = [x[0] for x in pair_fields]
 
             if align_:
-                _keys = [k for k in align_.keys()]
-                for _fields in _keys:
+                for _fields in align_.keys():
                     h, v = align_[_fields].split(':')
                     h, v = h.strip(), v.strip()
                     for _field in filter(None, _fields.split(',')):
