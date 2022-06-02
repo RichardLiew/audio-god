@@ -18,3 +18,25 @@ export-json, export-markdown, export_note 功能完善
 import_json, import_markdown, import_plist
 convert-qmc0, convert-kmx, convert-mp4
 plist 文件里的 kind，track_type，file_folder_count，library_folder_count 设置规则需要重新审视下
+看看 import 和 export 逻辑里可以做到增量更新吗
+
+
+
+
+
+
+第一步：下载曲目，并保证文件名是按照“歌手-曲名”命名的
+第二步：将曲目详细信息添加到 Notes 文件中，并做好分类
+第三步：format-notes
+第四步：fill-properties
+第五步：format-properties
+第六步：rename-audios
+第七步：organize-files
+第八步：export plist, markdown
+
+
+
+额外功能：
+1. derive-artworks
+2. convert
+3. display
