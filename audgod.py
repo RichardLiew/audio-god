@@ -2576,24 +2576,6 @@ def main():
         help='type of file organization',
     )
     parser.add_argument(
-        '--log-level', '-l',
-        type=str,
-        choices=[
-            'NOTSET',
-            'DEBUG',
-            'INFO',
-            'WARN',
-            'WARNING',
-            'ERROR',
-            'FATAL',
-            'CRITICAL',
-        ],
-        required=False,
-        default='DEBUG',
-        dest='log_level',
-        help='level of logger',
-    )
-    parser.add_argument(
         '--itunes-version-plist', '-q',
         type=str,
         required=False,
@@ -2624,6 +2606,24 @@ def main():
         default=AudioGod.DEFAULT_PLAYLIST_INITIAL_ID,
         dest='playlist_initial_id',
         help='initial id of playlists for itunes or apple music plist file',
+    )
+    parser.add_argument(
+        '--log-level', '-l',
+        type=str,
+        choices=[
+            'NOTSET',
+            'DEBUG',
+            'INFO',
+            'WARN',
+            'WARNING',
+            'ERROR',
+            'FATAL',
+            'CRITICAL',
+        ],
+        required=False,
+        default='DEBUG',
+        dest='log_level',
+        help='level of logger',
     )
 
     args = parser.parse_args()
