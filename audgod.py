@@ -153,6 +153,10 @@ class TreeX(Tree):
 
 
 class AudioGod(object):
+    AVATAR = 'Audio God'
+    VERSION = '1.0'
+
+
     DIV_CHAR = '#'
     ORI_DIV_CHAR = '-'
 
@@ -448,6 +452,14 @@ class AudioGod(object):
             numbered,
             style,
         ]
+
+    @property
+    def avatar(self):
+        return self.AVATAR
+
+    @property
+    def version(self):
+        return self.VERSION
 
     @property
     def logger(self):
@@ -2243,7 +2255,7 @@ General commands show below:
             --ignored-file=${local}/ignored.txt \\
             --source-file=${local}/notes.txt \\
             --audios-root=${music} \\
-            --properties=\\'{ \\
+            --properties='\\{ \\
                 "default": \\{ \\
                     "sources": ["command"], #(note: command/file/directory/filename) \\
                     "value": "" \\
@@ -2382,7 +2394,7 @@ General steps:
 def main():
     parser = argparse.ArgumentParser(
         prog=sys.argv[0],
-        usage=usage(),
+        usage='Use "--usage/-u" option to see details.',
         description='🎻 God of audios 🎸',
         epilog='🤔 Thinking ...',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -2391,7 +2403,16 @@ def main():
     parser.add_argument(
         '--version', '-v',
         action='version',
-        version='Audio God 1.0',
+        version='{avatar} {version}'.format(
+            avatar=AudioGod.AVATAR,
+            version=AudioGod.VERSION,
+        ),
+    )
+    parser.add_argument(
+        '--usage', '-u',
+        action='store_true',
+        dest='usage',
+        help='details of usage',
     )
     parser.add_argument(
         '--action', '-a',
@@ -2407,7 +2428,8 @@ def main():
             'export',
             'convert',
         ],
-        required=True,
+        required=False,
+        default=None,
         dest='action',
         help='actions you want to process',
     )
@@ -2466,7 +2488,7 @@ def main():
         help='valid extensions of audios',
     )
     parser.add_argument(
-        '--fields', '-u',
+        '--fields', '-9',
         type=str,
         required=False,
         default='core',
@@ -2628,39 +2650,44 @@ def main():
 
     args = parser.parse_args()
 
-    god = AudioGod(
-        source_file=args.source_file,
-        ignored_file=args.ignored_file,
-        audios_root=args.audios_root,
-        audios_source=(args.audios_source, args.recursive),
-        properties=json.loads(args.properties) if args.properties else {},
-        extensions=list(filter(None, args.extensions.split(','))),
-        fields=args.fields,
-        data_format=args.data_format,
-        display_options=[
-            args.page_number,
-            args.page_size,
-            json.loads(args.sort) if args.sort else [],
-            json.loads(args.filter) if args.filter else {},
-            args.fields,
-            json.loads(args.align) if args.align else {},
-            args.numbered,
-            args.style,
-        ],
-        itunes_options=[
-            args.itunes_version_plist,
-            args.itunes_media_folder,
-            args.track_initial_id,
-            args.playlist_initial_id,
-        ],
-        artwork_path=args.artwork_path,
-        filename_pattern=args.filename_pattern,
-        output_file=args.output_file,
-        organize_type=args.organize_type,
-        log_level=args.log_level,
-    )
+    if args.usage:
+        print(usage())
+    else:
+        if not args.action:
+            raise Exception('Miss "action" option!')
+        god = AudioGod(
+            source_file=args.source_file,
+            ignored_file=args.ignored_file,
+            audios_root=args.audios_root,
+            audios_source=(args.audios_source, args.recursive),
+            properties=json.loads(args.properties) if args.properties else {},
+            extensions=list(filter(None, args.extensions.split(','))),
+            fields=args.fields,
+            data_format=args.data_format,
+            display_options=[
+                args.page_number,
+                args.page_size,
+                json.loads(args.sort) if args.sort else [],
+                json.loads(args.filter) if args.filter else {},
+                args.fields,
+                json.loads(args.align) if args.align else {},
+                args.numbered,
+                args.style,
+            ],
+            itunes_options=[
+                args.itunes_version_plist,
+                args.itunes_media_folder,
+                args.track_initial_id,
+                args.playlist_initial_id,
+            ],
+            artwork_path=args.artwork_path,
+            filename_pattern=args.filename_pattern,
+            output_file=args.output_file,
+            organize_type=args.organize_type,
+            log_level=args.log_level,
+        )
 
-    getattr(god, args.action.replace('-', '_'))()
+        getattr(god, args.action.replace('-', '_'))()
 
 
 if __name__ == '__main__':

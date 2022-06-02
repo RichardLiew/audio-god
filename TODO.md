@@ -15,6 +15,7 @@ export-json, export-markdown, export_note 功能完善
 convert-qmc0, convert-kmx, convert-mp4
 plist 文件里的 kind，track_type，file_folder_count，library_folder_count 设置规则需要重新审视下
 看看 import 和 export 逻辑里可以做到增量更新吗
+export 所有空值的 field 都不要输出, 要注意对整型数据 0 和 0.0 的判断，0 的话也要输出，不算空值
 
 
 
