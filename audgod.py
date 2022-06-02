@@ -2243,6 +2243,9 @@ Common commands show below:
             --recursive \\
             --ignored-file=${local}/ignored.txt \\
             --source-file=${local}/notes.txt \\
+            --audios-root=${music} \\
+            --properties={
+            } \\
             --log-level=DEBUG
 
     5. Format properties of audios:
@@ -2338,6 +2341,8 @@ Common commands show below:
             --ignored-file=${local}/ignored.txt \\
             --log-level=DEBUG
 
+------------------------------------------------------------------------------
+
 Common steps:
     No.1: Download songs, and make sure that file named with "artist-title";
     No.2: Add detail of songs to notes and grouped;
@@ -2347,6 +2352,8 @@ Common steps:
     No.6: Rename audios;
     No.7: Organize files;
     No.8: Export plist, json, markdown and note file.
+
+------------------------------------------------------------------------------
 
     ''').safe_substitute(dict(
         cmd='{}'.format(sys.argv[0]),
