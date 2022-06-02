@@ -873,7 +873,7 @@ class AudioGod(object):
                 _value = dirname = os.path.dirname(audio)
                 if field == self.AudioProperty.GENRE:
                     _value = os.path.basename(dirname)
-                elif field == self.AudioProperty.COMMENTS:
+                elif field == self.AudioProperty.GROUPING:
                     _value = re.sub(r'/+$', r'', dirname)
                     _value = re.sub(
                         r'^%s/{1,}' % (
@@ -2244,8 +2244,16 @@ Common commands show below:
             --ignored-file=${local}/ignored.txt \\
             --source-file=${local}/notes.txt \\
             --audios-root=${music} \\
-            --properties={
-            } \\
+            --properties=\\'{ \\
+                "default": \\{ \\
+                    "sources": ["command", "file", "directory", "filename"], \\
+                    "value": "" \\
+                \\}, \\
+                "genre": \\{ \\
+                    "sources": ["command", "file", "directory", "filename"], \\
+                    "value": "Pop" \\
+                \\} \\
+            \\}' \\
             --log-level=DEBUG
 
     5. Format properties of audios:
@@ -2276,7 +2284,7 @@ Common commands show below:
             --ignored-file=${local}/ignored.txt \\
             --organize-type=grouped \\
             --log-level=DEBUG
-    
+
     8. Derive artworks:
         ${cmd} \\
             --action=derive-artworks \\
@@ -2297,15 +2305,23 @@ Common commands show below:
             --fields=core \\
             --page-number=1 \\
             --page-size=10 \\
-            --sort= \\
-            --filter= \\
+            --sort='[["title,artist", true], ["genre", false]]' \\
+            --filter='\\{ \\
+                "_options": \\{ \\
+                    "relation": "and" \\
+                \\}, \\
+                "title,core": \\{ \\
+                    "function": "search", \\
+                    "parameters": ["a", true, false] \\
+                \\} \\
+            \\}' \\
             --align= \\
-            --style= \\
+            --style=tabled \\
             --data-format=outputted \\
             --numbered \\
-            --output-file= \\
+            --output-file="" \\
             --log-level=ERROR
-    
+
     10. Export plist file for itunes or apple music:
         ${cmd} \\
             --action=export \\
