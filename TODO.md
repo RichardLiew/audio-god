@@ -16,24 +16,3 @@ plist 文件里的 kind，track_type，file_folder_count，library_folder_count 
 看看 import 和 export 逻辑里可以做到增量更新吗
 export 所有空值的 field 都不要输出, 要注意对整型数据 0 和 0.0 的判断，0 的话也要输出，不算空值
 import 某个 field 为空值时，是直接赋值空值还是跳过不赋值 这块逻辑梳理下
-
-
-
-
-
-
-第一步：下载曲目，并保证文件名是按照“歌手-曲名”命名的
-第二步：将曲目详细信息添加到 Notes 文件中，并做好分类
-第三步：format-notes
-第四步：fill-properties
-第五步：format-properties
-第六步：rename-audios
-第七步：organize-files
-第八步：export plist, markdown
-
-
-
-额外功能：
-1. derive-artworks
-2. convert
-3. display
