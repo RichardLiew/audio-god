@@ -108,8 +108,167 @@ from treelib import Tree
 from prettytable import PrettyTable
 
 
-__VERSION__ = '1.0'
 __AVATAR__ = 'Audio God'
+__VERSION__ = '1.0'
+__USAGE__ = Template('''
+
+General commands show below:
+
+    1. Show help information:
+        ${cmd} -h/--help
+
+    2. Show version of program:
+        ${cmd} -v/--version
+
+    3. Format the notes file:
+        ${cmd} \\
+            --action=format-notes \\
+            --source-file=${local}/notes.txt \\
+            --log-level=DEBUG
+
+    4. Fill properties of audios:
+        ${cmd} \\
+            --action=fill-properties \\
+            --audios-source=${music} \\
+            --extensions=mp3,aac \\
+            --recursive \\
+            --ignored-file=${local}/ignored.txt \\
+            --source-file=${local}/notes.txt \\
+            --audios-root=${music} \\
+            --properties='\\{ \\
+                "default": \\{ \\
+                    "sources": ["command"], #(note: command/file/directory/filename) \\
+                    "value": "" \\
+                \\}, \\
+                "genre": \\{ \\
+                    "sources": ["command", "file"], #(note: command/file/directory/filename) \\
+                    "value": "Pop" \\
+                \\} \\
+            \\}' \\
+            --log-level=DEBUG
+
+    5. Format properties of audios:
+        ${cmd} \\
+            --action=format-properties \\
+            --audios-source=${music} \\
+            --extensions=mp3,aac \\
+            --recursive \\
+            --ignored-file=${local}/ignored.txt \\
+            --log-level=DEBUG
+
+    6. Rename audios:
+        ${cmd} \\
+            --action=rename-audios \\
+            --audios-source=${music} \\
+            --extensions=mp3,aac \\
+            --recursive \\
+            --ignored-file=${local}/ignored.txt \\
+            --filename-pattern="@{artist} # @{title}" \\
+            --log-level=DEBUG
+
+    7. Organize files:
+        ${cmd} \\
+            --action=organize-files \\
+            --audios-source=${music} \\
+            --extensions=mp3,aac \\
+            --recursive \\
+            --ignored-file=${local}/ignored.txt \\
+            --organize-type=grouped \\
+            --log-level=DEBUG
+
+    8. Derive artworks:
+        ${cmd} \\
+            --action=derive-artworks \\
+            --audios-source=${music} \\
+            --extensions=mp3,aac \\
+            --recursive \\
+            --ignored-file=${local}/ignored.txt \\
+            --artwork-path=${music}/artworks \\
+            --log-level=DEBUG
+
+    9. Display audios:
+        ${cmd} \\
+            --action=display \\
+            --audios-source=${music} \\
+            --extensions=mp3,aac \\
+            --recursive \\
+            --ignored-file=${local}/ignored.txt \\
+            --fields=core \\
+            --page-number=1 \\
+            --page-size=10 \\
+            --sort='[["title,artist", true], ["genre", false]]' \\
+            --filter='\\{ \\
+                "_options": \\{ \\
+                    "relation": "and" #(note: and/or) \\
+                \\}, \\
+                "title,core": \\{ \\
+                    "function": "search", #(note: equal/search/empty) \\
+                    "parameters": ["a", true, false] \\
+                \\} \\
+            \\}' \\
+            --align='\\{ \\
+                "title,artist": "l:m" #(note: align=l/c/r, valign=t/m/b) \\
+            \\}' \\
+            --style=tabled \\
+            --data-format=outputted \\
+            --numbered \\
+            --output-file="" \\
+            --log-level=ERROR
+
+    10. Export plist file for itunes or apple music:
+        ${cmd} \\
+            --action=export \\
+            --audios-source=${music} \\
+            --extensions=mp3,aac \\
+            --recursive \\
+            --ignored-file=${local}/ignored.txt \\
+            --fields=ituned \\
+            --output-file=${local}/songs.xml \\
+            --itunes-version-plist=/System/Applications/Music.app/Contents/version.plist \\
+            --itunes-media-folder=${music}/iTunes/iTunes\\ Media \\
+            --track-initial-id=601 \\
+            --playlist-initial-id=3001 \\
+            --log-level=DEBUG
+
+    11. Export markdown (or json/note) file of properties for audios:
+        ${cmd} \\
+            --action=export \\
+            --audios-source=${music} \\
+            --extensions=mp3,aac \\
+            --recursive \\
+            --ignored-file=${local}/ignored.txt \\
+            --fields=all \\
+            --output-file=${local}/songs.md \\
+            --log-level=DEBUG
+
+    12. Convert audios:
+        ${cmd} \\
+            --action=convert \\
+            --audios-source=${music} \\
+            --extensions=mp3,aac \\
+            --recursive \\
+            --ignored-file=${local}/ignored.txt \\
+            --log-level=DEBUG
+
+------------------------------------------------------------------------------
+
+General steps:
+    No.1: Download songs, and make sure that file named with "artist-title";
+    No.2: Add detail of songs to notes and grouped;
+    No.3: Format notes;
+    No.4: Fill properties;
+    No.5: Format properties;
+    No.6: Rename audios;
+    No.7: Organize files;
+    No.8: Export plist, json, markdown and note file.
+
+------------------------------------------------------------------------------
+
+''').safe_substitute(dict(
+    cmd='{}'.format(sys.argv[0]),
+    music='~/Music',
+    local='.',
+))
 
 
 class TreeX(Tree):
@@ -2028,11 +2187,13 @@ class AudioGod(object):
             def _pack_properties() -> str:
                 ret = ''
                 for field in self.fields:
-                    ret += '\t'
                     value = self.fetchx(audio_object, field)
                     value = self.output_functions[field.value](
                         value, output_type=self.OutputType.PLIST,
                     )
+                    if (not isinstance(value, int)) and (not isinstance(value, float)) and (not value):
+                        continue
+                    ret += '\t'
                     ret += '<key>{key}</key>'.format(
                         key=self.AUDIO_EN_PROPERTIES[field.value],
                     )
@@ -2219,168 +2380,6 @@ class AudioGod(object):
 
     def convert(self):
         pass
-
-
-def usage():
-    return Template('''
-
-General commands show below:
-
-    1. Show help information:
-        ${cmd} -h/--help
-
-    2. Show version of program:
-        ${cmd} -v/--version
-
-    3. Format the notes file:
-        ${cmd} \\
-            --action=format-notes \\
-            --source-file=${local}/notes.txt \\
-            --log-level=DEBUG
-
-    4. Fill properties of audios:
-        ${cmd} \\
-            --action=fill-properties \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --source-file=${local}/notes.txt \\
-            --audios-root=${music} \\
-            --properties='\\{ \\
-                "default": \\{ \\
-                    "sources": ["command"], #(note: command/file/directory/filename) \\
-                    "value": "" \\
-                \\}, \\
-                "genre": \\{ \\
-                    "sources": ["command", "file"], #(note: command/file/directory/filename) \\
-                    "value": "Pop" \\
-                \\} \\
-            \\}' \\
-            --log-level=DEBUG
-
-    5. Format properties of audios:
-        ${cmd} \\
-            --action=format-properties \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --log-level=DEBUG
-
-    6. Rename audios:
-        ${cmd} \\
-            --action=rename-audios \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --filename-pattern="@{artist} # @{title}" \\
-            --log-level=DEBUG
-
-    7. Organize files:
-        ${cmd} \\
-            --action=organize-files \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --organize-type=grouped \\
-            --log-level=DEBUG
-
-    8. Derive artworks:
-        ${cmd} \\
-            --action=derive-artworks \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --artwork-path=${music}/artworks \\
-            --log-level=DEBUG
-
-    9. Display audios:
-        ${cmd} \\
-            --action=display \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --fields=core \\
-            --page-number=1 \\
-            --page-size=10 \\
-            --sort='[["title,artist", true], ["genre", false]]' \\
-            --filter='\\{ \\
-                "_options": \\{ \\
-                    "relation": "and" #(note: and/or) \\
-                \\}, \\
-                "title,core": \\{ \\
-                    "function": "search", #(note: equal/search/empty) \\
-                    "parameters": ["a", true, false] \\
-                \\} \\
-            \\}' \\
-            --align='\\{ \\
-                "title,artist": "l:m" #(note: align=l/c/r, valign=t/m/b) \\
-            \\}' \\
-            --style=tabled \\
-            --data-format=outputted \\
-            --numbered \\
-            --output-file="" \\
-            --log-level=ERROR
-
-    10. Export plist file for itunes or apple music:
-        ${cmd} \\
-            --action=export \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --fields=ituned \\
-            --output-file=${local}/songs.xml \\
-            --itunes-version-plist=/System/Applications/Music.app/Contents/version.plist \\
-            --itunes-media-folder=${music}/iTunes/iTunes\\ Media \\
-            --track-initial-id=601 \\
-            --playlist-initial-id=3001 \\
-            --log-level=DEBUG
-
-    11. Export markdown (or json/note) file of properties for audios:
-        ${cmd} \\
-            --action=export \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --fields=all \\
-            --output-file=${local}/songs.md \\
-            --log-level=DEBUG
-
-    12. Convert audios:
-        ${cmd} \\
-            --action=convert \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --log-level=DEBUG
-
-------------------------------------------------------------------------------
-
-General steps:
-    No.1: Download songs, and make sure that file named with "artist-title";
-    No.2: Add detail of songs to notes and grouped;
-    No.3: Format notes;
-    No.4: Fill properties;
-    No.5: Format properties;
-    No.6: Rename audios;
-    No.7: Organize files;
-    No.8: Export plist, json, markdown and note file.
-
-------------------------------------------------------------------------------
-
-    ''').safe_substitute(dict(
-        cmd='{}'.format(sys.argv[0]),
-        music='~/Music',
-        local='.',
-    ))
 
 
 def main():
@@ -2643,7 +2642,7 @@ def main():
     args = parser.parse_args()
 
     if args.usage:
-        print(usage())
+        print(__USAGE__)
     else:
         if not args.action:
             raise Exception('Miss "action" option!')
