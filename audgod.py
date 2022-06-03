@@ -108,6 +108,10 @@ from treelib import Tree
 from prettytable import PrettyTable
 
 
+__VERSION__ = '1.0'
+__AVATAR__ = 'Audio God'
+
+
 class TreeX(Tree):
     def perfect_merge(self, nid, new_tree, deep=False) -> None:
         if not (isinstance(new_tree, Tree) or isinstance(new_tree, TreeX)):
@@ -153,10 +157,6 @@ class TreeX(Tree):
 
 
 class AudioGod(object):
-    AVATAR = 'Audio God'
-    VERSION = '1.0'
-
-
     DIV_CHAR = '#'
     ORI_DIV_CHAR = '-'
 
@@ -452,14 +452,6 @@ class AudioGod(object):
             numbered,
             style,
         ]
-
-    @property
-    def avatar(self):
-        return self.AVATAR
-
-    @property
-    def version(self):
-        return self.VERSION
 
     @property
     def logger(self):
@@ -2404,8 +2396,8 @@ def main():
         '--version', '-v',
         action='version',
         version='{avatar} {version}'.format(
-            avatar=AudioGod.AVATAR,
-            version=AudioGod.VERSION,
+            avatar=__AVATAR__,
+            version=__VERSION__,
         ),
     )
     parser.add_argument(
@@ -2434,7 +2426,7 @@ def main():
         help='actions you want to process',
     )
     parser.add_argument(
-        '--source-file', '-f',
+        '--source-file', '-s',
         type=str,
         required=False,
         default='./source.txt',
@@ -2450,7 +2442,7 @@ def main():
         help='ignored files',
     )
     parser.add_argument(
-        '--audios-source', '-o',
+        '--audios-source', '-c',
         type=str,
         required=False,
         default='{}/Music/Temp'.format(os.environ['HOME']),
@@ -2488,7 +2480,7 @@ def main():
         help='valid extensions of audios',
     )
     parser.add_argument(
-        '--fields', '-9',
+        '--fields', '-f',
         type=str,
         required=False,
         default='core',
@@ -2501,7 +2493,7 @@ def main():
         ),
     )
     parser.add_argument(
-        '--page-number', '-n',
+        '--page-number', '-m',
         type=int,
         required=False,
         default=1,
@@ -2509,7 +2501,7 @@ def main():
         help='page number for audios display',
     )
     parser.add_argument(
-        '--page-size', '-z',
+        '--page-size', '-j',
         type=int,
         required=False,
         default=None,
@@ -2517,7 +2509,7 @@ def main():
         help='page size for audios display',
     )
     parser.add_argument(
-        '--sort', '-b',
+        '--sort', '-q',
         type=str,
         required=False,
         default=None,
@@ -2525,7 +2517,7 @@ def main():
         help='sort options for audios display',
     )
     parser.add_argument(
-        '--filter', '-x',
+        '--filter', '-b',
         type=str,
         required=False,
         default=None,
@@ -2533,7 +2525,7 @@ def main():
         help='filter options for audios display',
     )
     parser.add_argument(
-        '--align', '-y',
+        '--align', '-w',
         type=str,
         required=False,
         default=None,
@@ -2541,13 +2533,13 @@ def main():
         help='align options for audios display',
     )
     parser.add_argument(
-        '--numbered', '-k',
+        '--numbered', '-n',
         action='store_true',
         dest='numbered',
         help='if show number for audios display',
     )
     parser.add_argument(
-        '--style', '-w',
+        '--style', '-y',
         type=str,
         choices=[x.value for x in AudioGod.DisplayStyle],
         required=False,
@@ -2556,7 +2548,7 @@ def main():
         help='display style for audios',
     )
     parser.add_argument(
-        '--data-format', '-t',
+        '--data-format', '-x',
         type=str,
         choices=[x.value for x in AudioGod.DataFormat],
         required=False,
@@ -2565,7 +2557,7 @@ def main():
         help='the data format for audios to display',
     )
     parser.add_argument(
-        '--output-file', '-j',
+        '--output-file', '-o',
         type=str,
         required=False,
         default=None,
@@ -2573,7 +2565,7 @@ def main():
         help='output file',
     )
     parser.add_argument(
-        '--artwork-path', '-c',
+        '--artwork-path', '-k',
         type=str,
         required=False,
         default=None,
@@ -2581,7 +2573,7 @@ def main():
         help='path to export artworks',
     )
     parser.add_argument(
-        '--filename-pattern', '-m',
+        '--filename-pattern', '-t',
         type=str,
         required=False,
         default='%{artist} ' + AudioGod.DIV_CHAR + ' %{title}',
@@ -2598,7 +2590,7 @@ def main():
         help='type of file organization',
     )
     parser.add_argument(
-        '--itunes-version-plist', '-q',
+        '--itunes-version-plist', '-1',
         type=str,
         required=False,
         default=AudioGod.DEFAULT_ITUNES_VERSION_PLIST,
@@ -2606,7 +2598,7 @@ def main():
         help='the version plist file of itunes or apple music',
     )
     parser.add_argument(
-        '--itunes-media-folder', '-s',
+        '--itunes-media-folder', '-2',
         type=str,
         required=False,
         default=AudioGod.DEFAULT_ITUNES_MEDIA_FOLDER,
@@ -2614,7 +2606,7 @@ def main():
         help='the media folder of itunes or apple music',
     )
     parser.add_argument(
-        '--track-initial-id', '-6',
+        '--track-initial-id', '-3',
         type=int,
         required=False,
         default=AudioGod.DEFAULT_TRACK_INITIAL_ID,
@@ -2622,7 +2614,7 @@ def main():
         help='initial id of tracks for itunes or apple music plist file',
     )
     parser.add_argument(
-        '--playlist-initial-id', '-8',
+        '--playlist-initial-id', '-4',
         type=int,
         required=False,
         default=AudioGod.DEFAULT_PLAYLIST_INITIAL_ID,
