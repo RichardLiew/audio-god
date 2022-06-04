@@ -340,6 +340,7 @@ class AudioGod(object):
         NOTE = 'note'
         DISPLAY = 'display'
 
+
     @unique
     class PropertySource(Enum):
         COMMAND = 'command'
