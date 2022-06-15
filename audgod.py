@@ -13,52 +13,13 @@
 #            ffmpeg -i ~/Music/Demo.mp3
 #        ```;
 #        2. 查看帮助：```
-#            pipenv run python main.py --help
+#            pipenv run python audgod.py --help
 #        ```;
-#        3. 查看版本：```
-#            pipenv run python main.py --version
+#        3. 查看常用命令：```
+#            pipenv run python audgod.py --usage
 #        ```;
-#        4. 预处理 Notes 文件：```
-#            pipenv run python main.py \
-#                    -a format-notes \
-#                    -n ./notes.txt \
-#                    -l DEBUG
-#        ```;
-#        5. 填充音频文件属性：```
-#            pipenv run python main.py \
-#                    -a fill-properties \
-#                    -n ./notes.txt \
-#                    -i ./ignored.txt \
-#                    -o ${HOME}/Music/Temp \
-#                    -r \
-#                    -g Pop \
-#                    -s notefile \
-#                    -e mp3 \
-#                    -l DEBUG
-#        ```;
-#        6. 统一音频文件属性：```
-#            pipenv run python main.py \
-#                    -a format-properties \
-#                    -n ./notes.txt \
-#                    -i ./ignored.txt \
-#                    -o ${HOME}/Music/Temp \
-#                    -r \
-#                    -g Pop \
-#                    -s notefile \
-#                    -e mp3 \
-#                    -l DEBUG
-#        ```;
-#        7. 根据音频属性重命名文件：```
-#            pipenv run python main.py \
-#                    -a rename-audios \
-#                    -n ./notes.txt \
-#                    -i ./ignored.txt \
-#                    -o ${HOME}/Music/Temp \
-#                    -r \
-#                    -g Pop \
-#                    -s notefile \
-#                    -e mp3 \
-#                    -l DEBUG
+#        4. 查看版本：```
+#            pipenv run python audgod.py --version
 #        ```;
 #
 #    FILES:
@@ -79,7 +40,6 @@
 #            [requires]
 #            python_version = "3.9.1"
 #        ```]
-#
 #
 ###############################################################################
 
