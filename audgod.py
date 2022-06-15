@@ -775,7 +775,7 @@ class AudioGod(object):
         ret = re.sub(r'([\(\[\<\|])', r' \1', ret)
         ret = re.sub(r'([\)\]\>\|:,;\!\?])', r'\1 ', ret)
         ret = re.sub(r'([\&])', r' \1 ', ret)
-        # 依据情况而定，看看有必要将下面正则激活
+        # 依据情况而定，看看是否有必要将下面正则激活
         #ret = re.sub(r'[ \t]{0,}&[ \t]{0,}', r' & ', ret)
         ret = re.sub(r'[ \t]+', r' ', ret).strip()
         ret = re.sub(r'([\)\]\>\|]) ([:,;\.\!\?])', r'\1\2', ret)
