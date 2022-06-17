@@ -743,8 +743,8 @@ class AudioGod(object):
         return ret
 
     @staticmethod
-    def unify_format(property_content):
-        if property_content is None:
+    def unify_format(content):
+        if content is None:
             return None
 
         def _format_english(matched):
@@ -752,7 +752,7 @@ class AudioGod(object):
             #return matched.group('english').lower().capitalize()
 
         ret = re.sub(
-            r'(?P<english>[a-zA-Z]+)', _format_english, property_content,
+            r'(?P<english>[a-zA-Z]+)', _format_english, content,
         )
         ret = ret.replace('（', '(')\
                  .replace('）', ')')\
