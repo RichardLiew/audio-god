@@ -214,7 +214,7 @@ General commands show below:
 
 General steps:
     No.1: Download songs, and make sure that file named with "artist-title";
-    No.2: Add detail of songs to notes and grouped;
+    No.2: Add detail of songs to notes, then grouped;
     No.3: Format notes;
     No.4: Fill properties;
     No.5: Format properties;
