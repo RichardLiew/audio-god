@@ -292,7 +292,7 @@ class AudioGod(object):
 
 
     @unique
-    class OutputType(Enum):
+    class FileType(Enum):
         NONE = 'none'
         JSON = 'json'
         MARKDOWN = 'markdown'
@@ -513,7 +513,7 @@ class AudioGod(object):
             field.value: getattr(
                 self,
                 'output_{}'.format(field.value),
-                lambda x, y=self.OutputType.NONE: x,
+                lambda x, y=self.FileType.NONE: x,
             )
             for field in self.ALL_FIELDS
         }
@@ -840,70 +840,70 @@ class AudioGod(object):
         return ret
 
     @classmethod
-    def output_title(cls, title, output_type=OutputType.NONE):
+    def output_title(cls, title, output_type=FileType.NONE):
         if not title:
             return ''
         ret = title
-        if output_type == cls.OutputType.PLIST:
+        if output_type == cls.FileType.PLIST:
             ret = cls.escape_characters(ret)
         return ret
 
     @classmethod
-    def output_album(cls, album, output_type=OutputType.NONE):
+    def output_album(cls, album, output_type=FileType.NONE):
         if not album:
             return ''
         ret = album
-        if output_type == cls.OutputType.PLIST:
+        if output_type == cls.FileType.PLIST:
             ret = cls.escape_characters(ret)
         return ret
 
     @classmethod
-    def output_album_artist(cls, album_artist, output_type=OutputType.NONE):
+    def output_album_artist(cls, album_artist, output_type=FileType.NONE):
         if not album_artist:
             return ''
         ret = album_artist
-        if output_type == cls.OutputType.PLIST:
+        if output_type == cls.FileType.PLIST:
             ret = cls.escape_characters(ret)
         return ret
 
     @classmethod
-    def output_artist(cls, artist, output_type=OutputType.NONE):
+    def output_artist(cls, artist, output_type=FileType.NONE):
         if not artist:
             return ''
         ret = artist
-        if output_type == cls.OutputType.PLIST:
+        if output_type == cls.FileType.PLIST:
             ret = cls.escape_characters(ret)
         return ret
 
     @classmethod
-    def output_genre(cls, genre, output_type=OutputType.NONE):
+    def output_genre(cls, genre, output_type=FileType.NONE):
         if not genre:
             return ''
         ret = genre
         if isinstance(genre, Genre):
             ret = genre.name
-        if output_type == cls.OutputType.PLIST:
+        if output_type == cls.FileType.PLIST:
             ret = cls.escape_characters(ret)
         return ret
 
     @classmethod
-    def output_bit_rate(cls, bit_rate, output_type=OutputType.NONE):
+    def output_bit_rate(cls, bit_rate, output_type=FileType.NONE):
         if not bit_rate:
             return ''
         if isinstance(bit_rate, tuple):
             bit_rate = bit_rate[1]
-        if output_type in [cls.OutputType.NONE, cls.OutputType.PLIST]:
+        if output_type in [cls.FileType.NONE, cls.FileType.PLIST]:
             return bit_rate
         return '{} kb/s'.format(bit_rate)
 
     @classmethod
-    def output_sample_freq(cls, sample_freq, output_type=OutputType.NONE):
+    def output_sample_freq(cls, sample_freq, output_type=FileType.NONE):
         if not sample_freq:
             return ''
         return sample_freq
 
     @classmethod
-    def output_comments(cls, comments, output_type=OutputType.NONE):
+    def output_comments(cls, comments, output_type=FileType.NONE):
         if not comments:
             return ''
         if isinstance(comments, CommentsAccessor):
@@ -916,7 +916,7 @@ class AudioGod(object):
         return comments
 
     @classmethod
-    def output_track_num(cls, track_num, output_type=OutputType.NONE):
+    def output_track_num(cls, track_num, output_type=FileType.NONE):
         if not track_num:
             return ''
         if isinstance(track_num, tuple):
@@ -924,18 +924,18 @@ class AudioGod(object):
         return track_num
 
     @classmethod
-    def output_artwork(cls, artwork, output_type=OutputType.NONE):
+    def output_artwork(cls, artwork, output_type=FileType.NONE):
         if not artwork:
             return ''
         return artwork
 
     @classmethod
-    def output_duration(cls, duration, output_type=OutputType.NONE):
+    def output_duration(cls, duration, output_type=FileType.NONE):
         if not duration:
             duration = 0.0
-        if output_type == cls.OutputType.NONE:
+        if output_type == cls.FileType.NONE:
             return duration
-        elif output_type == cls.OutputType.PLIST:
+        elif output_type == cls.FileType.PLIST:
             return int(round(duration, 3) * 1000)
         s = duration
         m, s = divmod(s, 60)
@@ -946,10 +946,10 @@ class AudioGod(object):
         )
 
     @classmethod
-    def output_size(cls, size, output_type=OutputType.NONE):
+    def output_size(cls, size, output_type=FileType.NONE):
         if not size:
             return '0'
-        if output_type in [cls.OutputType.NONE, cls.OutputType.PLIST]:
+        if output_type in [cls.FileType.NONE, cls.FileType.PLIST]:
             return size
         suffix='B'
         for unit in ['','K','M','G','T','P','E','Z']:
@@ -959,10 +959,10 @@ class AudioGod(object):
         return "%.1f%s%s" % (size, 'Y', suffix)
 
     @classmethod
-    def output_mtime(cls, mtime, output_type=OutputType.NONE):
+    def output_mtime(cls, mtime, output_type=FileType.NONE):
         if not mtime:
             return ''
-        if output_type == cls.OutputType.PLIST:
+        if output_type == cls.FileType.PLIST:
             return cls.format_utc(mtime)
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(mtime))
 
@@ -1132,13 +1132,13 @@ class AudioGod(object):
         return ret
 
     def fetchx(self, audio_object, field,
-               formatted=False, output_type=OutputType.NONE):
+               formatted=False, output_type=FileType.NONE):
         ret = self.fetch(audio_object, field)
         if ret is None:
             return None
         if formatted:
             ret = self.format_functions[field.value](ret)
-        if output_type != self.OutputType.NONE:
+        if output_type != self.FileType.NONE:
             ret = self.output_functions[field.value](ret, output_type)
         return ret
 
@@ -1189,29 +1189,29 @@ class AudioGod(object):
     @classmethod
     def recognize_filetype(cls, file):
         if not file:
-            return cls.OutputType.NONE
+            return cls.FileType.NONE
         _, ext = os.path.splitext(os.path.basename(file))
         ext = ext[1:].lower()
         if ext in ['json']:
-            return cls.OutputType.JSON
+            return cls.FileType.JSON
         if ext in ['md', 'markdown']:
-            return cls.OutputType.MARKDOWN
+            return cls.FileType.MARKDOWN
         if ext in ['xml', 'plist']:
-            return cls.OutputType.PLIST
-        return cls.OutputType.NOTE
+            return cls.FileType.PLIST
+        return cls.FileType.NOTE
 
     def __load_properties_from_file(self):
         if not os.path.exists(self.source_file):
             self.logger.fatal('Source file <{}> not exists!'.format(self.source_file))
 
         _clauses, filetype = {}, self.recognize_filetype(self.source_file) 
-        if filetype in [self.OutputType.NONE, self.OutputType.DISPLAY]:
+        if filetype in [self.FileType.NONE, self.FileType.DISPLAY]:
             return
-        elif filetype == self.OutputType.JSON:
+        elif filetype == self.FileType.JSON:
             _clauses = self.__import_json()
-        elif filetype == self.OutputType.MARKDOWN:
+        elif filetype == self.FileType.MARKDOWN:
             _clauses = self.__import_markdown()
-        elif filetype == self.OutputType.PLIST:
+        elif filetype == self.FileType.PLIST:
             _clauses = self.__import_plist()
         else:
             _clauses = self.__import_note()
@@ -1691,13 +1691,13 @@ class AudioGod(object):
             (field.value, self.AUDIO_CN_PROPERTIES[field.value])
             for field in self.ALL_FIELDS
         ]
-        formatted, output_type = True, self.OutputType.DISPLAY
+        formatted, output_type = True, self.FileType.DISPLAY
         if self.data_format == self.DataFormat.ORIGINAL:
-            formatted, output_type = False, self.OutputType.NONE
+            formatted, output_type = False, self.FileType.NONE
         elif self.data_format == self.DataFormat.FORMATTED:
-            formatted, output_type = True, self.OutputType.NONE
+            formatted, output_type = True, self.FileType.NONE
         elif self.data_format == self.DataFormat.OUTPUTTED:
-            formatted, output_type = True, self.OutputType.DISPLAY
+            formatted, output_type = True, self.FileType.DISPLAY
         for audio in audios:
             audio_object = eyed3.load(audio)
             results.append([
@@ -2065,16 +2065,16 @@ class AudioGod(object):
 
     def export(self):
         filetype = self.recognize_filetype(self.output_file) 
-        if filetype == self.OutputType.NONE:
+        if filetype == self.FileType.NONE:
             self.logger.fatal('Output file is empty when export!')
         self.__fill_audios_tree()
-        if filetype == self.OutputType.JSON:
+        if filetype == self.FileType.JSON:
             self.__export_json()
-        elif filetype == self.OutputType.MARKDOWN:
+        elif filetype == self.FileType.MARKDOWN:
             self.__export_markdown()
-        elif filetype == self.OutputType.PLIST:
+        elif filetype == self.FileType.PLIST:
             self.__export_plist()
-        elif filetype == self.OutputType.NOTE:
+        elif filetype == self.FileType.NOTE:
             self.__export_note()
 
     def __export_json(self):
@@ -2150,7 +2150,7 @@ class AudioGod(object):
                 for field in self.fields:
                     value = self.fetchx(audio_object, field)
                     value = self.output_functions[field.value](
-                        value, output_type=self.OutputType.PLIST,
+                        value, output_type=self.FileType.PLIST,
                     )
                     if (not isinstance(value, int)) and (not isinstance(value, float)) and (not value):
                         continue
