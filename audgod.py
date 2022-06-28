@@ -2606,7 +2606,7 @@ def main():
         print(__USAGE__)
     else:
         if not args.action:
-            raise Exception('Miss "action" option!')
+            raise Exception('Missing "action" option!')
         god = AudioGod(
             source_file=args.source_file,
             ignored_file=args.ignored_file,
