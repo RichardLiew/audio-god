@@ -1033,7 +1033,7 @@ class AudioGod(object):
         return re.match(regex, image) is not None
 
     # Use AudioProperty type field here, you won't to check field parameter.
-    def __assign_to_audio(self, audio_object, field, value, formatted=False):
+    def save(self, audio_object, field, value, formatted=False):
         if value is None:
             return
         if formatted:
@@ -1504,7 +1504,7 @@ class AudioGod(object):
                 property_ = self.__fetch_from_outside(audio, field)
                 if property_ is not None:
                     filled = True
-                    self.__assign_to_audio(audio_object, field, property_, True)
+                    self.save(audio_object, field, property_, True)
                     self.logger.debug('Field <{}> assigned!'.format(field.value))
             if filled:
                 filled_count += 1
@@ -1549,7 +1549,7 @@ class AudioGod(object):
             for field in self.fields:
                 property_ = self.fetchx(audio_object, field, True)
                 if property_ is not None:
-                    self.__assign_to_audio(audio_object, field, property_, True)
+                    self.save(audio_object, field, property_, True)
         self.logger.warning(
             'Formatted Audios: {}\n'.format(len(audios)),
         )
