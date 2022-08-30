@@ -1200,36 +1200,34 @@ class AudioGod(object):
             return cls.FileType.PLIST
         return cls.FileType.NOTE
 
-    def __load_properties_from_file(self):
-        if not os.path.exists(self.source_file):
-            self.logger.fatal('Source file <{}> not exists!'.format(self.source_file))
+    def parse():
+        pass
 
-        _clauses, filetype = {}, self.recognize_filetype(self.source_file) 
+    def format():
+        pass
+
+    def output():
+        pass
+
+    def import_(self):
+        filetype = self.recognize_filetype(self.source_file)
         if filetype in [self.FileType.NONE, self.FileType.DISPLAY]:
             return
         elif filetype == self.FileType.JSON:
-            _clauses = self.__import_json()
+            self.__import_json()
         elif filetype == self.FileType.MARKDOWN:
-            _clauses = self.__import_markdown()
+            self.__import_markdown()
         elif filetype == self.FileType.PLIST:
-            _clauses = self.__import_plist()
+            self.__import_plist()
         else:
-            _clauses = self.__import_note()
+            self.__import_note()
 
-        self.valid_clauses.update({
-            key: _clauses[key][0]
-            for key in _clauses
-            if len(_clauses[key]) == 1
-        })
 
-        self.repeated_clauses.update({
-            key: _clauses[key]
-            for key in _clauses
-            if len(_clauses[key]) > 1
-        })
-
+    def __load_properties_from_file(self):
+        if not os.path.exists(self.source_file):
+            self.logger.fatal('Source file <{}> not exists!'.format(self.source_file))
+        self.import_()
         self.logger.warning('\n{}\n'.format('#' * 78))
-
         self.logger.warning(
             'Total Clauses: {}\n\n'
             'Valid Clauses: {}, '
@@ -1311,7 +1309,17 @@ class AudioGod(object):
                     result[k] = v
                 self.process_clause(line, result, _clauses)
 
-        return _clauses
+        self.valid_clauses.update({
+            key: _clauses[key][0]
+            for key in _clauses
+            if len(_clauses[key]) == 1
+        })
+
+        self.repeated_clauses.update({
+            key: _clauses[key]
+            for key in _clauses
+            if len(_clauses[key]) > 1
+        })
 
     def __load_audios(self):
         self.__load_ignored()
