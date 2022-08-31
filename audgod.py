@@ -497,19 +497,19 @@ class AudioGod(object):
         self.__audios_tree = TreeX(tree=None, deep=False, node_class=None, identifier=None)
         self.audios_tree.create_node(self.AUDIOS_TREE_ROOT_TAG, self.AUDIOS_TREE_ROOT_NID)
         self.__ignored_set = set()
-        self.__format_functions = {
+        self.__format = {
             field.value: getattr(
                 self, 'format_{}'.format(field.value), lambda x: x,
             )
             for field in self.ALL_FIELDS
         }
-        self.__parse_functions = {
+        self.__parse = {
             field.value: getattr(
                 self, 'parse_{}'.format(field.value), lambda x: x,
             )
             for field in self.ALL_FIELDS
         }
-        self.__output_functions = {
+        self.__output = {
             field.value: getattr(
                 self,
                 'output_{}'.format(field.value),
@@ -578,16 +578,16 @@ class AudioGod(object):
         return self.__logger
 
     @property
-    def format_functions(self):
-        return self.__format_functions
+    def format(self):
+        return self.__format
 
     @property
-    def parse_functions(self):
-        return self.__parse_functions
+    def parse(self):
+        return self.__parse
 
     @property
-    def output_functions(self):
-        return self.__output_functions
+    def output(self):
+        return self.__output
 
     @property
     def display_options(self):
@@ -967,8 +967,8 @@ class AudioGod(object):
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(mtime))
 
     def __fetch_from_outside(self, audio, field):
-        format_ = self.format_functions[field.value]
-        parse_ = self.parse_functions[field.value]
+        format_ = self.format[field.value]
+        parse_ = self.parse[field.value]
         sources = self.properties.get('default', {}).get(
             'sources', [
                 source.value for source in self.DEFAULT_SOURCES
@@ -1037,7 +1037,7 @@ class AudioGod(object):
         if value is None:
             return
         if formatted:
-            value = self.format_functions[field.value](value)
+            value = self.format[field.value](value)
         if field == self.AudioProperty.COMMENTS:
             audio_object.tag.comments.set(value)
         elif field in self.ZIP_FIELDS:
@@ -1137,9 +1137,9 @@ class AudioGod(object):
         if ret is None:
             return None
         if formatted:
-            ret = self.format_functions[field.value](ret)
+            ret = self.format[field.value](ret)
         if output_type != self.FileType.NONE:
-            ret = self.output_functions[field.value](ret, output_type)
+            ret = self.output[field.value](ret, output_type)
         return ret
 
     @classmethod
@@ -2157,7 +2157,7 @@ class AudioGod(object):
                 ret = ''
                 for field in self.fields:
                     value = self.fetchx(audio_object, field)
-                    value = self.output_functions[field.value](
+                    value = self.output[field.value](
                         value, output_type=self.FileType.PLIST,
                     )
                     if (not isinstance(value, int)) and (not isinstance(value, float)) and (not value):
