@@ -1200,15 +1200,6 @@ class AudioGod(object):
             return cls.FileType.PLIST
         return cls.FileType.NOTE
 
-    def parse():
-        pass
-
-    def format():
-        pass
-
-    def output():
-        pass
-
     def import_(self):
         filetype = self.recognize_filetype(self.source_file)
         if filetype in [self.FileType.NONE, self.FileType.DISPLAY]:
