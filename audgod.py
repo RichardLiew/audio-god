@@ -102,7 +102,7 @@ from prettytable import PrettyTable
 
 ################################################################################
 #                                                                              #
-#                             SCRIPT MACROS                                    #
+#                                SCRIPT MACROS                                 #
 #                                                                              #
 ################################################################################
 
@@ -111,14 +111,20 @@ __VERSION__ = '1.0'
 
 ################################################################################
 #                                                                              #
-#                          CLASSES AND FUNCTIONS                               #
+#                            CLASSES AND FUNCTIONS                             #
 #                                                                              #
 ################################################################################
 
 class TreeX(Tree):
+    def __init__(self, logger=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if logger is None:
+            logger = logging.getLogger()
+        self.logger = logger
+
     def perfect_merge(self, nid, new_tree, deep=False) -> None:
         if not (isinstance(new_tree, Tree) or isinstance(new_tree, TreeX)):
-            raise Exception('The new tree to merge is not a valid tree.')
+            self.logger.critical('The new tree to merge is not a valid tree.')
 
         if new_tree is None:
             return
@@ -132,12 +138,12 @@ class TreeX(Tree):
             nid = self.root
 
         if not self.contains(nid):
-            raise Exception('Node <{}> is not in the tree!'.format(nid))
+            self.logger.critical('Node <{}> is not in the tree!'.format(nid))
 
         current_node = self[nid]
 
         if current_node.tag != new_tree[new_tree.root].tag:
-            raise Exception('Current node not same with root of new tree.')
+            self.logger.critical('Current node not same with root of new tree.')
 
         childs = self.children(nid)
         child_tags = [child.tag for child in childs]
@@ -374,6 +380,13 @@ class AudioGod(object):
         organize_type=OrganizeType.ITUNED.value,
         log_level=logging.DEBUG,
     ):
+        self.__logger = logging.getLogger()
+        self.__logger.setLevel(log_level)
+        eyed3.log.setLevel(
+            #log_level,
+            logging.ERROR,
+        )
+
         self.__source_file = source_file
         self.__ignored_file = ignored_file
         self.__audios_root = audios_root
@@ -385,7 +398,13 @@ class AudioGod(object):
         ]
         self.__clauses = ([], {}, {})
         self.__audios = ([], [], [], [], set(), set())
-        self.__audios_tree = TreeX(tree=None, deep=False, node_class=None, identifier=None)
+        self.__audios_tree = TreeX(
+            tree=None,
+            deep=False,
+            node_class=None,
+            identifier=None,
+            logger=self.logger,
+        )
         self.audios_tree.create_node(self.AUDIOS_TREE_ROOT_TAG, self.AUDIOS_TREE_ROOT_NID)
         self.__ignored_set = set()
         self.__format = {
@@ -415,12 +434,6 @@ class AudioGod(object):
         self.__organize_type = AudioGod.OrganizeType(organize_type)
         self.__filename_pattern = filename_pattern
         self.__output_file = output_file
-        self.__logger = logging.getLogger()
-        self.__logger.setLevel(log_level)
-        eyed3.log.setLevel(
-            #log_level,
-            logging.ERROR,
-        )
 
     def __resolve_fields(self, fields):
         fields_ = list(filter(None, fields.split(',')))
@@ -1296,7 +1309,7 @@ class AudioGod(object):
                 if not tags:
                     continue
                 tags = [self.AUDIOS_TREE_ROOT_TAG] + tags
-                subtree = TreeX()
+                subtree = TreeX(logger=self.logger)
                 last_nid = self.AUDIOS_TREE_ROOT_NID
                 for i in range(len(tags)):
                     tag, nid = tags[i], self.generate_persistent_id()
@@ -2233,7 +2246,7 @@ class AudioGod(object):
 
 ################################################################################
 #                                                                              #
-#                             USAGE DETAILS                                    #
+#                                USAGE DETAILS                                 #
 #                                                                              #
 ################################################################################
 
@@ -2401,7 +2414,7 @@ General steps:
 
 ################################################################################
 #                                                                              #
-#                             MAIN FUNCTION                                    #
+#                                MAIN FUNCTION                                 #
 #                                                                              #
 ################################################################################
 
@@ -2708,7 +2721,7 @@ def main():
 
 ################################################################################
 #                                                                              #
-#                            SCRIPT ENTRANCE                                   #
+#                               SCRIPT ENTRANCE                                #
 #                                                                              #
 ################################################################################
 
