@@ -1,45 +1,74 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-
-###############################################################################
 #
-#    TODOS:
-#        1. 增加qmc0转mp3的功能;
-#        2. 增加kmx转mp4的功能;
-#        3. 增加mp4转mp3的功能;
+# Copyright (c) 2022 Anebit Inc.
+# All rights reserved.
 #
-#    COMMANDS:
-#        1. 查看音频信息：```
-#            ffmpeg -i ~/Music/Demo.mp3
-#        ```;
-#        2. 查看帮助：```
-#            pipenv run python audgod.py --help
-#        ```;
-#        3. 查看常用命令：```
-#            pipenv run python audgod.py --usage
-#        ```;
-#        4. 查看版本：```
-#            pipenv run python audgod.py --version
-#        ```;
+# "Audio God" version 1.0
 #
-#    FILES:
-#        1. pyenv: [.python-version => ```
-#            3.9.1
-#        ```];
-#        2. pipenv: [Pipfile => ```
-#            [[source]]
-#            url = "https://pypi.org/simple"
-#            verify_ssl = true
-#            name = "pypi"
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
 #
-#            [packages]
-#            eyed3 = "*"
+#    * Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+#    * Redistributions in binary form must reproduce the above
+# copyright notice, this list of conditions and the following disclaimer
+# in the documentation and/or other materials provided with the
+# distribution.
+#    * Neither the name of Anebit Inc. nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
 #
-#            [dev-packages]
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL__ THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES_; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-#            [requires]
-#            python_version = "3.9.1"
-#        ```]
+# ---
+# Author:  Richard
+# Created: 2022-08-30 10:46:00
+# E-mail:  richard.zen.liew@gmail.com
+#
+# ---
+# Description:
+#   The god processor for audios.
+#
+# ---
+# Dependences:
+#   1. pyenv: [.python-version => ```
+#       3.9.1
+#   ```];
+#   2. pipenv: [Pipfile => ```
+#       [[source]]
+#       url = "https://pypi.org/simple"
+#       verify_ssl = true
+#       name = "pypi"
+#       
+#       [packages]
+#       eyed3 = "*"
+#       prettytable = "*"
+#       mdutils = "*"
+#       treelib = "*"
+#       
+#       [dev-packages]
+#       
+#       [requires]
+#       python_version = "3.9.1"
+#   ```].
+#
+# ---
+# TODO (@Richard):
+#   1. 增加qmc0转mp3的功能;
+#   2. 增加kmx转mp4的功能;
+#   3. 增加mp4转mp3的功能;
 #
 ###############################################################################
 
@@ -67,6 +96,9 @@ from treelib import Tree
 
 from prettytable import PrettyTable
 
+'''
+    The god processor for audios.
+'''
 
 ################################################################################
 #                                                                              #
@@ -76,7 +108,6 @@ from prettytable import PrettyTable
 
 __AVATAR__ = 'Audio God'
 __VERSION__ = '1.0'
-
 
 ################################################################################
 #                                                                              #
@@ -2198,7 +2229,6 @@ class AudioGod(object):
     def convert(self):
         pass
 
-
 ################################################################################
 #                                                                              #
 #                             USAGE DETAILS                                    #
@@ -2366,7 +2396,6 @@ General steps:
     delimiter=AudioGod.FilenamePatternTemplate.delimiter,
     div_char=AudioGod.DIV_CHAR,
 ))
-
 
 ################################################################################
 #                                                                              #
@@ -2674,7 +2703,6 @@ def main():
         )
 
         getattr(god, args.action.replace('-', '_'))()
-
 
 ################################################################################
 #                                                                              #
