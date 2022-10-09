@@ -1373,6 +1373,8 @@ class AudioGod(object):
 
         if os.path.basename(audio) == '.DS_Store':
             return self.AudioType.OMITTED
+        if os.path.islink(audio):
+            return self.AudioType.OMITTED
         if not os.path.isfile(audio):
             return self.AudioType.OMITTED
 
