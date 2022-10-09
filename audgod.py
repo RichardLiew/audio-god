@@ -2360,7 +2360,7 @@ General steps:
 ------------------------------------------------------------------------------
 
 ''').safe_substitute(dict(
-    cmd='{}'.format(sys.argv[0]),
+    cmd='pipenv run python {}'.format(sys.argv[0]),
     music='~/Music',
     local='.',
     delimiter=AudioGod.FilenamePatternTemplate.delimiter,
