@@ -1117,6 +1117,7 @@ class AudioGod(object):
         key = self.generate_key(artist, title)
         if key not in final_clauses:
             final_clauses[key] = [hashed_clause]
+            self.valid_clauses_counter += 1
             return
         if len(final_clauses[key] > 1):
             final_clauses[key].append(hashed_clause)
@@ -1132,16 +1133,20 @@ class AudioGod(object):
         )
         if not final_grouping:
             final_clauses[key][0][self.AudioProperty.GROUPING.value] = grouping
+            self.valid_clauses_counter += 1
             return
         groups = grouping.split(self.GROUPING_SEPARATOR)
         final_groups = final_grouping.split(self.GROUPING_SEPARATOR)
         if len(list(set(groups) & set(final_groups))) > 0:
             final_clauses[key].append(hashed_clause)
+            self.valid_clauses_counter -= 1
+            self.repeated_clauses_counter += 2
             return
-        for group in groups:
-            final_clauses[key][0][self.AudioProperty.GROUPING.value] = '{}{}{}'.format(
-                final_grouping, self.GROUPING_SEPARATOR, group,
-            )
+        final_clauses[key][0][self.AudioProperty.GROUPING.value] = '{}{}{}'.format(
+            final_grouping, self.GROUPING_SEPARATOR, grouping,
+        )
+        self.valid_clauses_counter += 1
+        return
 
     @classmethod
     def recognize_filetype(cls, file):
