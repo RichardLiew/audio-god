@@ -59,6 +59,7 @@
 #       treelib = "*"
 #       
 #       [dev-packages]
+#       pylint = "*"
 #       
 #       [requires]
 #       python_version = "3.9.1"
@@ -1116,7 +1117,6 @@ class AudioGod(object):
             self.__import_plist()
         else:
             self.__import_note()
-
 
     def __load_properties_from_file(self):
         if not os.path.exists(self.source_file):
@@ -2251,7 +2251,6 @@ class AudioGod(object):
 ################################################################################
 
 __USAGE__ = Template('''
-
 General commands show below:
 
     1. Show help information:
@@ -2403,7 +2402,6 @@ General steps:
     No.8: Export plist, json, markdown and note file.
 
 ------------------------------------------------------------------------------
-
 ''').safe_substitute(dict(
     cmd='pipenv run python {}'.format(sys.argv[0]),
     music='~/Music',

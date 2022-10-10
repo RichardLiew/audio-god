@@ -16,3 +16,6 @@ plist 文件里的 kind，track_type，file_folder_count，library_folder_count 
 看看 import 和 export 逻辑里可以做到增量更新吗
 export 所有空值的 field 都不要输出, 要注意对整型数据 0 和 0.0 的判断，0 的话也要输出，不算空值
 import 某个 field 为空值时，是直接赋值空值还是跳过不赋值 这块逻辑梳理下
+
+import evernote+plist+markdown & export markdown+plist & directory maker & plist playlist
+仿照 arkid 项目，增加 precommit 等

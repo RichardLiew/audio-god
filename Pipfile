@@ -10,6 +10,7 @@ mdutils = "*"
 treelib = "*"
 
 [dev-packages]
+pylint = "*"
 
 [requires]
 python_version = "3.9.1"
