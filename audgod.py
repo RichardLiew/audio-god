@@ -399,7 +399,8 @@ class AudioGod(object):
         self.__fields = [
             self.AudioProperty(x) for x in self.__resolve_fields(fields)
         ]
-        self.__clauses = ([], {}, {})
+        self.__clauses = ([], {}, {}, [])
+        self.__clauses_counter = (0, 0, 0, 0, 0)
         self.__audios = ([], [], [], [], set(), set())
         self.__audios_tree = TreeX(
             tree=None,
@@ -571,6 +572,30 @@ class AudioGod(object):
     @property
     def repeated_clauses(self):
         return self.__clauses[2]
+
+    @property
+    def grouping_clauses(self):
+        return self.__clauses[3]
+
+    @property
+    def total_clauses_counter(self):
+        return self.__clauses_counter[0]
+
+    @property
+    def invalid_clauses_counter(self):
+        return self.__clauses_counter[1]
+
+    @property
+    def valid_clauses_counter(self):
+        return self.__clauses_counter[2]
+
+    @property
+    def repeated_clauses_counter(self):
+        return self.__clauses_counter[3]
+
+    @property
+    def grouping_clauses_counter(self):
+        return self.__clauses_counter[4]
 
     @property
     def source_audios(self):
@@ -1082,38 +1107,41 @@ class AudioGod(object):
         title = hashed_clause.get(self.AudioProperty.TITLE.value, None)
         if not title:
             self.invalid_clauses.append(plain_clause)
+            self.invalid_clauses_counter += 1
             return
         artist = hashed_clause.get(self.AudioProperty.ARTIST.value, None)
         if not artist:
             self.invalid_clauses.append(plain_clause)
+            self.invalid_clauses_counter += 1
             return
         key = self.generate_key(artist, title)
-        if key in final_clauses:
-            if len(final_clauses[key] > 1):
-                final_clauses[key].append(hashed_clause)
-            else:
-                grouping = hashed_clause.get(
-                    self.AudioProperty.GROUPING.value, None,
-                )
-                if not grouping:
-                    grouping = self.DEFAULT_GROUPING
-                final_grouping = final_clauses[key][0].get(
-                    self.AudioProperty.GROUPING.value, None,
-                )
-                if not final_grouping:
-                    final_clauses[key][0][self.AudioProperty.GROUPING.value] = grouping
-                else:
-                    groups = grouping.split(self.GROUPING_SEPARATOR)
-                    final_groups = final_grouping.split(self.GROUPING_SEPARATOR)
-                    if len(list(set(groups) & set(final_groups))) > 0:
-                        final_clauses[key].append(hashed_clause)
-                    else:
-                        for group in groups:
-                            final_clauses[key][0][self.AudioProperty.GROUPING.value] = '{}{}{}'.format(
-                                final_grouping, self.GROUPING_SEPARATOR, group,
-                            )
-        else:
+        if key not in final_clauses:
             final_clauses[key] = [hashed_clause]
+            return
+        if len(final_clauses[key] > 1):
+            final_clauses[key].append(hashed_clause)
+            self.repeated_clauses_counter += 1
+            return
+        grouping = hashed_clause.get(
+            self.AudioProperty.GROUPING.value, None,
+        )
+        if not grouping:
+            grouping = self.DEFAULT_GROUPING
+        final_grouping = final_clauses[key][0].get(
+            self.AudioProperty.GROUPING.value, None,
+        )
+        if not final_grouping:
+            final_clauses[key][0][self.AudioProperty.GROUPING.value] = grouping
+            return
+        groups = grouping.split(self.GROUPING_SEPARATOR)
+        final_groups = final_grouping.split(self.GROUPING_SEPARATOR)
+        if len(list(set(groups) & set(final_groups))) > 0:
+            final_clauses[key].append(hashed_clause)
+            return
+        for group in groups:
+            final_clauses[key][0][self.AudioProperty.GROUPING.value] = '{}{}{}'.format(
+                final_grouping, self.GROUPING_SEPARATOR, group,
+            )
 
     @classmethod
     def recognize_filetype(cls, file):
@@ -1150,22 +1178,14 @@ class AudioGod(object):
         self.logger.warning(
             'Total Clauses: {}\n\n'
             'Valid Clauses: {}, '
+            'Grouping Clauses: {}, '
             'Invalid Clauses: {}, '
             'Repeated Clauses: {}\n'.format(
-                len(self.valid_clauses) \
-                + len(self.invalid_clauses) \
-                + len([
-                    item
-                    for value in self.repeated_clauses.values()
-                    for item in value
-                ]),
-                len(self.valid_clauses),
-                len(self.invalid_clauses),
-                len([
-                    item
-                    for value in self.repeated_clauses.values()
-                    for item in value
-                ]),
+                self.total_clauses_counter,
+                self.valid_clauses_counter,
+                self.grouping_clauses_counter,
+                self.invalid_clauses_counter,
+                self.repeated_clauses_counter,
             )
         )
         if len(self.invalid_clauses) > 0:
@@ -1204,15 +1224,19 @@ class AudioGod(object):
         with open(self.source_file, 'r', encoding='utf-8') as f:
             genre, grouping = self.DEFAULT_GENRE, self.DEFAULT_GROUPING
             for line in f:
+                self.total_clauses_counter += 1
                 # grouping line
                 if re.match(grouping_pattern, line, re.IGNORECASE) is not None:
                     _line = re.sub(grouping_pattern, r'\1====\2', line, re.IGNORECASE)
                     genre, grouping = _line.split('====')
+                    self.grouping_clauses.append(line)
+                    self.grouping_clauses_counter += 1
                     continue
                 # audio information line 
                 _line = re.sub(prefix_pattern, r'\1:', line, re.IGNORECASE)
                 if re.match(entire_pattern, _line, re.IGNORECASE) is None:
                     self.invalid_clauses.append(line)
+                    self.invalid_clauses_counter += 1
                     continue
                 _line = re.sub(
                     r'^\s*(({}))[:：]'.format(fields_pattern),
@@ -1235,6 +1259,7 @@ class AudioGod(object):
                     k = self.AUDIO_CN_PROPERTY_SYNONYMS.get(k, k).lower()
                     if k not in [field.value for field in self.ALL_FIELDS]:
                         self.invalid_clauses.append(line)
+                        self.invalid_clauses_counter += 1
                         continue
                     result[k] = v
                 self.process_clause(line, result, _clauses)
