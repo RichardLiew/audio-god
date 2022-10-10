@@ -169,6 +169,7 @@ class TreeX(Tree):
 class AudioGod(object):
     DIV_CHAR = '#'
     ORI_DIV_CHAR = '-'
+    GROUPING_SEPARATOR = '|'
 
 
     class FilenamePatternTemplate(Template):
@@ -344,7 +345,8 @@ class AudioGod(object):
     AUDIOS_TREE_ROOT_TAG = '--root-tag--'
     AUDIOS_TREE_ROOT_NID = '--root-nid--'
 
-    AUDIO_DEFAULT_GROUPING = 'Default'
+    DEFAULT_GENRE = 'Pop'
+    DEFAULT_GROUPING = 'Default'
 
     DEFAULT_TRACK_INITIAL_ID = 601
     DEFAULT_PLAYLIST_INITIAL_ID = 3001
@@ -681,8 +683,8 @@ class AudioGod(object):
         ret = re.sub(r'([\)\]\>\|:,;\!\?])', r'\1 ', ret)
         ret = re.sub(r'([\&])', r' \1 ', ret)
         # 依据情况而定，看看是否有必要将下面正则激活
-        #ret = re.sub(r'[ \t]{0,}&[ \t]{0,}', r' & ', ret)
-        ret = re.sub(r'[ \t]+', r' ', ret).strip()
+        #ret = re.sub(r'\s*&\s*', r' & ', ret)
+        ret = re.sub(r'\s+', r' ', ret).strip()
         ret = re.sub(r'([\)\]\>\|]) ([:,;\.\!\?])', r'\1\2', ret)
         return ret
 
@@ -700,7 +702,7 @@ class AudioGod(object):
         ret = cls.unify_format(artist)
         ret = re.sub(r'[、，/,]', r'&', ret)
         ret = re.sub(r'&', r' & ', ret)
-        ret = re.sub(r'[ \t]{0,}&[ \t]{0,}', r' & ', ret)
+        ret = re.sub(r'\s*&\s*', r' & ', ret)
         return ret
 
     @classmethod
@@ -1026,7 +1028,7 @@ class AudioGod(object):
                     ret = (len(audio_object.tag.images), ret if ret else '')
             #elif field == AudioGod.AudioProperty.GROUPING:
             #    if not ret:
-            #        ret = self.AUDIO_DEFAULT_GROUPING
+            #        ret = self.DEFAULT_GROUPING
         else:
             if hasattr(audio_object.tag, field.value):
                 ret = getattr(audio_object.tag, field.value)
@@ -1165,37 +1167,45 @@ class AudioGod(object):
         pass
 
     def __import_note(self):
+        grouping_pattern = r'^\s*#\s*\[\s*(\S+)\s*\]\s*(\S+)\s*$'
         fields_pattern = '|'.join(
             list(self.AUDIO_CN_PROPERTIES.keys()) + \
             list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
         )
         prefix_pattern = r'^.*(({}))[:：]'.format(fields_pattern)
         entire_pattern = \
-                r'^({0})[:：].*([,，][ \t]{{0,}}({0})[:：].*){{0,}}$'.format(
+                r'^({0})[:：].*([,，]\s*({0})[:：].*){{0,}}$'.format(
             fields_pattern,
         )
 
         _clauses = {}
         with open(self.source_file, 'r', encoding='utf-8') as f:
+            genre, grouping = self.DEFAULT_GENRE, self.DEFAULT_GROUPING
             for line in f:
+                # grouping line
+                if re.match(grouping_pattern, line, re.IGNORECASE) is not None:
+                    _line = re.sub(grouping_pattern, r'\1====\2', line, re.IGNORECASE)
+                    genre, grouping = _line.split('====')
+                    continue
+                # audio information line 
                 _line = re.sub(prefix_pattern, r'\1:', line, re.IGNORECASE)
                 if re.match(entire_pattern, _line, re.IGNORECASE) is None:
                     self.invalid_clauses.append(line)
                     continue
                 _line = re.sub(
-                    r'^[ \t]{{0,}}(({}))[:：]'.format(fields_pattern),
+                    r'^\s*(({}))[:：]'.format(fields_pattern),
                     r'\1:',
                     _line,
                     re.IGNORECASE,
                 )
                 _line = re.sub(
-                    r'[,，][ \t]{{0,}}(({}))[:：]'.format(fields_pattern),
-                    r'|\1:',
+                    r'[,，]\s*(({}))[:：]'.format(fields_pattern),
+                    r'====\1:',
                     _line,
                     re.IGNORECASE,
                 )
                 result = {}
-                for kv in _line.split('|'):
+                for kv in _line.split('===='):
                     k, v = [item.strip() for item in kv.split(':')]
                     k = self.AUDIO_CN_PROPERTY_SYNONYMS.get(k, k).lower()
                     if k not in [field.value for field in self.ALL_FIELDS]:
@@ -1297,11 +1307,11 @@ class AudioGod(object):
             audio_object = eyed3.load(audio)
             grouping = self.fetchx(audio_object, self.AudioProperty.GROUPING)
             if not grouping:
-                grouping = self.AUDIO_DEFAULT_GROUPING
+                grouping = self.DEFAULT_GROUPING
                 self.logger.debug(
-                    'Empty grouping of <{}>, use <{}> instead!'.format(audio, self.AUDIO_DEFAULT_GROUPING),
+                    'Empty grouping of <{}>, use <{}> instead!'.format(audio, self.DEFAULT_GROUPING),
                 )
-            for group in grouping.split('|'):
+            for group in grouping.split(self.GROUPING_SEPARATOR):
                 group = re.sub(r'\/+', r'/', group).rstrip('/')
                 if not group:
                     continue
@@ -1896,7 +1906,7 @@ class AudioGod(object):
                     end = result.find('|\n+', beg+3)
                     result = result[:beg+2] + result[end+2:]
                     result = re.sub(r'\+[\+-]{0,}\n', r'', result)
-                    result = re.sub(r'[ \t]{0,}\|[ \t]{0,}', r'|', result)
+                    result = re.sub(r'\s*\|\s*', r'|', result)
                     result = re.sub(r'^[ \t\n]{0,}\|', r'', result)
                     result = re.sub(r'\|[ \t\n]{0,}$', r'\n', result)
                     result = re.sub(r'\|\n\|', r'\n', result)
