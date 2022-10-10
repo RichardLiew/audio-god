@@ -345,7 +345,7 @@ class AudioGod(object):
     AUDIOS_TREE_ROOT_TAG = '--root-tag--'
     AUDIOS_TREE_ROOT_NID = '--root-nid--'
 
-    DEFAULT_GENRE = 'Pop'
+    DEFAULT_GENRE = 'Default'
     DEFAULT_GROUPING = 'Default'
 
     DEFAULT_TRACK_INITIAL_ID = 601
@@ -1089,7 +1089,29 @@ class AudioGod(object):
             return
         key = self.generate_key(artist, title)
         if key in final_clauses:
-            final_clauses[key].append(hashed_clause)
+            if len(final_clauses[key] > 1):
+                final_clauses[key].append(hashed_clause)
+            else:
+                grouping = hashed_clause.get(
+                    self.AudioProperty.GROUPING.value, None,
+                )
+                if not grouping:
+                    grouping = self.DEFAULT_GROUPING
+                final_grouping = final_clauses[key][0].get(
+                    self.AudioProperty.GROUPING.value, None,
+                )
+                if not final_grouping:
+                    final_clauses[key][0][self.AudioProperty.GROUPING.value] = grouping
+                else:
+                    groups = grouping.split(self.GROUPING_SEPARATOR)
+                    final_groups = final_grouping.split(self.GROUPING_SEPARATOR)
+                    if len(list(set(groups) & set(final_groups))) > 0:
+                        final_clauses[key].append(hashed_clause)
+                    else:
+                        for group in groups:
+                            final_clauses[key][0][self.AudioProperty.GROUPING.value] = '{}{}{}'.format(
+                                final_grouping, self.GROUPING_SEPARATOR, group,
+                            )
         else:
             final_clauses[key] = [hashed_clause]
 
@@ -1204,7 +1226,10 @@ class AudioGod(object):
                     _line,
                     re.IGNORECASE,
                 )
-                result = {}
+                result = {
+                    self.AudioProperty.GENRE.value: genre,
+                    self.AudioProperty.GROUPING.value: grouping,
+                }
                 for kv in _line.split('===='):
                     k, v = [item.strip() for item in kv.split(':')]
                     k = self.AUDIO_CN_PROPERTY_SYNONYMS.get(k, k).lower()
