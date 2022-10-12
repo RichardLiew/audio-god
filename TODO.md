@@ -19,5 +19,5 @@ import 某个 field 为空值时，是直接赋值空值还是跳过不赋值 �
 
 import evernote+plist+markdown & export markdown+plist & directory maker & plist playlist
 仿照 arkid 项目，增加 precommit 等
-div_char 和 grouping_seperator 是否有必要改成命令行可配
-div_char、ori_div_char、note 样例等在 usage 信息里面展示
+div_char 和 grouping_seperator 是否有必要改成命令行可配 (没必要)
+div_char、ori_div_char、AUDIO_PROPERTIES、note 样例等在 usage 信息里面展示

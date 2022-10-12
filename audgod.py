@@ -167,8 +167,8 @@ class TreeX(Tree):
 
 
 class AudioGod(object):
-    DIV_CHAR = '#'
     ORI_DIV_CHAR = '-'
+    DIV_CHAR = '#'
     GROUPING_SEPARATOR = '|'
 
 
@@ -2315,9 +2315,65 @@ class AudioGod(object):
 #                                                                              #
 ################################################################################
 
-__USAGE__ = Template('''
-General commands show below:
+def audio_properties() -> str:
+    table = PrettyTable()
+    table.field_names = [
+        'Number',
+        'Field',
+        'Chinese Name',
+        'English Name',
+        'Type',
+    ]
+    for field in table.field_names:
+        table.align[field] = 'l'
+    for number, prop in enumerate(AudioGod.ALL_FIELDS):
+        field = prop.value
+        chinese_name = AudioGod.AUDIO_PROPERTIES[field][0][0]
+        english_name = AudioGod.AUDIO_PROPERTIES[field][0][1]
+        field_type = AudioGod.AUDIO_PROPERTIES[field][1]
+        table.add_row([
+            number+1,
+            field,
+            chinese_name,
+            english_name,
+            field_type,
+        ])
+    return table.get_string(
+        title='AUDIO PROPERTIES',
+    )
 
+def special_characters() -> str:
+    table = PrettyTable()
+    table.field_names = [
+        'Number',
+        'Character',
+        'Introduction',
+    ]
+    for field in table.field_names:
+        table.align[field] = 'l'
+    characters = [
+        (AudioGod.ORI_DIV_CHAR, 'Separator for origin audio file name.'),
+        (AudioGod.DIV_CHAR, 'Separator for formatted audio file name.'),
+        (AudioGod.GROUPING_SEPARATOR, 'Separator for several grouping property of audio file.'),
+    ]
+    for number, char in enumerate(characters):
+        table.add_row([
+            number+1,
+            char[0],
+            char[1],
+        ])
+    return table.get_string(
+        title='SPECIAL CHARACTERS',
+    )
+
+__USAGE__ = Template('''
+All fields:
+${audio_properties}
+
+Special characters:
+${special_characters}
+
+General commands:
     1. Show help information:
         ${cmd} -h/--help
 
@@ -2456,6 +2512,24 @@ General commands show below:
 
 ------------------------------------------------------------------------------
 
+Sample of audio file name:
+
+Origin audio file name: "傅梦彤-潮汐 (Natural).mp3"
+Formatted audio file name: "傅梦彤 # 潮汐 (Natural).mp3"
+
+------------------------------------------------------------------------------
+
+Sample in note to import:
+
+#[Pop] Vocals/Explosive/English
+歌曲名：Rise And Fall (DJ版), 歌手名：Camelot, 专辑名：Rise And Fall
+[]歌曲名：Drag Me Down, artist：One Direction, 专辑名：Drag Me Down, genre：Electronic
+#[Pop] Vocals/ppp/qqq
+1. []title：Star Sky, artist：Two Steps From Hell/Thomas Bergersen, album：Battlecry
+2.[]歌曲名：Horizon, 歌手名：Janji, 专辑名：Horizon, 分组：a/b/c|d/e/f|g/h/k
+
+------------------------------------------------------------------------------
+
 General steps:
     No.1: Download songs, and make sure that file named with "artist-title";
     No.2: Add detail of songs to notes, then grouped;
@@ -2468,6 +2542,8 @@ General steps:
 
 ------------------------------------------------------------------------------
 ''').safe_substitute(dict(
+    audio_properties=audio_properties(),
+    special_characters=special_characters(),
     cmd='pipenv run python {}'.format(sys.argv[0]),
     music='~/Music',
     local='.',
