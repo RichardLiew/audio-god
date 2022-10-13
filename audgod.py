@@ -337,7 +337,7 @@ class AudioGod(object):
 
 
     DEFAULT_ITUNES_VERSION_PLIST = '/System/Applications/Music.app/Contents/version.plist'
-    DEFAULT_ITUNES_FOLDER = '{}/Music/iTunes'.format(os.environ['HOME'])
+    DEFAULT_ITUNES_FOLDER = os.path.expandvars('${HOME}/Music/iTunes')
     DEFAULT_ITUNES_MEDIA_FOLDER = '{}/iTunes Media'.format(DEFAULT_ITUNES_FOLDER)
     DEFAULT_ITUNES_LIBRARY_PLIST = '{}/Library.xml'.format(DEFAULT_ITUNES_MEDIA_FOLDER)
 
@@ -602,13 +602,16 @@ class AudioGod(object):
         src, recursive = self.audios_source
         if not os.path.exists(src):
             self.logger.fatal('Source <{}> not exists!'.format(src))
+            return
         src = os.path.abspath(src)
         if os.path.isfile(src):
             if not self.__check_extension(src):
                 self.logger.fatal('Source <{}> invalid extension!'.format(src))
+                return
             return [src]
         if not os.path.isdir(src):
             self.logger.fatal('Source <{}> not a directory!'.format(src))
+            return
         ret = []
         if recursive:
             for _root, _dirs, _files in os.walk(src):
@@ -1014,6 +1017,7 @@ class AudioGod(object):
                                 audio_object.file_info.name, value,
                             ),
                         )
+                        return
         else:
             setattr(audio_object.tag, field.value, value)
         audio_object.tag.save()
@@ -1085,6 +1089,7 @@ class AudioGod(object):
     def generate_key_by_audio(self, audio):
         if not self.__check_name(audio):
             self.logger.fatal('Invalid name of audio <{}>!'.format(audio))
+            return
         name, _ = os.path.splitext(os.path.basename(audio))
         name = name.strip()
         if name.count(self.DIV_CHAR) == 1:
@@ -1178,6 +1183,7 @@ class AudioGod(object):
     def __load_properties_from_file(self):
         if not os.path.exists(self.source_file):
             self.logger.fatal('Source file <{}> not exists!'.format(self.source_file))
+            return
         self.import_()
         self.logger.warning('\n{}\n'.format('#' * 78))
         self.logger.warning(
@@ -1561,6 +1567,7 @@ class AudioGod(object):
     def organize_files(self):
         if not self.audio_root:
             self.logger.fatal('Invalid audio root!')
+            return
         self.__load_audios()
         audios = self.concerned_audios
         for audio in audios:
@@ -1569,16 +1576,23 @@ class AudioGod(object):
                 artist = self.fetchx(audio_object, self.AudioProperty.ARTIST)
                 if not artist:
                     self.logger.fatal('Invalid artist of <{}>'.format(audio))
+                    return
                 album = self.fetchx(audio_object, self.AudioProperty.ALBUM)
                 if not album:
                     self.logger.fatal('Invalid album of <{}>'.format(audio))
+                    return
                 dir_ = '{}/{}/{}'.format(self.audio_root, artist, album)
+                os.makedirs(dir_, exist_ok=True)
             else:
                 grouping = self.fetchx(audio_object, self.AudioProperty.GROUPING)
                 if not grouping:
                     self.logger.fatal('Invalid grouping of <{}>'.format(audio))
-                dir_ = '{}/{}'.format(self.audio_root, grouping)
-            os.makedirs(dir_, exist_ok=True)
+                    return
+                groups = grouping.split(self.GROUPING_SEPARATOR)
+                for group in groups:
+                    dir_ = '{}/{}'.format(self.audio_root, group)
+                    os.makedirs(dir_, exist_ok=True)
+                target, links = groups[0], groups[1:]
             newname = '{}/{}'.format(dir_, os.path.basename(audio))
             os.rename(audio, newname)
 
@@ -1701,6 +1715,7 @@ class AudioGod(object):
                 index = fields.index(field)
                 if index < 0:
                     self.logger.fatal('Invalid field <{}>!'.format(field))
+                    return
                 if index != i:
                     fields[i], fields[index] = \
                             fields[index], fields[i]
@@ -1785,6 +1800,7 @@ class AudioGod(object):
                                             _field,
                                         ),
                                     )
+                                    return
                                 if relation == 'or':
                                     rows_set.update(filter_functions[function](
                                         rows, index, *parameters,
@@ -1797,6 +1813,7 @@ class AudioGod(object):
                             self.logger.fatal(
                                 'Invalid function <{}>!'.format(function),
                             )
+                            return
                     rows = [list(row) for row in list(rows_set)]
 
             def _default_sort(rows, index, reverse):
@@ -1820,6 +1837,7 @@ class AudioGod(object):
                             self.logger.fatal(
                                 'Invalid field <{}> when sort!'.format(_field),
                             )
+                            return
                         function = sort_functions['default']
                         if _field in sort_functions.keys():
                             function = sort_functions[_field]
@@ -2034,6 +2052,7 @@ class AudioGod(object):
         filetype = self.recognize_filetype(self.output_file) 
         if filetype == self.FileType.NONE:
             self.logger.fatal('Output file is empty when export!')
+            return
         self.__fill_audios_tree()
         if filetype == self.FileType.JSON:
             self.__export_json()
@@ -2514,7 +2533,7 @@ General commands:
 
 Sample of audio file name:
 
-Origin audio file name: "傅梦彤-潮汐 (Natural).mp3"
+Original  audio file name: "傅梦彤-潮汐 (Natural).mp3"
 Formatted audio file name: "傅梦彤 # 潮汐 (Natural).mp3"
 
 ------------------------------------------------------------------------------
