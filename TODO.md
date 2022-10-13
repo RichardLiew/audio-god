@@ -22,4 +22,7 @@ import evernote+plist+markdown & export markdown+plist & directory maker & plist
 看看有必要增加几种类型的导入导出文件之间的相互转化
 pydoc.pipepager
 取消 string 类型的 enum 中的 value 累赘
-是否可虑适配 windows 系统，并将代码中的 / 符号全部检查一遍，替换为 os.path.join 形式，甚至需要更改 grouping 分隔符
+是否可虑适配 windows 系统，并将代码中的 / 符号全部检查一遍，替换为 os.path.join 形式，甚至需要更改 grouping 分隔符, os.path.normpath() os.path.normcase()  if sys.platform == "win32":
+os.symlink & os.link 看看取舍
+load audios 时删除所有无效软链接，或者全部软链接都删除也可以, https://gist.github.com/seanh/229454, if not os.path.exists(os.readlink(path)): os.path.exists(os.path.realpath(path)) link_target=os.readlink(path) dir=os.path.dirname(path) if not os.path.isabs(link_target): link_target=os.path.join(dir, link_target) if os.path.exists(link_target):
+创建软链接时，目前都是用的绝对路径，是否应该改成相对路径 

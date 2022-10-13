@@ -8,6 +8,16 @@ from enum import Enum, unique
 
 from treelib import Tree
 
+import sys
+
+import os
+
+
+os.symlink('./jay.txt', './jay.txt.link')
+
+print(os.path.islink('./jay.txt.link'))
+
+sys.exit(1)
 
 class TreeX(Tree):
     def perfect_merge(self, nid, new_tree, deep=False) -> None:

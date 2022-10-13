@@ -1581,20 +1581,35 @@ class AudioGod(object):
                 if not album:
                     self.logger.fatal('Invalid album of <{}>'.format(audio))
                     return
-                dir_ = '{}/{}/{}'.format(self.audio_root, artist, album)
+                dir_ = os.path.join(self.audio_root, artist, album)
                 os.makedirs(dir_, exist_ok=True)
+                newname = os.path.join(dir_, os.path.basename(audio))
+                os.rename(audio, newname)
             else:
                 grouping = self.fetchx(audio_object, self.AudioProperty.GROUPING)
                 if not grouping:
                     self.logger.fatal('Invalid grouping of <{}>'.format(audio))
                     return
                 groups = grouping.split(self.GROUPING_SEPARATOR)
-                for group in groups:
-                    dir_ = '{}/{}'.format(self.audio_root, group)
-                    os.makedirs(dir_, exist_ok=True)
-                target, links = groups[0], groups[1:]
-            newname = '{}/{}'.format(dir_, os.path.basename(audio))
-            os.rename(audio, newname)
+                target = os.path.join(self.audio_root, groups[0])
+                os.makedirs(target, exist_ok=True)
+                target = os.path.join(target, os.path.basename(audio))
+                os.rename(audio, target)
+                links = [os.path.join(self.audio_root, group) for group in groups[1:]]
+                for link in links:
+                    os.makedirs(link, exist_ok=True)
+                links = list(map(
+                    lambda x: os.path.join(self.audio_root, x), links,
+                ))
+                for link in links:
+                    if os.path.exists(link):
+                        if os.path.islink(link):
+                            os.remove(link)
+                        else:
+                            self.logger.fatal('<{}> not a link!'.format(link))
+                            return
+                    #os.link(target, link)
+                    os.symlink(target, link)
 
     def display(self):
         #print("# {}".format('=' * 78))
