@@ -143,7 +143,7 @@ class TreeX(Tree):
             nid = self.root
 
         if not self.contains(nid):
-            self.logger.critical('Node <{}> is not in the tree!'.format(nid))
+            self.logger.critical(f'Node <{nid}> is not in the tree!')
             return
 
         current_node = self[nid]
@@ -419,20 +419,20 @@ class AudioGod(object):
         self.__ignored_set = set()
         self.__format = {
             field: getattr(
-                self, 'format_{}'.format(field), lambda x: x,
+                self, f'format_{field}', lambda x: x,
             )
             for field in self.ALL_FIELDS
         }
         self.__parse = {
             field: getattr(
-                self, 'parse_{}'.format(field), lambda x: x,
+                self, f'parse_{field}', lambda x: x,
             )
             for field in self.ALL_FIELDS
         }
         self.__output = {
             field: getattr(
                 self,
-                'output_{}'.format(field),
+                f'output_{field}',
                 lambda x, y=self.FileType.NONE: x,
             )
             for field in self.ALL_FIELDS
@@ -607,16 +607,16 @@ class AudioGod(object):
     def source_audios(self):
         src, recursive = self.audios_source
         if not os.path.exists(src):
-            self.logger.fatal('Source <{}> not exists!'.format(src))
+            self.logger.fatal(f'Source <{src}> not exists!')
             return
         src = os.path.abspath(src)
         if os.path.isfile(src):
             if not self.__check_extension(src):
-                self.logger.fatal('Source <{}> invalid extension!'.format(src))
+                self.logger.fatal(f'Source <{src}> invalid extension!')
                 return
             return [src]
         if not os.path.isdir(src):
-            self.logger.fatal('Source <{}> not a directory!'.format(src))
+            self.logger.fatal(f'Source <{src}> not a directory!')
             return
         ret = []
         if recursive:
@@ -835,7 +835,7 @@ class AudioGod(object):
             bit_rate = bit_rate[1]
         if output_type in [cls.FileType.NONE, cls.FileType.PLIST]:
             return bit_rate
-        return '{} kb/s'.format(bit_rate)
+        return f'{bit_rate} kb/s'
 
     @classmethod
     def output_sample_freq(cls, sample_freq, output_type=FileType.NONE):
@@ -1017,7 +1017,7 @@ class AudioGod(object):
                             audio_object.tag.images.set(
                                 type_=3,
                                 img_data=open(value, 'rb').read(),
-                                mime_type='image/{}'.format(ext[1:].lower()),
+                                mime_type=f'image/{ext[1:].lower()}',
                             )
                         else:
                             self.logger.fatal(
@@ -1098,7 +1098,7 @@ class AudioGod(object):
 
     def generate_key_by_audio(self, audio):
         if not self.__check_name(audio):
-            self.logger.fatal('Invalid name of audio <{}>!'.format(audio))
+            self.logger.fatal(f'Invalid name of audio <{audio}>!')
             return
         name, _ = os.path.splitext(os.path.basename(audio))
         name = name.strip()
@@ -1193,7 +1193,7 @@ class AudioGod(object):
 
     def __load_properties_from_file(self):
         if not os.path.exists(self.source_file):
-            self.logger.fatal('Source file <{}> not exists!'.format(self.source_file))
+            self.logger.fatal(f'Source file <{self.source_file}> not exists!')
             return
         self.import_()
         self.logger.warning('\n{}\n'.format('#' * 78))
@@ -1213,7 +1213,7 @@ class AudioGod(object):
         if len(self.invalid_clauses) > 0:
             self.logger.info('\nInvalid Clauses:')
             for item in self.invalid_clauses:
-                self.logger.info('\t{}'.format(item))
+                self.logger.info(f'\t{item}')
         if len(self.repeated_clauses) > 0:
             self.logger.info('\nRepeated Clauses:')
             for key in self.repeated_clauses:
@@ -1303,7 +1303,7 @@ class AudioGod(object):
 
         audios = self.source_audios
         for audio in audios:
-            self.logger.debug('Loading <{}> ...'.format(audio))
+            self.logger.debug(f'Loading <{audio}> ...')
             _type = self.__check_audio(audio)
             if self.AudioType.INVALID_EXT.eq(_type):
                 self.invalid_ext_audios.append(audio)
@@ -1358,15 +1358,15 @@ class AudioGod(object):
         if len(self.invalid_ext_audios) > 0:
             self.logger.info('\nInvalid Extension Audios:')
             for audio in self.invalid_ext_audios:
-                self.logger.info('\t{}'.format(audio))
+                self.logger.info(f'\t{audio}')
         if len(self.invalid_name_audios) > 0:
             self.logger.info('\nInvalid Name Audios:')
             for audio in self.invalid_name_audios:
-                self.logger.info('\t{}'.format(audio))
+                self.logger.info(f'\t{audio}')
         if len(self.notmatched_audios) > 0:
             self.logger.info('\nNot Matched Audios:')
             for audio in self.notmatched_audios:
-                self.logger.info('\t{}'.format(audio))
+                self.logger.info(f'\t{audio}')
 
     def __fill_audios_tree(self) -> None:
         self.__load_audios()
@@ -1381,7 +1381,7 @@ class AudioGod(object):
             if not grouping:
                 grouping = self.DEFAULT_GROUPING
                 self.logger.debug(
-                    'Empty grouping of <{}>, use <{}> instead!'.format(audio, self.DEFAULT_GROUPING),
+                    f'Empty grouping of <{audio}>, use <{self.DEFAULT_GROUPING}> instead!',
                 )
             for group in grouping.split(self.GROUPING_SEPARATOR):
                 group = re.sub(r'\/+', r'/', group).rstrip('/')
@@ -1485,17 +1485,17 @@ class AudioGod(object):
         filled_count = 0
         self.logger.warning('\n{}\n'.format('#' * 78))
         for audio in audios:
-            self.logger.debug('Filling <{}> ...'.format(audio))
+            self.logger.debug(f'Filling <{audio}> ...')
             filled, audio_object = False, eyed3.load(audio)
             for field in self.fields:
                 property_ = self.__fetch_from_outside(audio, field)
                 if property_ is not None:
                     filled = True
                     self.save(audio_object, field, property_, True)
-                    self.logger.debug('Field <{}> assigned!'.format(field))
+                    self.logger.debug(f'Field <{field}> assigned!')
             if filled:
                 filled_count += 1
-                self.logger.debug('Audio <{}> filled!'.format(audio))
+                self.logger.debug(f'Audio <{audio}> filled!')
         self.logger.warning(
             'Audios To Fill: {}, Filled Audios: {}\n'.format(
                 len(audios), filled_count,
@@ -1531,15 +1531,13 @@ class AudioGod(object):
         audios = self.concerned_audios
         self.logger.warning('\n{}\n'.format('#' * 78))
         for audio in audios:
-            self.logger.debug('Formatting <{}> ...'.format(audio))
+            self.logger.debug(f'Formatting <{audio}> ...')
             audio_object = eyed3.load(audio)
             for field in self.fields:
                 property_ = self.fetchx(audio_object, field, True)
                 if property_ is not None:
                     self.save(audio_object, field, property_, True)
-        self.logger.warning(
-            'Formatted Audios: {}\n'.format(len(audios)),
-        )
+        self.logger.warning(f'Formatted Audios: {len(audios)}\n')
 
     def rename_audios(self):
         self.__load_audios()
@@ -1570,7 +1568,7 @@ class AudioGod(object):
             for i, image in enumerate(audio_object.tag.images):
                 image_file = os.path.join(_path, _name)
                 if len(audio_object.tag.images) > 1:
-                    image_file += '@{}'.format(i)
+                    image_file += f'@{i}'
                 image_file += '.jpg'
                 with open(image_file, 'wb') as f:
                     f.write(image.image_data)
@@ -1586,11 +1584,11 @@ class AudioGod(object):
             if self.OrganizeType.ITUNED.eq(self.organize_type):
                 artist = self.fetchx(audio_object, self.AudioProperty.ARTIST)
                 if not artist:
-                    self.logger.fatal('Invalid artist of <{}>'.format(audio))
+                    self.logger.fatal(f'Invalid artist of <{audio}>')
                     return
                 album = self.fetchx(audio_object, self.AudioProperty.ALBUM)
                 if not album:
-                    self.logger.fatal('Invalid album of <{}>'.format(audio))
+                    self.logger.fatal(f'Invalid album of <{audio}>')
                     return
                 dir_ = os.path.join(self.audio_root, artist, album)
                 os.makedirs(dir_, exist_ok=True)
@@ -1599,7 +1597,7 @@ class AudioGod(object):
             else:
                 grouping = self.fetchx(audio_object, self.AudioProperty.GROUPING)
                 if not grouping:
-                    self.logger.fatal('Invalid grouping of <{}>'.format(audio))
+                    self.logger.fatal(f'Invalid grouping of <{audio}>')
                     return
                 groups = grouping.split(self.GROUPING_SEPARATOR)
                 target = os.path.join(self.audio_root, groups[0])
@@ -1617,7 +1615,7 @@ class AudioGod(object):
                         if os.path.islink(link):
                             os.remove(link)
                         else:
-                            self.logger.fatal('<{}> not a link!'.format(link))
+                            self.logger.fatal(f'<{link}> not a link!')
                             return
                     #os.link(target, link)  # 创建硬链接
                     os.symlink(target, link)  # 创建软链接
@@ -1741,7 +1739,7 @@ class AudioGod(object):
             for i, field in enumerate(fields_to_show):
                 index = fields.index(field)
                 if index < 0:
-                    self.logger.fatal('Invalid field <{}>!'.format(field))
+                    self.logger.fatal(f'Invalid field <{field}>!')
                     return
                 if index != i:
                     fields[i], fields[index] = \
@@ -1823,9 +1821,7 @@ class AudioGod(object):
                                 index = fields.index(_field.strip())
                                 if index < 0:
                                     self.logger.fatal(
-                                        'Invalid field <%s> when filter!' % (
-                                            _field,
-                                        ),
+                                        f'Invalid field <{_field}> when filter!',
                                     )
                                     return
                                 if relation == 'or':
@@ -1838,7 +1834,7 @@ class AudioGod(object):
                                     ))
                         else:
                             self.logger.fatal(
-                                'Invalid function <{}>!'.format(function),
+                                f'Invalid function <{function}>!',
                             )
                             return
                     rows = [list(row) for row in list(rows_set)]
@@ -1862,7 +1858,7 @@ class AudioGod(object):
                         index = fields.index(_field.strip())
                         if index < 0:
                             self.logger.fatal(
-                                'Invalid field <{}> when sort!'.format(_field),
+                                f'Invalid field <{_field}> when sort!',
                             )
                             return
                         function = sort_functions['default']
@@ -1884,12 +1880,10 @@ class AudioGod(object):
                 for row in rows[start-1:end]:
                     table.add_row(row)
 
-            table_title = 'Total Audios: {}'.format(total_rows)
+            table_title = f'Total Audios: {total_rows}'
             if show_page:
-                table_title += ', Page Size: {}'.format(page_size)
-                table_title += ', Page Number: {} / {}'.format(
-                    page_number, total_pages,
-                )
+                table_title += f', Page Size: {page_size}'
+                table_title += f', Page Number: {page_number} / {total_pages}'
 
             table_string = table.get_string(
                 title=table_title,
@@ -2114,10 +2108,10 @@ class AudioGod(object):
 
     @classmethod
     def encode_location(cls, location) -> str:
-        ret = 'file://{}'.format(cls.encode(location))
+        ret = f'file://{cls.encode(location)}'
         if os.path.isfile(location):
             return ret
-        return '{}/'.format(ret)
+        return f'{ret}/'
 
     @staticmethod
     def escape_characters(content):
@@ -2144,7 +2138,7 @@ class AudioGod(object):
                         pos = 3
                     formatted_version = str(int(origin_version[0:pos]))
                     while pos < len(origin_version):
-                        formatted_version += '.{}'.format(str(int(origin_version[pos:pos+3])))
+                        formatted_version += f'.{str(int(origin_version[pos:pos+3]))}'
                         pos += 3
                     return formatted_version.rstrip('.0')
             return '1.0'
@@ -2153,7 +2147,7 @@ class AudioGod(object):
             return template.strip().replace(' '*4, '\t') + '\n'
 
         def _repack_plist(content) -> str:
-            result = '\n{}'.format(content).replace('\n', '\n\t\t')
+            result = f'\n{content}'.replace('\n', '\n\t\t')
             return result[:-1]
 
         def _pack_track(track) -> str:
@@ -2590,7 +2584,7 @@ General steps:
 ''').safe_substitute(dict(
     audio_properties=audio_properties(),
     special_characters=special_characters(),
-    cmd='pipenv run python {}'.format(sys.argv[0]),
+    cmd=f'pipenv run python {sys.argv[0]}',
     music='~/Music',
     local='.',
     delimiter=AudioGod.FilenamePatternTemplate.delimiter,
