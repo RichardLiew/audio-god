@@ -8,6 +8,7 @@ eyed3 = "*"
 prettytable = "*"
 mdutils = "*"
 treelib = "*"
+enumx = "*"
 
 [dev-packages]
 pylint = "*"

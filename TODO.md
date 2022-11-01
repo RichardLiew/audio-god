@@ -18,11 +18,14 @@ export 所有空值的 field 都不要输出, 要注意对整型数据 0 和 0.0
 import 某个 field 为空值时，是直接赋值空值还是跳过不赋值 这块逻辑梳理下
 
 import evernote+plist+markdown & export markdown+plist & directory maker & plist playlist
-仿照 arkid 项目，增加 precommit 等
+仿照 arkid 项目，增加 precommit 等, pre-commit-config.yaml, .pre-commit-hooks.yaml, (Anebit/startupmate-backend), .flake8, .readthedocs.yml
+pydoc 字体各版式控制
 看看有必要增加几种类型的导入导出文件之间的相互转化
-pydoc.pipepager
 取消 string 类型的 enum 中的 value 累赘
 是否可虑适配 windows 系统，并将代码中的 / 符号全部检查一遍，替换为 os.path.join 形式，甚至需要更改 grouping 分隔符, os.path.normpath() os.path.normcase()  if sys.platform == "win32":
 os.symlink & os.link 看看取舍
 load audios 时删除所有无效软链接，或者全部软链接都删除也可以, https://gist.github.com/seanh/229454, if not os.path.exists(os.readlink(path)): os.path.exists(os.path.realpath(path)) link_target=os.readlink(path) dir=os.path.dirname(path) if not os.path.isabs(link_target): link_target=os.path.join(dir, link_target) if os.path.exists(link_target):
-创建软链接时，目前都是用的绝对路径，是否应该改成相对路径 
+创建软链接时，目前都是用的绝对路径，是否应该改成相对路径
+判断是否是硬连接 os.stat(filename).st_nlink > 1
+os.environ['HOME'], os.path.expandvars('${HOME}'), '~' 看看是否需要统一下
+python switch 语句研究
