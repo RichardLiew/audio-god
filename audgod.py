@@ -1554,7 +1554,7 @@ class AudioGod(object):
             if _old == _new:
                 continue
             _path = os.path.dirname(audio)
-            os.rename(os.paht.join(_path, _old), os.path.join(_path, _new))
+            os.rename(os.path.join(_path, _old), os.path.join(_path, _new))
 
     def derive_artworks(self):
         self.__load_audios()
