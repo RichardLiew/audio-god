@@ -1396,12 +1396,11 @@ class AudioGod(object):
                 for i in range(len(tags)):
                     tag, nid = tags[i], self.generate_persistent_id()
                     parent, node_type = last_nid, self.AudiosTreeNodeType.FOLDER
-                    match i:
-                        case 0:
-                            nid = self.AUDIOS_TREE_ROOT_NID
-                            parent, node_type = None, self.AudiosTreeNodeType.ROOT
-                        case len(tags) - 1:
-                            node_type = self.AudiosTreeNodeType.PLAYLIST
+                    if i == 0:
+                        nid = self.AUDIOS_TREE_ROOT_NID
+                        parent, node_type = None, self.AudiosTreeNodeType.ROOT
+                    elif i == len(tags) - 1:
+                        node_type = self.AudiosTreeNodeType.PLAYLIST
                     subtree.create_node(
                         tag, nid, parent=parent,
                         data=[node_type, -1, nid, ''],
