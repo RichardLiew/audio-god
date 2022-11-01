@@ -1,3 +1,4 @@
 #!/usr/bin/env zsh
 
-pipenv run python audgod.py "$@"
+#pipenv run python audgod.py "$@"
+python audgod.py "$@"

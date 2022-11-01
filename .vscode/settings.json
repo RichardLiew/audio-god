@@ -1,5 +1,5 @@
 {
-    "python.defaultInterpreterPath": "${env:HOME}/.local/share/virtualenvs/audio-god-jcJC6gcV",
+    "python.defaultInterpreterPath": "/usr/local/bin/python",
     "files.exclude": {
         "**/.git": true,
         "**/.svn": true,

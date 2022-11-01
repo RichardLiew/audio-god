@@ -28,3 +28,4 @@ load audios 时删除所有无效软链接，或者全部软链接都删除也�
 判断是否是硬连接 os.stat(filename).st_nlink > 1
 os.environ['HOME'], os.path.expandvars('${HOME}'), '~' 看看是否需要统一下
 python switch 语句研究
+''.format() -> f''

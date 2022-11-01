@@ -51,19 +51,19 @@
 #       url = "https://pypi.org/simple"
 #       verify_ssl = true
 #       name = "pypi"
-#       
+#
 #       [packages]
 #       eyed3 = "*"
 #       prettytable = "*"
 #       mdutils = "*"
 #       treelib = "*"
 #       enumx = "*"
-#       
+#
 #       [dev-packages]
 #       pylint = "*"
-#       
+#
 #       [requires]
-#       python_version = "3.9.1"
+#       python_version = "3.10.6"
 #   ```].
 #
 # ---
@@ -89,13 +89,14 @@ import plistlib
 import datetime
 
 from string import Template
-from enumx import StringEnum
 
 import eyed3
 from eyed3.id3 import Genre, frames
 from eyed3.id3.tag import CommentsAccessor
 
 from treelib import Tree
+
+from enumx import StringEnum
 
 from prettytable import PrettyTable
 
@@ -128,6 +129,7 @@ class TreeX(Tree):
     def perfect_merge(self, nid, new_tree, deep=False) -> None:
         if not (isinstance(new_tree, Tree) or isinstance(new_tree, TreeX)):
             self.logger.critical('The new tree to merge is not a valid tree.')
+            return
 
         if new_tree is None:
             return
@@ -142,11 +144,13 @@ class TreeX(Tree):
 
         if not self.contains(nid):
             self.logger.critical('Node <{}> is not in the tree!'.format(nid))
+            return
 
         current_node = self[nid]
 
         if current_node.tag != new_tree[new_tree.root].tag:
             self.logger.critical('Current node not same with root of new tree.')
+            return
 
         childs = self.children(nid)
         child_tags = [child.tag for child in childs]
@@ -870,10 +874,11 @@ class AudioGod(object):
     def output_duration(cls, duration, output_type=FileType.NONE):
         if not duration:
             duration = 0.0
-        if cls.FileType.NONE.eq(output_type):
-            return duration
-        elif cls.FileType.PLIST.eq(output_type):
-            return int(round(duration, 3) * 1000)
+        match output_type:
+            case cls.FileType.NONE:
+                return duration
+            case cls.FileType.PLIST:
+                return int(round(duration, 3) * 1000)
         s = duration
         m, s = divmod(s, 60)
         h, m = divmod(m, 60)
@@ -916,33 +921,35 @@ class AudioGod(object):
         ]
         ret = self.properties.get('default', {}).get('value', None)
         for source in sources:
-            if self.PropertySource.COMMAND.eq(source):
-                if field in self.properties.keys():
-                    _value = self.properties[field].get('value', None)
+            match source:
+                case self.PropertySource.COMMAND:
+                    if field in self.properties.keys():
+                        _value = self.properties[field].get('value', None)
+                        if _value is not None:
+                            ret = _value
+                            break
+                case self.PropertySource.FILE:
+                    key = self.generate_key_by_audio(audio)
+                    _value = self.valid_clauses.get(key, {}).get(field, None)
                     if _value is not None:
                         ret = _value
                         break
-            elif self.PropertySource.FILE.eq(source):
-                key = self.generate_key_by_audio(audio)
-                _value = self.valid_clauses.get(key, {}).get(field, None)
-                if _value is not None:
+                case self.PropertySource.DIRECTORY:
+                    _value = dirname = os.path.dirname(audio)
+                    match field:
+                        case self.AudioProperty.GENRE:
+                            _value = os.path.basename(dirname)
+                        case self.AudioProperty.GROUPING:
+                            _value = re.sub(r'/+$', r'', dirname)
+                            _value = re.sub(
+                                r'^%s/{1,}' % (
+                                    re.escape(re.sub(r'/+$', r'', self.audios_root)),
+                                ),
+                                r'',
+                                _value,
+                            )
                     ret = _value
                     break
-            elif self.PropertySource.DIRECTORY.eq(source):
-                _value = dirname = os.path.dirname(audio)
-                if self.AudioProperty.GENRE.eq(field):
-                    _value = os.path.basename(dirname)
-                elif self.AudioProperty.GROUPING.eq(field):
-                    _value = re.sub(r'/+$', r'', dirname)
-                    _value = re.sub(
-                        r'^%s/{1,}' % (
-                            re.escape(re.sub(r'/+$', r'', self.audios_root)),
-                        ),
-                        r'',
-                        _value,
-                    )
-                ret = _value
-                break
         return None if ret is None else format_(parse_(ret))
 
     @staticmethod
@@ -973,98 +980,101 @@ class AudioGod(object):
             return
         if formatted:
             value = self.format[field](value)
-        if self.AudioProperty.COMMENTS.eq(field):
-            audio_object.tag.comments.set(value)
-        elif field in self.ZIP_FIELDS:
-            comments = audio_object.tag.comments
-            if comments is None:
-                comments = '{}'
-            else:
-                comments = ''.join([comment.text for comment in comments])
-            try:
-                comments = json.loads(comments)
-            except:
-                comments = {}
-            comments[field] = value
-            audio_object.tag.comments.set(json.dumps(comments))
-            if self.AudioProperty.ARTWORK.eq(field):
-                if self.validate_url(value):
-                    audio_object.tag.images.set(
-                        type_=3,
-                        img_data=None,
-                        mime_type=None,
-                        img_url=value,
-                    )
+        match field:
+            case self.AudioProperty.COMMENTS:
+                audio_object.tag.comments.set(value)
+            case _ if field in self.ZIP_FIELDS:
+                comments = audio_object.tag.comments
+                if comments is None:
+                    comments = '{}'
                 else:
-                    valid = self.validate_image(value) and (
-                                os.path.isfile(value) or (
-                                    (not self.artwork_path) and \
-                                    os.path.isfile(os.paht.join(
-                                        self.artwork_path, value,
-                                    ))
-                                )
-                            )
-                    if valid:
-                        _, ext = os.path.splitext(os.path.basename(value))
+                    comments = ''.join([comment.text for comment in comments])
+                try:
+                    comments = json.loads(comments)
+                except:
+                    comments = {}
+                comments[field] = value
+                audio_object.tag.comments.set(json.dumps(comments))
+                if self.AudioProperty.ARTWORK.eq(field):
+                    if self.validate_url(value):
                         audio_object.tag.images.set(
                             type_=3,
-                            img_data=open(value, 'rb').read(),
-                            mime_type='image/{}'.format(ext[1:].lower()),
+                            img_data=None,
+                            mime_type=None,
+                            img_url=value,
                         )
                     else:
-                        self.logger.fatal(
-                            'Audio <{}> has invalid artwork "{}"'.format(
-                                audio_object.file_info.name, value,
-                            ),
-                        )
-                        return
-        else:
-            setattr(audio_object.tag, field, value)
+                        valid = self.validate_image(value) and (
+                                    os.path.isfile(value) or (
+                                        (not self.artwork_path) and \
+                                        os.path.isfile(os.paht.join(
+                                            self.artwork_path, value,
+                                        ))
+                                    )
+                                )
+                        if valid:
+                            _, ext = os.path.splitext(os.path.basename(value))
+                            audio_object.tag.images.set(
+                                type_=3,
+                                img_data=open(value, 'rb').read(),
+                                mime_type='image/{}'.format(ext[1:].lower()),
+                            )
+                        else:
+                            self.logger.fatal(
+                                'Audio <{}> has invalid artwork "{}"'.format(
+                                    audio_object.file_info.name, value,
+                                ),
+                            )
+                            return
+            case _:
+                setattr(audio_object.tag, field, value)
         audio_object.tag.save()
 
     # Use AudioProperty type field here, you won't to check field parameter.
     def fetch(self, audio_object, field):
         ret, filename = None, audio_object.tag.file_info.name
-        if AudioGod.AudioProperty.GENRE.eq(field):
-            if audio_object.tag.genre is not None:
-                ret = audio_object.tag.genre.name
-        elif AudioGod.AudioProperty.TRACK_NUM.eq(field):
-            ret = audio_object.tag.track_num
-        elif AudioGod.AudioProperty.DURATION.eq(field):
-            ret = audio_object.info.time_secs
-        elif AudioGod.AudioProperty.MTIME.eq(field):
-            ret = audio_object.tag.file_info.mtime
-        elif AudioGod.AudioProperty.SIZE.eq(field):
-            ret = audio_object.info.size_bytes
-        elif AudioGod.AudioProperty.NAME.eq(field):
-            ret = os.path.basename(filename)
-        elif AudioGod.AudioProperty.PATH.eq(field):
-            ret = os.path.dirname(filename)
-        elif AudioGod.AudioProperty.COMMENTS.eq(field):
-            ret = audio_object.tag.comments
-        elif field in self.ZIP_FIELDS:
-            comments = audio_object.tag.comments
-            if comments:
-                comments = ''.join([comment.text for comment in comments])
-                try:
-                    ret = json.loads(comments).get(field, None)
-                except:
-                    pass
-            if AudioGod.AudioProperty.ARTWORK.eq(field):
-                if len(audio_object.tag.images) == 0 and not ret:
-                    ret = None
-                else:
-                    ret = (len(audio_object.tag.images), ret if ret else '')
-            #elif AudioGod.AudioProperty.GROUPING.eq(field):
-            #    if not ret:
-            #        ret = self.DEFAULT_GROUPING
-        else:
-            if hasattr(audio_object.tag, field):
-                ret = getattr(audio_object.tag, field)
-            elif hasattr(audio_object.info, field):
-                ret = getattr(audio_object.info, field)
-            elif hasattr(audio_object.tag.file_info, field):
-                ret = getattr(audio_object.tag.file_info, field)
+        match field:
+            case AudioGod.AudioProperty.GENRE:
+                if audio_object.tag.genre is not None:
+                    ret = audio_object.tag.genre.name
+            case AudioGod.AudioProperty.TRACK_NUM:
+                ret = audio_object.tag.track_num
+            case AudioGod.AudioProperty.DURATION:
+                ret = audio_object.info.time_secs
+            case AudioGod.AudioProperty.MTIME:
+                ret = audio_object.tag.file_info.mtime
+            case AudioGod.AudioProperty.SIZE:
+                ret = audio_object.info.size_bytes
+            case AudioGod.AudioProperty.NAME:
+                ret = os.path.basename(filename)
+            case AudioGod.AudioProperty.PATH:
+                ret = os.path.dirname(filename)
+            case AudioGod.AudioProperty.COMMENTS:
+                ret = audio_object.tag.comments
+            case _ if field in self.ZIP_FIELDS:
+                comments = audio_object.tag.comments
+                if comments:
+                    comments = ''.join([comment.text for comment in comments])
+                    try:
+                        ret = json.loads(comments).get(field, None)
+                    except:
+                        pass
+                match field:
+                    case AudioGod.AudioProperty.ARTWORK:
+                        if len(audio_object.tag.images) == 0 and not ret:
+                            ret = None
+                        else:
+                            ret = (len(audio_object.tag.images), ret if ret else '')
+                    #case AudioGod.AudioProperty.GROUPING:
+                    #    if not ret:
+                    #        ret = self.DEFAULT_GROUPING
+            case _:
+                if hasattr(audio_object.tag, field):
+                    ret = getattr(audio_object.tag, field)
+                elif hasattr(audio_object.info, field):
+                    ret = getattr(audio_object.info, field)
+                elif hasattr(audio_object.tag.file_info, field):
+                    ret = getattr(audio_object.tag.file_info, field)
         return ret
 
     def fetchx(self, audio_object, field,
@@ -1169,16 +1179,17 @@ class AudioGod(object):
 
     def import_(self):
         filetype = self.recognize_filetype(self.source_file)
-        if filetype in [self.FileType.NONE, self.FileType.DISPLAY]:
-            return
-        elif self.FileType.JSON.eq(filetype):
-            self.__import_json()
-        elif self.FileType.MARKDOWN.eq(filetype):
-            self.__import_markdown()
-        elif self.FileType.PLIST.eq(filetype):
-            self.__import_plist()
-        else:
-            self.__import_note()
+        match filetype:
+            case self.FileType.NONE | self.FileType.DISPLAY:
+                return
+            case self.FileType.JSON:
+                self.__import_json()
+            case self.FileType.MARKDOWN:
+                self.__import_markdown()
+            case self.FileType.PLIST:
+                self.__import_plist()
+            case _:
+                self.__import_note()
 
     def __load_properties_from_file(self):
         if not os.path.exists(self.source_file):
@@ -1385,11 +1396,12 @@ class AudioGod(object):
                 for i in range(len(tags)):
                     tag, nid = tags[i], self.generate_persistent_id()
                     parent, node_type = last_nid, self.AudiosTreeNodeType.FOLDER
-                    if i == 0:
-                        nid = self.AUDIOS_TREE_ROOT_NID
-                        parent, node_type = None, self.AudiosTreeNodeType.ROOT
-                    elif i == len(tags) - 1:
-                        node_type = self.AudiosTreeNodeType.PLAYLIST
+                    match i:
+                        case 0:
+                            nid = self.AUDIOS_TREE_ROOT_NID
+                            parent, node_type = None, self.AudiosTreeNodeType.ROOT
+                        case len(tags) - 1:
+                            node_type = self.AudiosTreeNodeType.PLAYLIST
                     subtree.create_node(
                         tag, nid, parent=parent,
                         data=[node_type, -1, nid, ''],
@@ -1688,12 +1700,13 @@ class AudioGod(object):
             for field in self.ALL_FIELDS
         ]
         formatted, output_type = True, self.FileType.DISPLAY
-        if self.DataFormat.ORIGINAL.eq(self.data_format):
-            formatted, output_type = False, self.FileType.NONE
-        elif self.DataFormat.FORMATTED.eq(self.data_format):
-            formatted, output_type = True, self.FileType.NONE
-        elif self.DataFormat.OUTPUTTED.eq(self.data_format):
-            formatted, output_type = True, self.FileType.DISPLAY
+        match self.data_format:
+            case self.DataFormat.ORIGINAL:
+                formatted, output_type = False, self.FileType.NONE
+            case self.DataFormat.FORMATTED:
+                formatted, output_type = True, self.FileType.NONE
+            case self.DataFormat.OUTPUTTED:
+                formatted, output_type = True, self.FileType.DISPLAY
         for audio in audios:
             audio_object = eyed3.load(audio)
             results.append([
@@ -2069,14 +2082,15 @@ class AudioGod(object):
             self.logger.fatal('Output file is empty when export!')
             return
         self.__fill_audios_tree()
-        if self.FileType.JSON.eq(filetype):
-            self.__export_json()
-        elif self.FileType.MARKDOWN.eq(filetype):
-            self.__export_markdown()
-        elif self.FileType.PLIST.eq(filetype):
-            self.__export_plist()
-        elif self.FileType.NOTE.eq(filetype):
-            self.__export_note()
+        match filetype:
+            case self.FileType.JSON:
+                self.__export_json()
+            case self.FileType.MARKDOWN:
+                self.__export_markdown()
+            case self.FileType.PLIST:
+                self.__export_plist()
+            case self.FileType.NOTE:
+                self.__export_note()
 
     def __export_json(self):
         pass
