@@ -512,7 +512,7 @@ class AudioGod(object):
         return self.__itunes_options
 
     @property
-    def output_file(self) -> str:
+    def output_file(self):
         return self.__output_file
 
     @property
@@ -755,7 +755,7 @@ class AudioGod(object):
         if artist is None:
             return None
         ret = cls.unify_format(artist)
-        ret = re.sub(r'[、，/,]', r'&', ret)
+        ret = re.sub(r'[、，/,]', r'&', ret)  # type: ignore
         ret = re.sub(r'&', r' & ', ret)
         ret = re.sub(r'\s*&\s*', r' & ', ret)
         return ret
@@ -1029,7 +1029,7 @@ class AudioGod(object):
                                     os.path.isfile(value) or (
                                         (not self.artwork_path) and \
                                         os.path.isfile(os.path.join(
-                                            self.artwork_path, value,
+                                            self.artwork_path, value,  # type: ignore
                                         ))
                                     )
                                 )
@@ -1404,7 +1404,7 @@ class AudioGod(object):
                 self.logger.debug(
                     f'Empty grouping of <{audio}>, use <{self.DEFAULT_GROUPING}> instead!',
                 )
-            for group in grouping.split(self.GROUPING_SEPARATOR):
+            for group in grouping.split(self.GROUPING_SEPARATOR):  # type: ignore
                 group = re.sub(r'\/+', r'/', group).rstrip('/')
                 if not group:
                     continue
@@ -1586,6 +1586,12 @@ class AudioGod(object):
             if self.artwork_path:
                 _path = self.artwork_path
             audio_object = eyed3.load(audio)
+            if not audio_object:
+                continue
+            if not audio_object.tag:
+                continue
+            if not audio_object.tag.images:
+                continue
             for i, image in enumerate(audio_object.tag.images):
                 image_file = os.path.join(_path, _name)
                 if len(audio_object.tag.images) > 1:
@@ -1611,7 +1617,7 @@ class AudioGod(object):
                 if not album:
                     self.logger.fatal(f'Invalid album of <{audio}>')
                     return
-                dir_ = os.path.join(self.audios_root, artist, album)
+                dir_ = os.path.join(self.audios_root, artist, album)  # type: ignore
                 os.makedirs(dir_, exist_ok=True)
                 newname = os.path.join(dir_, os.path.basename(audio))
                 os.rename(audio, newname)
@@ -1620,7 +1626,7 @@ class AudioGod(object):
                 if not grouping:
                     self.logger.fatal(f'Invalid grouping of <{audio}>')
                     return
-                groups = grouping.split(self.GROUPING_SEPARATOR)
+                groups = grouping.split(self.GROUPING_SEPARATOR)  # type: ignore
                 target = os.path.join(self.audios_root, groups[0])
                 os.makedirs(target, exist_ok=True)
                 target = os.path.join(target, os.path.basename(audio))
@@ -2361,7 +2367,7 @@ class AudioGod(object):
                 playlists = _pack_playlists(),
             ))
 
-        with open(self.output_file, mode='w', encoding='utf-8') as f:
+        with open(self.output_file, mode='w', encoding='utf-8') as f:  # type: ignore
             f.write(_pack_plist())
             f.flush()
 
