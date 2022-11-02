@@ -8,5 +8,6 @@
         "**/.DS_Store": true,
         "**/*.pyc": true,
         "**/__pycache__": true
-    }
+    },
+    "python.analysis.typeCheckingMode": "basic"
 }

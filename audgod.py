@@ -352,7 +352,7 @@ class AudioGod(object):
     AUDIOS_TREE_ROOT_NID = '--root-nid--'
 
     DEFAULT_GENRE = 'Default'
-    DEFAULT_GROUPING = 'Default'
+    DEFAULT_GROUPING: str = 'Default'
 
     DEFAULT_TRACK_INITIAL_ID = 601
     DEFAULT_PLAYLIST_INITIAL_ID = 3001
@@ -406,7 +406,7 @@ class AudioGod(object):
             self.AudioProperty(x) for x in self.__resolve_fields(fields)
         ]
         self.__clauses = ([], {}, {}, [])
-        self.__clauses_counter = (0, 0, 0, 0, 0)
+        self.__clauses_counter = [0, 0, 0, 0, 0]
         self.__audios = ([], [], [], [], set(), set())
         self.__audios_tree = TreeX(
             tree=None,
@@ -584,24 +584,44 @@ class AudioGod(object):
         return self.__clauses[3]
 
     @property
-    def total_clauses_counter(self):
+    def total_clauses_counter(self) -> int:
         return self.__clauses_counter[0]
 
+    @total_clauses_counter.setter
+    def total_clauses_counter(self, value):
+        self.__clauses_counter[0] = value
+
     @property
-    def invalid_clauses_counter(self):
+    def invalid_clauses_counter(self) -> int:
         return self.__clauses_counter[1]
 
+    @invalid_clauses_counter.setter
+    def invalid_clauses_counter(self, value):
+        self.__clauses_counter[1] = value
+
     @property
-    def valid_clauses_counter(self):
+    def valid_clauses_counter(self) -> int:
         return self.__clauses_counter[2]
 
-    @property
-    def repeated_clauses_counter(self):
-        return self.__clauses_counter[3]
+    @valid_clauses_counter.setter
+    def valid_clauses_counter(self, value):
+        self.__clauses_counter[2] = value
 
     @property
-    def grouping_clauses_counter(self):
+    def repeated_clauses_counter(self) -> int:
+        return self.__clauses_counter[3]
+
+    @repeated_clauses_counter.setter
+    def repeated_clauses_counter(self, value):
+        self.__clauses_counter[3] = value
+
+    @property
+    def grouping_clauses_counter(self) -> int:
         return self.__clauses_counter[4]
+
+    @grouping_clauses_counter.setter
+    def grouping_clauses_counter(self, value):
+        self.__clauses_counter[4] = value
 
     @property
     def source_audios(self):
@@ -1007,7 +1027,7 @@ class AudioGod(object):
                         valid = self.validate_image(value) and (
                                     os.path.isfile(value) or (
                                         (not self.artwork_path) and \
-                                        os.path.isfile(os.paht.join(
+                                        os.path.isfile(os.path.join(
                                             self.artwork_path, value,
                                         ))
                                     )
@@ -1574,7 +1594,7 @@ class AudioGod(object):
                     f.write(image.image_data)
 
     def organize_files(self):
-        if not self.audio_root:
+        if not self.audios_root:
             self.logger.fatal('Invalid audio root!')
             return
         self.__load_audios()
@@ -1590,7 +1610,7 @@ class AudioGod(object):
                 if not album:
                     self.logger.fatal(f'Invalid album of <{audio}>')
                     return
-                dir_ = os.path.join(self.audio_root, artist, album)
+                dir_ = os.path.join(self.audios_root, artist, album)
                 os.makedirs(dir_, exist_ok=True)
                 newname = os.path.join(dir_, os.path.basename(audio))
                 os.rename(audio, newname)
@@ -1600,15 +1620,15 @@ class AudioGod(object):
                     self.logger.fatal(f'Invalid grouping of <{audio}>')
                     return
                 groups = grouping.split(self.GROUPING_SEPARATOR)
-                target = os.path.join(self.audio_root, groups[0])
+                target = os.path.join(self.audios_root, groups[0])
                 os.makedirs(target, exist_ok=True)
                 target = os.path.join(target, os.path.basename(audio))
                 os.rename(audio, target)
-                links = [os.path.join(self.audio_root, group) for group in groups[1:]]
+                links = [os.path.join(self.audios_root, group) for group in groups[1:]]
                 for link in links:
                     os.makedirs(link, exist_ok=True)
                 links = list(map(
-                    lambda x: os.path.join(self.audio_root, x), links,
+                    lambda x: os.path.join(self.audios_root, x), links,
                 ))
                 for link in links:
                     if os.path.exists(link):

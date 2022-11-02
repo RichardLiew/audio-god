@@ -8,6 +8,7 @@ os.environ['HOME'], os.path.expandvars('${HOME}'), '~' 看看是否需要统一�
 封装成docker，并传到 github 以及 dockerhub 上，并添加 actions
 是否可虑适配 windows 系统，并将代码中的 / 符号全部检查一遍，替换为 os.path.join 形式，甚至需要更改 grouping 分隔符, os.path.normpath() os.path.normcase()  if sys.platform == "win32":
 python match case 如果对应的是变量或者公式或者函数调用，该怎么处理
+是否需要全域都进行 type checking ？类似 typescript
 
 
 导出 markdown 色彩版和简单版, 去除 Markdown 中的链接下划线
