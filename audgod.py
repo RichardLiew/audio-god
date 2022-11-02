@@ -1602,7 +1602,7 @@ class AudioGod(object):
 
     def organize_files(self):
         if not self.audios_root:
-            self.logger.fatal('Invalid audio root!')
+            self.logger.fatal('Invalid audios root!')
             return
         self.__load_audios()
         audios = self.concerned_audios
