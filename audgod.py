@@ -708,13 +708,11 @@ class AudioGod(object):
     def unify_format(content):
         if content is None:
             return None
-
-        def _format_english(matched):
-            return matched.group('english')
-            #return matched.group('english').lower().capitalize()
-
         ret = re.sub(
-            r'(?P<english>[a-zA-Z]+)', _format_english, content,
+            r'(?P<english>[a-zA-Z]+)',
+            lambda x: x.group('english'),
+            #lambda x: x.group('english').lower().capitalize(),
+            content,
         )
         ret = ret.replace('（', '(')\
                  .replace('）', ')')\
