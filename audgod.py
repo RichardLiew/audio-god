@@ -433,7 +433,7 @@ class AudioGod(object):
             field: getattr(
                 self,
                 f'output_{field}',
-                lambda x, y=self.FileType.NONE: x,
+                lambda x, output_type=self.FileType.NONE: x,
             )
             for field in self.ALL_FIELDS
         }
@@ -512,7 +512,7 @@ class AudioGod(object):
         return self.__itunes_options
 
     @property
-    def output_file(self):
+    def output_file(self) -> str:
         return self.__output_file
 
     @property
@@ -626,19 +626,20 @@ class AudioGod(object):
     @property
     def source_audios(self):
         src, recursive = self.audios_source
+        ret = []
         if not os.path.exists(src):
             self.logger.fatal(f'Source <{src}> not exists!')
-            return
+            return ret
         src = os.path.abspath(src)
         if os.path.isfile(src):
             if not self.__check_extension(src):
                 self.logger.fatal(f'Source <{src}> invalid extension!')
-                return
-            return [src]
+                return ret
+            ret.append(src)
+            return ret
         if not os.path.isdir(src):
             self.logger.fatal(f'Source <{src}> not a directory!')
-            return
-        ret = []
+            return ret
         if recursive:
             for _root, _dirs, _files in os.walk(src):
                 for _dir in _dirs:
@@ -1886,13 +1887,12 @@ class AudioGod(object):
                             function = sort_functions[_field]
                         rows = function(rows, index, reverse)
 
-            total_rows, show_page, start = len(rows), False, 0
+            total_rows, start = len(rows), 0
+            table_title = f'Total Audios: {total_rows}'
+
             if total_rows > 0:
-                show_page = True
                 if page_size is None or page_size < 1:
                     page_size = total_rows
-                else:
-                    show_page = True
                 total_pages = math.ceil(total_rows / page_size)
                 page_number = min(max(page_number, 1), total_pages)
                 start = (min(page_number, total_pages) - 1) * page_size + 1
@@ -1900,8 +1900,6 @@ class AudioGod(object):
                 for row in rows[start-1:end]:
                     table.add_row(row)
 
-            table_title = f'Total Audios: {total_rows}'
-            if show_page:
                 table_title += f', Page Size: {page_size}'
                 table_title += f', Page Number: {page_number} / {total_pages}'
 
@@ -2124,7 +2122,7 @@ class AudioGod(object):
 
     @staticmethod
     def encode(src) -> str:
-        return urllib.parse.quote(src, safe='/', encoding='utf-8', errors=None)
+        return urllib.parse.quote(src, safe='/', encoding='utf-8', errors=None)  # type: ignore
 
     @classmethod
     def encode_location(cls, location) -> str:
