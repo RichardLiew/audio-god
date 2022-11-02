@@ -2628,6 +2628,8 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
+    subparsers = parser.add_subparsers()
+
     parser.add_argument(
         '--version', '-v',
         action='version',

@@ -33,3 +33,4 @@ os.symlink & os.link 看看取舍
 load audios 时删除所有无效软链接，或者全部软链接都删除也可以, https://gist.github.com/seanh/229454, if not os.path.exists(os.readlink(path)): os.path.exists(os.path.realpath(path)) link_target=os.readlink(path) dir=os.path.dirname(path) if not os.path.isabs(link_target): link_target=os.path.join(dir, link_target) if os.path.exists(link_target):
 创建软链接时，目前都是用的绝对路径，是否应该改成相对路径
 判断是否是硬连接 os.stat(filename).st_nlink > 1
+parser.add_subparsers
