@@ -2593,14 +2593,14 @@ Sample in note to import:
 ------------------------------------------------------------------------------
 
 General steps:
-    No.1: Download songs, and make sure that file named with "artist-title";
-    No.2: Add detail of songs to notes, then grouped;
-    No.3: Format notes;
-    No.4: Fill properties;
-    No.5: Format properties;
-    No.6: Rename audios;
-    No.7: Organize files;
-    No.8: Export plist, json, markdown and note file.
+    Step.1: Download songs, and make sure that file named with "artist-title";
+    Step.2: Add detail of songs to notes, then grouped;
+    Step.3: Format notes;
+    Step.4: Fill properties;
+    Step.5: Format properties;
+    Step.6: Rename audios;
+    Step.7: Organize files;
+    Step.8: Export plist, json, markdown and note file.
 
 ------------------------------------------------------------------------------
 ''').safe_substitute(dict(
@@ -2626,9 +2626,20 @@ def main():
         description='🎻 God of audios 🎸',
         epilog='🤔 Thinking ...',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        #prefix_chars='-',
+        #fromfile_prefix_chars=None,
+        #argument_default=None,
+        #conflict_handler='error',
+        #add_help=True,
+        #allow_abbrev=True,
+        #exit_on_error=True,
     )
 
-    subparsers = parser.add_subparsers()
+    subparsers = parser.add_subparsers(
+        prog='actions',
+        title='actions',
+        description='sub actions below',
+    )
 
     parser.add_argument(
         '--version', '-v',
