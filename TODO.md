@@ -29,8 +29,16 @@ import evernote+plist+markdown & export markdown+plist & directory maker & plist
 仿照 arkid 项目，增加 precommit 等, pre-commit-config.yaml, .pre-commit-hooks.yaml, (Anebit/startupmate-backend), .flake8, .readthedocs.yml
 看看有必要增加几种类型的导入导出文件之间的相互转化
 
+新增曲库时，看看各个环节是否可以由全量模式改为增量模式
+
 os.symlink & os.link 看看取舍
 load audios 时删除所有无效软链接，或者全部软链接都删除也可以, https://gist.github.com/seanh/229454, if not os.path.exists(os.readlink(path)): os.path.exists(os.path.realpath(path)) link_target=os.readlink(path) dir=os.path.dirname(path) if not os.path.isabs(link_target): link_target=os.path.join(dir, link_target) if os.path.exists(link_target):
 创建软链接时，目前都是用的绝对路径，是否应该改成相对路径
 判断是否是硬连接 os.stat(filename).st_nlink > 1
-parser.add_subparsers
+parser.add_subparsers 子命令之间共享参数
+缺省任何参数时，默认参数是 -h (设置命令和自命令的默认命令，set_default?)
+export 的那几种形式，是否需要独立拆分出单独的 actions？
+
+输出的错误信息，如果不是程序bug，那就不要把代码栈打印出来，只打印有效信息就行
+
+自己搭建云播放平台？网站？App？

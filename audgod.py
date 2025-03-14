@@ -81,6 +81,7 @@ import math
 import time
 import uuid
 import json
+import copy
 import pydoc
 import urllib
 import logging
@@ -110,8 +111,7 @@ from prettytable import PrettyTable
 #                                                                              #
 ################################################################################
 
-__AVATAR__ = 'Audio God'
-__VERSION__ = '1.0'
+__VERSION__ = 'Audio God 1.0'
 
 ################################################################################
 #                                                                              #
@@ -2404,6 +2404,7 @@ def audio_properties() -> str:
         title='AUDIO PROPERTIES',
     )
 
+
 def special_characters() -> str:
     table = PrettyTable()
     table.field_names = [
@@ -2428,153 +2429,18 @@ def special_characters() -> str:
         title='SPECIAL CHARACTERS',
     )
 
-__USAGE__ = Template('''
+################################################################################
+
+__USAGE__ = '''
 All fields:
 ${audio_properties}
 
 Special characters:
 ${special_characters}
 
-General commands:
-    1. Show help information:
-        ${cmd} -h/--help
-
-    2. Show version of program:
-        ${cmd} -v/--version
-
-    3. Format the notes file:
-        ${cmd} \\
-            --action=format-notes \\
-            --source-file=${local}/notes.txt \\
-            --log-level=DEBUG
-
-    4. Fill properties of audios:
-        ${cmd} \\
-            --action=fill-properties \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --source-file=${local}/notes.txt \\
-            --audios-root=${music} \\
-            --properties='\\{ \\
-                "default": \\{ \\
-                    "sources": ["command"], #(note: command/file/directory/filename) \\
-                    "value": "" \\
-                \\}, \\
-                "genre": \\{ \\
-                    "sources": ["command", "file"], #(note: command/file/directory/filename) \\
-                    "value": "Pop" \\
-                \\} \\
-            \\}' \\
-            --log-level=DEBUG
-
-    5. Format properties of audios:
-        ${cmd} \\
-            --action=format-properties \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --log-level=DEBUG
-
-    6. Rename audios:
-        ${cmd} \\
-            --action=rename-audios \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --filename-pattern="${delimiter}{artist} ${div_char} ${delimiter}{title}" \\
-            --log-level=DEBUG
-
-    7. Organize files:
-        ${cmd} \\
-            --action=organize-files \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --organize-type=grouped \\
-            --log-level=DEBUG
-
-    8. Derive artworks:
-        ${cmd} \\
-            --action=derive-artworks \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --artwork-path=${music}/artworks \\
-            --log-level=DEBUG
-
-    9. Display audios:
-        ${cmd} \\
-            --action=display \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --fields=core \\
-            --page-number=1 \\
-            --page-size=10 \\
-            --sort='[["title,artist", true], ["genre", false]]' \\
-            --filter='\\{ \\
-                "_options": \\{ \\
-                    "relation": "and" #(note: and/or) \\
-                \\}, \\
-                "title,core": \\{ \\
-                    "function": "search", #(note: equal/search/empty) \\
-                    "parameters": ["a", true, false] \\
-                \\} \\
-            \\}' \\
-            --align='\\{ \\
-                "title,artist": "l:m" #(note: align=l/c/r, valign=t/m/b) \\
-            \\}' \\
-            --style=tabled \\
-            --data-format=outputted \\
-            --numbered \\
-            --output-file="" \\
-            --log-level=ERROR
-
-    10. Export plist file for itunes or apple music:
-        ${cmd} \\
-            --action=export \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --fields=ituned \\
-            --output-file=${local}/songs.xml \\
-            --itunes-version-plist=/System/Applications/Music.app/Contents/version.plist \\
-            --itunes-media-folder=${music}/iTunes/iTunes\\ Media \\
-            --track-initial-id=601 \\
-            --playlist-initial-id=3001 \\
-            --log-level=DEBUG
-
-    11. Export markdown (or json/note) file of properties for audios:
-        ${cmd} \\
-            --action=export \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --fields=all \\
-            --output-file=${local}/songs.md \\
-            --log-level=DEBUG
-
-    12. Convert audios:
-        ${cmd} \\
-            --action=convert \\
-            --audios-source=${music} \\
-            --extensions=mp3,aac \\
-            --recursive \\
-            --ignored-file=${local}/ignored.txt \\
-            --log-level=DEBUG
-
 ------------------------------------------------------------------------------
 
-Sample of audio file name:
+Samples of audio file name:
 
 Original  audio file name: "傅梦彤-潮汐 (Natural).mp3"
 Formatted audio file name: "傅梦彤 # 潮汐 (Natural).mp3"
@@ -2593,6 +2459,7 @@ Sample in note to import:
 ------------------------------------------------------------------------------
 
 General steps:
+
     Step.1: Download songs, and make sure that file named with "artist-title";
     Step.2: Add detail of songs to notes, then grouped;
     Step.3: Format notes;
@@ -2603,276 +2470,308 @@ General steps:
     Step.8: Export plist, json, markdown and note file.
 
 ------------------------------------------------------------------------------
-''').safe_substitute(dict(
-    audio_properties=audio_properties(),
-    special_characters=special_characters(),
-    cmd=f'pipenv run python {sys.argv[0]}',
-    music='~/Music',
-    local='.',
-    delimiter=AudioGod.FilenamePatternTemplate.delimiter,
-    div_char=AudioGod.DIV_CHAR,
-))
+
+General commands:
+
+    * Show help information:
+        ${cmd} -h/--help
+
+    * Show version of program:
+        ${cmd} -v/--version
+
+------------------------------------------------------------------------------
+'''
 
 ################################################################################
 #                                                                              #
-#                                MAIN FUNCTION                                 #
+#                          PUBLIC PARSER ARGUMENTS                             #
 #                                                                              #
 ################################################################################
 
-def main():
-    parser = argparse.ArgumentParser(
-        prog=sys.argv[0],
-        usage='Use "--usage/-u" option to see details.',
-        description='🎻 God of audios 🎸',
-        epilog='🤔 Thinking ...',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        #prefix_chars='-',
-        #fromfile_prefix_chars=None,
-        #argument_default=None,
-        #conflict_handler='error',
-        #add_help=True,
-        #allow_abbrev=True,
-        #exit_on_error=True,
-    )
+def _render_usage(usage) -> str:
+    _usage = '\n' + usage
 
-    subparsers = parser.add_subparsers(
-        prog='actions',
-        title='actions',
-        description='sub actions below',
-    )
+    pos = next((i for i, c in enumerate(_usage[2:], 1) if c != ' '), -1)
+    if pos != -1:
+        pos -= 1
+        _usage = re.sub(r'\n {%s}' % (pos,), '\n', _usage)
 
-    parser.add_argument(
-        '--version', '-v',
-        action='version',
-        version='{avatar} {version}'.format(
-            avatar=__AVATAR__,
-            version=__VERSION__,
-        ),
-    )
-    parser.add_argument(
-        '--usage', '-u',
-        action='store_true',
-        dest='usage',
-        help='details of usage',
-    )
-    parser.add_argument(
-        '--action', '-a',
-        type=str,
-        choices=[
-            'format-notes',
-            'fill-properties',
-            'format-properties',
-            'rename-audios',
-            'derive-artworks',
-            'organize-files',
-            'display',
-            'export',
-            'convert',
+    return(Template(_usage).safe_substitute(dict(
+        audio_properties=audio_properties(),
+        special_characters=special_characters(),
+        cmd=f'pipenv run python {sys.argv[0]}',
+        music='~/Music',
+        local='.',
+        delimiter=AudioGod.FilenamePatternTemplate.delimiter,
+        div_char=AudioGod.DIV_CHAR,
+    )))
+
+
+ARGUMENTS={
+    'log_level': 'DEBUG',
+    'source_file': './source.txt',
+    'ignored_file': './ignored.txt',
+    'audios_source': '{}/Music/Temp'.format(os.environ['HOME']),
+    'audios_root': '{}/Music/Temp'.format(os.environ['HOME']),
+    'properties': None,
+    'recursive': False,
+    'extensions': ','.join(AudioGod.DEFAULT_EXTENSIONS),
+    'fields': 'core',
+    'page_number': 1,
+    'page_size': None,
+    'sort': None,
+    'filter': None,
+    'align': None,
+    'numbered': False,
+    'style': AudioGod.DisplayStyle.TABLED,
+    'data_format': AudioGod.DataFormat.OUTPUTTED,
+    'output_file': None,
+    'artwork_path': None,
+    'filename_pattern': '{delimiter}{{artist}} {div_char} {delimiter}{{title}}'.format(
+        delimiter=AudioGod.FilenamePatternTemplate.delimiter,
+        div_char=AudioGod.DIV_CHAR,
+    ),
+    'organize_type': AudioGod.OrganizeType.ITUNED,
+    'itunes_version_plist': AudioGod.DEFAULT_ITUNES_VERSION_PLIST,
+    'itunes_media_folder': AudioGod.DEFAULT_ITUNES_MEDIA_FOLDER,
+    'track_initial_id': AudioGod.DEFAULT_TRACK_INITIAL_ID,
+    'playlist_initial_id': AudioGod.DEFAULT_PLAYLIST_INITIAL_ID,
+}
+
+
+ACTIONS={
+    'format-notes': {
+        'arguments': [
+            'source_file',
         ],
-        required=False,
-        default=None,
-        dest='action',
-        help='actions you want to process',
-    )
-    parser.add_argument(
-        '--source-file', '-s',
-        type=str,
-        required=False,
-        default='./source.txt',
-        dest='source_file',
-        help='source file to match',
-    )
-    parser.add_argument(
-        '--ignored-file', '-i',
-        type=str,
-        required=False,
-        default='./ignored.txt',
-        dest='ignored_file',
-        help='ignored files',
-    )
-    parser.add_argument(
-        '--audios-source', '-c',
-        type=str,
-        required=False,
-        default='{}/Music/Temp'.format(os.environ['HOME']),
-        dest='audios_source',
-        help='audio file or directory you want to process',
-    )
-    parser.add_argument(
-        '--audios-root', '-d',
-        type=str,
-        required=False,
-        default='{}/Music/Temp'.format(os.environ['HOME']),
-        dest='audios_root',
-        help='root directory of audios',
-    )
-    parser.add_argument(
-        '--properties', '-p',
-        type=str,
-        required=False,
-        default=None,
-        dest='properties',
-        help='properties for audios',
-    )
-    parser.add_argument(
-        '--recursive', '-r',
-        action='store_true',
-        dest='recursive',
-        help='if recursive when traverse the audios directory',
-    )
-    parser.add_argument(
-        '--extensions', '-e',
-        type=str,
-        required=False,
-        default=','.join(AudioGod.DEFAULT_EXTENSIONS),
-        dest='extensions',
-        help='valid extensions of audios',
-    )
-    parser.add_argument(
-        '--fields', '-f',
-        type=str,
-        required=False,
-        default='core',
-        dest='fields',
-        help='fields of audio to process: {}'.format(
-            '; '.join([
-                '({}: {})'.format(key, ','.join([f for f in fields]))
-                for key, fields in AudioGod.FIELDS.items()
-            ]),
-        ),
-    )
-    parser.add_argument(
-        '--page-number', '-m',
-        type=int,
-        required=False,
-        default=1,
-        dest='page_number',
-        help='page number for audios display',
-    )
-    parser.add_argument(
-        '--page-size', '-j',
-        type=int,
-        required=False,
-        default=None,
-        dest='page_size',
-        help='page size for audios display',
-    )
-    parser.add_argument(
-        '--sort', '-q',
-        type=str,
-        required=False,
-        default=None,
-        dest='sort',
-        help='sort options for audios display',
-    )
-    parser.add_argument(
-        '--filter', '-b',
-        type=str,
-        required=False,
-        default=None,
-        dest='filter',
-        help='filter options for audios display',
-    )
-    parser.add_argument(
-        '--align', '-w',
-        type=str,
-        required=False,
-        default=None,
-        dest='align',
-        help='align options for audios display',
-    )
-    parser.add_argument(
-        '--numbered', '-n',
-        action='store_true',
-        dest='numbered',
-        help='if show number for audios display',
-    )
-    parser.add_argument(
-        '--style', '-y',
-        type=str,
-        choices=AudioGod.DisplayStyle.members(),
-        required=False,
-        default=AudioGod.DisplayStyle.TABLED,
-        dest='style',
-        help='display style for audios',
-    )
-    parser.add_argument(
-        '--data-format', '-x',
-        type=str,
-        choices=AudioGod.DataFormat.members(),
-        required=False,
-        default=AudioGod.DataFormat.OUTPUTTED,
-        dest='data_format',
-        help='the data format for audios to display',
-    )
-    parser.add_argument(
-        '--output-file', '-o',
-        type=str,
-        required=False,
-        default=None,
-        dest='output_file',
-        help='output file',
-    )
-    parser.add_argument(
-        '--artwork-path', '-k',
-        type=str,
-        required=False,
-        default=None,
-        dest='artwork_path',
-        help='path to export artworks',
-    )
-    parser.add_argument(
-        '--filename-pattern', '-t',
-        type=str,
-        required=False,
-        default='{delimiter}{{artist}} {div_char} {delimiter}{{title}}'.format(
-            delimiter=AudioGod.FilenamePatternTemplate.delimiter,
-            div_char=AudioGod.DIV_CHAR,
-        ),
-        dest='filename_pattern',
-        help='filename pattern to rename audios',
-    )
-    parser.add_argument(
-        '--organize-type', '-g',
-        type=str,
-        choices=AudioGod.OrganizeType.members(),
-        required=False,
-        default=AudioGod.OrganizeType.ITUNED,
-        dest='organize_type',
-        help='type of file organization',
-    )
-    parser.add_argument(
-        '--itunes-version-plist', '-1',
-        type=str,
-        required=False,
-        default=AudioGod.DEFAULT_ITUNES_VERSION_PLIST,
-        dest='itunes_version_plist',
-        help='the version plist file of itunes or apple music',
-    )
-    parser.add_argument(
-        '--itunes-media-folder', '-2',
-        type=str,
-        required=False,
-        default=AudioGod.DEFAULT_ITUNES_MEDIA_FOLDER,
-        dest='itunes_media_folder',
-        help='the media folder of itunes or apple music',
-    )
-    parser.add_argument(
-        '--track-initial-id', '-3',
-        type=int,
-        required=False,
-        default=AudioGod.DEFAULT_TRACK_INITIAL_ID,
-        dest='track_initial_id',
-        help='initial id of tracks for itunes or apple music plist file',
-    )
-    parser.add_argument(
-        '--playlist-initial-id', '-4',
-        type=int,
-        required=False,
-        default=AudioGod.DEFAULT_PLAYLIST_INITIAL_ID,
-        dest='playlist_initial_id',
-        help='initial id of playlists for itunes or apple music plist file',
-    )
+        'kwargs': {
+            'description': '✋ Format the notes file',
+            'help': 'format the notes file',
+            'usage': _render_usage('''
+                ${cmd} format-notes \\
+                    --source-file=${local}/notes.txt
+            '''),
+        },
+    },
+    'fill-properties': {
+        'arguments': [
+            'audios_source',
+            'extensions',
+            'recursive',
+            'ignored_file',
+            'source_file',
+            'audios_root',
+            'properties',
+        ],
+        'kwargs': {
+            'description': '✋ Fill properties of audios',
+            'help': 'fill properties of audios',
+            'usage': _render_usage('''
+                ${cmd} fill-properties \\
+                    --audios-source=${music} \\
+                    --extensions=mp3,aac \\
+                    --recursive \\
+                    --ignored-file=${local}/ignored.txt \\
+                    --source-file=${local}/notes.txt \\
+                    --audios-root=${music} \\
+                    --properties='\\{ \\
+                        "default": \\{ \\
+                            "sources": ["command"], #(note: command/file/directory/filename) \\
+                            "value": "" \\
+                        \\}, \\
+                        "genre": \\{ \\
+                            "sources": ["command", "file"], #(note: command/file/directory/filename) \\
+                            "value": "Pop" \\
+                        \\} \\
+                    \\}'
+            '''),
+            },
+    },
+    'format-properties': {
+        'arguments': [
+            'audios_source',
+            'extensions',
+            'recursive',
+            'ignored_file',
+        ],
+        'kwargs': {
+            'description': '✋ Format properties of audios',
+            'help': 'format properties of audios',
+            'usage': _render_usage('''
+                ${cmd} format-properties \\
+                    --audios-source=${music} \\
+                    --extensions=mp3,aac \\
+                    --recursive \\
+                    --ignored-file=${local}/ignored.txt
+            '''),
+        },
+    },
+    'rename-audios': {
+        'arguments': [
+            'audios_source',
+            'extensions',
+            'recursive',
+            'ignored_file',
+            'filename_pattern',
+        ],
+        'kwargs': {
+            'description': '✋ Rename audios',
+            'help': 'rename audios',
+            'usage': _render_usage('''
+                ${cmd} rename-audios \\
+                    --audios-source=${music} \\
+                    --extensions=mp3,aac \\
+                    --recursive \\
+                    --ignored-file=${local}/ignored.txt \\
+                    --filename-pattern="${delimiter}{artist} ${div_char} ${delimiter}{title}"
+            '''),
+        },
+    },
+    'organize-files': {
+        'arguments': [
+            'audios_source',
+            'extensions',
+            'recursive',
+            'ignored_file',
+            'organize_type',
+        ],
+        'kwargs': {
+            'description': '✋ Organize files',
+            'help': 'organize files',
+            'usage': _render_usage('''
+                ${cmd} organize-files \\
+                    --audios-source=${music} \\
+                    --extensions=mp3,aac \\
+                    --recursive \\
+                    --ignored-file=${local}/ignored.txt \\
+                    --organize-type=grouped
+            '''),
+        },
+    },
+    'derive-artworks': {
+        'arguments': [
+            'audios_source',
+            'extensions',
+            'recursive',
+            'ignored_file',
+            'artwork_path',
+        ],
+        'kwargs': {
+            'description': '✋ Derive artworks',
+            'help': 'derive artworks',
+            'usage': _render_usage('''
+                ${cmd} derive-artworks \\
+                    --audios-source=${music} \\
+                    --extensions=mp3,aac \\
+                    --recursive \\
+                    --ignored-file=${local}/ignored.txt \\
+                    --artwork-path=${music}/artworks
+            '''),
+        },
+    },
+    'display': {
+        'arguments': [
+            'audios_source',
+            'extensions',
+            'recursive',
+            'ignored_file',
+            'fields',
+            'page_number',
+            'page_size',
+            'sort',
+            'filter',
+            'align',
+            'style',
+            'data_format',
+            'numbered',
+            'output_file',
+        ],
+        'kwargs': {
+            'description': '✋ Display audios',
+            'help': 'display audios',
+            'usage': _render_usage('''
+                ${cmd} display \\
+                    --audios-source=${music} \\
+                    --extensions=mp3,aac \\
+                    --recursive \\
+                    --ignored-file=${local}/ignored.txt \\
+                    --fields=core \\
+                    --page-number=1 \\
+                    --page-size=10 \\
+                    --sort='[["title,artist", true], ["genre", false]]' \\
+                    --filter='\\{ \\
+                        "_options": \\{ \\
+                            "relation": "and" #(note: and/or) \\
+                        \\}, \\
+                        "title,core": \\{ \\
+                            "function": "search", #(note: equal/search/empty) \\
+                            "parameters": ["a", true, false] \\
+                        \\} \\
+                    \\}' \\
+                    --align='\\{ \\
+                        "title,artist": "l:m" #(note: align=l/c/r, valign=t/m/b) \\
+                    \\}' \\
+                    --style=tabled \\
+                    --data-format=outputted \\
+                    --numbered \\
+                    --output-file=""
+            '''),
+        },
+    },
+    'export': {
+        'arguments': [
+            'audios_source',
+            'extensions',
+            'recursive',
+            'ignored_file',
+            'fields',
+            'output_file',
+            'itunes_version_plist',
+            'itunes_media_folder',
+            'track_initial_id',
+            'playlist_initial_id',
+        ],
+        'kwargs': {
+            'description': '✋ Export details to file',
+            'help': 'export details to file',
+            'usage': _render_usage('''
+                ${cmd} export \\
+                    --audios-source=${music} \\
+                    --extensions=mp3,aac \\
+                    --recursive \\
+                    --ignored-file=${local}/ignored.txt \\
+                    --fields=ituned \\
+                    --output-file=${local}/songs.xml \\
+                    --itunes-version-plist=/System/Applications/Music.app/Contents/version.plist \\
+                    --itunes-media-folder=${music}/iTunes/iTunes\\ Media \\
+                    --track-initial-id=601 \\
+                    --playlist-initial-id=3001
+            '''),
+        },
+    },
+    'convert': {
+        'arguments': [
+            'audios_source',
+            'extensions',
+            'recursive',
+            'ignored_file',
+        ],
+        'kwargs': {
+            'description': '✋ Convert audios',
+            'help': 'convert audios',
+            'usage': _render_usage('''
+                ${cmd} convert \\
+                    --audios-source=${music} \\
+                    --extensions=mp3,aac \\
+                    --recursive \\
+                    --ignored-file=${local}/ignored.txt
+            '''),
+        },
+    },
+}
+
+
+def _add_arguments(parser, arguments=[]) -> None:
     parser.add_argument(
         '--log-level', '-l',
         type=str,
@@ -2887,52 +2786,396 @@ def main():
             'CRITICAL',
         ],
         required=False,
-        default='DEBUG',
+        default=ARGUMENTS['log_level'],
         dest='log_level',
         help='level of logger',
     )
 
-    args = parser.parse_args()
-
-    if args.usage:
-        #print(__USAGE__)
-        pydoc.pager(__USAGE__)
-    else:
-        if not args.action:
-            raise Exception('Missing "action" option!')
-        god = AudioGod(
-            source_file=args.source_file,
-            ignored_file=args.ignored_file,
-            audios_root=args.audios_root,
-            audios_source=(args.audios_source, args.recursive),
-            properties=json.loads(args.properties) if args.properties else {},
-            extensions=list(filter(None, args.extensions.split(','))),
-            fields=args.fields,
-            data_format=args.data_format,
-            display_options=[
-                args.page_number,
-                args.page_size,
-                json.loads(args.sort) if args.sort else [],
-                json.loads(args.filter) if args.filter else {},
-                args.fields,
-                json.loads(args.align) if args.align else {},
-                args.numbered,
-                args.style,
-            ],
-            itunes_options=[
-                args.itunes_version_plist,
-                args.itunes_media_folder,
-                args.track_initial_id,
-                args.playlist_initial_id,
-            ],
-            artwork_path=args.artwork_path,
-            filename_pattern=args.filename_pattern,
-            output_file=args.output_file,
-            organize_type=args.organize_type,
-            log_level=args.log_level,
+    if 'source_file' in arguments:
+        parser.add_argument(
+            '--source-file', '-s',
+            type=str,
+            required=False,
+            default=ARGUMENTS['source_file'],
+            dest='source_file',
+            help='source file to match',
+        )
+    
+    if 'ignored_file' in arguments:
+        parser.add_argument(
+            '--ignored-file', '-i',
+            type=str,
+            required=False,
+            default=ARGUMENTS['ignored_file'],
+            dest='ignored_file',
+            help='ignored files',
+        )
+    
+    if 'audios_source' in arguments:
+        parser.add_argument(
+            '--audios-source', '-c',
+            type=str,
+            required=False,
+            default=ARGUMENTS['audios_source'],
+            dest='audios_source',
+            help='audio file or directory you want to process',
+        )
+    
+    if 'audios_root' in arguments:
+        parser.add_argument(
+            '--audios-root', '-d',
+            type=str,
+            required=False,
+            default=ARGUMENTS['audios_root'],
+            dest='audios_root',
+            help='root directory of audios',
+        )
+    
+    if 'properties' in arguments:
+        parser.add_argument(
+            '--properties', '-p',
+            type=str,
+            required=False,
+            default=ARGUMENTS['properties'],
+            dest='properties',
+            help='properties for audios',
+        )
+    
+    if 'recursive' in arguments:
+        parser.add_argument(
+            '--recursive', '-r',
+            action='store_true',
+            dest='recursive',
+            help='if recursive when traverse the audios directory',
+        )
+    
+    if 'extensions' in arguments:
+        parser.add_argument(
+            '--extensions', '-e',
+            type=str,
+            required=False,
+            default=ARGUMENTS['extensions'],
+            dest='extensions',
+            help='valid extensions of audios',
+        )
+    
+    if 'fields' in arguments:
+        parser.add_argument(
+            '--fields', '-f',
+            type=str,
+            required=False,
+            default=ARGUMENTS['fields'],
+            dest='fields',
+            help='fields of audio to process: {}'.format(
+                '; '.join([
+                    '({}: {})'.format(key, ','.join([f for f in fields]))
+                    for key, fields in AudioGod.FIELDS.items()
+                ]),
+            ),
+        )
+    
+    if 'page_number' in arguments:
+        parser.add_argument(
+            '--page-number', '-m',
+            type=int,
+            required=False,
+            default=ARGUMENTS['page_number'],
+            dest='page_number',
+            help='page number for audios display',
+        )
+    
+    if 'page_size' in arguments:
+        parser.add_argument(
+            '--page-size', '-j',
+            type=int,
+            required=False,
+            default=ARGUMENTS['page_size'],
+            dest='page_size',
+            help='page size for audios display',
+        )
+    
+    if 'sort' in arguments:
+        parser.add_argument(
+            '--sort', '-q',
+            type=str,
+            required=False,
+            default=ARGUMENTS['sort'],
+            dest='sort',
+            help='sort options for audios display',
+        )
+    
+    if 'filter' in arguments:
+        parser.add_argument(
+            '--filter', '-b',
+            type=str,
+            required=False,
+            default=ARGUMENTS['filter'],
+            dest='filter',
+            help='filter options for audios display',
+        )
+    
+    if 'align' in arguments:
+        parser.add_argument(
+            '--align', '-w',
+            type=str,
+            required=False,
+            default=ARGUMENTS['align'],
+            dest='align',
+            help='align options for audios display',
+        )
+    
+    if 'numbered' in arguments:
+        parser.add_argument(
+            '--numbered', '-n',
+            action='store_true',
+            dest='numbered',
+            help='if show number for audios display',
+        )
+    
+    if 'style' in arguments:
+        parser.add_argument(
+            '--style', '-y',
+            type=str,
+            choices=AudioGod.DisplayStyle.members(),
+            required=False,
+            default=ARGUMENTS['style'],
+            dest='style',
+            help='display style for audios',
+        )
+    
+    if 'data_format' in arguments:
+        parser.add_argument(
+            '--data-format', '-x',
+            type=str,
+            choices=AudioGod.DataFormat.members(),
+            required=False,
+            default=ARGUMENTS['data_format'],
+            dest='data_format',
+            help='the data format for audios to display',
+        )
+    
+    if 'output_file' in arguments:
+        parser.add_argument(
+            '--output-file', '-o',
+            type=str,
+            required=False,
+            default=ARGUMENTS['output_file'],
+            dest='output_file',
+            help='output file',
+        )
+    
+    if 'artwork_path' in arguments:
+        parser.add_argument(
+            '--artwork-path', '-k',
+            type=str,
+            required=False,
+            default=ARGUMENTS['artwork_path'],
+            dest='artwork_path',
+            help='path to export artworks',
+        )
+    
+    if 'filename_pattern' in arguments:
+        parser.add_argument(
+            '--filename-pattern', '-t',
+            type=str,
+            required=False,
+            default=ARGUMENTS['filename_pattern'],
+            dest='filename_pattern',
+            help='filename pattern to rename audios',
+        )
+    
+    if 'organize_type' in arguments:
+        parser.add_argument(
+            '--organize-type', '-g',
+            type=str,
+            choices=AudioGod.OrganizeType.members(),
+            required=False,
+            default=ARGUMENTS['organize_type'],
+            dest='organize_type',
+            help='type of file organization',
+        )
+    
+    if 'itunes_version_plist' in arguments:
+        parser.add_argument(
+            '--itunes-version-plist', '-1',
+            type=str,
+            required=False,
+            default=ARGUMENTS['itunes_version_plist'],
+            dest='itunes_version_plist',
+            help='the version plist file of itunes or apple music',
+        )
+    
+    if 'itunes_media_folder' in arguments:
+        parser.add_argument(
+            '--itunes-media-folder', '-2',
+            type=str,
+            required=False,
+            default=ARGUMENTS['itunes_media_folder'],
+            dest='itunes_media_folder',
+            help='the media folder of itunes or apple music',
+        )
+    
+    if 'track_initial_id' in arguments:
+        parser.add_argument(
+            '--track-initial-id', '-3',
+            type=int,
+            required=False,
+            default=ARGUMENTS['track_initial_id'],
+            dest='track_initial_id',
+            help='initial id of tracks for itunes or apple music plist file',
+        )
+    
+    if 'playlist_initial_id' in arguments:
+        parser.add_argument(
+            '--playlist-initial-id', '-4',
+            type=int,
+            required=False,
+            default=ARGUMENTS['playlist_initial_id'],
+            dest='playlist_initial_id',
+            help='initial id of playlists for itunes or apple music plist file',
         )
 
-        getattr(god, args.action.replace('-', '_'))()
+
+def _handle_subcmd(args) -> None:
+    _arguments = copy.deepcopy(ARGUMENTS)
+
+    for _argument in _arguments:
+        if hasattr(args, _argument):
+            _arguments[_argument] = getattr(args, _argument)
+
+    god = AudioGod(
+        source_file=_arguments['source_file'],
+        ignored_file=_arguments['ignored_file'],
+        audios_root=_arguments['audios_root'],
+        audios_source=(_arguments['audios_source'], _arguments['recursive']),
+        properties=json.loads(_arguments['properties']) if _arguments['properties'] else {},
+        extensions=list(filter(None, _arguments['extensions'].split(','))),
+        fields=_arguments['fields'],
+        data_format=_arguments['data_format'],
+        display_options=[
+            _arguments['page_number'],
+            _arguments['page_size'],
+            json.loads(_arguments['sort']) if _arguments['sort'] else [],
+            json.loads(_arguments['filter']) if _arguments['filter'] else {},
+            _arguments['fields'],
+            json.loads(_arguments['align']) if _arguments['align'] else {},
+            _arguments['numbered'],
+            _arguments['style'],
+        ],
+        itunes_options=[
+            _arguments['itunes_version_plist'],
+            _arguments['itunes_media_folder'],
+            _arguments['track_initial_id'],
+            _arguments['playlist_initial_id'],
+        ],
+        artwork_path=_arguments['artwork_path'],
+        filename_pattern=_arguments['filename_pattern'],
+        output_file=_arguments['output_file'],
+        organize_type=_arguments['organize_type'],
+        log_level=_arguments['log_level'],
+    )
+
+    getattr(god, args.subcmd.replace('-', '_'))()
+
+################################################################################
+#                                                                              #
+#                                MAIN FUNCTION                                 #
+#                                                                              #
+################################################################################
+
+class GreatArgumentParser(argparse.ArgumentParser):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__subparsers = []
+
+    def add_subparser(self, subparser):
+        self.__subparsers.append(subparser)
+
+    def parse_args(self):
+        ret = super().parse_args()
+        if len(sys.argv) == 1:
+            self.print_help()
+        return ret
+
+    def format_help(self):
+        help_text = super().format_help()
+        for name, subparser in self.__subparsers:
+            help_text += '\n' + '@' * 78 + '\n'
+            help_text += f'\nSubcommand "{name}" help info:\n\n'
+            help_text += subparser.format_help()
+        return help_text
+
+    def print_help(self):
+        pydoc.pager(self.format_help())
+        self.exit(0)
+
+    def error(self, message):
+        #if re.search(r"(required: \w+|需要以下参数: \w+)", message):
+        #    self.print_help()
+        super().error(message)
+
+
+def main():
+    parser = GreatArgumentParser(
+        prog=sys.argv[0],
+        usage=_render_usage(__USAGE__),
+        description='🎻 God of audios 🎸',
+        epilog='🤔 Thinking ...',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        #prefix_chars='-',
+        #fromfile_prefix_chars=None,
+        #argument_default=None,
+        #conflict_handler='error',
+        #add_help=True,
+        #allow_abbrev=True,
+        #exit_on_error=True,
+    )
+    
+    parser.add_argument(
+        '--version', '-v',
+        action='version',
+        version=__VERSION__,
+    )
+
+    subparsers = parser.add_subparsers(
+        prog=sys.argv[0],
+        title='Subcommands',
+        description='the available subcommands show below:',
+        dest="subcmd",
+        required=False,
+        metavar='subcommand name:   ',
+        help='subcommand statement:',
+    )
+
+    for _action in ACTIONS:
+        _kwargs = {
+            'description': '',
+            'help': '',
+            'usage': '',
+            'epilog': '😴 Sleeping ...',
+            'formatter_class': argparse.ArgumentDefaultsHelpFormatter,
+            #'prog': None,
+            #'aliases': (),
+            #'prefix_chars': '-',
+            #'fromfile_prefix_chars': None,
+            #'argument_default': None,
+            #'conflict_handler': 'error',
+            #'add_help': True,
+            #'allow_abbrev': True,
+            #'exit_on_error': True,
+        }
+        _kwargs.update(ACTIONS[_action].get('kwargs', {}))
+        _subparser = subparsers.add_parser(_action, **_kwargs)
+        _add_arguments(
+            _subparser,
+            ACTIONS[_action].get('arguments', []),
+        )
+        _subparser.set_defaults(execute=_handle_subcmd)
+        parser.add_subparser((_action, _subparser))
+
+    args = parser.parse_args()
+    # only for subparsers, error fo main parser
+    args.execute(args)
 
 ################################################################################
 #                                                                              #
