@@ -993,7 +993,7 @@ class AudioGod(object):
         )
         return re.match(regex, image) is not None
 
-    # Use AudioProperty type field here, you won't to check field parameter.
+    # Use AudioProperty type field here, you won't check field parameter.
     def save(self, audio_object, field, value, formatted=False):
         if value is None:
             return
@@ -1040,8 +1040,9 @@ class AudioGod(object):
                             )
                         else:
                             self.logger.fatal(
-                                'Audio <{}> has invalid artwork "{}"'.format(
-                                    audio_object.file_info.name, value,
+                                'Audio <{name}> has invalid artwork "{value}"'.format(
+                                    name=audio_object.file_info.name,
+                                    value=value,
                                 ),
                             )
                             return
@@ -1049,7 +1050,7 @@ class AudioGod(object):
                 setattr(audio_object.tag, field, value)
         audio_object.tag.save()
 
-    # Use AudioProperty type field here, you won't to check field parameter.
+    # Use AudioProperty type field here, you won't check field parameter.
     def fetch(self, audio_object, field):
         ret, filename = None, audio_object.tag.file_info.name
         match field:
@@ -1109,10 +1110,10 @@ class AudioGod(object):
 
     @classmethod
     def generate_key(cls, artist, title):
-        return '{}{}{}'.format(
-            cls.format_artist(artist.strip()),
-            cls.DIV_CHAR,
-            cls.format_title(title.strip()),
+        return '{artist}{div}{title}'.format(
+            artist=cls.format_artist(artist.strip()),
+            div=cls.DIV_CHAR,
+            title=cls.format_title(title.strip()),
         ).upper()
 
     def generate_key_by_audio(self, audio):
@@ -1176,8 +1177,10 @@ class AudioGod(object):
             self.valid_clauses_counter -= 1
             self.repeated_clauses_counter += 2
             return
-        final_clauses[key][0][self.AudioProperty.GROUPING] = '{}{}{}'.format(
-            final_grouping, self.GROUPING_SEPARATOR, grouping,
+        final_clauses[key][0][self.AudioProperty.GROUPING] = '{fg}{gs}{gp}'.format(
+            fg=final_grouping,
+            gs=self.GROUPING_SEPARATOR,
+            gp=grouping,
         )
         self.valid_clauses_counter += 1
         return
@@ -1217,16 +1220,16 @@ class AudioGod(object):
         self.import_()
         self.logger.warning('\n{}\n'.format('#' * 78))
         self.logger.warning(
-            'Total Clauses: {}\n\n'
-            'Valid Clauses: {}, '
-            'Grouping Clauses: {}, '
-            'Invalid Clauses: {}, '
-            'Repeated Clauses: {}\n'.format(
-                self.total_clauses_counter,
-                self.valid_clauses_counter,
-                self.grouping_clauses_counter,
-                self.invalid_clauses_counter,
-                self.repeated_clauses_counter,
+            'Total Clauses: {total}\n\n'
+            'Valid Clauses: {valid}, '
+            'Grouping Clauses: {grouping}, '
+            'Invalid Clauses: {invalid}, '
+            'Repeated Clauses: {repeated}\n'.format(
+                total=self.total_clauses_counter,
+                valid=self.valid_clauses_counter,
+                grouping=self.grouping_clauses_counter,
+                invalid=self.invalid_clauses_counter,
+                repeated=self.repeated_clauses_counter,
             )
         )
         if len(self.invalid_clauses) > 0:
@@ -1236,8 +1239,9 @@ class AudioGod(object):
         if len(self.repeated_clauses) > 0:
             self.logger.info('\nRepeated Clauses:')
             for key in self.repeated_clauses:
-                self.logger.info('\t{}: [{}]'.format(
-                    key, '｜'.join(self.repeated_clauses[key]),
+                self.logger.info('\t{key}: [{repeated}]'.format(
+                    key=key,
+                    repeated='｜'.join(self.repeated_clauses[key]),
                 ))
 
     def __import_json(self):
@@ -1351,27 +1355,27 @@ class AudioGod(object):
         self.logger.warning('\n{}\n'.format('#' * 78))
 
         self.logger.warning(
-            'Total Audios: {}\n\n'
-            'Invalid Audios: {} '
-            '(Invalid Extension Audios: {}, Invalid Name Audios: {})\n'
-            'Omitted Audios: {}\n'
-            'Ignored Audios: {}\n'
-            'Valid Audios: {} '
-            '(Matched: {}, NotMatched: {})\n'.format(
-                len(self.invalid_ext_audios) \
+            'Total Audios: {total}\n\n'
+            'Invalid Audios: {invalid} '
+            '(Invalid Extension Audios: {inv_ext}, Invalid Name Audios: {inv_name})\n'
+            'Omitted Audios: {omitted}\n'
+            'Ignored Audios: {ignored}\n'
+            'Valid Audios: {valid} '
+            '(Matched: {matched}, NotMatched: {nomatched})\n'.format(
+                total=len(self.invalid_ext_audios) \
                     + len(self.invalid_name_audios) \
                     + len(self.omitted_audios) \
                     + len(self.ignored_audios) \
                     + len(self.matched_audios) \
                     + len(self.notmatched_audios),
-                len(self.invalid_ext_audios) + len(self.invalid_name_audios),
-                len(self.invalid_ext_audios),
-                len(self.invalid_name_audios),
-                len(self.omitted_audios),
-                len(self.ignored_audios),
-                len(self.matched_audios) + len(self.notmatched_audios),
-                len(self.matched_audios),
-                len(self.notmatched_audios),
+                invalid=len(self.invalid_ext_audios) + len(self.invalid_name_audios),
+                inv_ext=len(self.invalid_ext_audios),
+                inv_name=len(self.invalid_name_audios),
+                omitted=len(self.omitted_audios),
+                ignored=len(self.ignored_audios),
+                valid=len(self.matched_audios) + len(self.notmatched_audios),
+                matched=len(self.matched_audios),
+                unmatched=len(self.notmatched_audios),
             )
         )
         if len(self.invalid_ext_audios) > 0:
@@ -1516,8 +1520,9 @@ class AudioGod(object):
                 filled_count += 1
                 self.logger.debug(f'Audio <{audio}> filled!')
         self.logger.warning(
-            'Audios To Fill: {}, Filled Audios: {}\n'.format(
-                len(audios), filled_count,
+            'Audios To Fill: {total}, Filled Audios: {filled}\n'.format(
+                total=len(audios),
+                filled=filled_count,
             )
         )
 
@@ -2496,6 +2501,7 @@ def _render_usage(usage) -> str:
         pos -= 1
         _usage = re.sub(r'\n {%s}' % (pos,), '\n', _usage)
 
+    # just for help details, no need set options
     return(Template(_usage).safe_substitute(dict(
         audio_properties=audio_properties(),
         special_characters=special_characters(),
@@ -2866,8 +2872,8 @@ def _add_arguments(parser, arguments=[]) -> None:
             required=False,
             default=ARGUMENTS['fields'],
             dest='fields',
-            help='fields of audio to process: {}'.format(
-                '; '.join([
+            help='fields of audio to process: {fields}'.format(
+                fields='; '.join([
                     '({}: {})'.format(key, ','.join([f for f in fields]))
                     for key, fields in AudioGod.FIELDS.items()
                 ]),
@@ -3174,7 +3180,7 @@ def main():
         parser.add_subparser((_action, _subparser))
 
     args = parser.parse_args()
-    # only for subparsers, error fo main parser
+    # only for subparsers, error for main parser
     args.execute(args)
 
 ################################################################################
