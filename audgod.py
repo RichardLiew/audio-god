@@ -178,6 +178,18 @@ class AudioGod(object):
     GROUPING_SEPARATOR = '|'
 
 
+    DEFAULT_MUSIC_FOLDER = '~/Music'
+    DEFAULT_ITUNES_VERSION_PLIST = '/System/Applications/Music.app/Contents/version.plist'
+    DEFAULT_TEMP_FOLDER = os.path.join(DEFAULT_MUSIC_FOLDER, 'temp')
+    DEFAULT_ITUNES_FOLDER = os.path.join(DEFAULT_MUSIC_FOLDER, 'iTunes')
+    DEFAULT_ITUNES_MEDIA_FOLDER = os.path.join(DEFAULT_ITUNES_FOLDER, 'iTunes Media')
+    DEFAULT_ITUNES_LIBRARY_PLIST = os.path.join(DEFAULT_ITUNES_MEDIA_FOLDER, 'Library.xml')
+
+
+    DEFAULT_SOURCE_FILE = './source.txt'
+    DEFAULT_IGNORED_FILE = './ignored.txt'
+
+
     class FilenamePatternTemplate(Template):
         delimiter = '@'
 
@@ -342,17 +354,11 @@ class AudioGod(object):
     }
 
 
-    DEFAULT_ITUNES_VERSION_PLIST = '/System/Applications/Music.app/Contents/version.plist'
-    DEFAULT_ITUNES_FOLDER = os.path.expandvars('${HOME}/Music/iTunes')
-    DEFAULT_ITUNES_MEDIA_FOLDER = os.path.join(DEFAULT_ITUNES_FOLDER, 'iTunes Media')
-    DEFAULT_ITUNES_LIBRARY_PLIST = os.path.join(DEFAULT_ITUNES_MEDIA_FOLDER, 'Library.xml')
-
-
     AUDIOS_TREE_ROOT_TAG = '--root-tag--'
     AUDIOS_TREE_ROOT_NID = '--root-nid--'
 
     DEFAULT_GENRE = 'Default'
-    DEFAULT_GROUPING: str = 'Default'
+    DEFAULT_GROUPING = 'Default'
 
     DEFAULT_TRACK_INITIAL_ID = 601
     DEFAULT_PLAYLIST_INITIAL_ID = 3001
@@ -1130,8 +1136,7 @@ class AudioGod(object):
         if not self.ignored_file:
             return
         if not os.path.exists(self.ignored_file):
-            if self.ignored_file in ['ignored.txt', './ignored.txt']:
-                return
+            return
         with open(self.ignored_file, 'r', encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
@@ -1361,7 +1366,7 @@ class AudioGod(object):
             'Omitted Audios: {omitted}\n'
             'Ignored Audios: {ignored}\n'
             'Valid Audios: {valid} '
-            '(Matched: {matched}, NotMatched: {nomatched})\n'.format(
+            '(Matched: {matched}, NotMatched: {notmatched})\n'.format(
                 total=len(self.invalid_ext_audios) \
                     + len(self.invalid_name_audios) \
                     + len(self.omitted_audios) \
@@ -1375,7 +1380,7 @@ class AudioGod(object):
                 ignored=len(self.ignored_audios),
                 valid=len(self.matched_audios) + len(self.notmatched_audios),
                 matched=len(self.matched_audios),
-                unmatched=len(self.notmatched_audios),
+                notmatched=len(self.notmatched_audios),
             )
         )
         if len(self.invalid_ext_audios) > 0:
@@ -2099,7 +2104,7 @@ class AudioGod(object):
     def export(self):
         filetype = self.recognize_filetype(self.output_file) 
         if self.FileType.NONE.eq(filetype):
-            self.logger.fatal('Output file is empty when export!')
+            self.logger.fatal('Please set output file with "--output-file" or "-o" options.')
             return
         self.__fill_audios_tree()
         match filetype:
@@ -2423,6 +2428,7 @@ def special_characters() -> str:
         (AudioGod.ORI_DIV_CHAR, 'Separator for origin audio file name.'),
         (AudioGod.DIV_CHAR, 'Separator for formatted audio file name.'),
         (AudioGod.GROUPING_SEPARATOR, 'Separator for several grouping property of audio file.'),
+        (AudioGod.FilenamePatternTemplate.delimiter, 'Delimiter of template for filename pattern.'),
     ]
     for number, char in enumerate(characters):
         table.add_row([
@@ -2506,7 +2512,7 @@ def _render_usage(usage) -> str:
         audio_properties=audio_properties(),
         special_characters=special_characters(),
         cmd=f'pipenv run python {sys.argv[0]}',
-        music='~/Music',
+        music=AudioGod.DEFAULT_MUSIC_FOLDER,
         local='.',
         delimiter=AudioGod.FilenamePatternTemplate.delimiter,
         div_char=AudioGod.DIV_CHAR,
@@ -2515,10 +2521,10 @@ def _render_usage(usage) -> str:
 
 ARGUMENTS={
     'log_level': 'DEBUG',
-    'source_file': './source.txt',
-    'ignored_file': './ignored.txt',
-    'audios_source': '{}/Music/Temp'.format(os.environ['HOME']),
-    'audios_root': '{}/Music/Temp'.format(os.environ['HOME']),
+    'source_file': AudioGod.DEFAULT_SOURCE_FILE,
+    'ignored_file': AudioGod.DEFAULT_IGNORED_FILE,
+    'audios_source': AudioGod.DEFAULT_TEMP_FOLDER,
+    'audios_root': AudioGod.DEFAULT_TEMP_FOLDER,
     'properties': None,
     'recursive': False,
     'extensions': ','.join(AudioGod.DEFAULT_EXTENSIONS),
