@@ -31,6 +31,7 @@ convert-qmc0, convert-kmx, convert-mp4
 命令行参数支持从类似json的配置文件加载？比如那些json形式的命令行参数，或者直接就全部命令行参数都支持json或者yaml,toml格式配置载入
 plist 文件里的 kind，track_type，file_folder_count，library_folder_count 设置规则需要重新审视下
 display 命令里，过滤和排序对 artwork 的单独处理
+解决在bash中获取解释器路径的逻辑，目前由于bash写入history文件有延时，即使设置了PROMPT_COMMAND="history -a"也没用，因为只有当当前命令执行完毕才会写入历史文件，sleep也没有用，调用python中调用subprocess会开启看不到的额外终端，与当前执行脚本的会话不在同一会话，所以怎么操作都没有意义。底线逻辑是获取当前python脚本的解释器完整路径（psutil.Process(os.getpid()).cmdline()），这个是可以实时做到的，但是完整路径过长，和想要的效果不同。psutil.Process().parent().name().lower()获取shell类型的逻辑里，如果是脚本间多层嵌套的话，那么parent()可能与人工执行命令的主终端所在会话不一样，可能会出错.
 
 
 Fixed:

@@ -95,6 +95,8 @@ import eyed3
 from eyed3.id3 import Genre, frames
 from eyed3.id3.tag import CommentsAccessor
 
+import psutil
+
 from treelib import Tree
 
 from enumx import StringEnum
@@ -112,6 +114,14 @@ from prettytable import PrettyTable
 ################################################################################
 
 __VERSION__ = 'Audio God 1.0'
+
+################################################################################
+#                                                                              #
+#                                  PRESETS                                     #
+#                                                                              #
+################################################################################
+
+# Remain ...
 
 ################################################################################
 #                                                                              #
@@ -921,9 +931,9 @@ class AudioGod(object):
         suffix='B'
         for unit in ['','K','M','G','T','P','E','Z']:
             if abs(size) < 1024.0:
-                return "%3.1f%s%s" % (size, unit, suffix)
+                return '%3.1f%s%s' % (size, unit, suffix)
             size /= 1024.0
-        return "%.1f%s%s" % (size, 'Y', suffix)
+        return '%.1f%s%s' % (size, 'Y', suffix)
 
     @classmethod
     def output_mtime(cls, mtime, output_type=FileType.NONE):
@@ -978,7 +988,7 @@ class AudioGod(object):
         return None if ret is None else format_(parse_(ret))
 
     @staticmethod
-    def validate_url(url):
+    def validate_url(url) -> bool:
         regex = re.compile(
             r'^(?:http|ftp)s?://'
             r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+'
@@ -2499,19 +2509,42 @@ General commands:
 #                                                                              #
 ################################################################################
 
+# Successful for zsh, failed for bash.
+# You should set 'PROMPT_COMMAND="history -a"' in "~/.bashrc" or "~/.bash_profile".
+# And then run "source ~/.bashrc" or "source ~/.bash_profile".
+def _get_python_interpreter() -> str:
+    interpreter = f'python {sys.argv[0]}'
+    try:
+        match psutil.Process().parent().name().lower(): # type: ignore
+            case 'bash':
+                history_file = '~/.bash_history'
+            case 'zsh':
+                history_file = '~/.zsh_history'
+        history_file = os.path.expanduser(history_file)
+        with open(history_file, 'r', errors='ignore') as f:
+            cmd = re.sub(
+                r'^: *[0-9\.]+:[0-9\.]+[:;]',
+                r'',
+                f.readlines()[-1].strip(),
+            ).strip()
+            index = cmd.find(' -')
+            if index != -1:
+                interpreter = cmd[:index].strip()
+            else:
+                interpreter = cmd.strip()
+    except Exception as e:
+        pass
+    return interpreter
+
 def _render_usage(usage) -> str:
     _usage = '\n' + usage
-
     pos = next((i for i, c in enumerate(_usage[2:], 1) if c != ' '), -1)
     if pos != -1:
-        pos -= 1
-        _usage = re.sub(r'\n {%s}' % (pos,), '\n', _usage)
-
-    # just for help details, no need set options
+        _usage = re.sub(r'\n {%s}' % (pos-1,), '\n', _usage)
     return(Template(_usage).safe_substitute(dict(
         audio_properties=audio_properties(),
         special_characters=special_characters(),
-        cmd=f'pipenv run python {sys.argv[0]}',
+        cmd=_get_python_interpreter(),
         music=AudioGod.DEFAULT_MUSIC_FOLDER,
         local='.',
         delimiter=AudioGod.FilenamePatternTemplate.delimiter,
@@ -3122,7 +3155,7 @@ class GreatArgumentParser(argparse.ArgumentParser):
         self.exit(0)
 
     def error(self, message):
-        #if re.search(r"(required: \w+|需要以下参数: \w+)", message):
+        #if re.search(r'(required: \w+|需要以下参数: \w+)', message):
         #    self.print_help()
         super().error(message)
 
@@ -3153,7 +3186,7 @@ def main():
         prog=sys.argv[0],
         title='Subcommands',
         description='the available subcommands show below:',
-        dest="subcmd",
+        dest='subcmd',
         required=False,
         metavar='subcommand name:   ',
         help='subcommand statement:',
