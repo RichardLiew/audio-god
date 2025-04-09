@@ -1,12 +1,10 @@
+Processing:
+看看 import 和 export 逻辑里可以做到增量更新吗,新增曲库时，看看各个环节是否可以由全量模式改为增量模式
+
+
 Useful Paths:
 /usr/local/Cellar/python@3.9/3.9.1_6/Frameworks/Python.framework/Versions/3.9/lib/python3.9/enum.py
 /Users/Zichoole/.local/share/virtualenvs/audio-god-jcJC6gcV/lib/python3.9/site-packages/eyed3
-
-
-Processing:
-export 所有空值的 field 都不要输出, 要注意对整型数据 0 和 0.0 的判断，0 的话也要输出，不算空值
-import 某个 field 为空值时，是直接赋值空值还是跳过不赋值 这块逻辑梳理下
-看看 import 和 export 逻辑里可以做到增量更新吗,新增曲库时，看看各个环节是否可以由全量模式改为增量模式
 
 
 Relax:
@@ -38,6 +36,8 @@ Fixed:
 把所有的.format()都改为keyvalue形式
 os.environ['HOME'], os.path.expandvars('${HOME}'), '~' 看看是否需要统一下
 看看所有的路径或者其他的可配置的内容，是否独立出来写成宏
+import 某个 field 为空值时，是直接赋值空值还是跳过不赋值 这块逻辑梳理下（字段为空值，则就直接赋值即可，无需考虑别的，不赋值的话就不要加这个字段就行了，对于 None 的情况，通常本程序需求的场景不考虑这种情况，只有空值，没有None）
+export 所有空值的 field 都不要输出, 要注意对整型数据 0 和 0.0 的判断，0 的话也要输出，不算空值
 
 
 Giveup:

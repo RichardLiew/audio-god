@@ -133,8 +133,8 @@ class FatalLogger(logging.Logger):
     def __init__(self, level=logging.DEBUG):
         super().__init__('fatal', level)
 
-    def fatal(self, msg, *args, **kwargs):
-        super().fatal(msg, *args, **kwargs)
+    def critical(self, msg, *args, **kwargs):
+        super().critical(msg, *args, **kwargs)
         sys.exit(1)
 
 
@@ -1643,30 +1643,31 @@ class AudioGod(object):
                 if not album:
                     self.logger.fatal(f'Invalid album of <{audio}>')
                     return
-                dir_ = os.path.join(self.audios_root, artist, album)  # type: ignore
-                os.makedirs(dir_, exist_ok=True)
-                newname = os.path.join(dir_, os.path.basename(audio))
-                os.rename(audio, newname)
+                newname = os.path.join(self.audios_root, artist, album, os.path.basename(audio)) # type: ignore
+                if newname != audio:
+                    os.makedirs(os.path.dirname(newname), exist_ok=True)
+                    os.rename(audio, newname)
             else:
                 grouping = self.fetchx(audio_object, self.AudioProperty.GROUPING)
                 if not grouping:
                     self.logger.fatal(f'Invalid grouping of <{audio}>')
                     return
                 groups = grouping.split(self.GROUPING_SEPARATOR)  # type: ignore
-                target = os.path.join(self.audios_root, groups[0])
-                os.makedirs(target, exist_ok=True)
-                target = os.path.join(target, os.path.basename(audio))
-                os.rename(audio, target)
-                links = [os.path.join(self.audios_root, group) for group in groups[1:]]
+                target = os.path.join(self.audios_root, groups[0], os.path.basename(audio))
+                if target != audio:
+                    os.makedirs(os.path.dirname(target), exist_ok=True)
+                    os.rename(audio, target)
+                links = [
+                    os.path.join(self.audios_root, group, os.path.basename(audio))
+                    for group in groups[1:]
+                ]
                 for link in links:
-                    os.makedirs(link, exist_ok=True)
-                links = list(map(
-                    lambda x: os.path.join(x, os.path.basename(audio)), links,
-                ))
-                for link in links:
+                    if link == target:
+                        continue
+                    os.makedirs(os.path.dirname(link), exist_ok=True)
                     if os.path.exists(link):
                         os.remove(link)
-                    os.link(target, link)  # 创建硬链接
+                    os.link(target, link)
 
     def list_repeated(self):
         self.__load_audios()
