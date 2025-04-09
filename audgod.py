@@ -129,16 +129,25 @@ __VERSION__ = 'Audio God 1.0'
 #                                                                              #
 ################################################################################
 
+class FatalLogger(logging.Logger):
+    def __init__(self, level=logging.DEBUG):
+        super().__init__('fatal', level)
+
+    def fatal(self, msg, *args, **kwargs):
+        super().fatal(msg, *args, **kwargs)
+        sys.exit(1)
+
+
 class TreeX(Tree):
     def __init__(self, logger=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if logger is None:
-            logger = logging.getLogger()
+            logger = FatalLogger(logging.DEBUG)
         self.logger = logger
 
     def perfect_merge(self, nid, new_tree, deep=False) -> None:
         if not (isinstance(new_tree, Tree) or isinstance(new_tree, TreeX)):
-            self.logger.critical('The new tree to merge is not a valid tree.')
+            self.logger.fatal('The new tree to merge is not a valid tree.')
             return
 
         if new_tree is None:
@@ -153,13 +162,13 @@ class TreeX(Tree):
             nid = self.root
 
         if not self.contains(nid):
-            self.logger.critical(f'Node <{nid}> is not in the tree!')
+            self.logger.fatal(f'Node <{nid}> is not in the tree!')
             return
 
         current_node = self[nid]
 
         if current_node.tag != new_tree[new_tree.root].tag:
-            self.logger.critical('Current node not same with root of new tree.')
+            self.logger.fatal('Current node not same with root of new tree.')
             return
 
         childs = self.children(nid)
@@ -405,8 +414,7 @@ class AudioGod(object):
         organize_type=OrganizeType.ITUNED,
         log_level=logging.DEBUG,
     ):
-        self.__logger = logging.getLogger()
-        self.__logger.setLevel(log_level)
+        self.__logger = FatalLogger(log_level)
         eyed3.log.setLevel(
             #log_level,
             logging.ERROR,
@@ -1653,17 +1661,51 @@ class AudioGod(object):
                 for link in links:
                     os.makedirs(link, exist_ok=True)
                 links = list(map(
-                    lambda x: os.path.join(self.audios_root, x), links,
+                    lambda x: os.path.join(x, os.path.basename(audio)), links,
                 ))
                 for link in links:
                     if os.path.exists(link):
-                        if os.path.islink(link):
-                            os.remove(link)
-                        else:
-                            self.logger.fatal(f'<{link}> not a link!')
-                            return
-                    #os.link(target, link)  # 创建硬链接
-                    os.symlink(target, link)  # 创建软链接
+                        os.remove(link)
+                    os.link(target, link)  # 创建硬链接
+
+    def list_repeated(self):
+        self.__load_audios()
+        
+        audios, results = self.concerned_audios, {}
+        for audio in audios:
+            audio_object = eyed3.load(audio)
+            artist = self.fetchx(audio_object, self.AudioProperty.ARTIST)
+            if not artist:
+                self.logger.fatal(f'Invalid artist of <{audio}>')
+                return
+            title = self.fetchx(audio_object, self.AudioProperty.TITLE)
+            if not title:
+                self.logger.fatal(f'Invalid title of <{audio}>')
+                return
+            key = self.generate_key(artist, title)
+            if key in results:
+                results[key].append(audio)
+            else:
+                results[key] = [audio]
+        
+        content = ''
+        for key in results:
+            items = results[key]
+            if len(items) < 2:
+                continue
+            content += f'{key}\n'
+            for item in items:
+                content += f'{item}\n'
+            content += '\n'
+
+        if not content:
+            content = 'No repeated!'
+
+        if self.output_file:
+            with open(self.output_file, 'w', encoding='utf-8') as f:
+                f.write(content)
+        else:
+            print(content)
 
     def display(self):
         #print("# {}".format('=' * 78))
@@ -2488,7 +2530,8 @@ General steps:
     Step.5: Format properties;
     Step.6: Rename audios;
     Step.7: Organize files;
-    Step.8: Export plist, json, markdown and note file.
+    Step.8: List repeated audios;
+    Step.9: Export plist, json, markdown and note file.
 
 ------------------------------------------------------------------------------
 
@@ -2512,7 +2555,7 @@ General commands:
 # Successful for zsh, failed for bash.
 # You should set 'PROMPT_COMMAND="history -a"' in "~/.bashrc" or "~/.bash_profile".
 # And then run "source ~/.bashrc" or "source ~/.bash_profile".
-def _get_python_interpreter() -> str:
+def _get_command() -> str:
     interpreter = f'python {sys.argv[0]}'
     try:
         match psutil.Process().parent().name().lower(): # type: ignore
@@ -2544,7 +2587,7 @@ def _render_usage(usage) -> str:
     return(Template(_usage).safe_substitute(dict(
         audio_properties=audio_properties(),
         special_characters=special_characters(),
-        cmd=_get_python_interpreter(),
+        cmd=_get_command(),
         music=AudioGod.DEFAULT_MUSIC_FOLDER,
         local='.',
         delimiter=AudioGod.FilenamePatternTemplate.delimiter,
@@ -2674,6 +2717,7 @@ ACTIONS={
     },
     'organize-files': {
         'arguments': [
+            'audios_root',
             'audios_source',
             'extensions',
             'recursive',
@@ -2685,11 +2729,33 @@ ACTIONS={
             'help': 'organize files',
             'usage': _render_usage('''
                 ${cmd} organize-files \\
+                    --audios-root=${music} \\
                     --audios-source=${music} \\
                     --extensions=mp3,aac \\
                     --recursive \\
                     --ignored-file=${local}/ignored.txt \\
                     --organize-type=grouped
+            '''),
+        },
+    },
+    'list-repeated': {
+        'arguments': [
+            'audios_source',
+            'extensions',
+            'recursive',
+            'ignored_file',
+            'output_file',
+        ],
+        'kwargs': {
+            'description': '✋ List repeated audio files by artist and title',
+            'help': 'list repeated',
+            'usage': _render_usage('''
+                ${cmd} list-repeated \\
+                    --audios-source=${music} \\
+                    --extensions=mp3,aac \\
+                    --recursive \\
+                    --ignored-file=${local}/ignored.txt \\
+                    --output-file=""
             '''),
         },
     },
