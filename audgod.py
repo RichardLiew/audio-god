@@ -44,7 +44,7 @@
 # ---
 # Dependences:
 #   1. pyenv: [.python-version => ```
-#       3.9.1
+#       3.10.6
 #   ```];
 #   2. pipenv: [Pipfile => ```
 #       [[source]]
@@ -53,11 +53,13 @@
 #       name = "pypi"
 #
 #       [packages]
-#       eyed3 = "*"
-#       prettytable = "*"
-#       mdutils = "*"
+#       psutil = "*"
 #       treelib = "*"
 #       enumx = "*"
+#       send2trash = "*"
+#       prettytable = "*"
+#       eyed3 = "*"
+#       mdutils = "*"
 #
 #       [dev-packages]
 #       pylint = "*"

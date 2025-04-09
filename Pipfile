@@ -4,11 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-eyed3 = "*"
-prettytable = "*"
-mdutils = "*"
+psutil = "*"
 treelib = "*"
 enumx = "*"
+send2trash = "*"
+prettytable = "*"
+eyed3 = "*"
+mdutils = "*"
 
 [dev-packages]
 pylint = "*"
