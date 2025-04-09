@@ -91,17 +91,17 @@ import datetime
 
 from string import Template
 
+import psutil
+
+from treelib import Tree
+from enumx import StringEnum
+from send2trash import send2trash
+from prettytable import PrettyTable
+
 import eyed3
 from eyed3.id3 import Genre, frames
 from eyed3.id3.tag import CommentsAccessor
 
-import psutil
-
-from treelib import Tree
-
-from enumx import StringEnum
-
-from prettytable import PrettyTable
 
 '''
     The god processor for audios.
@@ -190,6 +190,11 @@ class TreeX(Tree):
                     deep=deep,
                 )
 
+################################################################################
+#                                                                              #
+#                                 Audio God                                    #
+#                                                                              #
+################################################################################
 
 class AudioGod(object):
     ORI_DIV_CHAR = '-'
@@ -727,6 +732,15 @@ class AudioGod(object):
             return (None, None)
         ret = tuple(map(int, track_num.split(',')[:2]))
         return ret
+
+    @staticmethod
+    def remove(file):
+        if not os.path.exists(file):
+            return
+        try:
+            send2trash(file)
+        except:
+            pass
 
     @staticmethod
     def unify_format(content):
@@ -1565,7 +1579,7 @@ class AudioGod(object):
                 f.write(lines[i])
                 if i < len(lines) - 1:
                     f.write('\n')
-        os.remove(self.source_file)
+        self.remove(self.source_file)
         os.rename(tmp_file, self.source_file)
 
     def fill_properties(self):
@@ -1666,7 +1680,7 @@ class AudioGod(object):
                         continue
                     os.makedirs(os.path.dirname(link), exist_ok=True)
                     if os.path.exists(link):
-                        os.remove(link)
+                        self.remove(link)
                     os.link(target, link)
 
     def list_repeated(self):
