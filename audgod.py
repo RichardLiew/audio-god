@@ -69,6 +69,16 @@
 #   ```].
 #
 # ---
+# FAQs:
+#   1. pipenv 依赖于 pyenv，如果异常，建议先清空 pyenv 的 versions，
+#      然后再重新安装 python，安装完成后，需要在 ~/.zshrc
+#     （或者 ~/.bashrc、~/.bash_profile）文件最下方添加如下内容并重载 => ```
+#          export PYENV_ROOT="$HOME/.pyenv"
+#          export PATH="$PYENV_ROOT/bin:$PATH"
+#          eval "$(pyenv init -)"
+#      ```
+#
+# ---
 # TODO (@Richard):
 #   1. 增加 qmc0 转 mp3 的功能;
 #   2. 增加 kmx 转 mp4 的功能;
