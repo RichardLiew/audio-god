@@ -422,7 +422,7 @@ class AudioGod(object):
 
         self.__source_file = source_file
         self.__ignored_file = ignored_file
-        self.__audios_root = audios_root
+        self.__audios_root = os.path.abspath(audios_root)
         self.__audios_source = audios_source
         self.__properties = properties
         self.__extensions = list(map(lambda x: x.lower(), filter(None, extensions)))
