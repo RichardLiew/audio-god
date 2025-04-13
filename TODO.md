@@ -1,5 +1,10 @@
 Processing:
 看看 import 和 export 逻辑里可以做到增量更新吗,新增曲库时，看看各个环节是否可以由全量模式改为增量模式
+import 时支持fields三种类型识别
+export note时，输出概览
+import note & format note & export note 三者统一一下
+import 所有方式抽象出统一部分
+export 同上
 
 
 Useful Paths:
@@ -30,6 +35,8 @@ convert-qmc0, convert-kmx, convert-mp4
 plist 文件里的 kind，track_type，file_folder_count，library_folder_count 设置规则需要重新审视下
 display 命令里，过滤和排序对 artwork 的单独处理
 解决在bash中获取解释器路径的逻辑，目前由于bash写入history文件有延时，即使设置了PROMPT_COMMAND="history -a"也没用，因为只有当当前命令执行完毕才会写入历史文件，sleep也没有用，调用python中调用subprocess会开启看不到的额外终端，与当前执行脚本的会话不在同一会话，所以怎么操作都没有意义。底线逻辑是获取当前python脚本的解释器完整路径（psutil.Process(os.getpid()).cmdline()），这个是可以实时做到的，但是完整路径过长，和想要的效果不同。psutil.Process().parent().name().lower()获取shell类型的逻辑里，如果是脚本间多层嵌套的话，那么parent()可能与人工执行命令的主终端所在会话不一样，可能会出错.
+是否需要针对repeated的audios汇总groups
+type ignore都处理一下 
 
 
 Fixed:
@@ -39,6 +46,13 @@ os.environ['HOME'], os.path.expandvars('${HOME}'), '~' 看看是否需要统一�
 import 某个 field 为空值时，是直接赋值空值还是跳过不赋值 这块逻辑梳理下（字段为空值，则就直接赋值即可，无需考虑别的，不赋值的话就不要加这个字段就行了，对于 None 的情况，通常本程序需求的场景不考虑这种情况，只有空值，没有None）
 export 所有空值的 field 都不要输出, 要注意对整型数据 0 和 0.0 的判断，0 的话也要输出，不算空值
 notes文件加载逻辑里，歌曲信息里的属性值优先级是最高的，高于 分组信息 行
+genre 和 grouping 里不能包含空白符
+fieldtype 在display和export里都要使用
+export 支持指定文件类型和属性名的中英文
+所有正则表达式里的空格改成\s
+所有的fetch和fetchx都看看是否缺参数
+所有需要split的地方，都要三部曲,所有split的地方，都要考虑空字符串切割后列表并不为空而是有一个空字符串元素,查查看所有的split，有些是不需要去重和去空白的
+groups有重复的情况要处理一下(GROUPING和group都查找一下)
 
 
 Giveup:

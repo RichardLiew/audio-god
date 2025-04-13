@@ -96,6 +96,7 @@ import json
 import copy
 import pydoc
 import urllib
+import shutil
 import logging
 import argparse
 import plistlib
@@ -242,13 +243,12 @@ class AudioGod(object):
 
 
     @StringEnum.unique
-    class FileType(StringEnum):
+    class FileFormat(StringEnum):
         NONE = 'none'
         JSON = 'json'
         MARKDOWN = 'markdown'
         PLIST = 'plist'
         NOTE = 'note'
-        DISPLAY = 'display'
 
 
     @StringEnum.unique
@@ -287,6 +287,13 @@ class AudioGod(object):
         FOLDER = 'folder'
         PLAYLIST = 'playlist'
         TRACK = 'track'
+
+
+    @StringEnum.unique
+    class FieldType(StringEnum):
+        ORIGINAL = 'ori'
+        CHINESE = 'cn'
+        ENGLISH = 'en'
 
 
     AUDIO_PROPERTIES = {
@@ -348,6 +355,14 @@ class AudioGod(object):
         AudioProperty.GENRE,
     ]
 
+    SIMPLE_FIELDS = [
+        AudioProperty.TITLE,
+        AudioProperty.ARTIST,
+        AudioProperty.ALBUM,
+        AudioProperty.GENRE,
+        AudioProperty.GROUPING,
+    ]
+    
     ZIP_FIELDS = [
         AudioProperty.SELECTED,
         AudioProperty.LIKED,
@@ -383,6 +398,7 @@ class AudioGod(object):
 
     FIELDS = {
         'default': DEFAULT_FIELDS,
+        'simple': SIMPLE_FIELDS,
         'zip': ZIP_FIELDS,
         'core': CORE_FIELDS,
         'ituned': ITUNED_FIELDS,
@@ -408,6 +424,7 @@ class AudioGod(object):
         ignored_file,
         audios_root,
         audios_source,
+        recursive=False,
         properties={},
         extensions=DEFAULT_EXTENSIONS,
         fields=CORE_FIELDS,
@@ -427,6 +444,8 @@ class AudioGod(object):
             delimiter=FilenamePatternTemplate.delimiter,
             div_char=DIV_CHAR,
         ),
+        field_type=FieldType.ORIGINAL,
+        output_format=FileFormat.NONE,
         output_file=None,
         organize_type=OrganizeType.ITUNED,
         log_level=logging.DEBUG,
@@ -437,10 +456,11 @@ class AudioGod(object):
             logging.ERROR,
         )
 
-        self.__source_file = source_file
-        self.__ignored_file = ignored_file
-        self.__audios_root = os.path.abspath(audios_root)
-        self.__audios_source = audios_source
+        self.__source_file = self.abspath(source_file)
+        self.__ignored_file = self.abspath(ignored_file)
+        self.__audios_root = self.abspath(audios_root)
+        self.__audios_source = self.abspath(audios_source)
+        self.__recursive = recursive
         self.__properties = properties
         self.__extensions = list(map(lambda x: x.lower(), filter(None, extensions)))
         self.__fields = [
@@ -474,20 +494,28 @@ class AudioGod(object):
             field: getattr(
                 self,
                 f'output_{field}',
-                lambda x, output_type=self.FileType.NONE: x,
+                lambda x, output_format=self.FileFormat.NONE: x,
             )
             for field in self.ALL_FIELDS
         }
         self.__data_format = self.DataFormat(data_format)
         self.__display_options = self.__rewrite_options(display_options)
-        self.__itunes_options = itunes_options
-        self.__artwork_path = artwork_path
+        self.__artwork_path = self.abspath(artwork_path)
         self.__organize_type = AudioGod.OrganizeType(organize_type)
         self.__filename_pattern = filename_pattern
-        self.__output_file = output_file
+        self.__field_type = AudioGod.FieldType(field_type)
+        self.__output_file = self.abspath(output_file)
+        
+        self.__itunes_options = itunes_options
+        self.__itunes_options[0] = self.abspath(self.__itunes_options[0])
+        self.__itunes_options[1] = self.abspath(self.__itunes_options[1])
+
+        self.__output_format = AudioGod.FileFormat(output_format)
+        if self.FileFormat.NONE.eq(self.__output_format):
+            self.__output_format = self.recognize_file_format(self.output_file)
 
     def __resolve_fields(self, fields):
-        fields_ = list(filter(None, fields.split(',')))
+        fields_ = self.split(fields, ',')
         for key in self.FIELDS.keys():
             try:
                 index = fields_.index(key)
@@ -553,6 +581,14 @@ class AudioGod(object):
         return self.__itunes_options
 
     @property
+    def field_type(self):
+        return self.__field_type
+
+    @property
+    def output_format(self):
+        return self.__output_format
+
+    @property
     def output_file(self):
         return self.__output_file
 
@@ -571,6 +607,10 @@ class AudioGod(object):
     @property
     def audios_source(self):
         return self.__audios_source
+
+    @property
+    def recursive(self):
+        return self.__recursive
 
     @property
     def audios_tree(self):
@@ -666,31 +706,30 @@ class AudioGod(object):
 
     @property
     def source_audios(self):
-        src, recursive = self.audios_source
         ret = []
-        if not os.path.exists(src):
-            self.logger.fatal(f'Source <{src}> not exists!')
+        if not os.path.exists(self.audios_source):
+            self.logger.fatal(f'Source <{self.audios_source}> not exists!')
             return ret
-        src = os.path.abspath(src)
-        if os.path.isfile(src):
-            if not self.__check_extension(src):
-                self.logger.fatal(f'Source <{src}> invalid extension!')
+        if os.path.isfile(self.audios_source):
+            if not self.__check_extension(self.audios_source):
+                self.logger.fatal(f'Source <{self.audios_source}> invalid extension!')
                 return ret
-            ret.append(src)
+            ret.append(self.audios_source)
             return ret
-        if not os.path.isdir(src):
-            self.logger.fatal(f'Source <{src}> not a directory!')
+        if not os.path.isdir(self.audios_source):
+            self.logger.fatal(f'Source <{self.audios_source}> not a directory!')
             return ret
-        if recursive:
-            for _root, _dirs, _files in os.walk(src):
+        if self.recursive:
+            for _root, _dirs, _files in os.walk(self.audios_source):
                 for _dir in _dirs:
-                    ret.append(os.path.join(_root, _dir))
+                    ret.append(self.abspath(_root, _dir))
                 for _file in _files:
-                    ret.append(os.path.join(_root, _file))
+                    ret.append(self.abspath(_root, _file))
         else:
-            ret.extend(
-                [os.path.join(src, audio) for audio in os.listdir(src)]
-            )
+            ret.extend([
+                self.abspath(self.audios_source, audio)
+                for audio in os.listdir(self.audios_source)
+            ])
         return ret
 
     @property
@@ -746,13 +785,89 @@ class AudioGod(object):
         return ret
 
     @staticmethod
+    def split(s, sep=None, del_blank=True, filt_empty=True, filt_repeated=True, maxsplit=-1) -> list:
+        if not s:
+            return []
+        if not sep:
+            return [s]
+        ret = s.split(sep, maxsplit)
+        if del_blank:
+            ret = [item.strip() for item in ret]
+        if filt_empty:
+            ret = list(filter(lambda x: x, ret))
+        if filt_repeated:
+            ret = list(dict.fromkeys(ret))
+        return ret
+
+    @staticmethod
     def remove(file):
         if not os.path.exists(file):
             return
-        try:
-            send2trash(file)
-        except:
-            pass
+        send2trash(file)
+
+    @classmethod
+    def rename(cls, old, new):
+        if not os.path.exists(old):
+            raise Exception(f'File {old} not exists!')
+        if os.path.exists(new):
+            cls.remove(new)
+        os.rename(old, new)
+
+    @classmethod
+    def duplicate(cls, src, dst):
+        if not os.path.exists(src):
+            raise Exception(f'File {src} not exists!')
+        if os.path.exists(dst):
+            cls.remove(dst)
+        shutil.copy2(src, dst)
+    
+    @classmethod
+    def backup(cls, src):
+        if not os.path.exists(src):
+            raise Exception(f'File {src} not exists!')
+        timestamp = time.strftime('%Y%m%d%H:%M:%S%f', time.localtime())
+        cls.duplicate(src, f'{src}.backup.{timestamp}')
+
+    @staticmethod
+    def format_utc(timestamp) -> str:
+        return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    @classmethod
+    def current_time(cls) -> str:
+        return cls.format_utc(time.time())
+
+    @staticmethod
+    def encode(src) -> str:
+        return urllib.parse.quote(src, safe='/', encoding='utf-8', errors=None) # type: ignore
+
+    @classmethod
+    def encode_location(cls, location) -> str:
+        ret = f'file://{cls.encode(location)}'
+        if os.path.isfile(location):
+            return ret
+        return f'{ret}/'
+
+    @staticmethod
+    def escape_characters(content):
+        if not content:
+            return content
+        if isinstance(content, str):
+            return content.replace('&', '&#38;')\
+                      .replace('<', '&#60;')\
+                      .replace('>', '&#62;')\
+                      .replace("'", '&#39;')\
+                      .replace('"', '&#34;')
+        return content
+
+    @staticmethod
+    def abspath(path, *paths):
+        ret, paths = '', list(filter(lambda x: x, [path] + list(paths)))
+        if len(paths) > 0:
+            ret = paths[0]
+        if len(paths) > 1:
+            for path in paths[1:]:
+                ret = os.path.join(ret, path)
+        return os.path.normpath(os.path.abspath(os.path.expanduser(ret)))
 
     @staticmethod
     def unify_format(content):
@@ -803,7 +918,7 @@ class AudioGod(object):
         if artist is None:
             return None
         ret = cls.unify_format(artist)
-        ret = re.sub(r'[、，/,]', r'&', ret)  # type: ignore
+        ret = re.sub(r'[、，/,]', r'&', ret) # type: ignore
         ret = re.sub(r'&', r' & ', ret)
         ret = re.sub(r'\s*&\s*', r' & ', ret)
         return ret
@@ -829,6 +944,18 @@ class AudioGod(object):
         return ret
 
     @classmethod
+    def format_grouping(cls, grouping):
+        if grouping is None:
+            return None
+        grouping = re.sub(r'\s*\/\s*', r'/', grouping)
+        grouping = re.sub(r'\/+', r'/', grouping)
+        pattern = r'(?:\/\s*)*\s*{}\s*(?:\/\s*)*'.format(cls.GROUPING_SEPARATOR)
+        grouping = re.sub(pattern, cls.GROUPING_SEPARATOR, grouping)
+        grouping = re.sub(r'(?:^\/|\/$)', r'', grouping)
+        groups = cls.split(grouping, cls.GROUPING_SEPARATOR)
+        return cls.GROUPING_SEPARATOR.join(groups)
+
+    @classmethod
     def format_comments(cls, comments):
         if comments is None:
             return None
@@ -850,70 +977,77 @@ class AudioGod(object):
         return ret
 
     @classmethod
-    def output_title(cls, title, output_type=FileType.NONE):
+    def output_title(cls, title, output_format=FileFormat.NONE):
         if not title:
             return ''
         ret = title
-        if cls.FileType.PLIST.eq(output_type):
+        if cls.FileFormat.PLIST.eq(output_format):
             ret = cls.escape_characters(ret)
         return ret
 
     @classmethod
-    def output_album(cls, album, output_type=FileType.NONE):
+    def output_album(cls, album, output_format=FileFormat.NONE):
         if not album:
             return ''
         ret = album
-        if cls.FileType.PLIST.eq(output_type):
+        if cls.FileFormat.PLIST.eq(output_format):
             ret = cls.escape_characters(ret)
         return ret
 
     @classmethod
-    def output_album_artist(cls, album_artist, output_type=FileType.NONE):
+    def output_album_artist(cls, album_artist, output_format=FileFormat.NONE):
         if not album_artist:
             return ''
         ret = album_artist
-        if cls.FileType.PLIST.eq(output_type):
+        if cls.FileFormat.PLIST.eq(output_format):
             ret = cls.escape_characters(ret)
         return ret
 
     @classmethod
-    def output_artist(cls, artist, output_type=FileType.NONE):
+    def output_artist(cls, artist, output_format=FileFormat.NONE):
         if not artist:
             return ''
         ret = artist
-        if cls.FileType.PLIST.eq(output_type):
+        if cls.FileFormat.PLIST.eq(output_format):
             ret = cls.escape_characters(ret)
         return ret
 
     @classmethod
-    def output_genre(cls, genre, output_type=FileType.NONE):
+    def output_genre(cls, genre, output_format=FileFormat.NONE):
         if not genre:
             return ''
         ret = genre
         if isinstance(genre, Genre):
             ret = genre.name
-        if cls.FileType.PLIST.eq(output_type):
+        if cls.FileFormat.PLIST.eq(output_format):
             ret = cls.escape_characters(ret)
         return ret
 
     @classmethod
-    def output_bit_rate(cls, bit_rate, output_type=FileType.NONE):
+    def output_grouping(cls, grouping, output_format=FileFormat.NONE):
+        if not grouping:
+            return ''
+        ret = grouping
+        return ret
+
+    @classmethod
+    def output_bit_rate(cls, bit_rate, output_format=FileFormat.NONE):
         if not bit_rate:
             return ''
         if isinstance(bit_rate, tuple):
             bit_rate = bit_rate[1]
-        if output_type in [cls.FileType.NONE, cls.FileType.PLIST]:
+        if output_format in [cls.FileFormat.NONE, cls.FileFormat.PLIST]:
             return bit_rate
         return f'{bit_rate} kb/s'
 
     @classmethod
-    def output_sample_freq(cls, sample_freq, output_type=FileType.NONE):
+    def output_sample_freq(cls, sample_freq, output_format=FileFormat.NONE):
         if not sample_freq:
             return ''
         return sample_freq
 
     @classmethod
-    def output_comments(cls, comments, output_type=FileType.NONE):
+    def output_comments(cls, comments, output_format=FileFormat.NONE):
         if not comments:
             return ''
         if isinstance(comments, CommentsAccessor):
@@ -926,7 +1060,7 @@ class AudioGod(object):
         return comments
 
     @classmethod
-    def output_track_num(cls, track_num, output_type=FileType.NONE):
+    def output_track_num(cls, track_num, output_format=FileFormat.NONE):
         if not track_num:
             return ''
         if isinstance(track_num, tuple):
@@ -934,19 +1068,19 @@ class AudioGod(object):
         return track_num
 
     @classmethod
-    def output_artwork(cls, artwork, output_type=FileType.NONE):
+    def output_artwork(cls, artwork, output_format=FileFormat.NONE):
         if not artwork:
             return ''
         return artwork
 
     @classmethod
-    def output_duration(cls, duration, output_type=FileType.NONE):
+    def output_duration(cls, duration, output_format=FileFormat.NONE):
         if not duration:
             duration = 0.0
-        match output_type:
-            case cls.FileType.NONE:
+        match output_format:
+            case cls.FileFormat.NONE:
                 return duration
-            case cls.FileType.PLIST:
+            case cls.FileFormat.PLIST:
                 return int(round(duration, 3) * 1000)
         s = duration
         m, s = divmod(s, 60)
@@ -957,10 +1091,10 @@ class AudioGod(object):
         )
 
     @classmethod
-    def output_size(cls, size, output_type=FileType.NONE):
+    def output_size(cls, size, output_format=FileFormat.NONE):
         if not size:
             return '0'
-        if output_type in [cls.FileType.NONE, cls.FileType.PLIST]:
+        if output_format in [cls.FileFormat.NONE, cls.FileFormat.PLIST]:
             return size
         suffix='B'
         for unit in ['','K','M','G','T','P','E','Z']:
@@ -970,10 +1104,10 @@ class AudioGod(object):
         return '%.1f%s%s' % (size, 'Y', suffix)
 
     @classmethod
-    def output_mtime(cls, mtime, output_type=FileType.NONE):
+    def output_mtime(cls, mtime, output_format=FileFormat.NONE):
         if not mtime:
             return ''
-        if cls.FileType.PLIST.eq(output_type):
+        if cls.FileFormat.PLIST.eq(output_format):
             return cls.format_utc(mtime)
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(mtime))
 
@@ -1011,7 +1145,7 @@ class AudioGod(object):
                         case self.AudioProperty.GROUPING:
                             _value = re.sub(r'/+$', r'', dirname)
                             _value = re.sub(
-                                r'^%s/{1,}' % (
+                                r'^%s/+' % (
                                     re.escape(re.sub(r'/+$', r'', self.audios_root)),
                                 ),
                                 r'',
@@ -1042,6 +1176,20 @@ class AudioGod(object):
             re.IGNORECASE,
         )
         return re.match(regex, image) is not None
+
+    @classmethod
+    def recognize_file_format(cls, file):
+        if not file:
+            return cls.FileFormat.NONE
+        _, ext = os.path.splitext(os.path.basename(file))
+        ext = ext[1:].lower()
+        if ext in ['json']:
+            return cls.FileFormat.JSON
+        if ext in ['md', 'markdown']:
+            return cls.FileFormat.MARKDOWN
+        if ext in ['xml', 'plist']:
+            return cls.FileFormat.PLIST
+        return cls.FileFormat.NOTE
 
     # Use AudioProperty type field here, you won't check field parameter.
     def save(self, audio_object, field, value, formatted=False):
@@ -1076,8 +1224,8 @@ class AudioGod(object):
                         valid = self.validate_image(value) and (
                                     os.path.isfile(value) or (
                                         (not self.artwork_path) and \
-                                        os.path.isfile(os.path.join(
-                                            self.artwork_path, value,  # type: ignore
+                                        os.path.isfile(self.abspath(
+                                            self.artwork_path, value,
                                         ))
                                     )
                                 )
@@ -1148,14 +1296,14 @@ class AudioGod(object):
         return ret
 
     def fetchx(self, audio_object, field,
-               formatted=False, output_type=FileType.NONE):
+               formatted=False, output_format=FileFormat.NONE):
         ret = self.fetch(audio_object, field)
         if ret is None:
             return None
         if formatted:
             ret = self.format[field](ret)
-        if self.FileType.NONE.ne(output_type):
-            ret = self.output[field](ret, output_type)
+        if self.FileFormat.NONE.ne(output_format):
+            ret = self.output[field](ret, output_format)
         return ret
 
     @classmethod
@@ -1171,10 +1319,13 @@ class AudioGod(object):
             self.logger.fatal(f'Invalid name of audio <{audio}>!')
             return
         name, _ = os.path.splitext(os.path.basename(audio))
-        name = name.strip()
         if name.count(self.DIV_CHAR) == 1:
-            return self.generate_key(*name.split(self.DIV_CHAR))
-        return self.generate_key(*name.split(self.ORI_DIV_CHAR))
+            return self.generate_key(
+                *self.split(name, self.DIV_CHAR, filt_empty=False, filt_repeated=False),
+            )
+        return self.generate_key(
+            *self.split(name, self.ORI_DIV_CHAR, filt_empty=False, filt_repeated=False),
+        )
 
     def __load_ignored(self):
         if not self.ignored_file:
@@ -1185,7 +1336,7 @@ class AudioGod(object):
             for line in f:
                 line = line.strip()
                 if line:
-                    self.ignored_set.add(os.path.abspath(line))
+                    self.ignored_set.add(self.abspath(line))
 
     def process_clause(self, plain_clause, hashed_clause, final_clauses):
         title = hashed_clause.get(self.AudioProperty.TITLE, None)
@@ -1219,8 +1370,8 @@ class AudioGod(object):
             final_clauses[key][0][self.AudioProperty.GROUPING] = grouping
             self.valid_clauses_counter += 1
             return
-        groups = grouping.split(self.GROUPING_SEPARATOR)
-        final_groups = final_grouping.split(self.GROUPING_SEPARATOR)
+        groups = self.split(grouping, self.GROUPING_SEPARATOR)
+        final_groups = self.split(final_grouping, self.GROUPING_SEPARATOR)
         if len(list(set(groups) & set(final_groups))) > 0:
             final_clauses[key].append(hashed_clause)
             self.valid_clauses_counter -= 1
@@ -1234,40 +1385,102 @@ class AudioGod(object):
         self.valid_clauses_counter += 1
         return
 
-    @classmethod
-    def recognize_filetype(cls, file):
-        if not file:
-            return cls.FileType.NONE
-        _, ext = os.path.splitext(os.path.basename(file))
-        ext = ext[1:].lower()
-        if ext in ['json']:
-            return cls.FileType.JSON
-        if ext in ['md', 'markdown']:
-            return cls.FileType.MARKDOWN
-        if ext in ['xml', 'plist']:
-            return cls.FileType.PLIST
-        return cls.FileType.NOTE
-
     def import_(self):
-        filetype = self.recognize_filetype(self.source_file)
-        match filetype:
-            case self.FileType.NONE | self.FileType.DISPLAY:
-                return
-            case self.FileType.JSON:
-                self.__import_json()
-            case self.FileType.MARKDOWN:
-                self.__import_markdown()
-            case self.FileType.PLIST:
-                self.__import_plist()
-            case _:
-                self.__import_note()
+        file_format = self.recognize_file_format(self.source_file)
+        if self.FileFormat.NONE.eq(file_format):
+            self.logger.fatal(f'Invalid source file <{self.source_file}>.')
+            return
+        getattr(self, f'import_{file_format}')()
+
+    def import_json(self):
+        pass
+
+    def import_markdown(self):
+        pass
+
+    import_md = import_markdown
+
+    def import_plist(self):
+        pass
+
+    import_xml = import_plist
+
+    def import_note(self):
+        grouping_pattern = r'^\s*#\s*\[\s*(\S+)\s*\]\s*(\S+)\s*$'
+        fields_pattern = '|'.join(
+            list(self.AUDIO_CN_PROPERTIES.keys()) + \
+            list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
+        )
+        prefix_pattern = r'^.*(({}))[:：]'.format(fields_pattern)
+        entire_pattern = \
+                r'^({0})[:：].*([,，;；]\s*({0})[:：].*){{0,}}$'.format(
+            fields_pattern,
+        )
+
+        _clauses = {}
+        with open(self.source_file, 'r', encoding='utf-8') as f:
+            genre, grouping = self.DEFAULT_GENRE, self.DEFAULT_GROUPING
+            for line in f:
+                self.total_clauses_counter += 1
+                # grouping line
+                if re.match(grouping_pattern, line, re.IGNORECASE) is not None:
+                    _line = re.sub(grouping_pattern, r'\1====\2', line, re.IGNORECASE)
+                    genre, grouping = self.split(
+                        _line, '====', filt_empty=False, filt_repeated=False,
+                    )
+                    self.grouping_clauses.append(line)
+                    self.grouping_clauses_counter += 1
+                    continue
+                # audio information line 
+                _line = re.sub(prefix_pattern, r'\1:', line, re.IGNORECASE)
+                if re.match(entire_pattern, _line, re.IGNORECASE) is None:
+                    self.invalid_clauses.append(line)
+                    self.invalid_clauses_counter += 1
+                    continue
+                _line = re.sub(
+                    r'^\s*(({}))[:：]'.format(fields_pattern),
+                    r'\1:',
+                    _line,
+                    re.IGNORECASE,
+                )
+                _line = re.sub(
+                    r'[,，;；]\s*(({}))[:：]'.format(fields_pattern),
+                    r'====\1:',
+                    _line,
+                    re.IGNORECASE,
+                )
+                result = {
+                    self.AudioProperty.GENRE: genre,
+                    self.AudioProperty.GROUPING: grouping,
+                }
+                for kv in self.split(_line, '====', filt_empty=False, filt_repeated=False):
+                    k, v = self.split(kv, ':', filt_empty=False, filt_repeated=False)
+                    k = self.AUDIO_CN_PROPERTY_SYNONYMS.get(k, k).lower() # type: ignore
+                    if k not in self.ALL_FIELDS:
+                        self.invalid_clauses.append(line)
+                        self.invalid_clauses_counter += 1
+                        continue
+                    result[k] = v
+                self.process_clause(line, result, _clauses)
+
+        self.valid_clauses.update({
+            key: _clauses[key][0]
+            for key in _clauses
+            if len(_clauses[key]) == 1
+        })
+
+        self.repeated_clauses.update({
+            key: _clauses[key]
+            for key in _clauses
+            if len(_clauses[key]) > 1
+        })
 
     def __load_properties_from_file(self):
         if not os.path.exists(self.source_file):
             self.logger.fatal(f'Source file <{self.source_file}> not exists!')
             return
         self.import_()
-        self.logger.warning('\n{}\n'.format('#' * 78))
+        self.logger.warning(f'\n{"#"*78}\n')
         self.logger.warning(
             'Total Clauses: {total}\n\n'
             'Valid Clauses: {valid}, '
@@ -1293,83 +1506,6 @@ class AudioGod(object):
                     repeated='｜'.join(self.repeated_clauses[key]),
                 ))
 
-    def __import_json(self):
-        pass
-
-    def __import_markdown(self):
-        pass
-
-    def __import_plist(self):
-        pass
-
-    def __import_note(self):
-        grouping_pattern = r'^\s*#\s*\[\s*(\S+)\s*\]\s*(\S+)\s*$'
-        fields_pattern = '|'.join(
-            list(self.AUDIO_CN_PROPERTIES.keys()) + \
-            list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
-        )
-        prefix_pattern = r'^.*(({}))[:：]'.format(fields_pattern)
-        entire_pattern = \
-                r'^({0})[:：].*([,，]\s*({0})[:：].*){{0,}}$'.format(
-            fields_pattern,
-        )
-
-        _clauses = {}
-        with open(self.source_file, 'r', encoding='utf-8') as f:
-            genre, grouping = self.DEFAULT_GENRE, self.DEFAULT_GROUPING
-            for line in f:
-                self.total_clauses_counter += 1
-                # grouping line
-                if re.match(grouping_pattern, line, re.IGNORECASE) is not None:
-                    _line = re.sub(grouping_pattern, r'\1====\2', line, re.IGNORECASE)
-                    genre, grouping = _line.split('====')
-                    self.grouping_clauses.append(line)
-                    self.grouping_clauses_counter += 1
-                    continue
-                # audio information line 
-                _line = re.sub(prefix_pattern, r'\1:', line, re.IGNORECASE)
-                if re.match(entire_pattern, _line, re.IGNORECASE) is None:
-                    self.invalid_clauses.append(line)
-                    self.invalid_clauses_counter += 1
-                    continue
-                _line = re.sub(
-                    r'^\s*(({}))[:：]'.format(fields_pattern),
-                    r'\1:',
-                    _line,
-                    re.IGNORECASE,
-                )
-                _line = re.sub(
-                    r'[,，]\s*(({}))[:：]'.format(fields_pattern),
-                    r'====\1:',
-                    _line,
-                    re.IGNORECASE,
-                )
-                result = {
-                    self.AudioProperty.GENRE: genre,
-                    self.AudioProperty.GROUPING: grouping,
-                }
-                for kv in _line.split('===='):
-                    k, v = [item.strip() for item in kv.split(':')]
-                    k = self.AUDIO_CN_PROPERTY_SYNONYMS.get(k, k).lower()
-                    if k not in self.ALL_FIELDS:
-                        self.invalid_clauses.append(line)
-                        self.invalid_clauses_counter += 1
-                        continue
-                    result[k] = v
-                self.process_clause(line, result, _clauses)
-
-        self.valid_clauses.update({
-            key: _clauses[key][0]
-            for key in _clauses
-            if len(_clauses[key]) == 1
-        })
-
-        self.repeated_clauses.update({
-            key: _clauses[key]
-            for key in _clauses
-            if len(_clauses[key]) > 1
-        })
-
     def __load_audios(self):
         self.__load_ignored()
 
@@ -1377,22 +1513,23 @@ class AudioGod(object):
         for audio in audios:
             self.logger.debug(f'Loading <{audio}> ...')
             _type = self.__check_audio(audio)
-            if self.AudioType.INVALID_EXT.eq(_type):
-                self.invalid_ext_audios.append(audio)
-                self.logger.debug(self.AudioType.INVALID_EXT)
-                continue
-            if self.AudioType.INVALID_NAME.eq(_type):
-                self.invalid_name_audios.append(audio)
-                self.logger.debug(self.AudioType.INVALID_NAME)
-                continue
-            if self.AudioType.OMITTED.eq(_type):
-                self.omitted_audios.append(audio)
-                self.logger.debug(self.AudioType.OMITTED)
-                continue
-            if self.AudioType.IGNORED.eq(_type):
-                self.ignored_audios.append(audio)
-                self.logger.debug(self.AudioType.IGNORED)
-                continue
+            match _type:
+                case self.AudioType.INVALID_EXT:
+                    self.invalid_ext_audios.append(audio)
+                    self.logger.debug(self.AudioType.INVALID_EXT)
+                    continue
+                case self.AudioType.INVALID_NAME:
+                    self.invalid_name_audios.append(audio)
+                    self.logger.debug(self.AudioType.INVALID_NAME)
+                    continue
+                case self.AudioType.OMITTED:
+                    self.omitted_audios.append(audio)
+                    self.logger.debug(self.AudioType.OMITTED)
+                    continue
+                case self.AudioType.IGNORED:
+                    self.ignored_audios.append(audio)
+                    self.logger.debug(self.AudioType.IGNORED)
+                    continue
             key = self.generate_key_by_audio(audio)
             if key in self.valid_clauses:
                 self.matched_audios.add(audio)
@@ -1401,7 +1538,7 @@ class AudioGod(object):
                 self.notmatched_audios.add(audio)
                 self.logger.debug(self.AudioType.NOTMATCHED)
 
-        self.logger.warning('\n{}\n'.format('#' * 78))
+        self.logger.warning(f'\n{"#"*78}\n')
 
         self.logger.warning(
             'Total Audios: {total}\n\n'
@@ -1449,24 +1586,23 @@ class AudioGod(object):
         for audio in audios:
             track_persistent_id = self.generate_persistent_id()
             audio_object = eyed3.load(audio)
-            grouping = self.fetchx(audio_object, self.AudioProperty.GROUPING)
+            grouping = self.fetchx(
+                audio_object, self.AudioProperty.GROUPING, formatted=True,
+            )
             if not grouping:
                 grouping = self.DEFAULT_GROUPING
                 self.logger.debug(
                     f'Empty grouping of <{audio}>, use <{self.DEFAULT_GROUPING}> instead!',
                 )
-            for group in grouping.split(self.GROUPING_SEPARATOR):  # type: ignore
-                group = re.sub(r'\/+', r'/', group).rstrip('/')
-                if not group:
-                    continue
-                tags = list(filter(lambda x: x, group.split('/')))
+            for group in self.split(grouping, self.GROUPING_SEPARATOR): # type: ignore
+                tags = self.split(group, '/', filt_repeated=False)
                 if not tags:
                     continue
                 tags = [self.AUDIOS_TREE_ROOT_TAG] + tags
                 subtree = TreeX(logger=self.logger)
                 last_nid = self.AUDIOS_TREE_ROOT_NID
-                for i in range(len(tags)):
-                    tag, nid = tags[i], self.generate_persistent_id()
+                for i, tag in enumerate(tags):
+                    nid = self.generate_persistent_id()
                     parent, node_type = last_nid, self.AudiosTreeNodeType.FOLDER
                     if i == 0:
                         nid = self.AUDIOS_TREE_ROOT_NID
@@ -1532,7 +1668,7 @@ class AudioGod(object):
     def __check_audio(self, audio):
         _audio = audio
         while True:
-            if re.match('^/{0,}$', _audio) is not None:
+            if re.match('^/*$', _audio) is not None:
                 break
             if _audio in self.ignored_set or _audio+'/' in self.ignored_set:
                 return self.AudioType.IGNORED
@@ -1555,7 +1691,7 @@ class AudioGod(object):
     def __fill_audio_properties(self):
         audios = self.concerned_audios
         filled_count = 0
-        self.logger.warning('\n{}\n'.format('#' * 78))
+        self.logger.warning(f'\n{"#"*78}\n')
         for audio in audios:
             self.logger.debug(f'Filling <{audio}> ...')
             filled, audio_object = False, eyed3.load(audio)
@@ -1576,23 +1712,55 @@ class AudioGod(object):
         )
 
     def format_notes(self):
-        lines = []
+        grouping_pattern = r'^\s*(?:\s*\(\s*(?:\s*[0-9]\s*)+\s*\)\s*)*\s*#\s*\[\s*((?:\s*\S\s*)+)\s*\]\s*((?:\s*\S\s*)+)\s*$'
+        fields_pattern = '|'.join(
+            list(self.AUDIO_CN_PROPERTIES.keys()) + \
+            list(self.AUDIO_EN_PROPERTY_SYNONYMS.keys()) + \
+            list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
+        )
+        entire_pattern = \
+                r'^(((\s*[0-9]\s*)+\.\s*)*(\s*\[\s*[a-zA-Z]\s*\]\s*)*)*({0})\s*[:：](\s*\S\s*)+(\s*[,，;；]\s*({0})\s*[:：](\s*\S\s*)+)*$'.format(
+            fields_pattern,
+        )
+
+        lines, cache = [], []
         with open(self.source_file, 'r', encoding='utf-8') as f:
             for line in f:
-                pos = line.find('歌曲名：')
-                if pos < 0:
-                    pos = line.find('歌曲名:')
-                    if pos < 0:
-                        continue
-                lines.append(line[pos:].strip())
+                # grouping line
+                if re.match(grouping_pattern, line, re.IGNORECASE) is not None:
+                    if len(cache) > 0:
+                        for i, item in enumerate(cache, start=1):
+                            lines.append(f'{f"{i}.":<{len(str(len(cache)))+1}} {item}')
+                        cache = []
+                    self.grouping_clauses_counter += 1
+                    line = re.sub(
+                        grouping_pattern,
+                        lambda m: f'#[{m.group(1).strip()}] {m.group(2).strip()}',
+                        line,
+                    ).strip()
+                    lines.append(f'({self.grouping_clauses_counter}) {line}')
+                    self.grouping_clauses.append(line)
+                    self.total_clauses_counter += 1
+                    continue
+                # audio information line 
+                if re.match(entire_pattern, line, re.IGNORECASE) is not None:
+                    line = re.sub(grouping_pattern, r'#[\1]\2', line).strip()
+                    cache.append(line)
+                    #self.valid_clauses.append(line)
+                    self.valid_clauses_counter += 1
+                    self.total_clauses_counter += 1
+                    continue
+                self.invalid_clauses.append(line)
+                self.invalid_clauses_counter += 1
+        
         tmp_file = self.source_file + '.tmp'
         with open(tmp_file, 'w', encoding='utf-8') as f:
             for i in range(len(lines)):
                 f.write(lines[i])
                 if i < len(lines) - 1:
                     f.write('\n')
-        self.remove(self.source_file)
-        os.rename(tmp_file, self.source_file)
+        self.backup(self.source_file)
+        self.rename(tmp_file, self.source_file)
 
     def fill_properties(self):
         self.__load_properties_from_file()
@@ -1602,12 +1770,12 @@ class AudioGod(object):
     def format_properties(self):
         self.__load_audios()
         audios = self.concerned_audios
-        self.logger.warning('\n{}\n'.format('#' * 78))
+        self.logger.warning(f'\n{"#"*78}\n')
         for audio in audios:
             self.logger.debug(f'Formatting <{audio}> ...')
             audio_object = eyed3.load(audio)
             for field in self.fields:
-                property_ = self.fetchx(audio_object, field, True)
+                property_ = self.fetchx(audio_object, field, formatted=True)
                 if property_ is not None:
                     self.save(audio_object, field, property_, True)
         self.logger.warning(f'Formatted Audios: {len(audios)}\n')
@@ -1621,13 +1789,13 @@ class AudioGod(object):
             _, ext = os.path.splitext(_old)
             _new = self.FilenamePatternTemplate(self.filename_pattern).safe_substitute({
                 field: self.fetchx(
-                    audio_object, field, True,
+                    audio_object, field, formatted=True,
                 ) for field in self.ALL_FIELDS
             }) + ext.lower()
             if _old == _new:
                 continue
             _path = os.path.dirname(audio)
-            os.rename(os.path.join(_path, _old), os.path.join(_path, _new))
+            self.rename(self.abspath(_path, _old), self.abspath(_path, _new))
 
     def derive_artworks(self):
         self.__load_audios()
@@ -1645,10 +1813,11 @@ class AudioGod(object):
             if not audio_object.tag.images:
                 continue
             for i, image in enumerate(audio_object.tag.images):
-                image_file = os.path.join(_path, _name)
+                image_file = self.abspath(_path, _name)
                 if len(audio_object.tag.images) > 1:
                     image_file += f'@{i}'
                 image_file += '.jpg'
+                self.backup(image_file)
                 with open(image_file, 'wb') as f:
                     f.write(image.image_data)
 
@@ -1660,40 +1829,52 @@ class AudioGod(object):
         audios = self.concerned_audios
         for audio in audios:
             audio_object = eyed3.load(audio)
-            if self.OrganizeType.ITUNED.eq(self.organize_type):
-                artist = self.fetchx(audio_object, self.AudioProperty.ARTIST)
-                if not artist:
-                    self.logger.fatal(f'Invalid artist of <{audio}>')
-                    return
-                album = self.fetchx(audio_object, self.AudioProperty.ALBUM)
-                if not album:
-                    self.logger.fatal(f'Invalid album of <{audio}>')
-                    return
-                newname = os.path.join(self.audios_root, artist, album, os.path.basename(audio)) # type: ignore
-                if newname != audio:
-                    os.makedirs(os.path.dirname(newname), exist_ok=True)
-                    os.rename(audio, newname)
-            else:
-                grouping = self.fetchx(audio_object, self.AudioProperty.GROUPING)
-                if not grouping:
-                    self.logger.fatal(f'Invalid grouping of <{audio}>')
-                    return
-                groups = grouping.split(self.GROUPING_SEPARATOR)  # type: ignore
-                target = os.path.join(self.audios_root, groups[0], os.path.basename(audio))
-                if target != audio:
-                    os.makedirs(os.path.dirname(target), exist_ok=True)
-                    os.rename(audio, target)
-                links = [
-                    os.path.join(self.audios_root, group, os.path.basename(audio))
-                    for group in groups[1:]
-                ]
-                for link in links:
-                    if link == target:
+            match self.organize_type:
+                case self.OrganizeType.ITUNED:
+                    artist = self.fetchx(audio_object, self.AudioProperty.ARTIST, formatted=True)
+                    if not artist:
+                        self.logger.fatal(f'Invalid artist of <{audio}>')
+                        return
+                    album = self.fetchx(audio_object, self.AudioProperty.ALBUM, formatted=True)
+                    if not album:
+                        self.logger.fatal(f'Invalid album of <{audio}>')
+                        return
+                    newname = self.abspath(self.audios_root, artist, album, os.path.basename(audio))
+                    if newname != audio:
+                        os.makedirs(os.path.dirname(newname), exist_ok=True)
+                        self.rename(audio, newname)
+                case self.OrganizeType.GROUPED:
+                    grouping = self.fetchx(
+                        audio_object, self.AudioProperty.GROUPING, formatted=True,
+                    )
+                    if not grouping:
+                        self.logger.fatal(f'Invalid grouping of <{audio}>')
+                        return
+                    groups = self.split(grouping, self.GROUPING_SEPARATOR) # type: ignore
+                    target = self.abspath(
+                        self.audios_root, groups[0], os.path.basename(audio),
+                    )
+                    if target != audio:
+                        os.makedirs(os.path.dirname(target), exist_ok=True)
+                        self.rename(audio, target)
+                        ao = eyed3.load(target)
+                        self.save(
+                            ao, self.AudioProperty.GROUPING, groups[0], True,
+                        )
+                    if len(groups) < 2:
                         continue
-                    os.makedirs(os.path.dirname(link), exist_ok=True)
-                    if os.path.exists(link):
-                        self.remove(link)
-                    os.link(target, link)
+                    for group in groups[1:]:
+                        link = self.abspath(self.audios_root, group, os.path.basename(audio))
+                        if link == target:
+                            continue
+                        os.makedirs(os.path.dirname(link), exist_ok=True)
+                        if os.path.exists(link):
+                            self.remove(link)
+                        self.duplicate(target, link)
+                        ao = eyed3.load(link)
+                        self.save(
+                            ao, self.AudioProperty.GROUPING, group, True,
+                        )
 
     def list_repeated(self):
         self.__load_audios()
@@ -1701,11 +1882,11 @@ class AudioGod(object):
         audios, results = self.concerned_audios, {}
         for audio in audios:
             audio_object = eyed3.load(audio)
-            artist = self.fetchx(audio_object, self.AudioProperty.ARTIST)
+            artist = self.fetchx(audio_object, self.AudioProperty.ARTIST, formatted=True)
             if not artist:
                 self.logger.fatal(f'Invalid artist of <{audio}>')
                 return
-            title = self.fetchx(audio_object, self.AudioProperty.TITLE)
+            title = self.fetchx(audio_object, self.AudioProperty.TITLE, formatted=True)
             if not title:
                 self.logger.fatal(f'Invalid title of <{audio}>')
                 return
@@ -1728,11 +1909,12 @@ class AudioGod(object):
         if not content:
             content = 'No repeated!'
 
-        if self.output_file:
+        if not self.output_file:
+            print(content)
+        else:
+            self.backup(self.output_file)
             with open(self.output_file, 'w', encoding='utf-8') as f:
                 f.write(content)
-        else:
-            print(content)
 
     def display(self):
         #print("# {}".format('=' * 78))
@@ -1807,22 +1989,22 @@ class AudioGod(object):
 
         results, audios = [], self.concerned_audios
         all_fields = [
-            (field, self.AUDIO_CN_PROPERTIES[field])
+            (field, self.transform_field_name(field, self.field_type))
             for field in self.ALL_FIELDS
         ]
-        formatted, output_type = True, self.FileType.DISPLAY
+        formatted, output_format = True, self.FileFormat.NOTE
         match self.data_format:
             case self.DataFormat.ORIGINAL:
-                formatted, output_type = False, self.FileType.NONE
+                formatted, output_format = False, self.FileFormat.NONE
             case self.DataFormat.FORMATTED:
-                formatted, output_type = True, self.FileType.NONE
+                formatted, output_format = True, self.FileFormat.NONE
             case self.DataFormat.OUTPUTTED:
-                formatted, output_type = True, self.FileType.DISPLAY
+                formatted, output_format = True, self.FileFormat.NOTE
         for audio in audios:
             audio_object = eyed3.load(audio)
             results.append([
                 self.fetchx(
-                    audio_object, self.AudioProperty(x[0]), formatted, output_type,
+                    audio_object, self.AudioProperty(x[0]), formatted, output_format,
                 )
                 for x in all_fields
             ])
@@ -1837,7 +2019,7 @@ class AudioGod(object):
             numbered = options[6]
             style = AudioGod.DisplayStyle(options[7])
 
-            cn_fields_to_show = [dict(pair_fields)[x] for x in fields_to_show]
+            rl_fields_to_show = [dict(pair_fields)[x] for x in fields_to_show]
             fields = [x[0] for x in pair_fields]
 
             if align_:
@@ -1864,10 +2046,10 @@ class AudioGod(object):
                 for l, r in swaps:
                     row[l], row[r] = row[r], row[l]
 
-            cn_fields = [dict(pair_fields)[x] for x in fields]
+            rl_fields = [dict(pair_fields)[x] for x in fields]
 
             table = PrettyTable()
-            table.field_names = cn_fields
+            table.field_names = rl_fields
 
             for field in table.field_names:
                 table.align[field] = 'l'
@@ -1998,7 +2180,7 @@ class AudioGod(object):
 
             table_string = table.get_string(
                 title=table_title,
-                fields=cn_fields_to_show,
+                fields=rl_fields_to_show,
             )
 
             def _wrap_table(table_string, start=1, numbered=True,
@@ -2010,13 +2192,13 @@ class AudioGod(object):
                     length = (utf8_length - length) / 2 + length
                     return int(length)
 
-                cn_number = '序号'
+                rl_number = '···'
 
                 _total = table_string.count('\n') - 6
                 offset = 0
                 if numbered:
-                    offset = max(len(str(start+_total-1)), _xlen_(cn_number)) + 3
-                result = re.sub(r'\n\+[\+-]{1,}\+$', r'\n', table_string)
+                    offset = max(len(str(start+_total-1)), _xlen_(rl_number)) + 3
+                result = re.sub(r'\n\+[\+-]+\+$', r'\n', table_string)
 
                 beg = result.find('\n|', 0)
                 end = result.find('\n+', beg)
@@ -2054,12 +2236,12 @@ class AudioGod(object):
                 pos = result.find('+\n', pos)
 
                 _offset = offset-2
-                _offset -= len(re.compile(r'[\u4E00-\u9FA5]').findall(cn_number))
+                _offset -= len(re.compile(r'[\u4E00-\u9FA5]').findall(rl_number))
 
                 result= '{}{}{}'.format(
                     result[:pos+2],
                     # 这里 offset-2-2
-                    ('|{0:>%s} ' % (_offset)).format(cn_number) \
+                    ('|{0:>%s} ' % (_offset)).format(rl_number) \
                     if numbered else '',
                     result[pos+2:],
                 )
@@ -2110,10 +2292,10 @@ class AudioGod(object):
                     beg = result.find('|\n+', 0)
                     end = result.find('|\n+', beg+3)
                     result = result[:beg+2] + result[end+2:]
-                    result = re.sub(r'\+[\+-]{0,}\n', r'', result)
+                    result = re.sub(r'\+[\+-]*\n', r'', result)
                     result = re.sub(r'\s*\|\s*', r'|', result)
-                    result = re.sub(r'^[ \t\n]{0,}\|', r'', result)
-                    result = re.sub(r'\|[ \t\n]{0,}$', r'\n', result)
+                    result = re.sub(r'^\s*\|', r'', result)
+                    result = re.sub(r'\|\s*$', r'\n', result)
                     result = re.sub(r'\|\n\|', r'\n', result)
 
                 if AudioGod.DisplayStyle.VERTICAL.eq(style):
@@ -2132,8 +2314,8 @@ class AudioGod(object):
                     result += '\n\n'
                     result += '#' * 78
                     result += '\n\n'
-                    field_width = 2 + max(*([_xlen_(cn_number) if numbered else 0]+[
-                        _xlen_(field) for field in cn_fields_to_show
+                    field_width = 2 + max(*([_xlen_(rl_number) if numbered else 0]+[
+                        _xlen_(field) for field in rl_fields_to_show
                     ]))
                     while True:
                         end = _result.find('\n', beg+1)
@@ -2144,8 +2326,8 @@ class AudioGod(object):
                             '{}{}'.format(
                                 ('{0:<%s}' % (field_width,)).format(
                                     (
-                                        ([cn_number] if numbered \
-                                        else []) + cn_fields_to_show
+                                        ([rl_number] if numbered \
+                                        else []) + rl_fields_to_show
                                     )[i]+':',
                                 ),
                                 value,
@@ -2156,17 +2338,17 @@ class AudioGod(object):
                         result += '-' * 78
                         result += '\n\n'
                         beg = end
-                    result = re.sub(r'[ \t\n]{1,}$', r'\n', result)
+                    result = re.sub(r'\s+$', r'\n', result)
                 return result
 
             content = _wrap_table(
                 table_string, start=start, numbered=numbered, style=style,
             )
-            if output_file:
+            if not output_file:
+                print(content)
+            else:
                 with open(output_file, 'w', encoding='utf-8') as f:
                     f.write(content)
-            else:
-                print(content)
             return content
 
         _ = _charting(
@@ -2180,63 +2362,129 @@ class AudioGod(object):
     def generate_persistent_id() -> str:
         return str(uuid.uuid4()).replace('-', '')[:16].upper()
 
-    def export(self):
-        filetype = self.recognize_filetype(self.output_file) 
-        if self.FileType.NONE.eq(filetype):
-            self.logger.fatal('Please set output file with "--output-file" or "-o" options.')
-            return
+    @classmethod
+    def transform_field_name(cls, field, field_type=FieldType.ORIGINAL):
+        match field_type:
+            case cls.FieldType.CHINESE:
+                return cls.AUDIO_CN_PROPERTIES[field]
+            case cls.FieldType.ENGLISH:
+                return cls.AUDIO_EN_PROPERTIES[field]
+        return field
+
+
+
+
+
+
+
+
+
+
+    def summarize_outputs(self):
         self.__fill_audios_tree()
-        match filetype:
-            case self.FileType.JSON:
-                self.__export_json()
-            case self.FileType.MARKDOWN:
-                self.__export_markdown()
-            case self.FileType.PLIST:
-                self.__export_plist()
-            case self.FileType.NOTE:
-                self.__export_note()
 
-    def __export_json(self):
-        pass
 
-    def __export_markdown(self):
-        pass
 
-    def __export_note(self):
-        pass
 
-    @staticmethod
-    def format_utc(timestamp) -> str:
-        return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    @classmethod
-    def current_time(cls) -> str:
-        return cls.format_utc(time.time())
 
-    @staticmethod
-    def encode(src) -> str:
-        return urllib.parse.quote(src, safe='/', encoding='utf-8', errors=None)  # type: ignore
 
-    @classmethod
-    def encode_location(cls, location) -> str:
-        ret = f'file://{cls.encode(location)}'
-        if os.path.isfile(location):
-            return ret
-        return f'{ret}/'
 
-    @staticmethod
-    def escape_characters(content):
-        if not content:
-            return content
-        if isinstance(content, str):
-            return content.replace('&', '&#38;')\
-                      .replace('<', '&#60;')\
-                      .replace('>', '&#62;')\
-                      .replace("'", '&#39;')\
-                      .replace('"', '&#34;')
-        return content
 
-    def __export_plist(self):
+
+            _, track_id, persistent_id, audio_object = track.data
+
+            def _pack_properties() -> str:
+                ret = ''
+                for field in self.fields:
+                    value = self.fetchx(audio_object, field)
+                    value = self.output[field](
+                        value, output_format=self.FileFormat.PLIST,
+                    )
+                    if (not isinstance(value, int)) and (not isinstance(value, float)) and (not value):
+                        continue
+                    ret += '\t'
+                    ret += '<key>{key}</key>'.format(
+                        key=self.transform_field_name(field, self.field_type),
+                    )
+                    type_ = self.AUDIO_PROPERTY_TYPES[field]
+                    if type_ != 'boolean':
+                        ret += f'<{type_}>{value}</{type_}>'
+                    elif value == 'true':
+                        ret += '<true/>'
+                    ret += '\n'
+                return ret.strip()
+
+
+
+        def _unique_tracks(tracks) -> list:
+            results, track_set = [], set()
+            for track in tracks:
+                if track.tag in track_set:
+                    continue
+                results.append(track)
+                track_set.add(track.tag)
+            return results
+
+        def _pack_tracks() -> str:
+            result = ''
+            tracks = _unique_tracks(self.audios_tree.leaves())
+            for track in tracks:
+                if track.identifier == self.AUDIOS_TREE_ROOT_NID:
+                    continue
+                if not isinstance(track.data, list):
+                    continue
+                if self.AudiosTreeNodeType.TRACK.ne(track.data[0]):
+                    continue
+                result += _pack_track(track)
+            return _repack_plist(result)
+
+        def _pack_simple_tracks(node) -> str:
+            result, tracks = '', _unique_tracks(self.audios_tree.leaves(node.identifier))
+            for track in tracks:
+                if track.identifier == self.AUDIOS_TREE_ROOT_NID:
+                    continue
+                if not isinstance(track.data, list):
+                    continue
+                if self.AudiosTreeNodeType.TRACK.ne(track.data[0]):
+                    continue
+                _, track_id, _, _ = track.data
+
+
+
+
+
+
+
+    def export(self):
+        self.summarize_outputs()
+
+        content = ''
+        if self.FileFormat.NONE.eq(self.output_format):
+            self.logger.fatal('Please set <output-format> or <output-file> options.')
+            return
+
+        content = getattr(self, f'export_{self.output_format}')()
+
+        if not self.output_file:
+            print(content)
+        else:
+            self.backup(self.output_file)
+            with open(self.output_file, mode='w', encoding='utf-8') as f:
+                f.write(content)
+
+    def export_json(self) -> str:
+        return ''
+
+    def export_markdown(self) -> str:
+        return ''
+
+    export_md = export_markdown
+
+    def export_note(self):
+        return ''
+
+    def export_plist(self):
         itunes_version_plist, itunes_media_folder, _, _ = self.itunes_options
 
         def _get_itunes_version(itunes_version_plist) -> str:
@@ -2267,22 +2515,19 @@ class AudioGod(object):
             def _pack_properties() -> str:
                 ret = ''
                 for field in self.fields:
-                    value = self.fetchx(audio_object, field)
+                    value = self.fetchx(audio_object, field, formatted=True)
                     value = self.output[field](
-                        value, output_type=self.FileType.PLIST,
+                        value, output_format=self.FileFormat.PLIST,
                     )
                     if (not isinstance(value, int)) and (not isinstance(value, float)) and (not value):
                         continue
                     ret += '\t'
                     ret += '<key>{key}</key>'.format(
-                        key=self.AUDIO_EN_PROPERTIES[field],
+                        key=self.transform_field_name(field, self.field_type),
                     )
                     type_ = self.AUDIO_PROPERTY_TYPES[field]
                     if type_ != 'boolean':
-                        ret += '<{type}>{value}</{type}>'.format(
-                            value=value,
-                            type=self.AUDIO_PROPERTY_TYPES[field],
-                        )
+                        ret += f'<{type_}>{value}</{type_}>'
                     elif value == 'true':
                         ret += '<true/>'
                     ret += '\n'
@@ -2454,9 +2699,9 @@ class AudioGod(object):
                 playlists = _pack_playlists(),
             ))
 
-        with open(self.output_file, mode='w', encoding='utf-8') as f:  # type: ignore
-            f.write(_pack_plist())
-            f.flush()
+        return _pack_plist()
+    
+    export_xml = export_plist
 
     def convert(self):
         pass
@@ -2548,6 +2793,12 @@ Sample in note to import:
 
 ------------------------------------------------------------------------------
 
+Precautions:
+
+1. Don't contain blank characters in genres and groupings;
+
+------------------------------------------------------------------------------
+
 General steps:
 
     Step.1: Download songs, and make sure that file named with "artist-title";
@@ -2590,7 +2841,7 @@ def _get_command() -> str:
                 history_file = '~/.bash_history'
             case 'zsh':
                 history_file = '~/.zsh_history'
-        history_file = os.path.expanduser(history_file)
+        history_file = AudioGod.abspath(history_file)
         with open(history_file, 'r', errors='ignore') as f:
             cmd = re.sub(
                 r'^: *[0-9\.]+:[0-9\.]+[:;]',
@@ -2627,9 +2878,9 @@ ARGUMENTS={
     'source_file': AudioGod.DEFAULT_SOURCE_FILE,
     'ignored_file': AudioGod.DEFAULT_IGNORED_FILE,
     'audios_source': AudioGod.DEFAULT_TEMP_FOLDER,
+    'recursive': False,
     'audios_root': AudioGod.DEFAULT_TEMP_FOLDER,
     'properties': None,
-    'recursive': False,
     'extensions': ','.join(AudioGod.DEFAULT_EXTENSIONS),
     'fields': 'core',
     'page_number': 1,
@@ -2640,6 +2891,8 @@ ARGUMENTS={
     'numbered': False,
     'style': AudioGod.DisplayStyle.TABLED,
     'data_format': AudioGod.DataFormat.OUTPUTTED,
+    'field_type': AudioGod.FieldType.ORIGINAL,
+    'output_format': AudioGod.FileFormat.NONE,
     'output_file': None,
     'artwork_path': None,
     'filename_pattern': '{delimiter}{{artist}} {div_char} {delimiter}{{title}}'.format(
@@ -2821,6 +3074,7 @@ ACTIONS={
             'align',
             'style',
             'data_format',
+            'field_type',
             'numbered',
             'output_file',
         ],
@@ -2851,6 +3105,7 @@ ACTIONS={
                     \\}' \\
                     --style=tabled \\
                     --data-format=outputted \\
+                    --field-type=cn \\
                     --numbered \\
                     --output-file=""
             '''),
@@ -2863,6 +3118,8 @@ ACTIONS={
             'recursive',
             'ignored_file',
             'fields',
+            'field_type',
+            'output_format',
             'output_file',
             'itunes_version_plist',
             'itunes_media_folder',
@@ -2879,6 +3136,8 @@ ACTIONS={
                     --recursive \\
                     --ignored-file=${local}/ignored.txt \\
                     --fields=ituned \\
+                    --field-type=cn \\
+                    --output-format=plist \\
                     --output-file=${local}/songs.xml \\
                     --itunes-version-plist=/System/Applications/Music.app/Contents/version.plist \\
                     --itunes-media-folder=${music}/iTunes/iTunes\\ Media \\
@@ -3092,6 +3351,28 @@ def _add_arguments(parser, arguments=[]) -> None:
             help='the data format for audios to display',
         )
     
+    if 'field_type' in arguments:
+        parser.add_argument(
+            '--field-type', '-8',
+            type=str,
+            choices=AudioGod.FieldType.members(),
+            required=False,
+            default=ARGUMENTS['field_type'],
+            dest='field_type',
+            help='type of field name',
+        )
+    
+    if 'output_format' in arguments:
+        parser.add_argument(
+            '--output-format', '-9',
+            type=str,
+            choices=AudioGod.FileFormat.members(),
+            required=False,
+            default=ARGUMENTS['output_format'],
+            dest='output_format',
+            help='format of output content',
+        )
+    
     if 'output_file' in arguments:
         parser.add_argument(
             '--output-file', '-o',
@@ -3185,9 +3466,10 @@ def _handle_subcmd(args) -> None:
         source_file=_arguments['source_file'],
         ignored_file=_arguments['ignored_file'],
         audios_root=_arguments['audios_root'],
-        audios_source=(_arguments['audios_source'], _arguments['recursive']),
+        audios_source=_arguments['audios_source'],
+        recursive=_arguments['recursive'],
         properties=json.loads(_arguments['properties']) if _arguments['properties'] else {},
-        extensions=list(filter(None, _arguments['extensions'].split(','))),
+        extensions=AudioGod.split(_arguments['extensions'], ','),
         fields=_arguments['fields'],
         data_format=_arguments['data_format'],
         display_options=[
@@ -3208,6 +3490,8 @@ def _handle_subcmd(args) -> None:
         ],
         artwork_path=_arguments['artwork_path'],
         filename_pattern=_arguments['filename_pattern'],
+        field_type=_arguments['field_type'],
+        output_format=_arguments['output_format'],
         output_file=_arguments['output_file'],
         organize_type=_arguments['organize_type'],
         log_level=_arguments['log_level'],
