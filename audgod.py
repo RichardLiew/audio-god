@@ -478,18 +478,39 @@ class AudioGod(object):
         )
         self.audios_tree.create_node(self.AUDIOS_TREE_ROOT_TAG, self.AUDIOS_TREE_ROOT_NID)
         self.__ignored_set = set()
-        self.__format = {
-            field: getattr(
-                self, f'format_{field}', lambda x: x,
-            )
-            for field in self.ALL_FIELDS
-        }
+
         self.__parse = {
             field: getattr(
                 self, f'parse_{field}', lambda x: x,
             )
             for field in self.ALL_FIELDS
         }
+        def __parse(parse_func):
+            def __func(*args):
+                ret = parse_func(*args)
+                return ret
+            return __func
+        self.__parse = {
+            field: __parse(self.__parse[field])
+            for field in self.ALL_FIELDS
+        }
+
+        self.__format = {
+            field: getattr(
+                self, f'format_{field}', lambda x: x,
+            )
+            for field in self.ALL_FIELDS
+        }
+        def __format(format_func):
+            def __func(*args):
+                ret = format_func(*args)
+                return ret
+            return __func
+        self.__format = {
+            field: __format(self.__format[field])
+            for field in self.ALL_FIELDS
+        }
+
         self.__output = {
             field: getattr(
                 self,
@@ -498,6 +519,18 @@ class AudioGod(object):
             )
             for field in self.ALL_FIELDS
         }
+        def __output(output_func):
+            def __func(*args):
+                ret = output_func(*args)
+                if (not isinstance(ret, int)) and (not isinstance(ret, float)) and (not ret):
+                    return None
+                return ret
+            return __func
+        self.__output = {
+            field: __output(self.__output[field])
+            for field in self.ALL_FIELDS
+        }
+
         self.__data_format = self.DataFormat(data_format)
         self.__display_options = self.__rewrite_options(display_options)
         self.__artwork_path = self.abspath(artwork_path)
@@ -762,28 +795,6 @@ class AudioGod(object):
                + list(self.matched_audios) \
                + list(self.notmatched_audios)
 
-    @classmethod
-    def parse_genre(cls, genre):
-        if genre is None:
-            return None
-        ret = Genre(genre)
-        return ret
-
-    @classmethod
-    def parse_comments(cls, comments):
-        if comments is None:
-            return None
-        ret = CommentsAccessor(frames.FrameSet())
-        ret.set(comments)
-        return ret
-
-    @classmethod
-    def parse_track_num(cls, track_num):
-        if track_num is None:
-            return (None, None)
-        ret = tuple(map(int, track_num.split(',')[:2]))
-        return ret
-
     @staticmethod
     def split(s, sep=None, del_blank=True, filt_empty=True, filt_repeated=True, maxsplit=-1) -> list:
         if not s:
@@ -821,6 +832,16 @@ class AudioGod(object):
             cls.remove(dst)
         shutil.copy2(src, dst)
     
+    @staticmethod
+    def abspath(path, *paths):
+        ret, paths = '', list(filter(lambda x: x, [path] + list(paths)))
+        if len(paths) > 0:
+            ret = paths[0]
+        if len(paths) > 1:
+            for path in paths[1:]:
+                ret = os.path.join(ret, path)
+        return os.path.normpath(os.path.abspath(os.path.expanduser(ret)))
+
     @classmethod
     def backup(cls, src):
         if not os.path.exists(src):
@@ -829,12 +850,12 @@ class AudioGod(object):
         cls.duplicate(src, f'{src}.backup.{timestamp}')
 
     @staticmethod
-    def format_utc(timestamp) -> str:
+    def transform_utc(timestamp) -> str:
         return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%SZ')
 
     @classmethod
     def current_time(cls) -> str:
-        return cls.format_utc(time.time())
+        return cls.transform_utc(time.time())
 
     @staticmethod
     def encode(src) -> str:
@@ -858,16 +879,6 @@ class AudioGod(object):
                       .replace("'", '&#39;')\
                       .replace('"', '&#34;')
         return content
-
-    @staticmethod
-    def abspath(path, *paths):
-        ret, paths = '', list(filter(lambda x: x, [path] + list(paths)))
-        if len(paths) > 0:
-            ret = paths[0]
-        if len(paths) > 1:
-            for path in paths[1:]:
-                ret = os.path.join(ret, path)
-        return os.path.normpath(os.path.abspath(os.path.expanduser(ret)))
 
     @staticmethod
     def unify_format(content):
@@ -904,6 +915,64 @@ class AudioGod(object):
         #ret = re.sub(r'\s*&\s*', r' & ', ret)
         ret = re.sub(r'\s+', r' ', ret).strip()
         ret = re.sub(r'([\)\]\>\|]) ([:,;\.\!\?])', r'\1\2', ret)
+        return ret
+
+    @staticmethod
+    def validate_url(url) -> bool:
+        regex = re.compile(
+            r'^(?:http|ftp)s?://'
+            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+'
+            r'(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'
+            r'localhost|'
+            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+            r'(?::\d+)?'
+            r'(?:/?|[/?]\S+)$',
+            re.IGNORECASE,
+        )
+        return re.match(regex, url) is not None
+
+    @staticmethod
+    def validate_image(image):
+        regex = re.compile(
+            r'^.*\.(jp[e]g|png|[gt]if|bmp)$',
+            re.IGNORECASE,
+        )
+        return re.match(regex, image) is not None
+
+    @classmethod
+    def recognize_file_format(cls, file):
+        if not file:
+            return cls.FileFormat.NONE
+        _, ext = os.path.splitext(os.path.basename(file))
+        ext = ext[1:].lower()
+        if ext in ['json']:
+            return cls.FileFormat.JSON
+        if ext in ['md', 'markdown']:
+            return cls.FileFormat.MARKDOWN
+        if ext in ['xml', 'plist']:
+            return cls.FileFormat.PLIST
+        return cls.FileFormat.NOTE
+
+    @classmethod
+    def parse_genre(cls, genre):
+        if genre is None:
+            return None
+        ret = Genre(genre)
+        return ret
+
+    @classmethod
+    def parse_comments(cls, comments):
+        if comments is None:
+            return None
+        ret = CommentsAccessor(frames.FrameSet())
+        ret.set(comments)
+        return ret
+
+    @classmethod
+    def parse_track_num(cls, track_num):
+        if track_num is None:
+            return (None, None)
+        ret = tuple(map(int, track_num.split(',')[:2]))
         return ret
 
     @classmethod
@@ -1108,7 +1177,7 @@ class AudioGod(object):
         if not mtime:
             return ''
         if cls.FileFormat.PLIST.eq(output_format):
-            return cls.format_utc(mtime)
+            return cls.transform_utc(mtime)
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(mtime))
 
     def __fetch_from_outside(self, audio, field):
@@ -1154,42 +1223,6 @@ class AudioGod(object):
                     ret = _value
                     break
         return None if ret is None else format_(parse_(ret))
-
-    @staticmethod
-    def validate_url(url) -> bool:
-        regex = re.compile(
-            r'^(?:http|ftp)s?://'
-            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+'
-            r'(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'
-            r'localhost|'
-            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
-            r'(?::\d+)?'
-            r'(?:/?|[/?]\S+)$',
-            re.IGNORECASE,
-        )
-        return re.match(regex, url) is not None
-
-    @staticmethod
-    def validate_image(image):
-        regex = re.compile(
-            r'^.*\.(jp[e]g|png|[gt]if|bmp)$',
-            re.IGNORECASE,
-        )
-        return re.match(regex, image) is not None
-
-    @classmethod
-    def recognize_file_format(cls, file):
-        if not file:
-            return cls.FileFormat.NONE
-        _, ext = os.path.splitext(os.path.basename(file))
-        ext = ext[1:].lower()
-        if ext in ['json']:
-            return cls.FileFormat.JSON
-        if ext in ['md', 'markdown']:
-            return cls.FileFormat.MARKDOWN
-        if ext in ['xml', 'plist']:
-            return cls.FileFormat.PLIST
-        return cls.FileFormat.NOTE
 
     # Use AudioProperty type field here, you won't check field parameter.
     def save(self, audio_object, field, value, formatted=False):
@@ -1338,7 +1371,7 @@ class AudioGod(object):
                 if line:
                     self.ignored_set.add(self.abspath(line))
 
-    def process_clause(self, plain_clause, hashed_clause, final_clauses):
+    def __process_clause(self, plain_clause, hashed_clause, final_clauses):
         title = hashed_clause.get(self.AudioProperty.TITLE, None)
         if not title:
             self.invalid_clauses.append(plain_clause)
@@ -1390,22 +1423,22 @@ class AudioGod(object):
         if self.FileFormat.NONE.eq(file_format):
             self.logger.fatal(f'Invalid source file <{self.source_file}>.')
             return
-        getattr(self, f'import_{file_format}')()
+        getattr(self, f'__import_{file_format}')()
 
-    def import_json(self):
+    def __import_json(self):
         pass
 
-    def import_markdown(self):
+    def __import_markdown(self):
         pass
 
-    import_md = import_markdown
+    __import_md = __import_markdown
 
-    def import_plist(self):
+    def __import_plist(self):
         pass
 
-    import_xml = import_plist
+    __import_xml = __import_plist
 
-    def import_note(self):
+    def __import_note(self):
         grouping_pattern = r'^\s*#\s*\[\s*(\S+)\s*\]\s*(\S+)\s*$'
         fields_pattern = '|'.join(
             list(self.AUDIO_CN_PROPERTIES.keys()) + \
@@ -1461,7 +1494,7 @@ class AudioGod(object):
                         self.invalid_clauses_counter += 1
                         continue
                     result[k] = v
-                self.process_clause(line, result, _clauses)
+                self.__process_clause(line, result, _clauses)
 
         self.valid_clauses.update({
             key: _clauses[key][0]
@@ -1618,7 +1651,12 @@ class AudioGod(object):
                     audio,
                     self.generate_persistent_id(),
                     parent=last_nid,
-                    data=[self.AudiosTreeNodeType.TRACK, track_id, track_persistent_id, audio_object],
+                    data=[
+                        self.AudiosTreeNodeType.TRACK,
+                        track_id,
+                        track_persistent_id,
+                        self.__pack_audio_properties(audio_object),
+                    ],
                 )
                 self.audios_tree.perfect_merge(self.AUDIOS_TREE_ROOT_NID, subtree, deep=False)
             track_id += 1
@@ -2371,100 +2409,31 @@ class AudioGod(object):
                 return cls.AUDIO_EN_PROPERTIES[field]
         return field
 
+    def __pack_audio_properties(self, audio_object):
+        ret = {}
+        for field in self.fields:
+            value = self.fetchx(
+                audio_object, field, formatted=True, output_format=self.output_format,
+            )
+            if value is None:
+                continue
+            key = self.transform_field_name(field, self.field_type)
+            type_ = self.AUDIO_PROPERTY_TYPES[field]
+            ret[key] = (type_, value)
+        return ret
 
-
-
-
-
-
-
-
-
-    def summarize_outputs(self):
+    def __summarize(self):
         self.__fill_audios_tree()
 
-
-
-
-
-
-
-
-
-
-            _, track_id, persistent_id, audio_object = track.data
-
-            def _pack_properties() -> str:
-                ret = ''
-                for field in self.fields:
-                    value = self.fetchx(audio_object, field)
-                    value = self.output[field](
-                        value, output_format=self.FileFormat.PLIST,
-                    )
-                    if (not isinstance(value, int)) and (not isinstance(value, float)) and (not value):
-                        continue
-                    ret += '\t'
-                    ret += '<key>{key}</key>'.format(
-                        key=self.transform_field_name(field, self.field_type),
-                    )
-                    type_ = self.AUDIO_PROPERTY_TYPES[field]
-                    if type_ != 'boolean':
-                        ret += f'<{type_}>{value}</{type_}>'
-                    elif value == 'true':
-                        ret += '<true/>'
-                    ret += '\n'
-                return ret.strip()
-
-
-
-        def _unique_tracks(tracks) -> list:
-            results, track_set = [], set()
-            for track in tracks:
-                if track.tag in track_set:
-                    continue
-                results.append(track)
-                track_set.add(track.tag)
-            return results
-
-        def _pack_tracks() -> str:
-            result = ''
-            tracks = _unique_tracks(self.audios_tree.leaves())
-            for track in tracks:
-                if track.identifier == self.AUDIOS_TREE_ROOT_NID:
-                    continue
-                if not isinstance(track.data, list):
-                    continue
-                if self.AudiosTreeNodeType.TRACK.ne(track.data[0]):
-                    continue
-                result += _pack_track(track)
-            return _repack_plist(result)
-
-        def _pack_simple_tracks(node) -> str:
-            result, tracks = '', _unique_tracks(self.audios_tree.leaves(node.identifier))
-            for track in tracks:
-                if track.identifier == self.AUDIOS_TREE_ROOT_NID:
-                    continue
-                if not isinstance(track.data, list):
-                    continue
-                if self.AudiosTreeNodeType.TRACK.ne(track.data[0]):
-                    continue
-                _, track_id, _, _ = track.data
-
-
-
-
-
-
-
     def export(self):
-        self.summarize_outputs()
+        self.__summarize()
 
         content = ''
         if self.FileFormat.NONE.eq(self.output_format):
             self.logger.fatal('Please set <output-format> or <output-file> options.')
             return
 
-        content = getattr(self, f'export_{self.output_format}')()
+        content = getattr(self, f'__export_{self.output_format}')()
 
         if not self.output_file:
             print(content)
@@ -2473,18 +2442,18 @@ class AudioGod(object):
             with open(self.output_file, mode='w', encoding='utf-8') as f:
                 f.write(content)
 
-    def export_json(self) -> str:
+    def __export_json(self) -> str:
         return ''
 
-    def export_markdown(self) -> str:
+    def __export_markdown(self) -> str:
         return ''
 
-    export_md = export_markdown
+    __export_md = __export_markdown
 
-    def export_note(self):
+    def __export_note(self):
         return ''
 
-    def export_plist(self):
+    def __export_plist(self):
         itunes_version_plist, itunes_media_folder, _, _ = self.itunes_options
 
         def _get_itunes_version(itunes_version_plist) -> str:
@@ -2510,26 +2479,20 @@ class AudioGod(object):
             return result[:-1]
 
         def _pack_track(track) -> str:
-            _, track_id, persistent_id, audio_object = track.data
+            _, track_id, persistent_id, properties = track.data
 
             def _pack_properties() -> str:
                 ret = ''
-                for field in self.fields:
-                    value = self.fetchx(audio_object, field, formatted=True)
-                    value = self.output[field](
-                        value, output_format=self.FileFormat.PLIST,
-                    )
-                    if (not isinstance(value, int)) and (not isinstance(value, float)) and (not value):
-                        continue
+                for key in properties:
+                    type_, value = properties[key]
                     ret += '\t'
-                    ret += '<key>{key}</key>'.format(
-                        key=self.transform_field_name(field, self.field_type),
-                    )
-                    type_ = self.AUDIO_PROPERTY_TYPES[field]
+                    ret += f'<key>{key}</key>'
                     if type_ != 'boolean':
                         ret += f'<{type_}>{value}</{type_}>'
                     elif value == 'true':
                         ret += '<true/>'
+                    else:
+                        ret += '<false/>'
                     ret += '\n'
                 return ret.strip()
 
@@ -2701,7 +2664,7 @@ class AudioGod(object):
 
         return _pack_plist()
     
-    export_xml = export_plist
+    __export_xml = __export_plist
 
     def convert(self):
         pass
