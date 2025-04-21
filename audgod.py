@@ -1412,148 +1412,132 @@ class AudioGod(object):
                 if line:
                     self.ignored_set.add(self.abspath(line))
 
-    def __process_clause(self, plain_clause, hashed_clause, final_clauses):
-        title = hashed_clause.get(self.AudioProperty.TITLE, None)
-        if not title:
-            self.invalid_clauses.append(plain_clause)
-            self.invalid_clauses_counter += 1
+    def __generate_key_by_properties(self, properties):
+        if self.AudioProperty.ARTIST not in properties:
+            self.logger.fatal(f'"Artist" not in <{properties}>!')
             return
-        artist = hashed_clause.get(self.AudioProperty.ARTIST, None)
-        if not artist:
-            self.invalid_clauses.append(plain_clause)
-            self.invalid_clauses_counter += 1
+        if self.AudioProperty.TITLE not in properties:
+            self.logger.fatal(f'"Title" not in <{properties}>!')
             return
-        key = self.generate_key(artist, title)
-        if key not in final_clauses:
-            final_clauses[key] = [hashed_clause]
-            self.valid_clauses_counter += 1
-            return
-        if len(final_clauses[key] > 1):
-            final_clauses[key].append(hashed_clause)
-            self.repeated_clauses_counter += 1
-            return
-        grouping = hashed_clause.get(
-            self.AudioProperty.GROUPING, None,
-        )
-        if not grouping:
-            grouping = self.DEFAULT_GROUPING
-        final_grouping = final_clauses[key][0].get(
-            self.AudioProperty.GROUPING, None,
-        )
-        if not final_grouping:
-            final_clauses[key][0][self.AudioProperty.GROUPING] = grouping
-            self.valid_clauses_counter += 1
-            return
-        groups = self.split(grouping, self.GROUPING_SEPARATOR)
-        final_groups = self.split(final_grouping, self.GROUPING_SEPARATOR)
-        if len(list(set(groups) & set(final_groups))) > 0:
-            final_clauses[key].append(hashed_clause)
-            self.valid_clauses_counter -= 1
-            self.repeated_clauses_counter += 2
-            return
-        final_clauses[key][0][self.AudioProperty.GROUPING] = '{fg}{gs}{gp}'.format(
-            fg=final_grouping,
-            gs=self.GROUPING_SEPARATOR,
-            gp=grouping,
-        )
-        self.valid_clauses_counter += 1
-        return
-
-    def import_(self):
-        file_format = self.recognize_file_format(self.source_file)
-        if self.FileFormat.NONE.eq(file_format):
-            self.logger.fatal(f'Invalid source file <{self.source_file}>.')
-            return
-        getattr(self, f'__import_{file_format}')()
-
-    def __import_json(self):
-        pass
-
-    def __import_markdown(self):
-        pass
-
-    __import_md = __import_markdown
-
-    def __import_plist(self):
-        pass
-
-    __import_xml = __import_plist
-
-    def __import_note(self):
-        grouping_pattern = r'^\s*#\s*\[\s*(\S+)\s*\]\s*(\S+)\s*$'
-        fields_pattern = '|'.join(
-            list(self.AUDIO_CN_PROPERTIES.keys()) + \
-            list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
-        )
-        prefix_pattern = r'^.*(({}))[:：]'.format(fields_pattern)
-        entire_pattern = \
-                r'^({0})[:：].*([,，;；]\s*({0})[:：].*){{0,}}$'.format(
-            fields_pattern,
+        return self.generate_key(
+            properties[self.AudioProperty.ARTIST],
+            properties[self.AudioProperty.TITLE],
         )
 
-        _clauses = {}
-        with open(self.source_file, 'r', encoding='utf-8') as f:
-            genre, grouping = self.DEFAULT_GENRE, self.DEFAULT_GROUPING
-            for line in f:
-                self.total_clauses_counter += 1
-                # grouping line
-                if re.match(grouping_pattern, line, re.IGNORECASE) is not None:
-                    _line = re.sub(grouping_pattern, r'\1====\2', line, re.IGNORECASE)
-                    genre, grouping = self.split(
-                        _line, '====', filt_empty=False, filt_repeated=False,
-                    )
-                    self.grouping_clauses.append(line)
-                    self.grouping_clauses_counter += 1
-                    continue
-                # audio information line 
-                _line = re.sub(prefix_pattern, r'\1:', line, re.IGNORECASE)
-                if re.match(entire_pattern, _line, re.IGNORECASE) is None:
-                    self.invalid_clauses.append(line)
-                    self.invalid_clauses_counter += 1
-                    continue
-                _line = re.sub(
-                    r'^\s*(({}))[:：]'.format(fields_pattern),
-                    r'\1:',
-                    _line,
-                    re.IGNORECASE,
-                )
-                _line = re.sub(
-                    r'[,，;；]\s*(({}))[:：]'.format(fields_pattern),
-                    r'====\1:',
-                    _line,
-                    re.IGNORECASE,
-                )
-                result = {
+    def __transform_summaries_to_clauses(self):
+        for grouping in self.summaries:
+            genre, items = self.summaries[grouping]
+            for item in items:
+                key = self.__generate_key_by_properties(item)
+                properties = {
                     self.AudioProperty.GENRE: genre,
                     self.AudioProperty.GROUPING: grouping,
                 }
-                for kv in self.split(_line, '====', filt_empty=False, filt_repeated=False):
-                    k, v = self.split(kv, ':', filt_empty=False, filt_repeated=False)
-                    k = self.AUDIO_CN_PROPERTY_SYNONYMS.get(k.lower(), k.lower()).lower() # type: ignore
-                    if k not in self.ALL_FIELDS:
-                        self.invalid_clauses.append(line)
-                        self.invalid_clauses_counter += 1
+                properties.update({
+                    field: item[field][2]
+                    for field in item
+                })
+                if key not in self.valid_clauses:
+                    self.valid_clauses[key] = properties
+                else:
+                    self.valid_clauses[key].update(properties)
+                    self.valid_clauses[key][self.AudioProperty.GROUPING] += '{sep}grouping'.format(
+                        sep=self.GROUPING_SEPARATOR,
+                    )
+
+    def __analysis_note(self):
+        grouping_pattern = r'^\s*(?:\s*\(\s*(?:\s*[0-9]\s*)+\s*\)\s*)*\s*#\s*\[\s*((?:\s*\S\s*)+)\s*\]\s*((?:\s*\S\s*)+)\s*$'
+        fields_pattern = '|'.join(
+            list(self.AUDIO_CN_PROPERTIES.keys()) + \
+            list(self.AUDIO_EN_PROPERTY_SYNONYMS.keys()) + \
+            list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
+        )
+        entire_pattern = \
+                r'^(((\s*[0-9]\s*)+\.\s*)*(\s*\[\s*[a-zA-Z]\s*\]\s*)*)*({0})\s*[:：](\s*\S\s*)(\s*[,，;；]\s*({0})\s*[:：](\s*\S\s*)+)*$'.format(
+            fields_pattern,
+        )
+
+        with open(self.source_file, 'r', encoding='utf-8') as f:
+            keys, genre, grouping = {}, '', ''
+            for line_number, line in enumerate(f, start=1):
+                self.total_clauses_counter += 1
+                line_with_no = f'&{line_number}: {line}'
+                # grouping line
+                grouping_match = re.match(grouping_pattern, line, re.IGNORECASE)
+                if grouping_match is not None:
+                    genre, grouping = tuple(map(
+                        lambda x: x.strip(), grouping_match.groups(),
+                    ))
+                    if grouping in self.summaries:
+                        genre, grouping = '', ''
+                    if grouping:
+                        self.grouping_clauses.append(line_with_no)
+                        self.grouping_clauses_counter += 1
                         continue
-                    result[k] = v
-                self.__process_clause(line, result, _clauses)
+                # detail line
+                if grouping and re.match(entire_pattern, line, re.IGNORECASE) is not None:
+                    line = re.sub(
+                        r'^(.*)(({0}).*)$'.format(fields_pattern), r'\2', line,
+                    )
+                    units = self.split(
+                        line, r',，;；',
+                        del_blank=True, filt_empty=True, filt_repeated=False,
+                    )
+                    curr_key, repeated = '', False
+                    properties, valid = {}, True
+                    for unit in units:
+                        key, value = self.split(
+                            unit, r':：', del_blank=True, maxsplit=1,
+                        )
+                        field = self.transform_field_name_synonyms(key)
+                        if not field:
+                            valid = False
+                            break
+                        if field in properties:
+                            valid = False
+                            break
+                        properties[field] = value
+                    for field in self.NOTE_FIELDS:
+                        if field not in properties:
+                            valid = False
+                            break
+                    if valid:
+                        curr_key = self.__generate_key_by_properties(properties)
+                        if curr_key not in keys:
+                            keys[curr_key] = set([genre])
+                        else:
+                            keys[curr_key].add(genre)
+                            if len(keys[curr_key]) > 1:
+                                valid = False
+                            repeated = True
+                    if valid:
+                        if grouping not in self.summaries:
+                            self.summaries[grouping] = (genre, [properties])
+                        else:
+                            _, items = self.summaries[grouping]
+                            if curr_key in [self.__generate_key_by_properties(x) for x in items]:
+                                valid = False
+                            else:
+                                items.append(properties)
+                    if valid:
+                        if repeated:
+                            if curr_key not in self.repeated_clauses:
+                                self.repeated_clauses[curr_key] = [line_with_no]
+                            else:
+                                self.repeated_clauses[curr_key].append(line_with_no)
+                            self.repeated_clauses_counter += 1
+                        self.valid_clauses_counter += 1
+                        continue
+                self.invalid_clauses.append(line_with_no)
+                self.invalid_clauses_counter += 1
 
-        self.valid_clauses.update({
-            key: _clauses[key][0]
-            for key in _clauses
-            if len(_clauses[key]) == 1
-        })
+        for grouping in self.summaries:
+            genre, items = self.summaries[grouping]
+            for i, properties in enumerate(items):
+                items[i] = self.__repack_audio_properties(properties)
 
-        self.repeated_clauses.update({
-            key: _clauses[key]
-            for key in _clauses
-            if len(_clauses[key]) > 1
-        })
-
-    def __load_properties_from_file(self):
-        if not os.path.exists(self.source_file):
-            self.logger.fatal(f'Source file <{self.source_file}> not exists!')
-            return
-        self.import_()
+        self.__transform_summaries_to_clauses()
+        
         self.logger.warning(f'\n{"#"*78}\n')
         self.logger.warning(
             'Total Clauses: {total}\n\n'
@@ -1579,6 +1563,35 @@ class AudioGod(object):
                     key=key,
                     repeated='｜'.join(self.repeated_clauses[key]),
                 ))
+
+    def __import_note(self):
+        self.__analysis_note()
+
+    def __import_json(self):
+        pass
+
+    def __import_markdown(self):
+        pass
+
+    __import_md = __import_markdown
+
+    def __import_plist(self):
+        pass
+
+    __import_xml = __import_plist
+
+    def import_(self):
+        file_format = self.recognize_file_format(self.source_file)
+        if self.FileFormat.NONE.eq(file_format):
+            self.logger.fatal(f'Invalid source file <{self.source_file}>.')
+            return
+        getattr(self, f'__import_{file_format}')()
+
+    def __load_properties_from_file(self):
+        if not os.path.exists(self.source_file):
+            self.logger.fatal(f'Source file <{self.source_file}> not exists!')
+            return
+        self.import_()
 
     def __load_audios(self):
         self.__load_ignored()
@@ -1829,127 +1842,9 @@ class AudioGod(object):
             )
         )
 
-    def __generate_key_by_properties(self, properties):
-        if self.AudioProperty.ARTIST not in properties:
-            self.logger.fatal(f'"Artist" not in <{properties}>!')
-            return
-        if self.AudioProperty.TITLE not in properties:
-            self.logger.fatal(f'"Title" not in <{properties}>!')
-            return
-        return self.generate_key(
-            properties[self.AudioProperty.ARTIST],
-            properties[self.AudioProperty.TITLE],
-        )
-
-    def __transform_summaries_to_clauses(self):
-        for grouping in self.summaries:
-            genre, items = self.summaries[grouping]
-            for item in items:
-                key = self.__generate_key_by_properties(item)
-                properties = {
-                    self.AudioProperty.GENRE: genre,
-                    self.AudioProperty.GROUPING: grouping,
-                }
-                properties.update({
-                    field: item[field][2]
-                    for field in item
-                })
-                if key not in self.valid_clauses:
-                    self.valid_clauses[key] = properties
-                else:
-                    self.valid_clauses[key].update(properties)
-                    self.valid_clauses[key][self.AudioProperty.GROUPING] += '{sep}grouping'.format(
-                        sep=self.GROUPING_SEPARATOR,
-                    )
-
     def preprocess_notes(self):
-        grouping_pattern = r'^\s*(?:\s*\(\s*(?:\s*[0-9]\s*)+\s*\)\s*)*\s*#\s*\[\s*((?:\s*\S\s*)+)\s*\]\s*((?:\s*\S\s*)+)\s*$'
-        fields_pattern = '|'.join(
-            list(self.AUDIO_CN_PROPERTIES.keys()) + \
-            list(self.AUDIO_EN_PROPERTY_SYNONYMS.keys()) + \
-            list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
-        )
-        entire_pattern = \
-                r'^(((\s*[0-9]\s*)+\.\s*)*(\s*\[\s*[a-zA-Z]\s*\]\s*)*)*({0})\s*[:：](\s*\S\s*)(\s*[,，;；]\s*({0})\s*[:：](\s*\S\s*)+)*$'.format(
-            fields_pattern,
-        )
-
-        with open(self.source_file, 'r', encoding='utf-8') as f:
-            keys = {}
-            genre, grouping = '', ''
-            for line_number, line in enumerate(f, start=1):
-                line_with_no = f'&{line_number}: {line}'
-                # grouping line
-                grouping_match = re.match(grouping_pattern, line, re.IGNORECASE)
-                if grouping_match is not None:
-                    genre, grouping = tuple(map(
-                        lambda x: x.strip(), grouping_match.groups(),
-                    ))
-                    if grouping in self.summaries:
-                        genre, grouping = '', ''
-                    if grouping:
-                        self.grouping_clauses.append(line_with_no)
-                        self.grouping_clauses_counter += 1
-                        self.total_clauses_counter += 1
-                        continue
-                # detail line
-                if grouping and re.match(entire_pattern, line, re.IGNORECASE) is not None:
-                    line = re.sub(
-                        r'^(.*)(({0}).*)$'.format(fields_pattern), r'\2', line,
-                    )
-                    units = self.split(
-                        line, r',，;；',
-                        del_blank=True, filt_empty=True, filt_repeated=False,
-                    )
-                    properties, valid = {}, True
-                    for unit in units:
-                        key, value = self.split(
-                            unit, r':：', del_blank=True, maxsplit=1,
-                        )
-                        field = self.transform_field_name_synonyms(key)
-                        if not field:
-                            valid = False
-                            break
-                        if field in properties:
-                            valid = False
-                            break
-                        properties[field] = value
-                    for field in self.NOTE_FIELDS:
-                        if field not in properties:
-                            valid = False
-                            break
-                    if valid:
-                        curr_key = self.__generate_key_by_properties(properties)
-                        if curr_key in keys:
-                            ori_genre, ori_grouping = keys[curr_key]
-                            if ori_genre != genre:
-                                valid = False
-                        else:
-                            keys[curr_key] = (genre, grouping)
-                        if valid:
-                            if grouping not in self.summaries:
-                                self.summaries[grouping] = (genre, [properties])
-                            else:
-                                _, items = self.summaries[grouping]
-                                if curr_key in [self.__generate_key_by_properties(x) for x in items]:
-                                    valid = False
-                                else:
-                                    items.append(properties)
-                    if valid:
-                        self.valid_clauses_counter += 1
-                        self.total_clauses_counter += 1
-                        continue
-                self.invalid_clauses.append(line_with_no)
-                self.invalid_clauses_counter += 1
-
-        for grouping in self.summaries:
-            genre, items = self.summaries[grouping]
-            for i, properties in enumerate(items):
-                items[i] = self.__repack_audio_properties(properties)
-
+        self.__analysis_note()
         self.__sort_summaries()
-        self.__transform_summaries_to_clauses()
-
         tmp_file = self.source_file + '.tmp'
         with open(tmp_file, 'w', encoding='utf-8') as f:
             f.write(self.__summarize_for_note())

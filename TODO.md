@@ -1,7 +1,6 @@
 Processing:
 看看 import 和 export 逻辑里可以做到增量更新吗,新增曲库时，看看各个环节是否可以由全量模式改为增量模式
 self.DEFAULT_GENRE, self.DEFAULT_GROUPING 跟踪处理一下
-_counter 统计是否都需要用len（）代替
 看看 genre 和 grouping 是否在summaries时扣除去
 
 Useful Paths:
