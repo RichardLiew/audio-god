@@ -300,8 +300,9 @@ class AudioGod(object):
         'title': (('歌曲名', 'Name'), 'string'),
         'artist': (('歌手名', 'Artist'), 'string'),
         'album': (('专辑名', 'Album'), 'string'),
-        'album_artist': (('专辑出品人', 'Album Artist'), 'string'),
         'genre': (('流派', 'Genre'), 'string'),
+        'grouping': (('分组', 'Grouping'), 'string'),
+        'album_artist': (('专辑出品人', 'Album Artist'), 'string'),
         'comments': (('备注', 'Comments'), 'string'),
         'track_num': (('音轨号', 'Track Number'), 'integer'),
         'composer': (('作曲人', 'Composer'), 'string'),
@@ -317,7 +318,6 @@ class AudioGod(object):
         'selected': (('已选择', 'Selected'), 'boolean'),
         'liked': (('喜欢', 'Liked'), 'boolean'),
         'rating': (('评分', 'Rating'), 'integer'),
-        'grouping': (('分组', 'Grouping'), 'string'),
         'artwork': (('封面', 'Artwork'), 'string'),
     }
 
@@ -326,7 +326,7 @@ class AudioGod(object):
     }
 
     AUDIO_CN_PROPERTY_SYNONYMS = {
-        value: key for key, value in AUDIO_CN_PROPERTIES.items()
+        value.lower(): key for key, value in AUDIO_CN_PROPERTIES.items()
     }
 
     AUDIO_EN_PROPERTIES = {
@@ -334,7 +334,7 @@ class AudioGod(object):
     }
 
     AUDIO_EN_PROPERTY_SYNONYMS = {
-        value: key for key, value in AUDIO_EN_PROPERTIES.items()
+        value.lower(): key for key, value in AUDIO_EN_PROPERTIES.items()
     }
 
     AUDIO_PROPERTY_TYPES = {
@@ -351,8 +351,14 @@ class AudioGod(object):
         AudioProperty.TITLE,
         AudioProperty.ARTIST,
         AudioProperty.ALBUM,
-        AudioProperty.ALBUM_ARTIST,
         AudioProperty.GENRE,
+        AudioProperty.ALBUM_ARTIST,
+    ]
+
+    NOTE_FIELDS = [
+        AudioProperty.TITLE,
+        AudioProperty.ARTIST,
+        AudioProperty.ALBUM,
     ]
 
     SIMPLE_FIELDS = [
@@ -363,21 +369,13 @@ class AudioGod(object):
         AudioProperty.GROUPING,
     ]
     
-    ZIP_FIELDS = [
-        AudioProperty.SELECTED,
-        AudioProperty.LIKED,
-        AudioProperty.RATING,
-        AudioProperty.GROUPING,
-        AudioProperty.ARTWORK,
-    ]
-
     CORE_FIELDS = [
         AudioProperty.TITLE,
         AudioProperty.ARTIST,
         AudioProperty.ALBUM,
-        AudioProperty.ALBUM_ARTIST,
         AudioProperty.GENRE,
         AudioProperty.GROUPING,
+        AudioProperty.ALBUM_ARTIST,
         AudioProperty.ARTWORK,
     ]
 
@@ -385,8 +383,8 @@ class AudioGod(object):
         AudioProperty.TITLE,
         AudioProperty.ARTIST,
         AudioProperty.ALBUM,
-        AudioProperty.ALBUM_ARTIST,
         AudioProperty.GENRE,
+        AudioProperty.ALBUM_ARTIST,
         AudioProperty.SIZE,
         AudioProperty.DURATION,
         AudioProperty.BIT_RATE,
@@ -394,10 +392,19 @@ class AudioGod(object):
         AudioProperty.MTIME,
     ]
 
+    ZIP_FIELDS = [
+        AudioProperty.GROUPING,
+        AudioProperty.SELECTED,
+        AudioProperty.LIKED,
+        AudioProperty.RATING,
+        AudioProperty.ARTWORK,
+    ]
+
     ALL_FIELDS = AudioProperty.members()
 
     FIELDS = {
         'default': DEFAULT_FIELDS,
+        'note': NOTE_FIELDS,
         'simple': SIMPLE_FIELDS,
         'zip': ZIP_FIELDS,
         'core': CORE_FIELDS,
@@ -478,6 +485,7 @@ class AudioGod(object):
         )
         self.audios_tree.create_node(self.AUDIOS_TREE_ROOT_TAG, self.AUDIOS_TREE_ROOT_NID)
         self.__ignored_set = set()
+        self.__summaries = {}
 
         self.__parse = {
             field: getattr(
@@ -682,6 +690,14 @@ class AudioGod(object):
         return self.__ignored_set
 
     @property
+    def summaries(self):
+        return self.__summaries
+    
+    @summaries.setter
+    def summaries(self, value):
+        self.__summaries = value
+
+    @property
     def invalid_clauses(self):
         return self.__clauses[0]
 
@@ -796,12 +812,12 @@ class AudioGod(object):
                + list(self.notmatched_audios)
 
     @staticmethod
-    def split(s, sep=None, del_blank=True, filt_empty=True, filt_repeated=True, maxsplit=-1) -> list:
+    def split(s, pattern=None, del_blank=True, filt_empty=True, filt_repeated=True, *args, **kwargs) -> list:
         if not s:
             return []
-        if not sep:
+        if not pattern:
             return [s]
-        ret = s.split(sep, maxsplit)
+        ret = re.split(pattern, s, *args, **kwargs)
         if del_blank:
             ret = [item.strip() for item in ret]
         if filt_empty:
@@ -953,6 +969,38 @@ class AudioGod(object):
             return cls.FileFormat.PLIST
         return cls.FileFormat.NOTE
 
+    @classmethod
+    def generate_key(cls, artist, title):
+        return '{artist}{div}{title}'.format(
+            artist=cls.format_artist(artist.strip()),
+            div=cls.DIV_CHAR,
+            title=cls.format_title(title.strip()),
+        ).upper()
+
+    @staticmethod
+    def generate_persistent_id() -> str:
+        return str(uuid.uuid4()).replace('-', '')[:16].upper()
+
+    @classmethod
+    def transform_field_name(cls, field, field_type=FieldType.ORIGINAL):
+        match field_type:
+            case cls.FieldType.CHINESE:
+                return cls.AUDIO_CN_PROPERTIES[field]
+            case cls.FieldType.ENGLISH:
+                return cls.AUDIO_EN_PROPERTIES[field]
+        return field
+
+    @classmethod
+    def transform_field_name_synonyms(cls, field):
+        field = field.lower()
+        if field in cls.AUDIO_CN_PROPERTY_SYNONYMS:
+            return cls.AUDIO_CN_PROPERTY_SYNONYMS[field]
+        if field in cls.AUDIO_EN_PROPERTY_SYNONYMS:
+            return cls.AUDIO_EN_PROPERTY_SYNONYMS[field]
+        if field in cls.ALL_FIELDS:
+            return field
+        return None
+    
     @classmethod
     def parse_genre(cls, genre):
         if genre is None:
@@ -1180,6 +1228,19 @@ class AudioGod(object):
             return cls.transform_utc(mtime)
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(mtime))
 
+    def __generate_key_by_filename(self, audio):
+        if not self.__check_name(audio):
+            self.logger.fatal(f'Invalid name of audio <{audio}>!')
+            return
+        name, _ = os.path.splitext(os.path.basename(audio))
+        if name.count(self.DIV_CHAR) == 1:
+            return self.generate_key(
+                *self.split(name, self.DIV_CHAR, filt_empty=False, filt_repeated=False),
+            )
+        return self.generate_key(
+            *self.split(name, self.ORI_DIV_CHAR, filt_empty=False, filt_repeated=False),
+        )
+
     def __fetch_from_outside(self, audio, field):
         format_ = self.format[field]
         parse_ = self.parse[field]
@@ -1201,7 +1262,7 @@ class AudioGod(object):
                             ret = _value
                             break
                 case self.PropertySource.FILE:
-                    key = self.generate_key_by_audio(audio)
+                    key = self.__generate_key_by_filename(audio)
                     _value = self.valid_clauses.get(key, {}).get(field, None)
                     if _value is not None:
                         ret = _value
@@ -1212,7 +1273,6 @@ class AudioGod(object):
                         case self.AudioProperty.GENRE:
                             _value = os.path.basename(dirname)
                         case self.AudioProperty.GROUPING:
-                            _value = re.sub(r'/+$', r'', dirname)
                             _value = re.sub(
                                 r'^%s/+' % (
                                     re.escape(re.sub(r'/+$', r'', self.audios_root)),
@@ -1329,36 +1389,17 @@ class AudioGod(object):
         return ret
 
     def fetchx(self, audio_object, field,
-               formatted=False, output_format=FileFormat.NONE):
+               formatted=False, output_format=FileFormat.NONE, default=None):
         ret = self.fetch(audio_object, field)
-        if ret is None:
-            return None
-        if formatted:
-            ret = self.format[field](ret)
-        if self.FileFormat.NONE.ne(output_format):
-            ret = self.output[field](ret, output_format)
+        if ret is not None:
+            if formatted:
+                ret = self.format[field](ret)
+            if self.FileFormat.NONE.ne(output_format):
+                ret = self.output[field](ret, output_format)
+        if default is not None:
+            if not ret:
+                ret = default
         return ret
-
-    @classmethod
-    def generate_key(cls, artist, title):
-        return '{artist}{div}{title}'.format(
-            artist=cls.format_artist(artist.strip()),
-            div=cls.DIV_CHAR,
-            title=cls.format_title(title.strip()),
-        ).upper()
-
-    def generate_key_by_audio(self, audio):
-        if not self.__check_name(audio):
-            self.logger.fatal(f'Invalid name of audio <{audio}>!')
-            return
-        name, _ = os.path.splitext(os.path.basename(audio))
-        if name.count(self.DIV_CHAR) == 1:
-            return self.generate_key(
-                *self.split(name, self.DIV_CHAR, filt_empty=False, filt_repeated=False),
-            )
-        return self.generate_key(
-            *self.split(name, self.ORI_DIV_CHAR, filt_empty=False, filt_repeated=False),
-        )
 
     def __load_ignored(self):
         if not self.ignored_file:
@@ -1488,7 +1529,7 @@ class AudioGod(object):
                 }
                 for kv in self.split(_line, '====', filt_empty=False, filt_repeated=False):
                     k, v = self.split(kv, ':', filt_empty=False, filt_repeated=False)
-                    k = self.AUDIO_CN_PROPERTY_SYNONYMS.get(k, k).lower() # type: ignore
+                    k = self.AUDIO_CN_PROPERTY_SYNONYMS.get(k.lower(), k.lower()).lower() # type: ignore
                     if k not in self.ALL_FIELDS:
                         self.invalid_clauses.append(line)
                         self.invalid_clauses_counter += 1
@@ -1563,7 +1604,7 @@ class AudioGod(object):
                     self.ignored_audios.append(audio)
                     self.logger.debug(self.AudioType.IGNORED)
                     continue
-            key = self.generate_key_by_audio(audio)
+            key = self.__generate_key_by_filename(audio)
             if key in self.valid_clauses:
                 self.matched_audios.add(audio)
                 self.logger.debug(self.AudioType.MATCHED)
@@ -1610,6 +1651,28 @@ class AudioGod(object):
             for audio in self.notmatched_audios:
                 self.logger.info(f'\t{audio}')
 
+    def __repack_audio_properties(self, properties):
+        ret = {}
+        for field, value in properties:
+            field_name = self.transform_field_name(field, self.field_type)
+            type_ = self.AUDIO_PROPERTY_TYPES[field]
+            ret[field] = (field_name, type_, value)
+        return ret
+
+    def __gain_audio_properties(self, audio_object):
+        ret = {}
+        for field in self.fields:
+            value = self.fetchx(
+                audio_object,
+                field,
+                formatted=True,
+                output_format=self.output_format,
+            )
+            if value is None:
+                continue
+            ret[field] = value
+        return self.__repack_audio_properties(ret)
+
     def __fill_audios_tree(self) -> None:
         self.__load_audios()
 
@@ -1619,32 +1682,47 @@ class AudioGod(object):
         for audio in audios:
             track_persistent_id = self.generate_persistent_id()
             audio_object = eyed3.load(audio)
-            grouping = self.fetchx(
-                audio_object, self.AudioProperty.GROUPING, formatted=True,
+            genre = self.fetchx(
+                audio_object,
+                self.AudioProperty.GENRE,
+                formatted=True,
+                default=self.DEFAULT_GENRE,
             )
-            if not grouping:
-                grouping = self.DEFAULT_GROUPING
-                self.logger.debug(
-                    f'Empty grouping of <{audio}>, use <{self.DEFAULT_GROUPING}> instead!',
-                )
+            grouping = self.fetchx(
+                audio_object,
+                self.AudioProperty.GROUPING,
+                formatted=True,
+                default=self.DEFAULT_GROUPING,
+            )
             for group in self.split(grouping, self.GROUPING_SEPARATOR): # type: ignore
                 tags = self.split(group, '/', filt_repeated=False)
                 if not tags:
                     continue
                 tags = [self.AUDIOS_TREE_ROOT_TAG] + tags
                 subtree = TreeX(logger=self.logger)
-                last_nid = self.AUDIOS_TREE_ROOT_NID
+                last_nid, parent_tag = self.AUDIOS_TREE_ROOT_NID, ''
                 for i, tag in enumerate(tags):
                     nid = self.generate_persistent_id()
                     parent, node_type = last_nid, self.AudiosTreeNodeType.FOLDER
                     if i == 0:
                         nid = self.AUDIOS_TREE_ROOT_NID
                         parent, node_type = None, self.AudiosTreeNodeType.ROOT
-                    elif i == len(tags) - 1:
-                        node_type = self.AudiosTreeNodeType.PLAYLIST
+                    else:
+                        parent_tag += f'{tag}'
+                        if i == len(tags) - 1:
+                            node_type = self.AudiosTreeNodeType.PLAYLIST
+                        else:
+                            parent_tag += '/'
                     subtree.create_node(
                         tag, nid, parent=parent,
-                        data=[node_type, -1, nid, ''],
+                        data=[
+                            node_type,
+                            -1,
+                            nid,
+                            genre if i == len(tags)-1 else '',
+                            re.sub(r'[^/]+/$', r'', parent_tag).rstrip('/'),
+                            '',
+                        ],
                     )
                     last_nid = nid
                 subtree.create_node(
@@ -1655,7 +1733,9 @@ class AudioGod(object):
                         self.AudiosTreeNodeType.TRACK,
                         track_id,
                         track_persistent_id,
-                        self.__pack_audio_properties(audio_object),
+                        genre,
+                        group,
+                        self.__gain_audio_properties(audio_object),
                     ],
                 )
                 self.audios_tree.perfect_merge(self.AUDIOS_TREE_ROOT_NID, subtree, deep=False)
@@ -1665,7 +1745,7 @@ class AudioGod(object):
         for node in self.audios_tree.all_nodes():
             if node.is_root():
                 continue
-            node_type, _, _, _ = node.data
+            node_type = node.data[0]
             if self.AudiosTreeNodeType.TRACK.eq(node_type):
                 continue
             node.data[1] = playlist_id
@@ -1677,10 +1757,10 @@ class AudioGod(object):
                 continue
             if parent.is_root():
                 continue
-            node_type, _, _, _ = node.data
+            node_type = node.data[0]
             if node_type in [self.AudiosTreeNodeType.TRACK, self.AudiosTreeNodeType.ROOT]:
                 continue
-            node.data[3] = parent.identifier
+            node.data[5] = parent.identifier
 
     def __check_extension(self, audio):
         _, ext = os.path.splitext(os.path.basename(audio))
@@ -1749,7 +1829,40 @@ class AudioGod(object):
             )
         )
 
-    def format_notes(self):
+    def __generate_key_by_properties(self, properties):
+        if self.AudioProperty.ARTIST not in properties:
+            self.logger.fatal(f'"Artist" not in <{properties}>!')
+            return
+        if self.AudioProperty.TITLE not in properties:
+            self.logger.fatal(f'"Title" not in <{properties}>!')
+            return
+        return self.generate_key(
+            properties[self.AudioProperty.ARTIST],
+            properties[self.AudioProperty.TITLE],
+        )
+
+    def __transform_summaries_to_clauses(self):
+        for grouping in self.summaries:
+            genre, items = self.summaries[grouping]
+            for item in items:
+                key = self.__generate_key_by_properties(item)
+                properties = {
+                    self.AudioProperty.GENRE: genre,
+                    self.AudioProperty.GROUPING: grouping,
+                }
+                properties.update({
+                    field: item[field][2]
+                    for field in item
+                })
+                if key not in self.valid_clauses:
+                    self.valid_clauses[key] = properties
+                else:
+                    self.valid_clauses[key].update(properties)
+                    self.valid_clauses[key][self.AudioProperty.GROUPING] += '{sep}grouping'.format(
+                        sep=self.GROUPING_SEPARATOR,
+                    )
+
+    def preprocess_notes(self):
         grouping_pattern = r'^\s*(?:\s*\(\s*(?:\s*[0-9]\s*)+\s*\)\s*)*\s*#\s*\[\s*((?:\s*\S\s*)+)\s*\]\s*((?:\s*\S\s*)+)\s*$'
         fields_pattern = '|'.join(
             list(self.AUDIO_CN_PROPERTIES.keys()) + \
@@ -1757,46 +1870,89 @@ class AudioGod(object):
             list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
         )
         entire_pattern = \
-                r'^(((\s*[0-9]\s*)+\.\s*)*(\s*\[\s*[a-zA-Z]\s*\]\s*)*)*({0})\s*[:：](\s*\S\s*)+(\s*[,，;；]\s*({0})\s*[:：](\s*\S\s*)+)*$'.format(
+                r'^(((\s*[0-9]\s*)+\.\s*)*(\s*\[\s*[a-zA-Z]\s*\]\s*)*)*({0})\s*[:：](\s*\S\s*)(\s*[,，;；]\s*({0})\s*[:：](\s*\S\s*)+)*$'.format(
             fields_pattern,
         )
 
-        lines, cache = [], []
         with open(self.source_file, 'r', encoding='utf-8') as f:
-            for line in f:
+            keys = {}
+            genre, grouping = '', ''
+            for line_number, line in enumerate(f, start=1):
+                line_with_no = f'&{line_number}: {line}'
                 # grouping line
-                if re.match(grouping_pattern, line, re.IGNORECASE) is not None:
-                    if len(cache) > 0:
-                        for i, item in enumerate(cache, start=1):
-                            lines.append(f'{f"{i}.":<{len(str(len(cache)))+1}} {item}')
-                        cache = []
-                    self.grouping_clauses_counter += 1
+                grouping_match = re.match(grouping_pattern, line, re.IGNORECASE)
+                if grouping_match is not None:
+                    genre, grouping = tuple(map(
+                        lambda x: x.strip(), grouping_match.groups(),
+                    ))
+                    if grouping in self.summaries:
+                        genre, grouping = '', ''
+                    if grouping:
+                        self.grouping_clauses.append(line_with_no)
+                        self.grouping_clauses_counter += 1
+                        self.total_clauses_counter += 1
+                        continue
+                # detail line
+                if grouping and re.match(entire_pattern, line, re.IGNORECASE) is not None:
                     line = re.sub(
-                        grouping_pattern,
-                        lambda m: f'#[{m.group(1).strip()}] {m.group(2).strip()}',
-                        line,
-                    ).strip()
-                    lines.append(f'({self.grouping_clauses_counter}) {line}')
-                    self.grouping_clauses.append(line)
-                    self.total_clauses_counter += 1
-                    continue
-                # audio information line 
-                if re.match(entire_pattern, line, re.IGNORECASE) is not None:
-                    line = re.sub(grouping_pattern, r'#[\1]\2', line).strip()
-                    cache.append(line)
-                    #self.valid_clauses.append(line)
-                    self.valid_clauses_counter += 1
-                    self.total_clauses_counter += 1
-                    continue
-                self.invalid_clauses.append(line)
+                        r'^(.*)(({0}).*)$'.format(fields_pattern), r'\2', line,
+                    )
+                    units = self.split(
+                        line, r',，;；',
+                        del_blank=True, filt_empty=True, filt_repeated=False,
+                    )
+                    properties, valid = {}, True
+                    for unit in units:
+                        key, value = self.split(
+                            unit, r':：', del_blank=True, maxsplit=1,
+                        )
+                        field = self.transform_field_name_synonyms(key)
+                        if not field:
+                            valid = False
+                            break
+                        if field in properties:
+                            valid = False
+                            break
+                        properties[field] = value
+                    for field in self.NOTE_FIELDS:
+                        if field not in properties:
+                            valid = False
+                            break
+                    if valid:
+                        curr_key = self.__generate_key_by_properties(properties)
+                        if curr_key in keys:
+                            ori_genre, ori_grouping = keys[curr_key]
+                            if ori_genre != genre:
+                                valid = False
+                        else:
+                            keys[curr_key] = (genre, grouping)
+                        if valid:
+                            if grouping not in self.summaries:
+                                self.summaries[grouping] = (genre, [properties])
+                            else:
+                                _, items = self.summaries[grouping]
+                                if curr_key in [self.__generate_key_by_properties(x) for x in items]:
+                                    valid = False
+                                else:
+                                    items.append(properties)
+                    if valid:
+                        self.valid_clauses_counter += 1
+                        self.total_clauses_counter += 1
+                        continue
+                self.invalid_clauses.append(line_with_no)
                 self.invalid_clauses_counter += 1
-        
+
+        for grouping in self.summaries:
+            genre, items = self.summaries[grouping]
+            for i, properties in enumerate(items):
+                items[i] = self.__repack_audio_properties(properties)
+
+        self.__sort_summaries()
+        self.__transform_summaries_to_clauses()
+
         tmp_file = self.source_file + '.tmp'
         with open(tmp_file, 'w', encoding='utf-8') as f:
-            for i in range(len(lines)):
-                f.write(lines[i])
-                if i < len(lines) - 1:
-                    f.write('\n')
+            f.write(self.__summarize_for_note())
         self.backup(self.source_file)
         self.rename(tmp_file, self.source_file)
 
@@ -2396,35 +2552,86 @@ class AudioGod(object):
             self.output_file,
         )
 
-    @staticmethod
-    def generate_persistent_id() -> str:
-        return str(uuid.uuid4()).replace('-', '')[:16].upper()
+    def __pack_properties_for_json(self, properties):
+        return ''
 
-    @classmethod
-    def transform_field_name(cls, field, field_type=FieldType.ORIGINAL):
-        match field_type:
-            case cls.FieldType.CHINESE:
-                return cls.AUDIO_CN_PROPERTIES[field]
-            case cls.FieldType.ENGLISH:
-                return cls.AUDIO_EN_PROPERTIES[field]
-        return field
+    def __pack_properties_for_markdown(self, properties):
+        return ''
 
-    def __pack_audio_properties(self, audio_object):
-        ret = {}
-        for field in self.fields:
-            value = self.fetchx(
-                audio_object, field, formatted=True, output_format=self.output_format,
-            )
-            if value is None:
-                continue
-            key = self.transform_field_name(field, self.field_type)
-            type_ = self.AUDIO_PROPERTY_TYPES[field]
-            ret[key] = (type_, value)
+    __pack_properties_for_md = __pack_properties_for_markdown
+
+    def __pack_properties_for_note(self, properties):
+        ret = ''
+        for field in properties:
+            field_name, _, value = properties[field]
+            ret += f'{field_name}: {value}; '
+        return ret.strip().rstrip(';')
+    
+    def __pack_properties_for_plist(self, properties):
+        ret = ''
+        for field in properties:
+            field_name, type_, value = properties[field]
+            ret += '\t'
+            ret += f'<key>{field_name}</key>'
+            if type_ != 'boolean':
+                ret += f'<{type_}>{value}</{type_}>'
+            else:
+                ret += f'<{value}/>'
+            ret += '\n'
+        return ret.strip()
+
+    __pack_properties_for_xml = __pack_properties_for_plist
+
+    def __summarize_for_note(self):
+        ret = 'Summary: Groups {group_number}, Items {item_number}\n\n'.format(
+            group_number=len(self.summaries),
+            item_number=sum([len(x) for _, (_, x) in self.summaries.items()]),
+        )
+
+        group_number = 0
+        for group, (genre, items) in self.summaries.items():
+            group_number += 1
+            ret += f'({group_number}) #[{genre}] {group}:\n'
+            item_number = 0
+            for item in items:
+                item_number += 1
+                ret += '{number} {content}\n'.format(
+                    number=f'"{item_number}.":<{len(str(len(items)))+1}',
+                    content=self.__pack_properties_for_note(item),
+                )
         return ret
+
+    def __sort_summaries(self):
+        for grouping in self.summaries:
+            _, items = self.summaries[grouping]
+            items.sort(
+                key=lambda x: getattr(self, f'__pack_properties_for_{self.output_format}')(x),
+            )
+        self.summaries = {
+            key: self.summaries[key] for key in sorted(self.summaries)
+        }
 
     def __summarize(self):
         self.__fill_audios_tree()
 
+        group_nodes = []
+        for node in self.audios_tree.all_nodes():
+            if node.is_root():
+                continue
+            node_type = node.data[0]
+            if self.AudiosTreeNodeType.PLAYLIST.eq(node_type):
+                group_nodes.append(node)
+
+        group_nodes.sort(key=lambda x: (x.data[4], x.tag))
+
+        for group_node in group_nodes:
+            genre, parent_group = group_node.data[3], group_node.data[4]
+            group = f'{parent_group}/{group_node.tag}'
+            items = self.audios_tree.leaves(group_node.identifier)
+            self.summaries[group] = (genre, list(map(lambda x: x.data[5], items)))
+
+        self.__sort_summaries()
+        
     def export(self):
         self.__summarize()
 
@@ -2451,7 +2658,8 @@ class AudioGod(object):
     __export_md = __export_markdown
 
     def __export_note(self):
-        return ''
+        ret = self.__summarize_for_note()
+        return ret
 
     def __export_plist(self):
         itunes_version_plist, itunes_media_folder, _, _ = self.itunes_options
@@ -2479,23 +2687,7 @@ class AudioGod(object):
             return result[:-1]
 
         def _pack_track(track) -> str:
-            _, track_id, persistent_id, properties = track.data
-
-            def _pack_properties() -> str:
-                ret = ''
-                for key in properties:
-                    type_, value = properties[key]
-                    ret += '\t'
-                    ret += f'<key>{key}</key>'
-                    if type_ != 'boolean':
-                        ret += f'<{type_}>{value}</{type_}>'
-                    elif value == 'true':
-                        ret += '<true/>'
-                    else:
-                        ret += '<false/>'
-                    ret += '\n'
-                return ret.strip()
-
+            _, track_id, persistent_id, _, _, properties = track.data
             result = Template(_format_template('''
 <key>${track_id}</key>
 <dict>
@@ -2511,7 +2703,7 @@ class AudioGod(object):
 </dict>
             ''')).safe_substitute(dict(
                 track_id=track_id,
-                properties=_pack_properties(),
+                properties=self.__pack_properties_for_plist(properties),
                 date_added=self.current_time(),
                 kind='MPEG audio file',
                 persistent_id=persistent_id,
@@ -2539,7 +2731,8 @@ class AudioGod(object):
                     continue
                 if not isinstance(track.data, list):
                     continue
-                if self.AudiosTreeNodeType.TRACK.ne(track.data[0]):
+                node_type = track.data[0]
+                if self.AudiosTreeNodeType.TRACK.ne(node_type):
                     continue
                 result += _pack_track(track)
             return _repack_plist(result)
@@ -2551,9 +2744,10 @@ class AudioGod(object):
                     continue
                 if not isinstance(track.data, list):
                     continue
-                if self.AudiosTreeNodeType.TRACK.ne(track.data[0]):
+                node_type = track.data[0]
+                if self.AudiosTreeNodeType.TRACK.ne(node_type):
                     continue
-                _, track_id, _, _ = track.data
+                track_id = track.data[1]
                 result += Template(_format_template('''
 <dict>
 	<key>Track ID</key><integer>${track_id}</integer>
@@ -2589,7 +2783,7 @@ class AudioGod(object):
             return result
 
         def _pack_playlist(node) -> str:
-            node_type, id, pid, ppid = node.data
+            node_type, id, pid, _, _, ppid = node.data
             result = Template(_format_template('''
 <dict>
 	<key>Name</key><string>${name}</string>
@@ -2599,9 +2793,9 @@ class AudioGod(object):
 ''' + ('' if (not ppid) or (ppid == self.AUDIOS_TREE_ROOT_NID) else \
 '''\t<key>Parent Persistent ID</key><string>${parent_persistent_id}</string>
 ''') + '''\t<key>All Items</key><${show_all_items}/>
-''' + ('' if self.AudiosTreeNodeType.FOLDER.ne(node_type) else '''\t<key>Folder</key><${is_folder}/>
-''') + '''\t<key>Playlist Items</key>
-	<array>${tracks}</array>
+    <key>Folder</key><${is_folder}/>
+    <key>Playlist Items</key>
+    <array>${tracks}</array>
 </dict>
             ''')).safe_substitute(dict(
                 name=self.escape_characters(node.tag),
@@ -2610,7 +2804,7 @@ class AudioGod(object):
                 playlist_persistent_id=pid,
                 parent_persistent_id=ppid,
                 show_all_items='true',
-                is_folder='true',
+                is_folder=str(self.AudiosTreeNodeType.FOLDER.eq(node_type)).lower(),
                 tracks=_pack_simple_tracks(node),
             ))
             return result
@@ -2620,7 +2814,7 @@ class AudioGod(object):
             for node in self.audios_tree.all_nodes():
                 if node.is_root():
                     continue
-                node_type, _, _, _ = node.data
+                node_type = node.data[0]
                 if self.AudiosTreeNodeType.TRACK.eq(node_type):
                     continue
                 result += _pack_playlist(node)
@@ -2759,6 +2953,7 @@ Sample in note to import:
 Precautions:
 
 1. Don't contain blank characters in genres and groupings;
+2. Audios in the same group should have a same genre;
 
 ------------------------------------------------------------------------------
 
@@ -2766,7 +2961,7 @@ General steps:
 
     Step.1: Download songs, and make sure that file named with "artist-title";
     Step.2: Add detail of songs to notes, then grouped;
-    Step.3: Format notes;
+    Step.3: Preprocess notes, until note file not changed;
     Step.4: Fill properties;
     Step.5: Format properties;
     Step.6: Rename audios;
@@ -2871,16 +3066,18 @@ ARGUMENTS={
 
 
 ACTIONS={
-    'format-notes': {
+    'preprocess-notes': {
         'arguments': [
             'source_file',
+            'field_type',
         ],
         'kwargs': {
-            'description': '✋ Format the notes file',
-            'help': 'format the notes file',
+            'description': '✋ Preprocess the notes file',
+            'help': 'preprocess the notes file',
             'usage': _render_usage('''
-                ${cmd} format-notes \\
-                    --source-file=${local}/notes.txt
+                ${cmd} preprocess-notes \\
+                    --source-file=${local}/notes.txt \\
+                    --field-type=cn
             '''),
         },
     },
