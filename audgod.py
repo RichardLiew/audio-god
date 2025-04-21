@@ -1376,9 +1376,6 @@ class AudioGod(object):
                             ret = None
                         else:
                             ret = (len(audio_object.tag.images), ret if ret else '')
-                    #case AudioGod.AudioProperty.GROUPING:
-                    #    if not ret:
-                    #        ret = self.DEFAULT_GROUPING
             case _:
                 if hasattr(audio_object.tag, field):
                     ret = getattr(audio_object.tag, field)
@@ -1452,8 +1449,8 @@ class AudioGod(object):
             list(self.AUDIO_EN_PROPERTY_SYNONYMS.keys()) + \
             list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
         )
-        entire_pattern = \
-                r'^(((\s*[0-9]\s*)+\.\s*)?(\s*\[\s*[a-zA-Z]\s*\]\s*)?)?({0})\s*[:：](\s*\S\s*)+(\s*[,，;；]\s*({0})\s*[:：](\s*\S\s*)+)*$'.format(
+        detail_pattern = \
+                r'^(?:(?:(?:\s*[0-9]\s*)+\.\s*)?(?:\s*\[\s*[a-zA-Z]\s*\]\s*)?)?(({0})\s*[:：](?:\s*\S\s*)+(?:\s*[,，;；]\s*({0})\s*[:：](?:\s*\S\s*)+)*)$'.format(
             fields_pattern,
         )
 
@@ -1475,10 +1472,9 @@ class AudioGod(object):
                         self.grouping_clauses_counter += 1
                         continue
                 # detail line
-                if grouping and re.match(entire_pattern, line, re.IGNORECASE) is not None:
-                    line = re.sub(
-                        r'^(.*)(({0}).*)$'.format(fields_pattern), r'\2', line,
-                    )
+                detail_match = re.match(detail_pattern, line, re.IGNORECASE)
+                if grouping and detail_match is not None:
+                    line = detail_match.group(0).strip()
                     units = self.split(
                         line, r',，;；',
                         del_blank=True, filt_empty=True, filt_repeated=False,
@@ -1841,15 +1837,6 @@ class AudioGod(object):
                 filled=filled_count,
             )
         )
-
-    def preprocess_notes(self):
-        self.__analysis_note()
-        self.__sort_summaries()
-        tmp_file = self.source_file + '.tmp'
-        with open(tmp_file, 'w', encoding='utf-8') as f:
-            f.write(self.__summarize_for_note())
-        self.backup(self.source_file)
-        self.rename(tmp_file, self.source_file)
 
     def fill_properties(self):
         self.__load_properties_from_file()
@@ -2505,6 +2492,15 @@ class AudioGod(object):
         self.summaries = {
             key: self.summaries[key] for key in sorted(self.summaries)
         }
+
+    def preprocess_notes(self):
+        self.__analysis_note()
+        self.__sort_summaries()
+        tmp_file = self.source_file + '.tmp'
+        with open(tmp_file, 'w', encoding='utf-8') as f:
+            f.write(self.__summarize_for_note())
+        self.backup(self.source_file)
+        self.rename(tmp_file, self.source_file)
 
     def __summarize(self):
         self.__fill_audios_tree()
