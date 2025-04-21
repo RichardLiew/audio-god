@@ -1446,14 +1446,14 @@ class AudioGod(object):
                     )
 
     def __analysis_note(self):
-        grouping_pattern = r'^\s*(?:\s*\(\s*(?:\s*[0-9]\s*)+\s*\)\s*)*\s*#\s*\[\s*((?:\s*\S\s*)+)\s*\]\s*((?:\s*\S\s*)+)\s*$'
+        grouping_pattern = r'^\s*(?:\s*\(\s*(?:\s*[0-9]\s*)+\s*\)\s*)?\s*#\s*\[\s*((?:\s*\S\s*)+)\s*\]\s*((?:\s*\S\s*)+)\s*$'
         fields_pattern = '|'.join(
             list(self.AUDIO_CN_PROPERTIES.keys()) + \
             list(self.AUDIO_EN_PROPERTY_SYNONYMS.keys()) + \
             list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
         )
         entire_pattern = \
-                r'^(((\s*[0-9]\s*)+\.\s*)*(\s*\[\s*[a-zA-Z]\s*\]\s*)*)*({0})\s*[:：](\s*\S\s*)(\s*[,，;；]\s*({0})\s*[:：](\s*\S\s*)+)*$'.format(
+                r'^(((\s*[0-9]\s*)+\.\s*)?(\s*\[\s*[a-zA-Z]\s*\]\s*)?)?({0})\s*[:：](\s*\S\s*)+(\s*[,，;；]\s*({0})\s*[:：](\s*\S\s*)+)*$'.format(
             fields_pattern,
         )
 
@@ -1564,6 +1564,13 @@ class AudioGod(object):
                     repeated='｜'.join(self.repeated_clauses[key]),
                 ))
 
+    def import_(self):
+        file_format = self.recognize_file_format(self.source_file)
+        if self.FileFormat.NONE.eq(file_format):
+            self.logger.fatal(f'Invalid source file <{self.source_file}>.')
+            return
+        getattr(self, f'__import_{file_format}')()
+
     def __import_note(self):
         self.__analysis_note()
 
@@ -1579,13 +1586,6 @@ class AudioGod(object):
         pass
 
     __import_xml = __import_plist
-
-    def import_(self):
-        file_format = self.recognize_file_format(self.source_file)
-        if self.FileFormat.NONE.eq(file_format):
-            self.logger.fatal(f'Invalid source file <{self.source_file}>.')
-            return
-        getattr(self, f'__import_{file_format}')()
 
     def __load_properties_from_file(self):
         if not os.path.exists(self.source_file):
@@ -2447,6 +2447,13 @@ class AudioGod(object):
             self.output_file,
         )
 
+    def __pack_properties_for_note(self, properties):
+        ret = ''
+        for field in properties:
+            field_name, _, value = properties[field]
+            ret += f'{field_name}: {value}; '
+        return ret.strip().rstrip(';')
+    
     def __pack_properties_for_json(self, properties):
         return ''
 
@@ -2455,13 +2462,6 @@ class AudioGod(object):
 
     __pack_properties_for_md = __pack_properties_for_markdown
 
-    def __pack_properties_for_note(self, properties):
-        ret = ''
-        for field in properties:
-            field_name, _, value = properties[field]
-            ret += f'{field_name}: {value}; '
-        return ret.strip().rstrip(';')
-    
     def __pack_properties_for_plist(self, properties):
         ret = ''
         for field in properties:
@@ -2544,6 +2544,10 @@ class AudioGod(object):
             with open(self.output_file, mode='w', encoding='utf-8') as f:
                 f.write(content)
 
+    def __export_note(self):
+        ret = self.__summarize_for_note()
+        return ret
+
     def __export_json(self) -> str:
         return ''
 
@@ -2551,10 +2555,6 @@ class AudioGod(object):
         return ''
 
     __export_md = __export_markdown
-
-    def __export_note(self):
-        ret = self.__summarize_for_note()
-        return ret
 
     def __export_plist(self):
         itunes_version_plist, itunes_media_folder, _, _ = self.itunes_options
