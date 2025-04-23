@@ -1453,13 +1453,15 @@ class AudioGod(object):
             list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
         )
         detail_pattern = \
-                r'^(?:(?:(?:\s*[0-9]\s*)+\.\s*)?(?:\s*\[\s*[a-zA-Z]?\s*\]\s*)?)?(({0})\s*[:：](?:\s*\S\s*)+(?:\s*[,，;；]\s*({0})\s*[:：](?:\s*\S\s*)+)*)$'.format(
+                r'^(?:(?:(?:\s*[0-9]\s*)+\.\s*)?(?:\s*\[\s*[a-zA-Z]?\s*\]\s*)?)?(?:\s*[,，;；]+\s*)?\s*({0})\s*[:：]+((?:\s*\S\s*)+?)((?:\s*[,，;；]+\s*(?:{0})\s*[:：]+(?:\s*\S\s*)+)*)$'.format(
             fields_pattern,
         )
 
         with open(self.source_file, 'r', encoding='utf-8') as f:
             keys, (genre, grouping) = {}, ('', '')
             for line_number, line in enumerate(f, start=1):
+                if not line.strip():
+                    continue
                 self.total_clauses_counter += 1
                 line_with_no, invalid_info = f'&{line_number}: {line}'.strip(), 'not matched'
                 # grouping line
@@ -1478,21 +1480,19 @@ class AudioGod(object):
                 # detail line
                 detail_match = re.match(detail_pattern, line, re.IGNORECASE)
                 if grouping and detail_match is not None:
-                    line = detail_match.group(1).strip()
-                    units = self.split(
-                        line, r'[,,，;；]',
-                        del_blank=True, filt_empty=True, filt_repeated=False,
-                    )
                     valid, repeated = True, False
                     curr_key, properties = '', {}
-                    for unit in units:
-                        key_value = self.split(
-                            unit, r'[:：：]', del_blank=True,
-                        )
-                        if len(key_value) != 2:
-                            valid, invalid_info = False, 'invalid count of colon or comma or semicolon'
+                    temp_line = line
+                    while True:
+                        temp_match = re.match(detail_pattern, temp_line, re.IGNORECASE)
+                        if not temp_match:
                             break
-                        key, value = key_value
+                        temp_line = temp_match.group(3)
+                        if not temp_line:
+                            temp_line = ''
+                        key, value = tuple(map(
+                            lambda x: x.strip(), temp_match.groups()[:2],
+                        ))
                         field = self.transform_field_name_synonyms(key)
                         if not field:
                             valid, invalid_info = False, 'invalid field name'
@@ -2856,6 +2856,7 @@ Precautions:
 
 1. Don't contain blank characters in genres and groupings;
 2. Audios in the same group should have a same genre;
+3. In invalid detail line of note.txt file, "," -> "\\" and ":" -> "/";
 
 ------------------------------------------------------------------------------
 
