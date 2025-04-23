@@ -1,4 +1,4 @@
-Summary: Groups 13, Items 255
+Summary: Groups 12, Items 249
 
 
 (1) #[Explosive] Vocals/Explosive/Chinese:
@@ -45,98 +45,94 @@ Summary: Groups 13, Items 255
 36.  歌曲名: Free Loop; 歌手名: Daniel Powter; 专辑名: Daniel Powter
 37.  歌曲名: Friendships (Original Mix); 歌手名: Pascal Letoublon; 专辑名: Friendships
 38.  歌曲名: Glad You Came; 歌手名: The Wanted; 专辑名: Glad You Came - EP
-39.  歌曲名: Go Off; 歌手名: Lil Uzi Vert/Quavo/Travis Scott; 专辑名: Fast & Furious 8: The Album
-40.  歌曲名: Go Time; 歌手名: Mark Petrie; 专辑名: Go Time
-41.  歌曲名: God Is a Girl; 歌手名: Groove Coverage; 专辑名: God Is a Girl
-42.  歌曲名: Good Life; 歌手名: G-Eazy/Kehlani; 专辑名: Fast & Furious 8: The Album
-43.  歌曲名: Hall of Fame; 歌手名: The Script/will.i.am; 专辑名: #3
-44.  歌曲名: HandClap; 歌手名: Fitz and The Tantrums; 专辑名: Fitz & the Tantrums
-45.  歌曲名: Havana; 歌手名: Camila Cabello/Young Thug; 专辑名: Camila
-46.  歌曲名: Heroes (we could be); 歌手名: Alesso/Tove Lo; 专辑名: Forever
-47.  歌曲名: Home (Blaze U Remix); 歌手名: ThimLife/Bibiane Z/Blaze U; 专辑名: Home (Blaze U Remix)
-48.  歌曲名: Horizon; 歌手名: Janji; 专辑名: Horizon
-49.  歌曲名: Hymn For The Weekend (Remix); 歌手名: Alan Walker/Coldplay; 专辑名: Hymn For The Weekend [Remix]
-50.  歌曲名: I Want My Tears Back; 歌手名: Nightwish; 专辑名: Imaginaerum (Tour Edition)
-51.  歌曲名: I'm Gonna Getcha Good! (Red Single Edit); 歌手名: Shania Twain; 专辑名: Greatest Hits
-52.  歌曲名: If You Feel My Love (Chaow Mix); 歌手名: Blaxy Girls; 专辑名: If You Feel My Love
-53.  歌曲名: Ignite; 歌手名: K-391/Alan Walker/Julie Bergan/胜利; 专辑名: Ignite
-54.  歌曲名: Intro; 歌手名: Alan Walker; 专辑名: Different World
-55.  歌曲名: It Ain't Me; 歌手名: Kygo/Selena Gomez; 专辑名: Stargazing
-56.  歌曲名: Jealousy (Dance Extended); 歌手名: French Kiss; 专辑名: Jealousy
-57.  歌曲名: KNAI; 歌手名: Deltabot; 专辑名: Rushdown Assemble Vol.1
-58.  歌曲名: Laputa (Original Mix); 歌手名: Shogun; 专辑名: Laputa
-59.  歌曲名: Last of the Wilds; 歌手名: Nightwish; 专辑名: Dark Passion Play
-60.  歌曲名: Lean On; 歌手名: Major Lazer/MØ/DJ Snake; 专辑名: Peace Is The Mission (Explicit)
-61.  歌曲名: Lily; 歌手名: Alan Walker/K-391/Emelie Hollow; 专辑名: Different World
-62.  歌曲名: Lonely; 歌手名: Alan Walker/Steve Aoki/ISÁK/Omar Noir; 专辑名: Different World
-63.  歌曲名: Lonely; 歌手名: Nana; 专辑名: Nana
-64.  歌曲名: Lou Lou; 歌手名: Albin Lee Meldau; 专辑名: Lovers
-65.  歌曲名: Love The Way You Lie (Part II) (Explicit); 歌手名: Rihanna/Eminem; 专辑名: Loud
-66.  歌曲名: Low; 歌手名: Flo Rida/T-Pain; 专辑名: Mail On Sunday
-67.  歌曲名: Man At Arms; 歌手名: Position Music; 专辑名: Position Music - Production Music Series Vol. 55 - Epic Hip-Hop
-68.  歌曲名: Maps; 歌手名: Maroon 5; 专辑名: Singles (Explicit)
-69.  歌曲名: Monody; 歌手名: TheFatRat/Laura Brehm; 专辑名: Monody
-70.  歌曲名: More Than You Know; 歌手名: Axwell Λ Ingrosso; 专辑名: More Than You Know
-71.  歌曲名: Move Up(Lost Gravity); 歌手名: Mr. Polska; 专辑名: Move Up (Lost Gravity)
-72.  歌曲名: My Way; 歌手名: Calvin Harris; 专辑名: My Way
-73.  歌曲名: Narco (Extended Mix); 歌手名: BlasterJaxx/Timmy Trumpet; 专辑名: Narco
-74.  歌曲名: Nevada; 歌手名: Vicetone/Cozi Zuehlsdorff; 专辑名: Nevada
-75.  歌曲名: Never Back Down; 歌手名: Two Steps From Hell/Thomas Bergersen; 专辑名: Battlecry
-76.  歌曲名: Nothing But Trouble (Instagram Models Dance Remix); 歌手名: Charlie Puth; 专辑名: Nine Track Mind Deluxe
-77.  歌曲名: Nubia; 歌手名: Aly & Fila/Ferry Tayle; 专辑名: Solarstone Presents Pure Trance 3
-78.  歌曲名: On The Floor; 歌手名: Jennifer Lopez/Pitbull; 专辑名: Smash Hits 2000 (Explicit)
-79.  歌曲名: One Kiss; 歌手名: Calvin Harris/Dua Lipa; 专辑名: Dua Lipa (Complete Edition) [Explicit]
-80.  歌曲名: Panama; 歌手名: Matteo; 专辑名: Panama
-81.  歌曲名: Party Rock Anthem; 歌手名: LMFAO/Lauren Bennett/GoonRock; 专辑名: Sorry for Party Rocking
-82.  歌曲名: Pneumatic Tokyo; 歌手名: ENV; 专辑名: Pneumatic Tokyo
-83.  歌曲名: Prelude (VIP Edit); 歌手名: TheFatRat/JJD; 专辑名: Prelude (VIP Edit)
-84.  歌曲名: Pyro; 歌手名: Chester Young; 专辑名: Pyro
-85.  歌曲名: Remember (DJ Kira Remix); 歌手名: Gift/Miah; 专辑名: Remember
-86.  歌曲名: Rip N Dip (Kill The Noise Remix); 歌手名: Getter、Kill The Noise; 专辑名: Rip N Dip (Remixes)
-87.  歌曲名: Rise And Fall (DJ版); 歌手名: Camelot; 专辑名: Rise And Fall
-88.  歌曲名: River Flows In You (Original Mix); 歌手名: Mark Pride; 专辑名: Into The Deep Vol.02
-89.  歌曲名: Say Less (Eptic Remix); 歌手名: Dillon Francis/G-Eazy; 专辑名: Say Less
-90.  歌曲名: Seve (Radio Edit); 歌手名: Tez Cadey; 专辑名: Seve
-91.  歌曲名: Sexual Healing (Kygo Remix); 歌手名: Kygo/Marvin Gaye; 专辑名: Sexual Healing (Kygo Remix)
-92.  歌曲名: Shape of You; 歌手名: Ed Sheeran; 专辑名: ÷ (Deluxe)
-93.  歌曲名: Shelter; 歌手名: Porter Robinson/Madeon; 专辑名: Shelter
-94.  歌曲名: Shotgun Senorita; 歌手名: Blue Stahli; 专辑名: Antisleep Vol. 01
-95.  歌曲名: Sing Me to Sleep; 歌手名: Alan Walker/Iselin Solheim; 专辑名: Sing Me to Sleep
-96.  歌曲名: Sky; 歌手名: Alan Walker/Alex Skrindo; 专辑名: EDC Las Vegas 2017
-97.  歌曲名: Something Just Like This; 歌手名: The Chainsmokers/Coldplay; 专辑名: Memories...Do Not Open
-98.  歌曲名: Space Bass; 歌手名: Onionz; 专辑名: Global Underground #38: Carl Cox - Black Rock Desert
-99.  歌曲名: Star Sky; 歌手名: Two Steps From Hell/Thomas Bergersen; 专辑名: Battlecry
-100. 歌曲名: Stay Here Forever; 歌手名: Jewel; 专辑名: Great Big Love Songs
-101. 歌曲名: Strength of a Thousand Men; 歌手名: Two Steps From Hell; 专辑名: Archangel
-102. 歌曲名: Take Me to Infinity (Radio Edit); 歌手名: Oussema Saffar; 专辑名: Take Me to Infinity
-103. 歌曲名: Take Me to Infinity; 歌手名: Consoul Trainin; 专辑名: Take Me to Infinity
-104. 歌曲名: Thank You; 歌手名: Diego Miranda; 专辑名: Thank You
-105. 歌曲名: That Girl; 歌手名: Olly Murs; 专辑名: 24 HRS (Deluxe)
-106. 歌曲名: The Mass (Album Version); 歌手名: Era; 专辑名: The Mass
-107. 歌曲名: The Ocean (Radio Edit); 歌手名: Mike Perry/Shy Martin; 专辑名: The Ocean (Radio Edit)
-108. 歌曲名: The Saltwater Room; 歌手名: Owl City; 专辑名: Ocean Eyes (Deluxe Edition)
-109. 歌曲名: The Show; 歌手名: Lenka; 专辑名: Lenka (Expanded Edition)
-110. 歌曲名: The Spectre; 歌手名: Alan Walker; 专辑名: The Spectre
-111. 歌曲名: The Spook; 歌手名: KSHMR/Basskillers/B3nte; 专辑名: The Spook
-112. 歌曲名: There For You; 歌手名: Martin Garrix/Troye Sivan; 专辑名: There For You
-113. 歌曲名: Tiger (IR Edit); 歌手名: R3HAB/Skytech & Fafaq; 专辑名: R3HAB: Inspired - Ministry of Sound
-114. 歌曲名: Touch The Sky; 歌手名: Cedric Gervais/Digital Farm Animals/Dallas Austin; 专辑名: Armada Music Top 100 (Mini Mix 001)
-115. 歌曲名: Trippy Love; 歌手名: Vexento; 专辑名: Trippy Love
-116. 歌曲名: Unity; 歌手名: TheFatRat; 专辑名: Unity
-117. 歌曲名: Vagrant; 歌手名: Feint/Veela; 专辑名: Vagrant
-118. 歌曲名: Victory; 歌手名: Two Steps From Hell/Thomas Bergersen; 专辑名: Battlecry
-119. 歌曲名: Waiting for Love; 歌手名: Avicii; 专辑名: Waiting For Love
-120. 歌曲名: Walk Thru Fire; 歌手名: Vicetone/Meron Ryan; 专辑名: Walk Thru Fire
-121. 歌曲名: Way Back (feat. Cozi Zuehlsdorff); 歌手名: Vicetone/Cozi Zuehlsdorff; 专辑名: Way Back
-122. 歌曲名: Welcome to Planet Urf 欢迎来到海牛星; 歌手名: 英雄联盟; 专辑名: Welcome to Planet Urf
-123. 歌曲名: Welcome to the Rift; 歌手名: 英雄联盟; 专辑名: 歌曲合辑
-124. 歌曲名: What Are Words; 歌手名: Chris Medina; 专辑名: What Are Words
-125. 歌曲名: Whataya Want from Me; 歌手名: Adam Lambert; 专辑名: For Your Entertainment (Tour Edition)
-126. 歌曲名: Whistle; 歌手名: Flo Rida; 专辑名: Wild Ones
-127. 歌曲名: Wolves; 歌手名: Selena Gomez/Marshmello; 专辑名: Wolves
-128. 歌曲名: Worth It; 歌手名: Fifth Harmony/Kid Ink; 专辑名: Reflection (Deluxe)
-129. 歌曲名: You're Beautiful; 歌手名: James Blunt; 专辑名: Promo Only Mainstream Radio January 2006
-130. 歌曲名: You; 歌手名: Approaching Nirvana; 专辑名: Blocking the Sky
+39.  歌曲名: Go Time; 歌手名: Mark Petrie; 专辑名: Go Time
+40.  歌曲名: God Is a Girl; 歌手名: Groove Coverage; 专辑名: God Is a Girl
+41.  歌曲名: Hall of Fame; 歌手名: The Script/will.i.am; 专辑名: #3
+42.  歌曲名: HandClap; 歌手名: Fitz and The Tantrums; 专辑名: Fitz & the Tantrums
+43.  歌曲名: Havana; 歌手名: Camila Cabello/Young Thug; 专辑名: Camila
+44.  歌曲名: Heroes (we could be); 歌手名: Alesso/Tove Lo; 专辑名: Forever
+45.  歌曲名: Home (Blaze U Remix); 歌手名: ThimLife/Bibiane Z/Blaze U; 专辑名: Home (Blaze U Remix)
+46.  歌曲名: Horizon; 歌手名: Janji; 专辑名: Horizon
+47.  歌曲名: Hymn For The Weekend (Remix); 歌手名: Alan Walker/Coldplay; 专辑名: Hymn For The Weekend [Remix]
+48.  歌曲名: I Want My Tears Back; 歌手名: Nightwish; 专辑名: Imaginaerum (Tour Edition)
+49.  歌曲名: I'm Gonna Getcha Good! (Red Single Edit); 歌手名: Shania Twain; 专辑名: Greatest Hits
+50.  歌曲名: If You Feel My Love (Chaow Mix); 歌手名: Blaxy Girls; 专辑名: If You Feel My Love
+51.  歌曲名: Ignite; 歌手名: K-391/Alan Walker/Julie Bergan/胜利; 专辑名: Ignite
+52.  歌曲名: Intro; 歌手名: Alan Walker; 专辑名: Different World
+53.  歌曲名: It Ain't Me; 歌手名: Kygo/Selena Gomez; 专辑名: Stargazing
+54.  歌曲名: Jealousy (Dance Extended); 歌手名: French Kiss; 专辑名: Jealousy
+55.  歌曲名: KNAI; 歌手名: Deltabot; 专辑名: Rushdown Assemble Vol.1
+56.  歌曲名: Laputa (Original Mix); 歌手名: Shogun; 专辑名: Laputa
+57.  歌曲名: Last of the Wilds; 歌手名: Nightwish; 专辑名: Dark Passion Play
+58.  歌曲名: Lean On; 歌手名: Major Lazer/MØ/DJ Snake; 专辑名: Peace Is The Mission (Explicit)
+59.  歌曲名: Lily; 歌手名: Alan Walker/K-391/Emelie Hollow; 专辑名: Different World
+60.  歌曲名: Lonely; 歌手名: Alan Walker/Steve Aoki/ISÁK/Omar Noir; 专辑名: Different World
+61.  歌曲名: Lonely; 歌手名: Nana; 专辑名: Nana
+62.  歌曲名: Lou Lou; 歌手名: Albin Lee Meldau; 专辑名: Lovers
+63.  歌曲名: Love The Way You Lie (Part II) (Explicit); 歌手名: Rihanna/Eminem; 专辑名: Loud
+64.  歌曲名: Low; 歌手名: Flo Rida/T-Pain; 专辑名: Mail On Sunday
+65.  歌曲名: Man At Arms; 歌手名: Position Music; 专辑名: Position Music - Production Music Series Vol. 55 - Epic Hip-Hop
+66.  歌曲名: Maps; 歌手名: Maroon 5; 专辑名: Singles (Explicit)
+67.  歌曲名: Monody; 歌手名: TheFatRat/Laura Brehm; 专辑名: Monody
+68.  歌曲名: More Than You Know; 歌手名: Axwell Λ Ingrosso; 专辑名: More Than You Know
+69.  歌曲名: Move Up(Lost Gravity); 歌手名: Mr. Polska; 专辑名: Move Up (Lost Gravity)
+70.  歌曲名: My Way; 歌手名: Calvin Harris; 专辑名: My Way
+71.  歌曲名: Narco (Extended Mix); 歌手名: BlasterJaxx/Timmy Trumpet; 专辑名: Narco
+72.  歌曲名: Nevada; 歌手名: Vicetone/Cozi Zuehlsdorff; 专辑名: Nevada
+73.  歌曲名: Never Back Down; 歌手名: Two Steps From Hell/Thomas Bergersen; 专辑名: Battlecry
+74.  歌曲名: Nothing But Trouble (Instagram Models Dance Remix); 歌手名: Charlie Puth; 专辑名: Nine Track Mind Deluxe
+75.  歌曲名: Nubia; 歌手名: Aly & Fila/Ferry Tayle; 专辑名: Solarstone Presents Pure Trance 3
+76.  歌曲名: On The Floor; 歌手名: Jennifer Lopez/Pitbull; 专辑名: Smash Hits 2000 (Explicit)
+77.  歌曲名: One Kiss; 歌手名: Calvin Harris/Dua Lipa; 专辑名: Dua Lipa (Complete Edition) [Explicit]
+78.  歌曲名: Panama; 歌手名: Matteo; 专辑名: Panama
+79.  歌曲名: Party Rock Anthem; 歌手名: LMFAO/Lauren Bennett/GoonRock; 专辑名: Sorry for Party Rocking
+80.  歌曲名: Pneumatic Tokyo; 歌手名: ENV; 专辑名: Pneumatic Tokyo
+81.  歌曲名: Prelude (VIP Edit); 歌手名: TheFatRat/JJD; 专辑名: Prelude (VIP Edit)
+82.  歌曲名: Pyro; 歌手名: Chester Young; 专辑名: Pyro
+83.  歌曲名: Remember (DJ Kira Remix); 歌手名: Gift/Miah; 专辑名: Remember
+84.  歌曲名: Rip N Dip (Kill The Noise Remix); 歌手名: Getter、Kill The Noise; 专辑名: Rip N Dip (Remixes)
+85.  歌曲名: Rise And Fall (DJ版); 歌手名: Camelot; 专辑名: Rise And Fall
+86.  歌曲名: River Flows In You (Original Mix); 歌手名: Mark Pride; 专辑名: Into The Deep Vol.02
+87.  歌曲名: Say Less (Eptic Remix); 歌手名: Dillon Francis/G-Eazy; 专辑名: Say Less
+88.  歌曲名: Seve (Radio Edit); 歌手名: Tez Cadey; 专辑名: Seve
+89.  歌曲名: Sexual Healing (Kygo Remix); 歌手名: Kygo/Marvin Gaye; 专辑名: Sexual Healing (Kygo Remix)
+90.  歌曲名: Shape of You; 歌手名: Ed Sheeran; 专辑名: ÷ (Deluxe)
+91.  歌曲名: Shelter; 歌手名: Porter Robinson/Madeon; 专辑名: Shelter
+92.  歌曲名: Shotgun Senorita; 歌手名: Blue Stahli; 专辑名: Antisleep Vol. 01
+93.  歌曲名: Sing Me to Sleep; 歌手名: Alan Walker/Iselin Solheim; 专辑名: Sing Me to Sleep
+94.  歌曲名: Sky; 歌手名: Alan Walker/Alex Skrindo; 专辑名: EDC Las Vegas 2017
+95.  歌曲名: Something Just Like This; 歌手名: The Chainsmokers/Coldplay; 专辑名: Memories...Do Not Open
+96.  歌曲名: Star Sky; 歌手名: Two Steps From Hell/Thomas Bergersen; 专辑名: Battlecry
+97.  歌曲名: Stay Here Forever; 歌手名: Jewel; 专辑名: Great Big Love Songs
+98.  歌曲名: Strength of a Thousand Men; 歌手名: Two Steps From Hell; 专辑名: Archangel
+99.  歌曲名: Take Me to Infinity (Radio Edit); 歌手名: Oussema Saffar; 专辑名: Take Me to Infinity
+100. 歌曲名: Take Me to Infinity; 歌手名: Consoul Trainin; 专辑名: Take Me to Infinity
+101. 歌曲名: Thank You; 歌手名: Diego Miranda; 专辑名: Thank You
+102. 歌曲名: That Girl; 歌手名: Olly Murs; 专辑名: 24 HRS (Deluxe)
+103. 歌曲名: The Mass (Album Version); 歌手名: Era; 专辑名: The Mass
+104. 歌曲名: The Ocean (Radio Edit); 歌手名: Mike Perry/Shy Martin; 专辑名: The Ocean (Radio Edit)
+105. 歌曲名: The Saltwater Room; 歌手名: Owl City; 专辑名: Ocean Eyes (Deluxe Edition)
+106. 歌曲名: The Show; 歌手名: Lenka; 专辑名: Lenka (Expanded Edition)
+107. 歌曲名: The Spectre; 歌手名: Alan Walker; 专辑名: The Spectre
+108. 歌曲名: The Spook; 歌手名: KSHMR/Basskillers/B3nte; 专辑名: The Spook
+109. 歌曲名: There For You; 歌手名: Martin Garrix/Troye Sivan; 专辑名: There For You
+110. 歌曲名: Touch The Sky; 歌手名: Cedric Gervais/Digital Farm Animals/Dallas Austin; 专辑名: Armada Music Top 100 (Mini Mix 001)
+111. 歌曲名: Trippy Love; 歌手名: Vexento; 专辑名: Trippy Love
+112. 歌曲名: Unity; 歌手名: TheFatRat; 专辑名: Unity
+113. 歌曲名: Vagrant; 歌手名: Feint/Veela; 专辑名: Vagrant
+114. 歌曲名: Victory; 歌手名: Two Steps From Hell/Thomas Bergersen; 专辑名: Battlecry
+115. 歌曲名: Waiting for Love; 歌手名: Avicii; 专辑名: Waiting For Love
+116. 歌曲名: Walk Thru Fire; 歌手名: Vicetone/Meron Ryan; 专辑名: Walk Thru Fire
+117. 歌曲名: Way Back (feat. Cozi Zuehlsdorff); 歌手名: Vicetone/Cozi Zuehlsdorff; 专辑名: Way Back
+118. 歌曲名: Welcome to Planet Urf 欢迎来到海牛星; 歌手名: 英雄联盟; 专辑名: Welcome to Planet Urf
+119. 歌曲名: Welcome to the Rift; 歌手名: 英雄联盟; 专辑名: 歌曲合辑
+120. 歌曲名: What Are Words; 歌手名: Chris Medina; 专辑名: What Are Words
+121. 歌曲名: Whataya Want from Me; 歌手名: Adam Lambert; 专辑名: For Your Entertainment (Tour Edition)
+122. 歌曲名: Whistle; 歌手名: Flo Rida; 专辑名: Wild Ones
+123. 歌曲名: Wolves; 歌手名: Selena Gomez/Marshmello; 专辑名: Wolves
+124. 歌曲名: Worth It; 歌手名: Fifth Harmony/Kid Ink; 专辑名: Reflection (Deluxe)
+125. 歌曲名: You're Beautiful; 歌手名: James Blunt; 专辑名: Promo Only Mainstream Radio January 2006
+126. 歌曲名: You; 歌手名: Approaching Nirvana; 专辑名: Blocking the Sky
 
 (3) #[Explosive] Vocals/Explosive/Filipino:
 1. 歌曲名: Sayaw Mga Choy(Math Dance Challenge); 歌手名: DjDanz Remix; 专辑名: Sayaw Mga Choy (Math Dance Challenge)
@@ -147,10 +143,7 @@ Summary: Groups 13, Items 255
 (5) #[Explosive] Vocals/Explosive/German:
 1. 歌曲名: Aloha Heja He; 歌手名: Deutscher Schlager; 专辑名: Deutscher Schlager präsentiert - Die besten Party und Discofox Hits aus Deutschland 2015 bis 2016
 
-(6) #[Explosive] Vocals/Explosive/Indian:
-1. 歌曲名: Tunak Tunak Tun (Dubstep Remix); 歌手名: Daler Mehndi/Nilesh P.; 专辑名: The Dance Project (Season 1: Episode 8)
-
-(7) #[Explosive] Vocals/Explosive/Japanese:
+(6) #[Explosive] Vocals/Explosive/Japanese:
 1. 歌曲名: MY ALL; 歌手名: 滨崎步; 专辑名: GUILTY (原罪 )
 2. 歌曲名: Only my railgun; 歌手名: 南条爱乃; 专辑名: とある科学の超電磁砲
 3. 歌曲名: aLIEz; 歌手名: SawanoHiroyuki[nZk]/瑞葵; 专辑名: O1
@@ -161,7 +154,7 @@ Summary: Groups 13, Items 255
 8. 歌曲名: 残酷な天使のテーゼ (残酷天使的行动纲领) (Director’s Edit.Version); 歌手名: 高橋洋子; 专辑名: 残酷な天使のテーゼ/FLY ME TO THE MOON
 9. 歌曲名: 鬼火の童・鬼切、虎徹にございます! (我们是鬼火童子鬼切、虎彻！); 歌手名: 増田俊郎; 专辑名: 神様はじめました 3 スペシャル特典CD (元气少女缘结神 BD第三卷 特典CD)
 
-(8) #[Explosive] Vocals/Explosive/Korean:
+(7) #[Explosive] Vocals/Explosive/Korean:
 1.  歌曲名: Free Storm; 歌手名: 影视原声; 专辑名: 韩国综艺&CF音乐合辑
 2.  歌曲名: Gee; 歌手名: 少女时代; 专辑名: The First Mini Album Gee
 3.  歌曲名: LOSER; 歌手名: BIGBANG; 专辑名: MADE SERIES 《M》
@@ -173,19 +166,19 @@ Summary: Groups 13, Items 255
 9.  歌曲名: 뿜뿜 (BBoom BBoom) (2018 SORIBADA BEST-K MUSIC AWARDS Live); 歌手名: MOMOLAND; 专辑名: 2018 SORIBADA BEST-K MUSIC AWARDS Live
 10. 歌曲名: 와 (哇！); 歌手名: 李贞贤; 专辑名: Let's Go To My Star
 
-(9) #[Explosive] Vocals/Explosive/Russian:
+(8) #[Explosive] Vocals/Explosive/Russian:
 1. 歌曲名: колыбельная; 歌手名: Rauf & Faik; 专辑名: колыбельная
 
-(10) #[Explosive] Vocals/Explosive/Spanish:
+(9) #[Explosive] Vocals/Explosive/Spanish:
 1. 歌曲名: Despacito; 歌手名: Luis Fonsi/Daddy Yankee; 专辑名: Pasito a pasito
 
-(11) #[Explosive] Vocals/Explosive/Thai:
+(10) #[Explosive] Vocals/Explosive/Thai:
 1. 歌曲名: ปูหนีบอีปิ; 歌手名: พร จันทพร; 专辑名: ปูหนีบอีปิ - Single
 
-(12) #[Explosive] Vocals/Explosive/Vietnamese:
+(11) #[Explosive] Vocals/Explosive/Vietnamese:
 1. 歌曲名: Phut Hon (Remix); 歌手名: DJ Carry; 专辑名: Dear john
 
-(13) #[Douyin] Vocals/Platforms/Douyin:
+(12) #[Douyin] Vocals/Platforms/Douyin:
 1.  歌曲名: Aankhein Khuli; 歌手名: Lata Mangeshkar/Udit Narayan/Ishaan/Shweta Pandit; 专辑名: Mohabbatein (Original Motion Picture Soundtrack)
 2.  歌曲名: Alcastar (全网最火版); 歌手名: 何友; 专辑名: 倒车请注意
 3.  歌曲名: Bboy Danny; 歌手名: 新旭; 专辑名: Holy Bgm
@@ -197,87 +190,86 @@ Summary: Groups 13, Items 255
 9.  歌曲名: Disc 1 - Radetzky March (拉德斯基进行曲); 歌手名: Arthur Fiedler/Johann Strauss I; 专辑名: Stars And Stripes Forever
 10. 歌曲名: Fight For Hiphop (Live); 歌手名: 欧阳靖/Double Zhuo/中国有嘻哈70强; 专辑名: 中国有嘻哈 第12期
 11. 歌曲名: Fur Elise; 歌手名: Beethoven Band; 专辑名: Beethoven Classics
-12. 歌曲名: He's a Pirate (From "Pirates of the Caribbean: The Curse Of the Black Pearl"/Score); 歌手名: Klaus Badelt; 专辑名: Pirates of the Caribbean: The Curse of the Black Pearl (Original Motion Picture Soundtrack)
-13. 歌曲名: He's a Pirate; 歌手名: Maksim Mrvica; 专辑名: The Movies
-14. 歌曲名: Horse Racing; 歌手名: Canada Eight Rainbows; 专辑名: Horse Racing
-15. 歌曲名: Lendo Calendo (抖音DJ热搜版); 歌手名: 水冰月; 专辑名: 车载低音炮
-16. 歌曲名: Let's Party; 歌手名: 吴宣仪/和平精英; 专辑名: Let's Party
-17. 歌曲名: Mariage d'amour; 歌手名: Richard Clayderman; 专辑名: 40 Relaxing Piano Classics
-18. 歌曲名: My Love; 歌手名: Westlife; 专辑名: Pure... Love
-19. 歌曲名: Only Love; 歌手名: Trademark; 专辑名: #Love
-20. 歌曲名: PDD洪荒之力; 歌手名: 青稚m; 专辑名: PDD<洪荒之力>
-21. 歌曲名: Papillon (Live); 歌手名: 王嘉尔/GAI周延; 专辑名: 中国有嘻哈 第11期
-22. 歌曲名: Rap Of China (Live); 歌手名: Tizzy T; 专辑名: 中国有嘻哈 第11期
-23. 歌曲名: Someone Like You; 歌手名: Adele; 专辑名: 21 (Explicit)
-24. 歌曲名: Stand & Believe; 歌手名: Tanaki Alison; 专辑名: Reach Higher
-25. 歌曲名: Street Fighter (Live); 歌手名: GAI周延/艾福杰尼/黄旭/大笑; 专辑名: 中国有嘻哈 第8期
-26. 歌曲名: Summer (菊次郎的夏天) (PIANO VER.); 歌手名: 久石让; 专辑名: ENCORE (安可曲)
-27. 歌曲名: Take Me To Your Heart; 歌手名: Michael Learns To Rock; 专辑名: For Fuld Musik
-28. 歌曲名: The Day You Went Away; 歌手名: M2M; 专辑名: The Day You Went Away The Best Of M2M
-29. 歌曲名: The Flight of the Bumble-Bee; 歌手名: Maksim Mrvica; 专辑名: Greatest Maksim
-30. 歌曲名: Tony lgy (抖音原版); 歌手名: 龙儿; 专辑名: La Banda
-31. 歌曲名: 一千年以后; 歌手名: 林俊杰; 专辑名: 编号89757
-32. 歌曲名: 一曲相思; 歌手名: 半阳; 专辑名: 一曲相思
-33. 歌曲名: 三年二班 (Live); 歌手名: 吴亦凡/BrAnT.B/Tizzy T; 专辑名: 中国有嘻哈 第9期
-34. 歌曲名: 不得不爱; 歌手名: 潘玮柏/弦子; 专辑名: 高手
-35. 歌曲名: 不要忘了我; 歌手名: 潘玮柏; 专辑名: 高手
-36. 歌曲名: 乱舞春秋; 歌手名: 周杰伦; 专辑名: 七里香
-37. 歌曲名: 以父之名; 歌手名: 周杰伦; 专辑名: 叶惠美
-38. 歌曲名: 你不知道的事; 歌手名: 王力宏; 专辑名: 十八般武艺
-39. 歌曲名: 你是我心内的一首歌; 歌手名: 王力宏/任家萱Selina; 专辑名: 改变自己
-40. 歌曲名: 凡人歌 (Live); 歌手名: 张震岳/MC HotDog/黄旭/GAI周延; 专辑名: 中国有嘻哈 第9期
-41. 歌曲名: 反方向的钟; 歌手名: 周杰伦; 专辑名: Jay
-42. 歌曲名: 反转地球; 歌手名: 潘玮柏; 专辑名: 反转地球
-43. 歌曲名: 唯一; 歌手名: 王力宏; 专辑名: 人海中遇见你 最佳婚礼歌曲精选
-44. 歌曲名: 垃圾话; 歌手名: GAI周延; 专辑名: 见字如面
-45. 歌曲名: 壁虎漫步; 歌手名: 潘玮柏; 专辑名: U Love
-46. 歌曲名: 大一岁 (Live); 歌手名: Tizzy T; 专辑名: 中国有嘻哈 第9期
-47. 歌曲名: 大城小爱; 歌手名: 王力宏; 专辑名: 盖世英雄
-48. 歌曲名: 大悲咒; 歌手名: 佛教歌曲; 专辑名: 歌曲合辑
-49. 歌曲名: 大碗宽面 (Live); 歌手名: 郁可唯/孟佳/李斯丹妮/沈梦辰/金晨/王霏霏/张含韵; 专辑名: 乘风破浪的姐姐 第3期
-50. 歌曲名: 头文字T (Live); 歌手名: Tizzy T; 专辑名: 中国有嘻哈 第10期
-51. 歌曲名: 奇迹の山 (奇迹的山); 歌手名: 岸部真明; 专辑名: 奇跡の山 (奇迹之山)
-52. 歌曲名: 将军; 歌手名: 周杰伦; 专辑名: 七里香
-53. 歌曲名: 心中的日月; 歌手名: 王力宏; 专辑名: 心中的日月
-54. 歌曲名: 心跳; 歌手名: 王力宏; 专辑名: 心·跳
-55. 歌曲名: 快乐崇拜; 歌手名: 张韶涵/潘玮柏; 专辑名: 欧若拉
-56. 歌曲名: 我们的歌; 歌手名: 王力宏; 专辑名: 改变自己
-57. 歌曲名: 我想更懂你; 歌手名: 潘玮柏/苏芮; 专辑名: 反转地球
-58. 歌曲名: 我的麦克风; 歌手名: 潘玮柏; 专辑名: 我的麦克风
-59. 歌曲名: 找朋友 (Live); 歌手名: 布瑞吉Bridge/VaVa毛衍七/李大奔; 专辑名: 中国有嘻哈 第8期
-60. 歌曲名: 攀登 (Live); 歌手名: 潘玮柏/G.E.M. 邓紫棋/艾热; 专辑名: 中国新说唱 第13期
-61. 歌曲名: 改变自己; 歌手名: 王力宏; 专辑名: 改变自己
-62. 歌曲名: 曹操; 歌手名: 林俊杰; 专辑名: 曹操
-63. 歌曲名: 曾经的你; 歌手名: 许巍; 专辑名: 每一刻都是崭新的
-64. 歌曲名: 本草纲目; 歌手名: 周杰伦; 专辑名: 依然范特西
-65. 歌曲名: 梁祝 (小提琴协奏曲); 歌手名: 俞丽拿; 专辑名: 梁祝 绝响
-66. 歌曲名: 欢乐颂 (Ode an die Freude); 歌手名: Classical Artists; 专辑名: 世界名曲一百首
-67. 歌曲名: 江南; 歌手名: 林俊杰; 专辑名: 第二天堂
-68. 歌曲名: 流れ行く雲 (流行的云); 歌手名: 岸部真明; 专辑名: 奇跡の山 (奇迹之山)
-69. 歌曲名: 海啸 (Live); 歌手名: GAI周延; 专辑名: 中国有嘻哈 第8期
-70. 歌曲名: 烟火; 歌手名: 光良; 专辑名: 不会分离
-71. 歌曲名: 爱因为在心中; 歌手名: 王力宏; 专辑名: 盖世英雄
-72. 歌曲名: 猴子说 (Live); 歌手名: 齐奕同/董子龙; 专辑名: 即刻电音 第2期
-73. 歌曲名: 王妃; 歌手名: 萧敬腾; 专辑名: 王妃
-74. 歌曲名: 真高兴 (Live); 歌手名: 蒋亮的声音系统; 专辑名: 即刻电音 第2期
-75. 歌曲名: 禅舞不二; 歌手名: 潘玮柏; 专辑名: 高手
-76. 歌曲名: 空城计 (Live); 歌手名: GAI周延; 专辑名: 中国有嘻哈 第12期
-77. 歌曲名: 童话; 歌手名: 光良; 专辑名: 童话
-78. 歌曲名: 笑纳; 歌手名: 花僮; 专辑名: 笑纳
-79. 歌曲名: 第一次; 歌手名: 光良; 专辑名: 第1次个人创作专辑
-80. 歌曲名: 缘分一道桥; 歌手名: 王力宏/谭维维; 专辑名: A.I. 爱
-81. 歌曲名: 美; 歌手名: 王力宏; 专辑名: 十八般武艺
-82. 歌曲名: 美人鱼; 歌手名: 林俊杰; 专辑名: 第二天堂
-83. 歌曲名: 老大 (Live); 歌手名: 布瑞吉Bridge; 专辑名: 中国有嘻哈 第2期
-84. 歌曲名: 花田错; 歌手名: 王力宏; 专辑名: 盖世英雄
-85. 歌曲名: 蓝莲花; 歌手名: 许巍; 专辑名: 时光·漫步
-86. 歌曲名: 西界; 歌手名: 林俊杰; 专辑名: 西界
-87. 歌曲名: 赛马 (Live); 歌手名: 女子十二乐坊; 专辑名: 魅力音乐会
-88. 歌曲名: 重庆魂 (Live); 歌手名: GAI周延; 专辑名: 中国有嘻哈 第12期
-89. 歌曲名: 雨蝶 (Live); 歌手名: G.E.M. 邓紫棋/张靓颖; 专辑名: 王牌对王牌第三季 第8期
-90. 歌曲名: 青春舞曲 (Live); 歌手名: 张震岳/MC HotDog/艾福杰尼; 专辑名: 中国有嘻哈 第12期
-91. 歌曲名: 飘移; 歌手名: 周杰伦; 专辑名: 十一月的萧邦
-92. 歌曲名: 高手; 歌手名: 潘玮柏/张敖杰（铁竹堂）; 专辑名: 高手
-93. 歌曲名: 魔鬼中的天使 (Live); 歌手名: 康树龙; 专辑名: 2018中国好声音 第1期
-94. 歌曲名: 龙的传人; 歌手名: 王力宏; 专辑名: 永远的第一天
-95. 歌曲名: 龙虎人丹 (Live); 歌手名: 庞宽/张雨绮/张萌/郑希怡/伊能静/黄圣依/张含韵/吴昕; 专辑名: 乘风破浪的姐姐 第9期
+12. 歌曲名: He's a Pirate; 歌手名: Maksim Mrvica; 专辑名: The Movies
+13. 歌曲名: Horse Racing; 歌手名: Canada Eight Rainbows; 专辑名: Horse Racing
+14. 歌曲名: Lendo Calendo (抖音DJ热搜版); 歌手名: 水冰月; 专辑名: 车载低音炮
+15. 歌曲名: Let's Party; 歌手名: 吴宣仪/和平精英; 专辑名: Let's Party
+16. 歌曲名: Mariage d'amour; 歌手名: Richard Clayderman; 专辑名: 40 Relaxing Piano Classics
+17. 歌曲名: My Love; 歌手名: Westlife; 专辑名: Pure... Love
+18. 歌曲名: Only Love; 歌手名: Trademark; 专辑名: #Love
+19. 歌曲名: PDD洪荒之力; 歌手名: 青稚m; 专辑名: PDD<洪荒之力>
+20. 歌曲名: Papillon (Live); 歌手名: 王嘉尔/GAI周延; 专辑名: 中国有嘻哈 第11期
+21. 歌曲名: Rap Of China (Live); 歌手名: Tizzy T; 专辑名: 中国有嘻哈 第11期
+22. 歌曲名: Someone Like You; 歌手名: Adele; 专辑名: 21 (Explicit)
+23. 歌曲名: Stand & Believe; 歌手名: Tanaki Alison; 专辑名: Reach Higher
+24. 歌曲名: Street Fighter (Live); 歌手名: GAI周延/艾福杰尼/黄旭/大笑; 专辑名: 中国有嘻哈 第8期
+25. 歌曲名: Summer (菊次郎的夏天) (PIANO VER.); 歌手名: 久石让; 专辑名: ENCORE (安可曲)
+26. 歌曲名: Take Me To Your Heart; 歌手名: Michael Learns To Rock; 专辑名: For Fuld Musik
+27. 歌曲名: The Day You Went Away; 歌手名: M2M; 专辑名: The Day You Went Away The Best Of M2M
+28. 歌曲名: The Flight of the Bumble-Bee; 歌手名: Maksim Mrvica; 专辑名: Greatest Maksim
+29. 歌曲名: Tony lgy (抖音原版); 歌手名: 龙儿; 专辑名: La Banda
+30. 歌曲名: 一千年以后; 歌手名: 林俊杰; 专辑名: 编号89757
+31. 歌曲名: 一曲相思; 歌手名: 半阳; 专辑名: 一曲相思
+32. 歌曲名: 三年二班 (Live); 歌手名: 吴亦凡/BrAnT.B/Tizzy T; 专辑名: 中国有嘻哈 第9期
+33. 歌曲名: 不得不爱; 歌手名: 潘玮柏/弦子; 专辑名: 高手
+34. 歌曲名: 不要忘了我; 歌手名: 潘玮柏; 专辑名: 高手
+35. 歌曲名: 乱舞春秋; 歌手名: 周杰伦; 专辑名: 七里香
+36. 歌曲名: 以父之名; 歌手名: 周杰伦; 专辑名: 叶惠美
+37. 歌曲名: 你不知道的事; 歌手名: 王力宏; 专辑名: 十八般武艺
+38. 歌曲名: 你是我心内的一首歌; 歌手名: 王力宏/任家萱Selina; 专辑名: 改变自己
+39. 歌曲名: 凡人歌 (Live); 歌手名: 张震岳/MC HotDog/黄旭/GAI周延; 专辑名: 中国有嘻哈 第9期
+40. 歌曲名: 反方向的钟; 歌手名: 周杰伦; 专辑名: Jay
+41. 歌曲名: 反转地球; 歌手名: 潘玮柏; 专辑名: 反转地球
+42. 歌曲名: 唯一; 歌手名: 王力宏; 专辑名: 人海中遇见你 最佳婚礼歌曲精选
+43. 歌曲名: 垃圾话; 歌手名: GAI周延; 专辑名: 见字如面
+44. 歌曲名: 壁虎漫步; 歌手名: 潘玮柏; 专辑名: U Love
+45. 歌曲名: 大一岁 (Live); 歌手名: Tizzy T; 专辑名: 中国有嘻哈 第9期
+46. 歌曲名: 大城小爱; 歌手名: 王力宏; 专辑名: 盖世英雄
+47. 歌曲名: 大悲咒; 歌手名: 佛教歌曲; 专辑名: 歌曲合辑
+48. 歌曲名: 大碗宽面 (Live); 歌手名: 郁可唯/孟佳/李斯丹妮/沈梦辰/金晨/王霏霏/张含韵; 专辑名: 乘风破浪的姐姐 第3期
+49. 歌曲名: 头文字T (Live); 歌手名: Tizzy T; 专辑名: 中国有嘻哈 第10期
+50. 歌曲名: 奇迹の山 (奇迹的山); 歌手名: 岸部真明; 专辑名: 奇跡の山 (奇迹之山)
+51. 歌曲名: 将军; 歌手名: 周杰伦; 专辑名: 七里香
+52. 歌曲名: 心中的日月; 歌手名: 王力宏; 专辑名: 心中的日月
+53. 歌曲名: 心跳; 歌手名: 王力宏; 专辑名: 心·跳
+54. 歌曲名: 快乐崇拜; 歌手名: 张韶涵/潘玮柏; 专辑名: 欧若拉
+55. 歌曲名: 我们的歌; 歌手名: 王力宏; 专辑名: 改变自己
+56. 歌曲名: 我想更懂你; 歌手名: 潘玮柏/苏芮; 专辑名: 反转地球
+57. 歌曲名: 我的麦克风; 歌手名: 潘玮柏; 专辑名: 我的麦克风
+58. 歌曲名: 找朋友 (Live); 歌手名: 布瑞吉Bridge/VaVa毛衍七/李大奔; 专辑名: 中国有嘻哈 第8期
+59. 歌曲名: 攀登 (Live); 歌手名: 潘玮柏/G.E.M. 邓紫棋/艾热; 专辑名: 中国新说唱 第13期
+60. 歌曲名: 改变自己; 歌手名: 王力宏; 专辑名: 改变自己
+61. 歌曲名: 曹操; 歌手名: 林俊杰; 专辑名: 曹操
+62. 歌曲名: 曾经的你; 歌手名: 许巍; 专辑名: 每一刻都是崭新的
+63. 歌曲名: 本草纲目; 歌手名: 周杰伦; 专辑名: 依然范特西
+64. 歌曲名: 梁祝 (小提琴协奏曲); 歌手名: 俞丽拿; 专辑名: 梁祝 绝响
+65. 歌曲名: 欢乐颂 (Ode an die Freude); 歌手名: Classical Artists; 专辑名: 世界名曲一百首
+66. 歌曲名: 江南; 歌手名: 林俊杰; 专辑名: 第二天堂
+67. 歌曲名: 流れ行く雲 (流行的云); 歌手名: 岸部真明; 专辑名: 奇跡の山 (奇迹之山)
+68. 歌曲名: 海啸 (Live); 歌手名: GAI周延; 专辑名: 中国有嘻哈 第8期
+69. 歌曲名: 烟火; 歌手名: 光良; 专辑名: 不会分离
+70. 歌曲名: 爱因为在心中; 歌手名: 王力宏; 专辑名: 盖世英雄
+71. 歌曲名: 猴子说 (Live); 歌手名: 齐奕同/董子龙; 专辑名: 即刻电音 第2期
+72. 歌曲名: 王妃; 歌手名: 萧敬腾; 专辑名: 王妃
+73. 歌曲名: 真高兴 (Live); 歌手名: 蒋亮的声音系统; 专辑名: 即刻电音 第2期
+74. 歌曲名: 禅舞不二; 歌手名: 潘玮柏; 专辑名: 高手
+75. 歌曲名: 空城计 (Live); 歌手名: GAI周延; 专辑名: 中国有嘻哈 第12期
+76. 歌曲名: 童话; 歌手名: 光良; 专辑名: 童话
+77. 歌曲名: 笑纳; 歌手名: 花僮; 专辑名: 笑纳
+78. 歌曲名: 第一次; 歌手名: 光良; 专辑名: 第1次个人创作专辑
+79. 歌曲名: 缘分一道桥; 歌手名: 王力宏/谭维维; 专辑名: A.I. 爱
+80. 歌曲名: 美; 歌手名: 王力宏; 专辑名: 十八般武艺
+81. 歌曲名: 美人鱼; 歌手名: 林俊杰; 专辑名: 第二天堂
+82. 歌曲名: 老大 (Live); 歌手名: 布瑞吉Bridge; 专辑名: 中国有嘻哈 第2期
+83. 歌曲名: 花田错; 歌手名: 王力宏; 专辑名: 盖世英雄
+84. 歌曲名: 蓝莲花; 歌手名: 许巍; 专辑名: 时光·漫步
+85. 歌曲名: 西界; 歌手名: 林俊杰; 专辑名: 西界
+86. 歌曲名: 赛马 (Live); 歌手名: 女子十二乐坊; 专辑名: 魅力音乐会
+87. 歌曲名: 重庆魂 (Live); 歌手名: GAI周延; 专辑名: 中国有嘻哈 第12期
+88. 歌曲名: 雨蝶 (Live); 歌手名: G.E.M. 邓紫棋/张靓颖; 专辑名: 王牌对王牌第三季 第8期
+89. 歌曲名: 青春舞曲 (Live); 歌手名: 张震岳/MC HotDog/艾福杰尼; 专辑名: 中国有嘻哈 第12期
+90. 歌曲名: 飘移; 歌手名: 周杰伦; 专辑名: 十一月的萧邦
+91. 歌曲名: 高手; 歌手名: 潘玮柏/张敖杰（铁竹堂）; 专辑名: 高手
+92. 歌曲名: 魔鬼中的天使 (Live); 歌手名: 康树龙; 专辑名: 2018中国好声音 第1期
+93. 歌曲名: 龙的传人; 歌手名: 王力宏; 专辑名: 永远的第一天
+94. 歌曲名: 龙虎人丹 (Live); 歌手名: 庞宽/张雨绮/张萌/郑希怡/伊能静/黄圣依/张含韵/吴昕; 专辑名: 乘风破浪的姐姐 第9期

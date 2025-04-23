@@ -1487,10 +1487,10 @@ class AudioGod(object):
                     curr_key, properties = '', {}
                     for unit in units:
                         key_value = self.split(
-                            unit, r'[:：：]', del_blank=True, maxsplit=1,
+                            unit, r'[:：：]', del_blank=True,
                         )
                         if len(key_value) != 2:
-                            valid, invalid_info = False, 'count of colon or comma or semicolon not equal to 2'
+                            valid, invalid_info = False, 'invalid count of colon or comma or semicolon'
                             break
                         key, value = key_value
                         field = self.transform_field_name_synonyms(key)
@@ -1501,10 +1501,11 @@ class AudioGod(object):
                             valid, invalid_info = False, 'duplicate field existed'
                             break
                         properties[field] = value
-                    for field in self.NOTE_FIELDS:
-                        if field not in properties:
-                            valid, invalid_info = False, 'lack note fields'
-                            break
+                    if valid:
+                        for field in self.NOTE_FIELDS:
+                            if field not in properties:
+                                valid, invalid_info = False, 'lack note fields'
+                                break
                     if valid:
                         curr_key = self.__generate_key_by_properties(properties)
                         if curr_key not in keys:
