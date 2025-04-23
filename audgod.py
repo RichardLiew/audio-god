@@ -145,6 +145,9 @@ __VERSION__ = 'Audio God 1.0'
 class FatalLogger(logging.Logger):
     def __init__(self, level=logging.DEBUG):
         super().__init__('fatal', level)
+        handler = logging.StreamHandler()
+        handler.setLevel(level)
+        self.addHandler(handler)
 
     def critical(self, msg, *args, **kwargs):
         super().critical(msg, *args, **kwargs)
@@ -556,7 +559,7 @@ class AudioGod(object):
             self.__output_format = self.recognize_file_format(self.output_file)
 
     def __resolve_fields(self, fields):
-        fields_ = self.split(fields, ',')
+        fields_ = self.split(fields, r',')
         for key in self.FIELDS.keys():
             try:
                 index = fields_.index(key)
@@ -862,7 +865,7 @@ class AudioGod(object):
     def backup(cls, src):
         if not os.path.exists(src):
             raise Exception(f'File {src} not exists!')
-        timestamp = time.strftime('%Y%m%d%H:%M:%S%f', time.localtime())
+        timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         cls.duplicate(src, f'{src}.backup.{timestamp}')
 
     @staticmethod
@@ -1425,7 +1428,6 @@ class AudioGod(object):
         for grouping in self.summaries:
             genre, items = self.summaries[grouping]
             for item in items:
-                key = self.__generate_key_by_properties(item)
                 properties = {
                     self.AudioProperty.GENRE: genre,
                     self.AudioProperty.GROUPING: grouping,
@@ -1434,6 +1436,7 @@ class AudioGod(object):
                     field: item[field][2]
                     for field in item
                 })
+                key = self.__generate_key_by_properties(properties)
                 if key not in self.valid_clauses:
                     self.valid_clauses[key] = properties
                 else:
@@ -1443,30 +1446,31 @@ class AudioGod(object):
                     )
 
     def __analysis_note(self):
-        grouping_pattern = r'^\s*(?:\s*\(\s*(?:\s*[0-9]\s*)+\s*\)\s*)?\s*#\s*\[\s*((?:\s*\S\s*)+)\s*\]\s*((?:\s*\S\s*)+)\s*$'
+        grouping_pattern = r'^\s*(?:\s*\(\s*(?:\s*[0-9]\s*)+\s*\)\s*)?\s*#\s*\[\s*((?:\s*\S\s*)+)\s*\]\s*((?:\s*[^:：\s]\s*)+)[:：]?\s*$'
         fields_pattern = '|'.join(
             list(self.AUDIO_CN_PROPERTIES.keys()) + \
             list(self.AUDIO_EN_PROPERTY_SYNONYMS.keys()) + \
             list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
         )
         detail_pattern = \
-                r'^(?:(?:(?:\s*[0-9]\s*)+\.\s*)?(?:\s*\[\s*[a-zA-Z]\s*\]\s*)?)?(({0})\s*[:：](?:\s*\S\s*)+(?:\s*[,，;；]\s*({0})\s*[:：](?:\s*\S\s*)+)*)$'.format(
+                r'^(?:(?:(?:\s*[0-9]\s*)+\.\s*)?(?:\s*\[\s*[a-zA-Z]?\s*\]\s*)?)?(({0})\s*[:：](?:\s*\S\s*)+(?:\s*[,，;；]\s*({0})\s*[:：](?:\s*\S\s*)+)*)$'.format(
             fields_pattern,
         )
 
         with open(self.source_file, 'r', encoding='utf-8') as f:
-            keys, genre, grouping = {}, '', ''
+            keys, (genre, grouping) = {}, ('', '')
             for line_number, line in enumerate(f, start=1):
                 self.total_clauses_counter += 1
-                line_with_no = f'&{line_number}: {line}'
+                line_with_no, invalid_info = f'&{line_number}: {line}'.strip(), 'not matched'
                 # grouping line
                 grouping_match = re.match(grouping_pattern, line, re.IGNORECASE)
                 if grouping_match is not None:
                     genre, grouping = tuple(map(
                         lambda x: x.strip(), grouping_match.groups(),
                     ))
-                    if grouping in self.summaries:
+                    if grouping and grouping in self.summaries:
                         genre, grouping = '', ''
+                        invalid_info = 'grouping already exists'
                     if grouping:
                         self.grouping_clauses.append(line_with_no)
                         self.grouping_clauses_counter += 1
@@ -1474,28 +1478,32 @@ class AudioGod(object):
                 # detail line
                 detail_match = re.match(detail_pattern, line, re.IGNORECASE)
                 if grouping and detail_match is not None:
-                    line = detail_match.group(0).strip()
+                    line = detail_match.group(1).strip()
                     units = self.split(
-                        line, r',，;；',
+                        line, r'[,,，;；]',
                         del_blank=True, filt_empty=True, filt_repeated=False,
                     )
-                    curr_key, repeated = '', False
-                    properties, valid = {}, True
+                    valid, repeated = True, False
+                    curr_key, properties = '', {}
                     for unit in units:
-                        key, value = self.split(
-                            unit, r':：', del_blank=True, maxsplit=1,
+                        key_value = self.split(
+                            unit, r'[:：：]', del_blank=True, maxsplit=1,
                         )
+                        if len(key_value) != 2:
+                            valid, invalid_info = False, 'count of colon or comma or semicolon not equal to 2'
+                            break
+                        key, value = key_value
                         field = self.transform_field_name_synonyms(key)
                         if not field:
-                            valid = False
+                            valid, invalid_info = False, 'invalid field name'
                             break
                         if field in properties:
-                            valid = False
+                            valid, invalid_info = False, 'duplicate field existed'
                             break
                         properties[field] = value
                     for field in self.NOTE_FIELDS:
                         if field not in properties:
-                            valid = False
+                            valid, invalid_info = False, 'lack note fields'
                             break
                     if valid:
                         curr_key = self.__generate_key_by_properties(properties)
@@ -1504,7 +1512,7 @@ class AudioGod(object):
                         else:
                             keys[curr_key].add(genre)
                             if len(keys[curr_key]) > 1:
-                                valid = False
+                                valid, invalid_info = False, 'more than one genres for one detail item'
                             repeated = True
                     if valid:
                         if grouping not in self.summaries:
@@ -1512,7 +1520,7 @@ class AudioGod(object):
                         else:
                             _, items = self.summaries[grouping]
                             if curr_key in [self.__generate_key_by_properties(x) for x in items]:
-                                valid = False
+                                valid, invalid_info = False, 'duplicate detail items under same grouping'
                             else:
                                 items.append(properties)
                     if valid:
@@ -1524,7 +1532,7 @@ class AudioGod(object):
                             self.repeated_clauses_counter += 1
                         self.valid_clauses_counter += 1
                         continue
-                self.invalid_clauses.append(line_with_no)
+                self.invalid_clauses.append((line_with_no, invalid_info))
                 self.invalid_clauses_counter += 1
 
         for grouping in self.summaries:
@@ -1551,7 +1559,7 @@ class AudioGod(object):
         if len(self.invalid_clauses) > 0:
             self.logger.info('\nInvalid Clauses:')
             for item in self.invalid_clauses:
-                self.logger.info(f'\t{item}')
+                self.logger.info(f'\t{item[0]}\n\t{item[1]}')
         if len(self.repeated_clauses) > 0:
             self.logger.info('\nRepeated Clauses:')
             for key in self.repeated_clauses:
@@ -1662,7 +1670,7 @@ class AudioGod(object):
 
     def __repack_audio_properties(self, properties):
         ret = {}
-        for field, value in properties:
+        for field, value in properties.items():
             field_name = self.transform_field_name(field, self.field_type)
             type_ = self.AUDIO_PROPERTY_TYPES[field]
             ret[field] = (field_name, type_, value)
@@ -1704,7 +1712,7 @@ class AudioGod(object):
                 default=self.DEFAULT_GROUPING,
             )
             for group in self.split(grouping, self.GROUPING_SEPARATOR): # type: ignore
-                tags = self.split(group, '/', filt_repeated=False)
+                tags = self.split(group, r'/', filt_repeated=False)
                 if not tags:
                     continue
                 tags = [self.AUDIOS_TREE_ROOT_TAG] + tags
@@ -2434,22 +2442,22 @@ class AudioGod(object):
             self.output_file,
         )
 
-    def __pack_properties_for_note(self, properties):
+    def _pack_properties_for_note(self, properties):
         ret = ''
         for field in properties:
             field_name, _, value = properties[field]
             ret += f'{field_name}: {value}; '
         return ret.strip().rstrip(';')
     
-    def __pack_properties_for_json(self, properties):
+    def _pack_properties_for_json(self, properties):
         return ''
 
-    def __pack_properties_for_markdown(self, properties):
+    def _pack_properties_for_markdown(self, properties):
         return ''
 
-    __pack_properties_for_md = __pack_properties_for_markdown
+    _pack_properties_for_md = _pack_properties_for_markdown
 
-    def __pack_properties_for_plist(self, properties):
+    def _pack_properties_for_plist(self, properties):
         ret = ''
         for field in properties:
             field_name, type_, value = properties[field]
@@ -2462,7 +2470,7 @@ class AudioGod(object):
             ret += '\n'
         return ret.strip()
 
-    __pack_properties_for_xml = __pack_properties_for_plist
+    _pack_properties_for_xml = _pack_properties_for_plist
 
     def __summarize_for_note(self):
         ret = 'Summary: Groups {group_number}, Items {item_number}\n\n'.format(
@@ -2473,13 +2481,13 @@ class AudioGod(object):
         group_number = 0
         for group, (genre, items) in self.summaries.items():
             group_number += 1
-            ret += f'({group_number}) #[{genre}] {group}:\n'
+            ret += f'\n({group_number}) #[{genre}] {group}:\n'
             item_number = 0
             for item in items:
                 item_number += 1
                 ret += '{number} {content}\n'.format(
-                    number=f'"{item_number}.":<{len(str(len(items)))+1}',
-                    content=self.__pack_properties_for_note(item),
+                    number=f'{f"{item_number}.":<{len(str(len(items)))+1}}',
+                    content=self._pack_properties_for_note(item),
                 )
         return ret
 
@@ -2487,7 +2495,7 @@ class AudioGod(object):
         for grouping in self.summaries:
             _, items = self.summaries[grouping]
             items.sort(
-                key=lambda x: getattr(self, f'__pack_properties_for_{self.output_format}')(x),
+                key=lambda x: getattr(self, f'_pack_properties_for_{self.output_format}')(x),
             )
         self.summaries = {
             key: self.summaries[key] for key in sorted(self.summaries)
@@ -2594,7 +2602,7 @@ class AudioGod(object):
 </dict>
             ''')).safe_substitute(dict(
                 track_id=track_id,
-                properties=self.__pack_properties_for_plist(properties),
+                properties=self._pack_properties_for_plist(properties),
                 date_added=self.current_time(),
                 kind='MPEG audio file',
                 persistent_id=persistent_id,
@@ -2832,7 +2840,9 @@ Formatted audio file name: "傅梦彤 # 潮汐 (Natural).mp3"
 
 Sample in note to import:
 
-#[Pop] Vocals/Explosive/English
+(1) #[Pop] Vocals/Explosive/English:
+1.[x]title：Star Sky, artist：Two Steps From Hell/Thomas Bergersen, album：Battlecry
+2.[]歌曲名：Horizon, 歌手名：Janji, 专辑名：Horizon, 分组：a/b/c|d/e/f|g/h/k
 歌曲名：Rise And Fall (DJ版), 歌手名：Camelot, 专辑名：Rise And Fall
 []歌曲名：Drag Me Down, artist：One Direction, 专辑名：Drag Me Down, genre：Electronic
 #[Pop] Vocals/ppp/qqq

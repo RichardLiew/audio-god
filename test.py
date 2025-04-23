@@ -1,5 +1,12 @@
 from enumx import StringEnum, IntegerEnum
-import os
+import os, sys
+
+
+#print(f'"{item_number}.":<{len(str(len(items)))+1}')
+print(f'{1.:<3}')
+
+
+sys.exit(0)
 
 @StringEnum.unique
 class ABC(StringEnum):

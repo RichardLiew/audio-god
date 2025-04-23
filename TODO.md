@@ -1,9 +1,10 @@
 Processing:
-看看 import 和 export 逻辑里可以做到增量更新吗,新增曲库时，看看各个环节是否可以由全量模式改为增量模式
+All done.
 
 Useful Paths:
 /usr/local/Cellar/python@3.9/3.9.1_6/Frameworks/Python.framework/Versions/3.9/lib/python3.9/enum.py
 /Users/Zichoole/.local/share/virtualenvs/audio-god-jcJC6gcV/lib/python3.9/site-packages/eyed3
+/Users/Zichoole/.pyenv/versions/3.10.6/lib/python3.10
 
 
 Relax:
@@ -52,6 +53,7 @@ export note时，输出概览
 import note & format note & export note 三者统一一下, import和export 所有方式抽象出统一部分
 import 时支持fields三种类型识别
 看看 genre 和 grouping 是否在summaries时扣除去
+看看 import 和 export 逻辑里可以做到增量更新吗,新增曲库时，看看各个环节是否可以由全量模式改为增量模式
 
 
 Giveup:
