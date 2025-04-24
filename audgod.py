@@ -1598,23 +1598,23 @@ class AudioGod(object):
         if self.FileFormat.NONE.eq(file_format):
             self.logger.fatal(f'Invalid source file <{self.source_file}>.')
             return
-        getattr(self, f'__import_{file_format}')()
+        getattr(self, f'_import_{file_format}')()
 
-    def __import_note(self):
+    def _import_note(self):
         self.__analysis_note()
 
-    def __import_json(self):
+    def _import_json(self):
         pass
 
-    def __import_markdown(self):
+    def _import_markdown(self):
         pass
 
-    __import_md = __import_markdown
+    _import_md = _import_markdown
 
-    def __import_plist(self):
+    def _import_plist(self):
         pass
 
-    __import_xml = __import_plist
+    _import_xml = _import_plist
 
     def __load_properties_from_file(self):
         if not os.path.exists(self.source_file):
@@ -2564,7 +2564,7 @@ class AudioGod(object):
             self.logger.fatal('Please set <output-format> or <output-file> options.')
             return
 
-        content = getattr(self, f'__export_{self.output_format}')()
+        content = getattr(self, f'_export_{self.output_format}')()
 
         if not self.output_file:
             print(content)
@@ -2573,19 +2573,19 @@ class AudioGod(object):
             with open(self.output_file, mode='w', encoding='utf-8') as f:
                 f.write(content)
 
-    def __export_note(self):
+    def _export_note(self):
         ret = self.__summarize_for_note()
         return ret
 
-    def __export_json(self) -> str:
+    def _export_json(self) -> str:
         return ''
 
-    def __export_markdown(self) -> str:
+    def _export_markdown(self) -> str:
         return ''
 
-    __export_md = __export_markdown
+    _export_md = _export_markdown
 
-    def __export_plist(self):
+    def _export_plist(self):
         itunes_version_plist, itunes_media_folder, _, _ = self.itunes_options
 
         def _get_itunes_version(itunes_version_plist) -> str:
@@ -2782,7 +2782,7 @@ class AudioGod(object):
 
         return _pack_plist()
     
-    __export_xml = __export_plist
+    _export_xml = _export_plist
 
     def convert(self):
         pass
