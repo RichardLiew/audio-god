@@ -476,8 +476,8 @@ class AudioGod(object):
         self.__fields = [
             self.AudioProperty(x) for x in self.__resolve_fields(fields)
         ]
-        self.__clauses = ([], {}, {}, [])
-        self.__clauses_counter = [0, 0, 0, 0, 0]
+        self.__clauses = ([], {}, {}, [], [])
+        self.__clauses_counter = [0, 0, 0, 0, 0, 0]
         self.__audios = ([], [], [], [], set(), set())
         self.__audios_tree = TreeX(
             tree=None,
@@ -717,6 +717,10 @@ class AudioGod(object):
         return self.__clauses[3]
 
     @property
+    def warn_clauses(self):
+        return self.__clauses[4]
+
+    @property
     def total_clauses_counter(self) -> int:
         return self.__clauses_counter[0]
 
@@ -755,6 +759,14 @@ class AudioGod(object):
     @grouping_clauses_counter.setter
     def grouping_clauses_counter(self, value):
         self.__clauses_counter[4] = value
+
+    @property
+    def warn_clauses_counter(self) -> int:
+        return self.__clauses_counter[5]
+
+    @warn_clauses_counter.setter
+    def warn_clauses_counter(self, value):
+        self.__clauses_counter[5] = value
 
     @property
     def source_audios(self):
@@ -1456,6 +1468,7 @@ class AudioGod(object):
                 r'^(?:(?:(?:\s*[0-9]\s*)+\.\s*)?(?:\s*\[\s*[a-zA-Z]?\s*\]\s*)?)?(?:\s*[,，;；]+\s*)?\s*({0})\s*[:：]+((?:\s*\S\s*)+?)((?:\s*[,，;；]+\s*(?:{0})\s*[:：]+(?:\s*\S\s*)+)*)$'.format(
             fields_pattern,
         )
+        warn_pattern = r'(?:\s*[,，;；]+\s*)?(?:(?:\s*\S\s*)+)\s*[:：]+'
 
         with open(self.source_file, 'r', encoding='utf-8') as f:
             keys, (genre, grouping) = {}, ('', '')
@@ -1493,6 +1506,9 @@ class AudioGod(object):
                         key, value = tuple(map(
                             lambda x: x.strip(), temp_match.groups()[:2],
                         ))
+                        if re.match(warn_pattern, value, re.IGNORECASE) is not None:
+                            self.warn_clauses.append(line_with_no)
+                            self.warn_clauses_counter += 1
                         field = self.transform_field_name_synonyms(key)
                         if not field:
                             valid, invalid_info = False, 'invalid field name'
@@ -1546,17 +1562,23 @@ class AudioGod(object):
         self.logger.warning(f'\n{"#"*78}\n')
         self.logger.warning(
             'Total Clauses: {total}\n\n'
-            'Valid Clauses: {valid}, '
-            'Grouping Clauses: {grouping}, '
-            'Invalid Clauses: {invalid}, '
-            'Repeated Clauses: {repeated}\n'.format(
+            'Valid Clauses: {valid}\n'
+            'Grouping Clauses: {grouping}\n'
+            'Warn Clauses: {warn}\n'
+            'Repeated Clauses: {repeated}\n'
+            'Invalid Clauses: {invalid}\n'.format(
                 total=self.total_clauses_counter,
                 valid=self.valid_clauses_counter,
                 grouping=self.grouping_clauses_counter,
-                invalid=self.invalid_clauses_counter,
+                warn=self.warn_clauses_counter,
                 repeated=self.repeated_clauses_counter,
+                invalid=self.invalid_clauses_counter,
             )
         )
+        if len(self.warn_clauses) > 0:
+            self.logger.info('\nWarn Clauses:')
+            for item in self.warn_clauses:
+                self.logger.info(f'{item}')
         if len(self.invalid_clauses) > 0:
             self.logger.info('\nInvalid Clauses:')
             for item in self.invalid_clauses:
