@@ -2865,12 +2865,13 @@ Formatted audio file name: "傅梦彤 # 潮汐 (Natural).mp3"
 
 Sample in note to import:
 
-(1) #[Pop] Vocals/Explosive/English:
+# Support annotation.
+(1) @[Pop] Vocals/Explosive/English:
 1.[x]title：Star Sky, artist：Two Steps From Hell/Thomas Bergersen, album：Battlecry
 2.[]歌曲名：Horizon, 歌手名：Janji, 专辑名：Horizon, 分组：a/b/c|d/e/f|g/h/k
 歌曲名：Rise And Fall (DJ版), 歌手名：Camelot, 专辑名：Rise And Fall
 []歌曲名：Drag Me Down, artist：One Direction, 专辑名：Drag Me Down, genre：Electronic
-#[Pop] Vocals/ppp/qqq
+@[Pop] Vocals/ppp/qqq
 1. []title：Star Sky, artist：Two Steps From Hell/Thomas Bergersen, album：Battlecry
 2.[]歌曲名：Horizon, 歌手名：Janji, 专辑名：Horizon, 分组：a/b/c|d/e/f|g/h/k
 
