@@ -1,12 +1,12 @@
-Summary: Groups 15, Items 267
+# Summary: Groups 15, Items 267
 
 
-(1) #[Explosive] Vocals/Explosive/Chinese:
+(1) @[Explosive] Vocals/Explosive/Chinese:
 1. 歌曲名: 不变的音乐; 歌手名: 王绎龙; 专辑名: 康电情歌
 2. 歌曲名: 人间惊鸿客 (DJ沈念版); 歌手名: 叶里; 专辑名: 人间惊鸿客(DJ沈念版)
 3. 歌曲名: 小鸡哔哔; 歌手名: 洛天依; 专辑名: 洛天依小鸡哔哔
 
-(2) #[Explosive] Vocals/Explosive/English:
+(2) @[Explosive] Vocals/Explosive/English:
 1.   歌曲名: All Falls Down; 歌手名: Alan Walker/Noah Cyrus/Digital Farm Animals/Juliander; 专辑名: Different World
 2.   歌曲名: All Rise; 歌手名: Blue; 专辑名: Road Trip Sing-Along (Explicit)
 3.   歌曲名: Alone; 歌手名: Alan Walker; 专辑名: Different World
@@ -141,19 +141,19 @@ Summary: Groups 15, Items 267
 132. 歌曲名: You're Beautiful; 歌手名: James Blunt; 专辑名: Promo Only Mainstream Radio January 2006
 133. 歌曲名: You; 歌手名: Approaching Nirvana; 专辑名: Blocking the Sky
 
-(3) #[Explosive] Vocals/Explosive/Filipino:
+(3) @[Explosive] Vocals/Explosive/Filipino:
 1. 歌曲名: Sayaw Mga Choy(Math Dance Challenge); 歌手名: DjDanz Remix; 专辑名: Sayaw Mga Choy (Math Dance Challenge)
 
-(4) #[Explosive] Vocals/Explosive/French:
+(4) @[Explosive] Vocals/Explosive/French:
 1. 歌曲名: On écrit sur les murs; 歌手名: Kids United; 专辑名: Un monde meilleur
 
-(5) #[Explosive] Vocals/Explosive/German:
+(5) @[Explosive] Vocals/Explosive/German:
 1. 歌曲名: Aloha Heja He; 歌手名: Deutscher Schlager; 专辑名: Deutscher Schlager präsentiert - Die besten Party und Discofox Hits aus Deutschland 2015 bis 2016
 
-(6) #[Explosive] Vocals/Explosive/Indian:
+(6) @[Explosive] Vocals/Explosive/Indian:
 1. 歌曲名: Tunak Tunak Tun (Dubstep Remix); 歌手名: Daler Mehndi/Nilesh P.; 专辑名: The Dance Project (Season 1: Episode 8)
 
-(7) #[Explosive] Vocals/Explosive/Japanese:
+(7) @[Explosive] Vocals/Explosive/Japanese:
 1. 歌曲名: MY ALL; 歌手名: 滨崎步; 专辑名: GUILTY (原罪 )
 2. 歌曲名: Only my railgun; 歌手名: 南条爱乃; 专辑名: とある科学の超電磁砲
 3. 歌曲名: aLIEz; 歌手名: SawanoHiroyuki[nZk]/瑞葵; 专辑名: O1
@@ -164,7 +164,7 @@ Summary: Groups 15, Items 267
 8. 歌曲名: 残酷な天使のテーゼ (残酷天使的行动纲领) (Director’s Edit.Version); 歌手名: 高橋洋子; 专辑名: 残酷な天使のテーゼ/FLY ME TO THE MOON
 9. 歌曲名: 鬼火の童・鬼切、虎徹にございます! (我们是鬼火童子鬼切、虎彻！); 歌手名: 増田俊郎; 专辑名: 神様はじめました 3 スペシャル特典CD (元气少女缘结神 BD第三卷 特典CD)
 
-(8) #[Explosive] Vocals/Explosive/Korean:
+(8) @[Explosive] Vocals/Explosive/Korean:
 1.  歌曲名: Free Storm; 歌手名: 影视原声; 专辑名: 韩国综艺&CF音乐合辑
 2.  歌曲名: Gee; 歌手名: 少女时代; 专辑名: The First Mini Album Gee
 3.  歌曲名: LOSER; 歌手名: BIGBANG; 专辑名: MADE SERIES 《M》
@@ -177,26 +177,26 @@ Summary: Groups 15, Items 267
 10. 歌曲名: 뿜뿜 (BBoom BBoom) (2018 SORIBADA BEST-K MUSIC AWARDS Live); 歌手名: MOMOLAND; 专辑名: 2018 SORIBADA BEST-K MUSIC AWARDS Live
 11. 歌曲名: 와 (哇！); 歌手名: 李贞贤; 专辑名: Let's Go To My Star
 
-(9) #[Explosive] Vocals/Explosive/Mongolian:
+(9) @[Explosive] Vocals/Explosive/Mongolian:
 1. 歌曲名: Hood(feat. TG, Gee & Desant); 歌手名: VanQuish/TG/Gee/Desant; 专辑名: Hood (feat. TG, Gee & Desant)
 
-(10) #[Explosive] Vocals/Explosive/Others:
-1. 歌曲名: Ai se eu te pego; 歌手名: Michel Teló; 专辑名: 实况足球2013 OST, 语种：巴西
-2. 歌曲名: Ievan Polkka; 歌手名: Antonio Santos; 专辑名: The Comics Song 2017, 语种：芬兰
+(10) @[Explosive] Vocals/Explosive/Others:
+1. 歌曲名: Ai se eu te pego; 歌手名: Michel Teló; 专辑名: 实况足球2013 OST
+2. 歌曲名: Ievan Polkka; 歌手名: Antonio Santos; 专辑名: The Comics Song 2017
 
-(11) #[Explosive] Vocals/Explosive/Russian:
+(11) @[Explosive] Vocals/Explosive/Russian:
 1. 歌曲名: колыбельная; 歌手名: Rauf & Faik; 专辑名: колыбельная
 
-(12) #[Explosive] Vocals/Explosive/Spanish:
+(12) @[Explosive] Vocals/Explosive/Spanish:
 1. 歌曲名: Despacito; 歌手名: Luis Fonsi/Daddy Yankee; 专辑名: Pasito a pasito
 
-(13) #[Explosive] Vocals/Explosive/Thai:
+(13) @[Explosive] Vocals/Explosive/Thai:
 1. 歌曲名: ปูหนีบอีปิ; 歌手名: พร จันทพร; 专辑名: ปูหนีบอีปิ - Single
 
-(14) #[Explosive] Vocals/Explosive/Vietnamese:
+(14) @[Explosive] Vocals/Explosive/Vietnamese:
 1. 歌曲名: Phut Hon (Remix); 歌手名: DJ Carry; 专辑名: Dear john
 
-(15) #[Douyin] Vocals/Platforms/Douyin:
+(15) @[Douyin] Vocals/Platforms/Douyin:
 1.   歌曲名: Aankhein Khuli; 歌手名: Lata Mangeshkar/Udit Narayan/Ishaan/Shweta Pandit; 专辑名: Mohabbatein (Original Motion Picture Soundtrack)
 2.   歌曲名: Alcastar (全网最火版); 歌手名: 何友; 专辑名: 倒车请注意
 3.   歌曲名: Bboy Danny; 歌手名: 新旭; 专辑名: Holy Bgm

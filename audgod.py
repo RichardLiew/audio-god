@@ -1458,7 +1458,7 @@ class AudioGod(object):
                     )
 
     def __analysis_note(self):
-        grouping_pattern = r'^\s*(?:\s*\(\s*(?:\s*[0-9]\s*)+\s*\)\s*)?\s*#\s*\[\s*((?:\s*\S\s*)+)\s*\]\s*((?:\s*[^:：\s]\s*)+)[:：]?\s*$'
+        grouping_pattern = r'^\s*(?:\s*\(\s*(?:\s*[0-9]\s*)+\s*\)\s*)?\s*@\s*\[\s*((?:\s*\S\s*)+)\s*\]\s*((?:\s*[^:：\s]\s*)+)[:：]?\s*$'
         fields_pattern = '|'.join(
             list(self.AUDIO_CN_PROPERTIES.keys()) + \
             list(self.AUDIO_EN_PROPERTY_SYNONYMS.keys()) + \
@@ -1468,12 +1468,14 @@ class AudioGod(object):
                 r'^(?:(?:(?:\s*[0-9]\s*)+\.\s*)?(?:\s*\[\s*[a-zA-Z]?\s*\]\s*)?)?(?:\s*[,，;；]+\s*)?\s*({0})\s*[:：]+((?:\s*\S\s*)+?)((?:\s*[,，;；]+\s*(?:{0})\s*[:：]+(?:\s*\S\s*)+)*)$'.format(
             fields_pattern,
         )
-        warn_pattern = r'(?:\s*[,，;；]+\s*)?(?:(?:\s*\S\s*)+)\s*[:：]+'
+        warn_pattern = r'(?:\s*[,，;；]+\s*)+(?:(?:\s*\S\s*)+)\s*[:：]+(?:\s*\S\s*)+'
 
         with open(self.source_file, 'r', encoding='utf-8') as f:
             keys, (genre, grouping) = {}, ('', '')
             for line_number, line in enumerate(f, start=1):
                 if not line.strip():
+                    continue
+                if re.match(r'^\s*#+', line, re.IGNORECASE) is not None:
                     continue
                 self.total_clauses_counter += 1
                 line_with_no, invalid_info = f'&{line_number}: {line}'.strip(), 'not matched'
@@ -1506,7 +1508,7 @@ class AudioGod(object):
                         key, value = tuple(map(
                             lambda x: x.strip(), temp_match.groups()[:2],
                         ))
-                        if re.match(warn_pattern, value, re.IGNORECASE) is not None:
+                        if re.search(warn_pattern, value, re.IGNORECASE) is not None:
                             self.warn_clauses.append(line_with_no)
                             self.warn_clauses_counter += 1
                         field = self.transform_field_name_synonyms(key)
@@ -2496,7 +2498,7 @@ class AudioGod(object):
     _pack_properties_for_xml = _pack_properties_for_plist
 
     def __summarize_for_note(self):
-        ret = 'Summary: Groups {group_number}, Items {item_number}\n\n'.format(
+        ret = '# Summary: Groups {group_number}, Items {item_number}\n\n'.format(
             group_number=len(self.summaries),
             item_number=sum([len(x) for _, (_, x) in self.summaries.items()]),
         )
@@ -2504,7 +2506,7 @@ class AudioGod(object):
         group_number = 0
         for group, (genre, items) in self.summaries.items():
             group_number += 1
-            ret += f'\n({group_number}) #[{genre}] {group}:\n'
+            ret += f'\n({group_number}) @[{genre}] {group}:\n'
             item_number = 0
             for item in items:
                 item_number += 1
