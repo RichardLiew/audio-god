@@ -1338,6 +1338,7 @@ class AudioGod(object):
                 comments[field] = value
                 audio_object.tag.comments.set(json.dumps(comments))
                 if self.AudioProperty.ARTWORK.eq(field):
+                    _, value = value
                     if self.validate_url(value):
                         audio_object.tag.images.set(
                             type_=3,
