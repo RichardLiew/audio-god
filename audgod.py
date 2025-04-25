@@ -134,7 +134,7 @@ __VERSION__ = 'Audio God 1.0'
 #                                                                              #
 ################################################################################
 
-# Remain ...
+DEFAULT_LOGGER_LEVEL = logging.WARNING
 
 ################################################################################
 #                                                                              #
@@ -143,7 +143,7 @@ __VERSION__ = 'Audio God 1.0'
 ################################################################################
 
 class FatalLogger(logging.Logger):
-    def __init__(self, level=logging.DEBUG):
+    def __init__(self, level=DEFAULT_LOGGER_LEVEL):
         super().__init__('fatal', level)
         handler = logging.StreamHandler()
         handler.setLevel(level)
@@ -158,7 +158,7 @@ class TreeX(Tree):
     def __init__(self, logger=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if logger is None:
-            logger = FatalLogger(logging.DEBUG)
+            logger = FatalLogger(DEFAULT_LOGGER_LEVEL)
         self.logger = logger
 
     def perfect_merge(self, nid, new_tree, deep=False) -> None:
@@ -215,7 +215,7 @@ class TreeX(Tree):
 class AudioGod(object):
     ORI_DIV_CHAR = '-'
     DIV_CHAR = '#'
-    GROUPING_SEPARATOR = '|'
+    GROUPING_SEPARATOR = '&'
 
 
     DEFAULT_MUSIC_FOLDER = '~/Music'
@@ -459,7 +459,7 @@ class AudioGod(object):
         output_format=FileFormat.NONE,
         output_file=None,
         organize_type=OrganizeType.ITUNED,
-        log_level=logging.DEBUG,
+        log_level=DEFAULT_LOGGER_LEVEL,
     ):
         self.__logger = FatalLogger(log_level)
         eyed3.log.setLevel(
@@ -1296,7 +1296,6 @@ class AudioGod(object):
                 case self.PropertySource.FILE:
                     key = self.__generate_key_by_filename(audio)
                     _value = self.valid_clauses.get(key, {}).get(field, None)
-                    print(field, _value)
                     if _value is not None:
                         ret = _value
                         break
@@ -1372,7 +1371,7 @@ class AudioGod(object):
                             return
             case _:
                 setattr(audio_object.tag, field, value)
-        audio_object.tag.save()
+        audio_object.tag.save(version=eyed3.id3.ID3_V2_4, encoding='utf-8') # type: ignore
 
     # Use AudioProperty type field here, you won't check field parameter.
     def fetch(self, audio_object, field):
@@ -1584,12 +1583,12 @@ class AudioGod(object):
         
         self.logger.warning(f'\n{"#"*78}\n')
         self.logger.warning(
-            'Total Clauses: {total}\n\n'
-            'Valid Clauses: {valid}\n'
+            'Total Clauses:    {total}\n\n'
+            'Valid Clauses:    {valid}\n'
             'Grouping Clauses: {grouping}\n'
-            'Warn Clauses: {warn}\n'
+            'Warn Clauses:     {warn}\n'
             'Repeated Clauses: {repeated}\n'
-            'Invalid Clauses: {invalid}\n'.format(
+            'Invalid Clauses:  {invalid}\n'.format(
                 total=self.total_clauses_counter,
                 valid=self.valid_clauses_counter,
                 grouping=self.grouping_clauses_counter,
@@ -1599,17 +1598,17 @@ class AudioGod(object):
             )
         )
         if len(self.warn_clauses) > 0:
-            self.logger.info('\nWarn Clauses:')
+            self.logger.warning('\nWarn Clauses:')
             for item in self.warn_clauses:
-                self.logger.info(f'{item}')
+                self.logger.warning(f'{item}')
         if len(self.invalid_clauses) > 0:
-            self.logger.info('\nInvalid Clauses:')
+            self.logger.warning('\nInvalid Clauses:')
             for item in self.invalid_clauses:
-                self.logger.info(f'\t{item[0]}\n\t{item[1]}')
+                self.logger.warning(f'\t{item[0]}\n\t{item[1]}')
         if len(self.repeated_clauses) > 0:
-            self.logger.info('\nRepeated Clauses:')
+            self.logger.warning('\nRepeated Clauses:')
             for key in self.repeated_clauses:
-                self.logger.info('\t{key}: [{repeated}]'.format(
+                self.logger.warning('\t{key}: [{repeated}]'.format(
                     key=key,
                     repeated='｜'.join(self.repeated_clauses[key]),
                 ))
@@ -1643,7 +1642,7 @@ class AudioGod(object):
             return
         self.import_()
 
-    def __load_audios(self):
+    def __load_audios(self, matched=False):
         self.__load_ignored()
 
         audios = self.source_audios
@@ -1680,11 +1679,10 @@ class AudioGod(object):
         self.logger.warning(
             'Total Audios: {total}\n\n'
             'Invalid Audios: {invalid} '
-            '(Invalid Extension Audios: {inv_ext}, Invalid Name Audios: {inv_name})\n'
+            '(Invalid Extension: {inv_ext}, Invalid Name: {inv_name})\n'
             'Omitted Audios: {omitted}\n'
             'Ignored Audios: {ignored}\n'
-            'Valid Audios: {valid} '
-            '(Matched: {matched}, NotMatched: {notmatched})\n'.format(
+            'Valid Audios:   {valid}{match_detail}'.format(
                 total=len(self.invalid_ext_audios) \
                     + len(self.invalid_name_audios) \
                     + len(self.omitted_audios) \
@@ -1697,10 +1695,21 @@ class AudioGod(object):
                 omitted=len(self.omitted_audios),
                 ignored=len(self.ignored_audios),
                 valid=len(self.matched_audios) + len(self.notmatched_audios),
-                matched=len(self.matched_audios),
-                notmatched=len(self.notmatched_audios),
+                match_detail='\n' if not matched else ' (Matched: {matched}, NotMatched: {notmatched})\n'.format(
+                    matched=len(self.matched_audios),
+                    notmatched=len(self.notmatched_audios),
+                ),
             )
         )
+
+        if len(self.omitted_audios) > 0:
+            self.logger.info('\nOmitted Audios:')
+            for audio in self.omitted_audios:
+                self.logger.info(f'\t{audio}')
+        if len(self.ignored_audios) > 0:
+            self.logger.info('\nIgnored Audios:')
+            for audio in self.ignored_audios:
+                self.logger.info(f'\t{audio}')
         if len(self.invalid_ext_audios) > 0:
             self.logger.info('\nInvalid Extension Audios:')
             for audio in self.invalid_ext_audios:
@@ -1709,7 +1718,7 @@ class AudioGod(object):
             self.logger.info('\nInvalid Name Audios:')
             for audio in self.invalid_name_audios:
                 self.logger.info(f'\t{audio}')
-        if len(self.notmatched_audios) > 0:
+        if matched and len(self.notmatched_audios) > 0:
             self.logger.info('\nNot Matched Audios:')
             for audio in self.notmatched_audios:
                 self.logger.info(f'\t{audio}')
@@ -1737,7 +1746,7 @@ class AudioGod(object):
         return self.__repack_audio_properties(ret)
 
     def __fill_audios_tree(self) -> None:
-        self.__load_audios()
+        self.__load_audios(matched=False)
 
         _, _, track_initial_id, playlist_initial_id = self.itunes_options
         track_id, audios = track_initial_id, self.concerned_audios
@@ -1884,7 +1893,7 @@ class AudioGod(object):
                     self.logger.debug(f'Field <{field}> assigned!')
             if filled:
                 filled_count += 1
-                self.logger.debug(f'Audio <{audio}> filled!')
+                self.logger.debug(f'Audio <{audio}> filled!\n')
         self.logger.warning(
             'Audios To Fill: {total}, Filled Audios: {filled}\n'.format(
                 total=len(audios),
@@ -1894,11 +1903,11 @@ class AudioGod(object):
 
     def fill_properties(self):
         self.__load_properties_from_file()
-        self.__load_audios()
+        self.__load_audios(matched=True)
         self.__fill_audio_properties()
 
     def format_properties(self):
-        self.__load_audios()
+        self.__load_audios(matched=False)
         audios = self.concerned_audios
         self.logger.warning(f'\n{"#"*78}\n')
         for audio in audios:
@@ -1911,7 +1920,7 @@ class AudioGod(object):
         self.logger.warning(f'Formatted Audios: {len(audios)}\n')
 
     def rename_audios(self):
-        self.__load_audios()
+        self.__load_audios(matched=False)
         audios = self.concerned_audios
         for audio in audios:
             audio_object = eyed3.load(audio)
@@ -1928,7 +1937,7 @@ class AudioGod(object):
             self.rename(self.abspath(_path, _old), self.abspath(_path, _new))
 
     def derive_artworks(self):
-        self.__load_audios()
+        self.__load_audios(matched=False)
         audios = self.concerned_audios
         for audio in audios:
             _name, _ = os.path.splitext(os.path.basename(audio))
@@ -1955,7 +1964,7 @@ class AudioGod(object):
         if not self.audios_root:
             self.logger.fatal('Invalid audios root!')
             return
-        self.__load_audios()
+        self.__load_audios(matched=False)
         audios = self.concerned_audios
         for audio in audios:
             audio_object = eyed3.load(audio)
@@ -2007,7 +2016,7 @@ class AudioGod(object):
                         )
 
     def list_repeated(self):
-        self.__load_audios()
+        self.__load_audios(matched=False)
         
         audios, results = self.concerned_audios, {}
         for audio in audios:
@@ -2115,7 +2124,7 @@ class AudioGod(object):
         #                                 time.localtime(tag.file_info.atime))))
         #print("# {}".format('=' * 78))
 
-        self.__load_audios()
+        self.__load_audios(matched=False)
 
         results, audios = [], self.concerned_audios
         all_fields = [
@@ -2322,7 +2331,7 @@ class AudioGod(object):
                     length = (utf8_length - length) / 2 + length
                     return int(length)
 
-                rl_number = '···'
+                rl_number = '··'
 
                 _total = table_string.count('\n') - 6
                 offset = 0
@@ -2423,13 +2432,14 @@ class AudioGod(object):
                     end = result.find('|\n+', beg+3)
                     result = result[:beg+2] + result[end+2:]
                     result = re.sub(r'\+[\+-]*\n', r'', result)
-                    result = re.sub(r'\s*\|\s*', r'|', result)
-                    result = re.sub(r'^\s*\|', r'', result)
-                    result = re.sub(r'\|\s*$', r'\n', result)
+                    result = re.sub(r'[^\S\n\r]*\|[^\S\n\r]*', r'|', result)
+                    result = re.sub(r'^[^\S\n\r]*\|', r'', result)
+                    result = re.sub(r'\|[^\S\n\r]*$', r'\n', result)
                     result = re.sub(r'\|\n\|', r'\n', result)
 
                 if AudioGod.DisplayStyle.VERTICAL.eq(style):
                     _result= result
+                    #_result = re.sub(r'\|\|', r'|\n|', result)
                     result = '\n'
                     result += '#' * 78
                     result += '\n\n'
@@ -2447,11 +2457,14 @@ class AudioGod(object):
                     field_width = 2 + max(*([_xlen_(rl_number) if numbered else 0]+[
                         _xlen_(field) for field in rl_fields_to_show
                     ]))
+
                     while True:
                         end = _result.find('\n', beg+1)
                         if end < 0:
                             break
                         row = _result[beg+1:end]
+                        if not row.strip():
+                            break
                         result += '\n'.join([
                             '{}{}'.format(
                                 ('{0:<%s}' % (field_width,)).format(
@@ -2982,7 +2995,7 @@ def _render_usage(usage) -> str:
 
 
 ARGUMENTS={
-    'log_level': 'DEBUG',
+    'log_level': 'WARNING',
     'source_file': AudioGod.DEFAULT_SOURCE_FILE,
     'ignored_file': AudioGod.DEFAULT_IGNORED_FILE,
     'audios_source': AudioGod.DEFAULT_TEMP_FOLDER,
