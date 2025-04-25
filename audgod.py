@@ -261,7 +261,8 @@ class AudioGod(object):
         FILENAME = 'filename'
         DIRECTORY = 'directory'
 
-    DEFAULT_SOURCES = PropertySource.members()
+    #DEFAULT_SOURCES = PropertySource.members()
+    DEFAULT_SOURCES = ['file']
 
 
     @StringEnum.unique
@@ -559,7 +560,7 @@ class AudioGod(object):
             self.__output_format = self.recognize_file_format(self.output_file)
 
     def __resolve_fields(self, fields):
-        fields_ = self.split(fields, r',')
+        fields_ = self.split(fields, ',', escaped=True)
         for key in self.FIELDS.keys():
             try:
                 index = fields_.index(key)
@@ -827,11 +828,13 @@ class AudioGod(object):
                + list(self.notmatched_audios)
 
     @staticmethod
-    def split(s, pattern=None, del_blank=True, filt_empty=True, filt_repeated=True, *args, **kwargs) -> list:
+    def split(s, pattern=None, escaped=False, del_blank=True, filt_empty=True, filt_repeated=True, *args, **kwargs) -> list:
         if not s:
             return []
         if not pattern:
             return [s]
+        if escaped:
+            pattern = re.escape(pattern)
         ret = re.split(pattern, s, *args, **kwargs)
         if del_blank:
             ret = [item.strip() for item in ret]
@@ -871,6 +874,8 @@ class AudioGod(object):
         if len(paths) > 1:
             for path in paths[1:]:
                 ret = os.path.join(ret, path)
+        if not ret:
+            return ret
         return os.path.normpath(os.path.abspath(os.path.expanduser(ret)))
 
     @classmethod
@@ -1079,12 +1084,20 @@ class AudioGod(object):
     def format_grouping(cls, grouping):
         if grouping is None:
             return None
-        grouping = re.sub(r'\s*\/\s*', r'/', grouping)
-        grouping = re.sub(r'\/+', r'/', grouping)
-        pattern = r'(?:\/\s*)*\s*{}\s*(?:\/\s*)*'.format(cls.GROUPING_SEPARATOR)
+        grouping = re.sub(r'(\s*\/\s*)+', r'/', grouping)
+        pattern = r'(?:\s*\/\s*)*\s*{0}\s*(?:\s*\/\s*)*'.format(
+            re.escape(cls.GROUPING_SEPARATOR),
+        )
         grouping = re.sub(pattern, cls.GROUPING_SEPARATOR, grouping)
-        grouping = re.sub(r'(?:^\/|\/$)', r'', grouping)
-        groups = cls.split(grouping, cls.GROUPING_SEPARATOR)
+        grouping = re.sub(r'(?:^\/+|\/+$)', r'', grouping)
+        groups = cls.split(
+            grouping,
+            cls.GROUPING_SEPARATOR,
+            escaped=True,
+            del_blank=True,
+            filt_empty=True,
+            filt_repeated=False,
+        )
         return cls.GROUPING_SEPARATOR.join(groups)
 
     @classmethod
@@ -1250,10 +1263,10 @@ class AudioGod(object):
         name, _ = os.path.splitext(os.path.basename(audio))
         if name.count(self.DIV_CHAR) == 1:
             return self.generate_key(
-                *self.split(name, self.DIV_CHAR, filt_empty=False, filt_repeated=False),
+                *self.split(name, self.DIV_CHAR, escaped=True, filt_empty=False, filt_repeated=False),
             )
         return self.generate_key(
-            *self.split(name, self.ORI_DIV_CHAR, filt_empty=False, filt_repeated=False),
+            *self.split(name, self.ORI_DIV_CHAR, escaped=True, filt_empty=False, filt_repeated=False),
         )
 
     def __fetch_from_outside(self, audio, field):
@@ -1279,6 +1292,7 @@ class AudioGod(object):
                 case self.PropertySource.FILE:
                     key = self.__generate_key_by_filename(audio)
                     _value = self.valid_clauses.get(key, {}).get(field, None)
+                    print(field, _value)
                     if _value is not None:
                         ret = _value
                         break
@@ -1347,7 +1361,7 @@ class AudioGod(object):
                         else:
                             self.logger.fatal(
                                 'Audio <{name}> has invalid artwork "{value}"'.format(
-                                    name=audio_object.file_info.name,
+                                    name=audio_object.tag.file_info.name,
                                     value=value,
                                 ),
                             )
@@ -1736,8 +1750,8 @@ class AudioGod(object):
                 formatted=True,
                 default=self.DEFAULT_GROUPING,
             )
-            for group in self.split(grouping, self.GROUPING_SEPARATOR): # type: ignore
-                tags = self.split(group, r'/', filt_repeated=False)
+            for group in self.split(grouping, self.GROUPING_SEPARATOR, escaped=True): # type: ignore
+                tags = self.split(group, r'/', escaped=True, filt_repeated=False)
                 if not tags:
                     continue
                 tags = [self.AUDIOS_TREE_ROOT_TAG] + tags
@@ -1828,7 +1842,7 @@ class AudioGod(object):
     def __check_audio(self, audio):
         _audio = audio
         while True:
-            if re.match('^/*$', _audio) is not None:
+            if re.match(r'^/*$', _audio) is not None:
                 break
             if _audio in self.ignored_set or _audio+'/' in self.ignored_set:
                 return self.AudioType.IGNORED
@@ -1959,7 +1973,7 @@ class AudioGod(object):
                     if not grouping:
                         self.logger.fatal(f'Invalid grouping of <{audio}>')
                         return
-                    groups = self.split(grouping, self.GROUPING_SEPARATOR) # type: ignore
+                    groups = self.split(grouping, self.GROUPING_SEPARATOR, escaped=True) # type: ignore
                     target = self.abspath(
                         self.audios_root, groups[0], os.path.basename(audio),
                     )
