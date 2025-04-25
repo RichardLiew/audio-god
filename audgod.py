@@ -632,6 +632,10 @@ class AudioGod(object):
     @property
     def output_format(self):
         return self.__output_format
+    
+    @output_format.setter
+    def output_format(self, value):
+        self.__output_format = value
 
     @property
     def output_file(self):
@@ -1466,9 +1470,12 @@ class AudioGod(object):
                 if key not in self.valid_clauses:
                     self.valid_clauses[key] = properties
                 else:
+                    ori_grouping = self.valid_clauses[key][self.AudioProperty.GROUPING]
                     self.valid_clauses[key].update(properties)
-                    self.valid_clauses[key][self.AudioProperty.GROUPING] += '{sep}grouping'.format(
+                    self.valid_clauses[key][self.AudioProperty.GROUPING] = '{ori}{sep}{new}'.format(
+                        ori=ori_grouping,
                         sep=self.GROUPING_SEPARATOR,
+                        new=grouping,
                     )
 
     def __analysis_note(self):
@@ -2541,6 +2548,7 @@ class AudioGod(object):
         }
 
     def preprocess_notes(self):
+        self.output_format = self.FileFormat.NOTE
         self.__analysis_note()
         self.__sort_summaries()
         tmp_file = self.source_file + '.tmp'
