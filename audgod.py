@@ -1677,7 +1677,7 @@ class AudioGod(object):
         self.logger.warning(f'\n{"#"*78}\n')
 
         self.logger.warning(
-            'Total Audios: {total}\n\n'
+            'Total Audios:   {total}\n\n'
             'Invalid Audios: {invalid} '
             '(Invalid Extension: {inv_ext}, Invalid Name: {inv_name})\n'
             'Omitted Audios: {omitted}\n'
@@ -2331,7 +2331,7 @@ class AudioGod(object):
                     length = (utf8_length - length) / 2 + length
                     return int(length)
 
-                rl_number = '··'
+                rl_number = '--'
 
                 _total = table_string.count('\n') - 6
                 offset = 0
@@ -2439,7 +2439,6 @@ class AudioGod(object):
 
                 if AudioGod.DisplayStyle.VERTICAL.eq(style):
                     _result= result
-                    #_result = re.sub(r'\|\|', r'|\n|', result)
                     result = '\n'
                     result += '#' * 78
                     result += '\n\n'
@@ -2465,19 +2464,31 @@ class AudioGod(object):
                         row = _result[beg+1:end]
                         if not row.strip():
                             break
-                        result += '\n'.join([
-                            '{}{}'.format(
-                                ('{0:<%s}' % (field_width,)).format(
-                                    (
-                                        ([rl_number] if numbered \
-                                        else []) + rl_fields_to_show
-                                    )[i]+':',
-                                ),
-                                value,
+
+                        fields = ([rl_number] if numbered else []) + rl_fields_to_show
+                        is_cn_field_name = False
+                        if len(rl_fields_to_show) > 0:
+                            matched = re.search(
+                                r'[\u4e00-\u9fff]', rl_fields_to_show[0], re.IGNORECASE,
                             )
-                            for i, value in enumerate(row.split('|'))
-                        ])
-                        result += '\n\n'
+                            if matched is not None:
+                                is_cn_field_name = True
+                        
+                        for i, value in enumerate(row.split('|')):
+                            if is_cn_field_name:
+                                result += '{}{}{}\n'.format(
+                                    f'{fields[i]}:',
+                                    '\u3000' * int((field_width-_xlen_(fields[i]))/2),
+                                    value,
+                                )
+                            else:
+                                result += '{}{}\n'.format(
+                                    ('{0:<%s}' % (field_width,)).format(
+                                        fields[i]+':',
+                                    ),
+                                    value,
+                                )
+                        result += '\n'
                         result += '-' * 78
                         result += '\n\n'
                         beg = end
