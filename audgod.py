@@ -444,72 +444,107 @@ class AudioGod(object):
 
 
     ARGUMENTS={
-        'log_level': logging.getLevelName(DEFAULT_LOGGER_LEVEL),
-        'log_file': 'stderr',
-        'source_file': DEFAULT_SOURCE_FILE,
-        'ignored_file': DEFAULT_IGNORED_FILE,
-        'audios_source': DEFAULT_TEMP_FOLDER,
-        'recursive': False,
-        'audios_root': DEFAULT_TEMP_FOLDER,
-        'properties': None,
-        'extensions': ','.join(DEFAULT_EXTENSIONS),
-        'fields': 'core',
-        'page_number': 1,
-        'page_size': None,
-        'sort': None,
-        'filter': None,
-        'align': None,
-        'numbered': False,
-        'style': DisplayStyle.TABLED,
-        'data_format': DataFormat.OUTPUTTED,
-        'field_type': FieldType.ORIGINAL,
-        'output_format': FileFormat.NONE,
-        'output_file': None,
-        'artwork_path': None,
-        'filename_pattern': '{delimiter}{{artist}} {div_char} {delimiter}{{title}}'.format(
+        'log_level': {
+            'default': logging.getLevelName(DEFAULT_LOGGER_LEVEL),
+            'choices': [
+                'NOTSET',
+                'DEBUG',
+                'INFO',
+                'WARN',
+                'WARNING',
+                'ERROR',
+                'FATAL',
+                'CRITICAL',
+            ],
+        },
+        'log_file': { 'default': 'stderr', },
+        'source_file': { 'default': DEFAULT_SOURCE_FILE, },
+        'ignored_file': { 'default': DEFAULT_IGNORED_FILE, },
+        'audios_source': { 'default': DEFAULT_TEMP_FOLDER, },
+        'recursive': { 'default': False, },
+        'audios_root': { 'default': DEFAULT_TEMP_FOLDER, },
+        'properties': { 'default': None, },
+        'extensions': { 'default': ','.join(DEFAULT_EXTENSIONS), },
+        'fields': { 'default': 'core', },
+        'page_number': { 'default': 1, },
+        'page_size': { 'default': None, },
+        'sort': { 'default': None, },
+        'filter': { 'default': None, },
+        'align': { 'default': None, },
+        'numbered': { 'default': False, },
+        'style': {
+            'default': DisplayStyle.TABLED,
+            'choices': DisplayStyle.members(),
+        },
+        'data_format': {
+            'default': DataFormat.OUTPUTTED,
+            'choices': DataFormat.members(),
+        },
+        'field_type': {
+            'default': FieldType.ORIGINAL,
+            'choices': FieldType.members(),
+        },
+        'output_format': {
+            'default': FileFormat.NONE,
+            'choices': FileFormat.members(),
+        },
+        'output_file': { 'default': None, },
+        'artwork_path': { 'default': None, },
+        'filename_pattern': { 'default': '{delimiter}{{artist}} {div_char} {delimiter}{{title}}'.format(
             delimiter=FilenamePatternTemplate.delimiter,
             div_char=DIV_CHAR,
-        ),
-        'organize_type': OrganizeType.ITUNED,
-        'itunes_version_plist': DEFAULT_ITUNES_VERSION_PLIST,
-        'itunes_media_folder': DEFAULT_ITUNES_MEDIA_FOLDER,
-        'track_initial_id': DEFAULT_TRACK_INITIAL_ID,
-        'playlist_initial_id': DEFAULT_PLAYLIST_INITIAL_ID,
+        ), },
+        'organize_type': {
+            'default': OrganizeType.ITUNED,
+            'choices': OrganizeType.members(),
+        },
+        'itunes_version_plist': { 'default': DEFAULT_ITUNES_VERSION_PLIST, },
+        'itunes_media_folder': { 'default': DEFAULT_ITUNES_MEDIA_FOLDER, },
+        'track_initial_id': { 'default': DEFAULT_TRACK_INITIAL_ID, },
+        'playlist_initial_id': { 'default': DEFAULT_PLAYLIST_INITIAL_ID, },
+    }
+
+    ARGUMENTS_DEFAULTS = {
+        key: value.get('default', None) for key, value in ARGUMENTS.items()
+    }
+
+    ARGUMENTS_CHOICES = {
+        key: value.get('choices', []) for key, value in ARGUMENTS.items()
     }
 
 
     def __init__(
         self,
-        source_file=ARGUMENTS['source_file'],
-        ignored_file=ARGUMENTS['ignored_file'],
-        audios_root=ARGUMENTS['audios_root'],
-        audios_source=(ARGUMENTS['audios_source'], ARGUMENTS['recursive']),
-        properties=ARGUMENTS['properties'],
-        extensions=ARGUMENTS['extensions'],
-        fields=ARGUMENTS['fields'],
-        data_format=ARGUMENTS['data_format'],
+        source_file=ARGUMENTS_DEFAULTS['source_file'],
+        ignored_file=ARGUMENTS_DEFAULTS['ignored_file'],
+        audios_root=ARGUMENTS_DEFAULTS['audios_root'],
+        audios_source=(ARGUMENTS_DEFAULTS['audios_source'], ARGUMENTS_DEFAULTS['recursive']),
+        properties=ARGUMENTS_DEFAULTS['properties'],
+        extensions=ARGUMENTS_DEFAULTS['extensions'],
+        fields=ARGUMENTS_DEFAULTS['fields'],
+        data_format=ARGUMENTS_DEFAULTS['data_format'],
         display_options=[
-            ARGUMENTS['page_number'],
-            ARGUMENTS['page_size'],
-            ARGUMENTS['sort'],
-            ARGUMENTS['filter'],
-            ARGUMENTS['fields'],
-            ARGUMENTS['align'],
-            ARGUMENTS['numbered'],
-            ARGUMENTS['style'],
+            ARGUMENTS_DEFAULTS['page_number'],
+            ARGUMENTS_DEFAULTS['page_size'],
+            ARGUMENTS_DEFAULTS['sort'],
+            ARGUMENTS_DEFAULTS['filter'],
+            ARGUMENTS_DEFAULTS['fields'],
+            ARGUMENTS_DEFAULTS['align'],
+            ARGUMENTS_DEFAULTS['numbered'],
+            ARGUMENTS_DEFAULTS['style'],
         ],
         itunes_options=[
-            ARGUMENTS['itunes_version_plist'],
-            ARGUMENTS['itunes_media_folder'],
-            ARGUMENTS['track_initial_id'],
-            ARGUMENTS['playlist_initial_id'],
+            ARGUMENTS_DEFAULTS['itunes_version_plist'],
+            ARGUMENTS_DEFAULTS['itunes_media_folder'],
+            ARGUMENTS_DEFAULTS['track_initial_id'],
+            ARGUMENTS_DEFAULTS['playlist_initial_id'],
         ],
-        artwork_path=ARGUMENTS['artwork_path'],
-        filename_pattern=ARGUMENTS['filename_pattern'],
-        field_type=ARGUMENTS['field_type'],
-        output_options=(ARGUMENTS['output_file'], ARGUMENTS['output_format']),
-        organize_type=ARGUMENTS['organize_type'],
-        logger_options=(ARGUMENTS['log_level'], ARGUMENTS['log_file']),
+        artwork_path=ARGUMENTS_DEFAULTS['artwork_path'],
+        filename_pattern=ARGUMENTS_DEFAULTS['filename_pattern'],
+        field_type=ARGUMENTS_DEFAULTS['field_type'],
+        output_options=(ARGUMENTS_DEFAULTS['output_file'], ARGUMENTS_DEFAULTS['output_format']),
+        organize_type=ARGUMENTS_DEFAULTS['organize_type'],
+        logger_options=(ARGUMENTS_DEFAULTS['log_level'], ARGUMENTS_DEFAULTS['log_file']),
     ):
         self.__logger = FatalLogger(*logger_options)
         eyed3.log.setLevel(logging.ERROR)
@@ -3326,18 +3361,9 @@ def _add_arguments(parser, arguments=[]) -> None:
     parser.add_argument(
         '--log-level', '-l',
         type=str,
-        choices=[
-            'NOTSET',
-            'DEBUG',
-            'INFO',
-            'WARN',
-            'WARNING',
-            'ERROR',
-            'FATAL',
-            'CRITICAL',
-        ],
+        choices=AudioGod.ARGUMENTS_CHOICES['log_level'],
         required=False,
-        default=AudioGod.ARGUMENTS['log_level'],
+        default=AudioGod.ARGUMENTS_DEFAULTS['log_level'],
         dest='log_level',
         help='level of logger',
     )
@@ -3346,7 +3372,7 @@ def _add_arguments(parser, arguments=[]) -> None:
         '--log-file', '-7',
         type=str,
         required=False,
-        default=AudioGod.ARGUMENTS['log_file'],
+        default=AudioGod.ARGUMENTS_DEFAULTS['log_file'],
         dest='log_file',
         help='log file of logger',
     )
@@ -3356,7 +3382,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--source-file', '-s',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS['source_file'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['source_file'],
             dest='source_file',
             help='source file to match',
         )
@@ -3366,7 +3392,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--ignored-file', '-i',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS['ignored_file'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['ignored_file'],
             dest='ignored_file',
             help='ignored files',
         )
@@ -3376,7 +3402,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--audios-source', '-c',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS['audios_source'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['audios_source'],
             dest='audios_source',
             help='audio file or directory you want to process',
         )
@@ -3386,7 +3412,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--audios-root', '-d',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS['audios_root'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['audios_root'],
             dest='audios_root',
             help='root directory of audios',
         )
@@ -3396,7 +3422,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--properties', '-p',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS['properties'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['properties'],
             dest='properties',
             help='properties for audios',
         )
@@ -3414,7 +3440,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--extensions', '-e',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS['extensions'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['extensions'],
             dest='extensions',
             help='valid extensions of audios',
         )
@@ -3424,7 +3450,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--fields', '-f',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS['fields'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['fields'],
             dest='fields',
             help='fields of audio to process: {fields}'.format(
                 fields='; '.join([
@@ -3439,7 +3465,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--page-number', '-m',
             type=int,
             required=False,
-            default=AudioGod.ARGUMENTS['page_number'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['page_number'],
             dest='page_number',
             help='page number for audios display',
         )
@@ -3449,7 +3475,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--page-size', '-j',
             type=int,
             required=False,
-            default=AudioGod.ARGUMENTS['page_size'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['page_size'],
             dest='page_size',
             help='page size for audios display',
         )
@@ -3459,7 +3485,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--sort', '-q',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS['sort'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['sort'],
             dest='sort',
             help='sort options for audios display',
         )
@@ -3469,7 +3495,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--filter', '-b',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS['filter'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['filter'],
             dest='filter',
             help='filter options for audios display',
         )
@@ -3479,7 +3505,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--align', '-w',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS['align'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['align'],
             dest='align',
             help='align options for audios display',
         )
@@ -3496,9 +3522,9 @@ def _add_arguments(parser, arguments=[]) -> None:
         parser.add_argument(
             '--style', '-y',
             type=str,
-            choices=AudioGod.DisplayStyle.members(),
+            choices=AudioGod.ARGUMENTS_CHOICES['style'],
             required=False,
-            default=AudioGod.ARGUMENTS['style'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['style'],
             dest='style',
             help='display style for audios',
         )
@@ -3507,9 +3533,9 @@ def _add_arguments(parser, arguments=[]) -> None:
         parser.add_argument(
             '--data-format', '-x',
             type=str,
-            choices=AudioGod.DataFormat.members(),
+            choices=AudioGod.ARGUMENTS_CHOICES['data_format'],
             required=False,
-            default=AudioGod.ARGUMENTS['data_format'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['data_format'],
             dest='data_format',
             help='the data format for audios to display',
         )
@@ -3518,9 +3544,9 @@ def _add_arguments(parser, arguments=[]) -> None:
         parser.add_argument(
             '--field-type', '-8',
             type=str,
-            choices=AudioGod.FieldType.members(),
+            choices=AudioGod.ARGUMENTS_CHOICES['field_type'],
             required=False,
-            default=AudioGod.ARGUMENTS['field_type'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['field_type'],
             dest='field_type',
             help='type of field name',
         )
@@ -3529,9 +3555,9 @@ def _add_arguments(parser, arguments=[]) -> None:
         parser.add_argument(
             '--output-format', '-9',
             type=str,
-            choices=AudioGod.FileFormat.members(),
+            choices=AudioGod.ARGUMENTS_CHOICES['output_format'],
             required=False,
-            default=AudioGod.ARGUMENTS['output_format'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['output_format'],
             dest='output_format',
             help='format of output content',
         )
@@ -3541,7 +3567,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--output-file', '-o',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS['output_file'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['output_file'],
             dest='output_file',
             help='output file',
         )
@@ -3551,7 +3577,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--artwork-path', '-k',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS['artwork_path'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['artwork_path'],
             dest='artwork_path',
             help='path to export artworks',
         )
@@ -3561,7 +3587,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--filename-pattern', '-t',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS['filename_pattern'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['filename_pattern'],
             dest='filename_pattern',
             help='filename pattern to rename audios',
         )
@@ -3570,9 +3596,9 @@ def _add_arguments(parser, arguments=[]) -> None:
         parser.add_argument(
             '--organize-type', '-g',
             type=str,
-            choices=AudioGod.OrganizeType.members(),
+            choices=AudioGod.ARGUMENTS_CHOICES['organize_type'],
             required=False,
-            default=AudioGod.ARGUMENTS['organize_type'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['organize_type'],
             dest='organize_type',
             help='type of file organization',
         )
@@ -3582,7 +3608,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--itunes-version-plist', '-1',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS['itunes_version_plist'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['itunes_version_plist'],
             dest='itunes_version_plist',
             help='the version plist file of itunes or apple music',
         )
@@ -3592,7 +3618,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--itunes-media-folder', '-2',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS['itunes_media_folder'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['itunes_media_folder'],
             dest='itunes_media_folder',
             help='the media folder of itunes or apple music',
         )
@@ -3602,7 +3628,7 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--track-initial-id', '-3',
             type=int,
             required=False,
-            default=AudioGod.ARGUMENTS['track_initial_id'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['track_initial_id'],
             dest='track_initial_id',
             help='initial id of tracks for itunes or apple music plist file',
         )
@@ -3612,14 +3638,14 @@ def _add_arguments(parser, arguments=[]) -> None:
             '--playlist-initial-id', '-4',
             type=int,
             required=False,
-            default=AudioGod.ARGUMENTS['playlist_initial_id'],
+            default=AudioGod.ARGUMENTS_DEFAULTS['playlist_initial_id'],
             dest='playlist_initial_id',
             help='initial id of playlists for itunes or apple music plist file',
         )
 
 
 def _handle_subcmd(args) -> None:
-    _arguments = copy.deepcopy(AudioGod.ARGUMENTS)
+    _arguments = copy.deepcopy(AudioGod.ARGUMENTS_DEFAULTS)
 
     for _argument in _arguments:
         if hasattr(args, _argument):
