@@ -483,8 +483,7 @@ class AudioGod(object):
         source_file=ARGUMENTS['source_file'],
         ignored_file=ARGUMENTS['ignored_file'],
         audios_root=ARGUMENTS['audios_root'],
-        audios_source=ARGUMENTS['audios_source'],
-        recursive=ARGUMENTS['recursive'],
+        audios_source=(ARGUMENTS['audios_source'], ARGUMENTS['recursive']),
         properties=ARGUMENTS['properties'],
         extensions=ARGUMENTS['extensions'],
         fields=ARGUMENTS['fields'],
@@ -508,23 +507,18 @@ class AudioGod(object):
         artwork_path=ARGUMENTS['artwork_path'],
         filename_pattern=ARGUMENTS['filename_pattern'],
         field_type=ARGUMENTS['field_type'],
-        output_format=ARGUMENTS['output_format'],
-        output_file=ARGUMENTS['output_file'],
+        output_options=(ARGUMENTS['output_file'], ARGUMENTS['output_format']),
         organize_type=ARGUMENTS['organize_type'],
-        log_level=ARGUMENTS['log_level'],
-        log_file=ARGUMENTS['log_file'],
+        logger_options=(ARGUMENTS['log_level'], ARGUMENTS['log_file']),
     ):
-        self.__logger = FatalLogger(log_level, log_file)
-        eyed3.log.setLevel(
-            #log_level,
-            logging.ERROR,
-        )
+        self.__logger = FatalLogger(*logger_options)
+        eyed3.log.setLevel(logging.ERROR)
 
         self.__source_file = self.abspath(source_file)
         self.__ignored_file = self.abspath(ignored_file)
         self.__audios_root = self.abspath(audios_root)
-        self.__audios_source = self.abspath(audios_source)
-        self.__recursive = recursive
+        self.__audios_source = self.abspath(audios_source[0])
+        self.__recursive = audios_source[1]
         self.__properties = json.loads(properties) if properties else {}
         self.__extensions = self.split(
             extensions.lower(), ',',
@@ -608,13 +602,13 @@ class AudioGod(object):
         self.__organize_type = AudioGod.OrganizeType(organize_type)
         self.__filename_pattern = filename_pattern
         self.__field_type = AudioGod.FieldType(field_type)
-        self.__output_file = self.abspath(output_file)
         
         self.__itunes_options = itunes_options
         self.__itunes_options[0] = self.abspath(self.__itunes_options[0])
         self.__itunes_options[1] = self.abspath(self.__itunes_options[1])
 
-        self.__output_format = AudioGod.FileFormat(output_format)
+        self.__output_file = self.abspath(output_options[0])
+        self.__output_format = AudioGod.FileFormat(output_options[1])
         if self.FileFormat.NONE.eq(self.__output_format):
             self.__output_format = self.recognize_file_format(self.output_file)
 
@@ -1763,25 +1757,25 @@ class AudioGod(object):
         )
 
         if len(self.omitted_audios) > 0:
-            self.logger.info('\nOmitted Audios:')
+            self.logger.warning('\nOmitted Audios:')
             for audio in self.omitted_audios:
-                self.logger.info(f'\t{audio}')
+                self.logger.warning(f'\t{audio}')
         if len(self.ignored_audios) > 0:
-            self.logger.info('\nIgnored Audios:')
+            self.logger.warning('\nIgnored Audios:')
             for audio in self.ignored_audios:
-                self.logger.info(f'\t{audio}')
+                self.logger.warning(f'\t{audio}')
         if len(self.invalid_ext_audios) > 0:
-            self.logger.info('\nInvalid Extension Audios:')
+            self.logger.warning('\nInvalid Extension Audios:')
             for audio in self.invalid_ext_audios:
-                self.logger.info(f'\t{audio}')
+                self.logger.warning(f'\t{audio}')
         if len(self.invalid_name_audios) > 0:
-            self.logger.info('\nInvalid Name Audios:')
+            self.logger.warning('\nInvalid Name Audios:')
             for audio in self.invalid_name_audios:
-                self.logger.info(f'\t{audio}')
+                self.logger.warning(f'\t{audio}')
         if matched and len(self.notmatched_audios) > 0:
-            self.logger.info('\nNot Matched Audios:')
+            self.logger.warning('\nNot Matched Audios:')
             for audio in self.notmatched_audios:
-                self.logger.info(f'\t{audio}')
+                self.logger.warning(f'\t{audio}')
 
     def __repack_audio_properties(self, properties):
         ret = {}
@@ -3635,8 +3629,7 @@ def _handle_subcmd(args) -> None:
         source_file=_arguments['source_file'],
         ignored_file=_arguments['ignored_file'],
         audios_root=_arguments['audios_root'],
-        audios_source=_arguments['audios_source'],
-        recursive=_arguments['recursive'],
+        audios_source=(_arguments['audios_source'], _arguments['recursive']),
         properties=_arguments['properties'],
         extensions=_arguments['extensions'],
         fields=_arguments['fields'],
@@ -3660,11 +3653,9 @@ def _handle_subcmd(args) -> None:
         artwork_path=_arguments['artwork_path'],
         filename_pattern=_arguments['filename_pattern'],
         field_type=_arguments['field_type'],
-        output_format=_arguments['output_format'],
-        output_file=_arguments['output_file'],
+        output_options=(_arguments['output_file'], _arguments['output_format']),
         organize_type=_arguments['organize_type'],
-        log_level=_arguments['log_level'],
-        log_file=_arguments['log_file'],
+        logger_options=(_arguments['log_level'], _arguments['log_file']),
     )
 
     getattr(god, args.subcmd.replace('-', '_'))()
