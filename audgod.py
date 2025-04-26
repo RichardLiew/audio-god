@@ -982,12 +982,12 @@ class AudioGod(object):
             return ret
         return os.path.normpath(os.path.abspath(os.path.expanduser(ret)))
 
-    @classmethod
-    def backup(cls, src):
-        if not os.path.exists(src):
-            raise Exception(f'File {src} not exists!')
-        timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
-        cls.duplicate(src, f'{src}.backup.{timestamp}')
+    def backup(self, src):
+        if os.path.exists(src):
+            timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
+            self.duplicate(src, f'{src}.backup.{timestamp}')
+        #else:
+        #    self.logger.error(f'Backup warning: File {src} not exists!')
 
     @staticmethod
     def transform_utc(timestamp) -> str:
@@ -1526,9 +1526,8 @@ class AudioGod(object):
                 ret = self.format[field](ret)
             if self.FileFormat.NONE.ne(output_format):
                 ret = self.output[field](ret, output_format)
-        if default is not None:
-            if not ret:
-                ret = default
+        if default is not None and not ret:
+            ret = default
         return ret
 
     def __load_ignored(self):
@@ -1873,7 +1872,8 @@ class AudioGod(object):
                     continue
                 tags = [self.AUDIOS_TREE_ROOT_TAG] + tags
                 subtree = TreeX(logger=self.logger)
-                last_nid, parent_tag = self.AUDIOS_TREE_ROOT_NID, ''
+                last_nid = self.AUDIOS_TREE_ROOT_NID
+                last_tag = parent_tag = ''
                 for i, tag in enumerate(tags):
                     nid = self.generate_persistent_id()
                     parent, node_type = last_nid, self.AudiosTreeNodeType.FOLDER
@@ -1881,11 +1881,14 @@ class AudioGod(object):
                         nid = self.AUDIOS_TREE_ROOT_NID
                         parent, node_type = None, self.AudiosTreeNodeType.ROOT
                     else:
-                        parent_tag += f'{tag}'
+                        if last_tag:
+                            parent_tag += f'{last_tag}'
                         if i == len(tags) - 1:
                             node_type = self.AudiosTreeNodeType.PLAYLIST
                         else:
-                            parent_tag += '/'
+                            if last_tag:
+                                parent_tag += '/'
+                        last_tag = tag
                     subtree.create_node(
                         tag, nid, parent=parent,
                         data=[
@@ -2081,8 +2084,46 @@ class AudioGod(object):
                         return
                     newname = self.abspath(self.audios_root, artist, album, os.path.basename(audio))
                     if newname != audio:
-                        os.makedirs(os.path.dirname(newname), exist_ok=True)
-                        self.rename(audio, newname)
+                        if not os.path.exists(newname):
+                            os.makedirs(os.path.dirname(newname), exist_ok=True)
+                            self.rename(audio, newname)
+                        else:
+                            current_grouping = self.fetchx(
+                                audio_object, self.AudioProperty.GROUPING, formatted=True,
+                            )
+                            current_groups = self.split(
+                                current_grouping,
+                                self.GROUPING_SEPARATOR,
+                                escaped=True,
+                                del_blank=True,
+                                filt_empty=True,
+                                filt_repeated=True,
+                            )
+                            existed_object = eyed3.load(newname)
+                            existed_grouping = self.fetchx(
+                                existed_object, self.AudioProperty.GROUPING, formatted=True,
+                            )
+                            existed_groups = self.split(
+                                existed_grouping,
+                                self.GROUPING_SEPARATOR,
+                                escaped=True,
+                                del_blank=True,
+                                filt_empty=True,
+                                filt_repeated=True,
+                            )
+                            if not bool(set(current_groups) & set(existed_groups)):
+                                self.save(
+                                    existed_object,
+                                    self.AudioProperty.GROUPING,
+                                    self.GROUPING_SEPARATOR.join(existed_groups+current_groups),
+                                    formatted=True,
+                                )
+                                self.remove(audio)
+                            else:
+                                self.logger.fatal(
+                                    f'Duplicate groupings between current <{audio}> and existed <{newname}>!',
+                                )
+                                return
                 case self.OrganizeType.GROUPED:
                     grouping = self.fetchx(
                         audio_object, self.AudioProperty.GROUPING, formatted=True,
@@ -2116,6 +2157,26 @@ class AudioGod(object):
                             ao, self.AudioProperty.GROUPING, group, True,
                         )
 
+    def __glorify_exportation(self, outputs):
+        ret = f'{"#"*78}\n\n'
+        ret += '# Summary: Collects {collects_count}, Items {items_count}\n\n'.format(
+            collects_count=len(outputs),
+            items_count=sum([len(x) for _, x in outputs.items()]),
+        )
+
+        collect_number = 0
+        for collect, items in outputs.items():
+            collect_number += 1
+            ret += f'\n({collect_number}) {collect}:\n'
+            item_number = 0
+            for item in items:
+                item_number += 1
+                ret += '\t{number} {content}\n'.format(
+                    number=f'{f"{item_number}.":<{len(str(len(items)))+1}}',
+                    content=item,
+                )
+        return ret
+
     def list_repeated(self):
         self.__load_audios(matched=False)
         
@@ -2136,18 +2197,8 @@ class AudioGod(object):
             else:
                 results[key] = [audio]
         
-        content = ''
-        for key in results:
-            items = results[key]
-            if len(items) < 2:
-                continue
-            content += f'{key}\n'
-            for item in items:
-                content += f'{item}\n'
-            content += '\n'
-
-        if not content:
-            content = 'No repeated!'
+        results = { key: items for key, items in results.items() if len(items) > 1 }
+        content = f'\n{self.__glorify_exportation(results)}'
 
         if not self.output_file:
             print(content)
@@ -2595,6 +2646,7 @@ class AudioGod(object):
             if not output_file:
                 print(content)
             else:
+                self.backup(output_file)
                 with open(output_file, 'w', encoding='utf-8') as f:
                     f.write(content)
             return content
@@ -2637,23 +2689,11 @@ class AudioGod(object):
     _pack_properties_for_xml = _pack_properties_for_plist
 
     def __summarize_for_note(self):
-        ret = '# Summary: Groups {group_number}, Items {item_number}\n\n'.format(
-            group_number=len(self.summaries),
-            item_number=sum([len(x) for _, (_, x) in self.summaries.items()]),
-        )
-
-        group_number = 0
-        for group, (genre, items) in self.summaries.items():
-            group_number += 1
-            ret += f'\n({group_number}) @[{genre}] {group}:\n'
-            item_number = 0
-            for item in items:
-                item_number += 1
-                ret += '{number} {content}\n'.format(
-                    number=f'{f"{item_number}.":<{len(str(len(items)))+1}}',
-                    content=self._pack_properties_for_note(item),
-                )
-        return ret
+        return self.__glorify_exportation({
+            f'@[{genre}] {grouping}': [
+                self._pack_properties_for_note(item) for item in items
+            ] for grouping, (genre, items) in self.summaries.items()
+        })
 
     def __sort_summaries(self):
         for grouping in self.summaries:
