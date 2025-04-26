@@ -552,8 +552,7 @@ class AudioGod(object):
         self.__source_file = self.abspath(source_file)
         self.__ignored_file = self.abspath(ignored_file)
         self.__audios_root = self.abspath(audios_root)
-        self.__audios_source = self.abspath(audios_source[0])
-        self.__recursive = audios_source[1]
+        self.__audios_source = (self.abspath(audios_source[0]), audios_source[1])
         self.__properties = json.loads(properties) if properties else {}
         self.__extensions = self.split(
             extensions.lower(), ',',
@@ -567,7 +566,7 @@ class AudioGod(object):
         ]
         self.__clauses = ([], {}, {}, [], [])
         self.__clauses_counter = [0, 0, 0, 0, 0, 0]
-        self.__audios = ([], [], [], [], set(), set())
+        self.__audios = ([], [], [], [], [], [])
         self.__audios_tree = TreeX(
             tree=None,
             deep=False,
@@ -746,10 +745,6 @@ class AudioGod(object):
         return self.__audios_source
 
     @property
-    def recursive(self):
-        return self.__recursive
-
-    @property
     def audios_tree(self):
         return self.__audios_tree
 
@@ -863,29 +858,29 @@ class AudioGod(object):
 
     @property
     def source_audios(self):
-        ret = []
-        if not os.path.exists(self.audios_source):
-            self.logger.fatal(f'Source <{self.audios_source}> not exists!')
+        ret, (audios_source, recursive) = [], self.audios_source
+        if not os.path.exists(audios_source):
+            self.logger.fatal(f'Source <{audios_source}> not exists!')
             return ret
-        if os.path.isfile(self.audios_source):
-            if not self.__check_extension(self.audios_source):
-                self.logger.fatal(f'Source <{self.audios_source}> invalid extension!')
+        if os.path.isfile(audios_source):
+            if not self.__check_extension(audios_source):
+                self.logger.fatal(f'Source <{audios_source}> invalid extension!')
                 return ret
-            ret.append(self.audios_source)
+            ret.append(audios_source)
             return ret
-        if not os.path.isdir(self.audios_source):
-            self.logger.fatal(f'Source <{self.audios_source}> not a directory!')
+        if not os.path.isdir(audios_source):
+            self.logger.fatal(f'Source <{audios_source}> not a directory!')
             return ret
-        if self.recursive:
-            for _root, _dirs, _files in os.walk(self.audios_source):
+        if recursive:
+            for _root, _dirs, _files in os.walk(audios_source):
                 for _dir in _dirs:
                     ret.append(self.abspath(_root, _dir))
                 for _file in _files:
                     ret.append(self.abspath(_root, _file))
         else:
             ret.extend([
-                self.abspath(self.audios_source, audio)
-                for audio in os.listdir(self.audios_source)
+                self.abspath(audios_source, audio)
+                for audio in os.listdir(audios_source)
             ])
         return ret
 
@@ -915,9 +910,11 @@ class AudioGod(object):
 
     @property
     def concerned_audios(self):
-        return self.invalid_name_audios \
-               + list(self.matched_audios) \
-               + list(self.notmatched_audios)
+        return list(dict.fromkeys(
+            self.invalid_name_audios \
+                + self.matched_audios \
+                + self.notmatched_audios,
+        ))
 
     @staticmethod
     def split(s, pattern=None, escaped=False, del_blank=True, filt_empty=True, filt_repeated=True, *args, **kwargs) -> list:
@@ -1757,10 +1754,10 @@ class AudioGod(object):
                     continue
             key = self.__generate_key_by_filename(audio)
             if key in self.valid_clauses:
-                self.matched_audios.add(audio)
+                self.matched_audios.append(audio)
                 self.logger.debug(self.AudioType.MATCHED)
             else:
-                self.notmatched_audios.add(audio)
+                self.notmatched_audios.append(audio)
                 self.logger.debug(self.AudioType.NOTMATCHED)
 
         self.logger.warning(f'\n{"#"*78}\n')
