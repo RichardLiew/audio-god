@@ -418,7 +418,9 @@ class AudioGod(object):
         AudioProperty.ARTWORK,
     ]
 
-    ALL_FIELDS = AudioProperty.members()
+    ALL_FIELDS = AudioProperty.members(excepts=[
+        AudioProperty.COMMENTS,
+    ])
 
     FIELDS = {
         'default': DEFAULT_FIELDS,
@@ -518,7 +520,10 @@ class AudioGod(object):
         source_file=ARGUMENTS_DEFAULTS['source_file'],
         ignored_file=ARGUMENTS_DEFAULTS['ignored_file'],
         audios_root=ARGUMENTS_DEFAULTS['audios_root'],
-        audios_source=(ARGUMENTS_DEFAULTS['audios_source'], ARGUMENTS_DEFAULTS['recursive']),
+        audios_source=(
+            ARGUMENTS_DEFAULTS['audios_source'],
+            ARGUMENTS_DEFAULTS['recursive'],
+        ),
         properties=ARGUMENTS_DEFAULTS['properties'],
         extensions=ARGUMENTS_DEFAULTS['extensions'],
         fields=ARGUMENTS_DEFAULTS['fields'],
@@ -542,9 +547,15 @@ class AudioGod(object):
         artwork_path=ARGUMENTS_DEFAULTS['artwork_path'],
         filename_pattern=ARGUMENTS_DEFAULTS['filename_pattern'],
         field_type=ARGUMENTS_DEFAULTS['field_type'],
-        output_options=(ARGUMENTS_DEFAULTS['output_file'], ARGUMENTS_DEFAULTS['output_format']),
+        output_options=(
+            ARGUMENTS_DEFAULTS['output_file'],
+            ARGUMENTS_DEFAULTS['output_format'],
+        ),
         organize_type=ARGUMENTS_DEFAULTS['organize_type'],
-        logger_options=(ARGUMENTS_DEFAULTS['log_level'], ARGUMENTS_DEFAULTS['log_file']),
+        logger_options=(
+            ARGUMENTS_DEFAULTS['log_level'],
+            ARGUMENTS_DEFAULTS['log_file'],
+        ),
     ):
         self.__logger = FatalLogger(*logger_options)
         eyed3.log.setLevel(logging.ERROR)
@@ -552,7 +563,9 @@ class AudioGod(object):
         self.__source_file = self.abspath(source_file)
         self.__ignored_file = self.abspath(ignored_file)
         self.__audios_root = self.abspath(audios_root)
-        self.__audios_source = (self.abspath(audios_source[0]), audios_source[1])
+        self.__audios_source = (
+            self.abspath(audios_source[0]), audios_source[1],
+        )
         self.__properties = json.loads(properties) if properties else {}
         self.__extensions = self.split(
             extensions.lower(), ',',
@@ -574,7 +587,9 @@ class AudioGod(object):
             identifier=None,
             logger=self.logger,
         )
-        self.audios_tree.create_node(self.AUDIOS_TREE_ROOT_TAG, self.AUDIOS_TREE_ROOT_NID)
+        self.audios_tree.create_node(
+            self.AUDIOS_TREE_ROOT_TAG, self.AUDIOS_TREE_ROOT_NID,
+        )
         self.__ignored_set = set()
         self.__summaries = {}
 
@@ -2235,14 +2250,7 @@ class AudioGod(object):
             ])
 
         def _charting(rows, pair_fields, options, output_file):
-            page_number = options[0]
-            page_size = options[1]
-            sort_ = options[2] if options[2] else []
-            filter_ = options[3] if options[3] else {}
-            fields_to_show = options[4] if options[4] else []
-            align_ = options[5] if options[5] else {}
-            numbered = options[6]
-            style = AudioGod.DisplayStyle(options[7])
+            page_number, page_size, sort_, filter_, fields_to_show, align_, numbered, style = options
 
             rl_fields_to_show = [dict(pair_fields)[x] for x in fields_to_show]
             fields = [x[0] for x in pair_fields]
