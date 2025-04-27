@@ -991,7 +991,8 @@ class AudioGod(object):
 
     @staticmethod
     def transform_utc(timestamp) -> str:
-        return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%SZ')
+        #return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%SZ')
+        return datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%SZ')
 
     @classmethod
     def current_time(cls) -> str:
@@ -1053,6 +1054,8 @@ class AudioGod(object):
         ret = re.sub(r'([\&])', r' \1 ', ret)
         # 依据情况而定，看看是否有必要将下面正则激活
         #ret = re.sub(r'\s*&\s*', r' & ', ret)
+        ret = re.sub(r'([\(\[])\s+', r'\1', ret)
+        ret = re.sub(r'\s+([\)\]])', r'\1', ret)
         ret = re.sub(r'\s+', r' ', ret).strip()
         ret = re.sub(r'([\)\]\>\|]) ([:,;\.\!\?])', r'\1\2', ret)
         return ret
@@ -1605,6 +1608,8 @@ class AudioGod(object):
                     genre, grouping = tuple(map(
                         lambda x: x.strip(), grouping_match.groups(),
                     ))
+                    genre = self.format[self.AudioProperty.GENRE](genre)
+                    grouping = self.format[self.AudioProperty.GROUPING](grouping)
                     if grouping and grouping in self.summaries:
                         genre, grouping = '', ''
                         invalid_info = 'grouping already exists'
@@ -1638,7 +1643,7 @@ class AudioGod(object):
                         if field in properties:
                             valid, invalid_info = False, 'duplicate field existed'
                             break
-                        properties[field] = value
+                        properties[field] = self.format[field](value)
                     if valid:
                         for field in self.NOTE_FIELDS:
                             if field not in properties:
@@ -1845,6 +1850,16 @@ class AudioGod(object):
             ret[field] = value
         return self.__repack_audio_properties(ret)
 
+    def __prime_audio(self, audio):
+        audio_object = eyed3.load(audio)
+        if audio_object is None:
+            self.logger.fatal(f'Invalid audio <{audio}>!')
+            return None
+        if audio_object.tag is None:
+            audio_object.initTag()
+            audio_object.tag.save() # type: ignore
+        return audio_object
+
     def __fill_audios_tree(self) -> None:
         self.__load_audios(matched=False)
 
@@ -1853,7 +1868,7 @@ class AudioGod(object):
 
         for audio in audios:
             track_persistent_id = self.generate_persistent_id()
-            audio_object = eyed3.load(audio)
+            audio_object = self.__prime_audio(audio)
             genre = self.fetchx(
                 audio_object,
                 self.AudioProperty.GENRE,
@@ -1988,7 +2003,7 @@ class AudioGod(object):
         self.logger.warning(f'\n{"#"*78}\n')
         for audio in audios:
             self.logger.debug(f'Filling <{audio}> ...')
-            filled, audio_object = False, eyed3.load(audio)
+            filled, audio_object = False, self.__prime_audio(audio)
             for field in self.fields:
                 property_ = self.__fetch_from_outside(audio, field)
                 if property_ is not None:
@@ -2016,7 +2031,7 @@ class AudioGod(object):
         self.logger.warning(f'\n{"#"*78}\n')
         for audio in audios:
             self.logger.debug(f'Formatting <{audio}> ...')
-            audio_object = eyed3.load(audio)
+            audio_object = self.__prime_audio(audio)
             for field in self.fields:
                 property_ = self.fetchx(audio_object, field, formatted=True)
                 if property_ is not None:
@@ -2027,7 +2042,7 @@ class AudioGod(object):
         self.__load_audios(matched=False)
         audios = self.concerned_audios
         for audio in audios:
-            audio_object = eyed3.load(audio)
+            audio_object = self.__prime_audio(audio)
             _old = os.path.basename(audio)
             _, ext = os.path.splitext(_old)
             _new = self.FilenamePatternTemplate(self.filename_pattern).safe_substitute({
@@ -2048,7 +2063,7 @@ class AudioGod(object):
             _path = os.path.dirname(audio)
             if self.artwork_path:
                 _path = self.artwork_path
-            audio_object = eyed3.load(audio)
+            audio_object = self.__prime_audio(audio)
             if not audio_object:
                 continue
             if not audio_object.tag:
@@ -2071,7 +2086,7 @@ class AudioGod(object):
         self.__load_audios(matched=False)
         audios = self.concerned_audios
         for audio in audios:
-            audio_object = eyed3.load(audio)
+            audio_object = self.__prime_audio(audio)
             match self.organize_type:
                 case self.OrganizeType.ITUNED:
                     artist = self.fetchx(audio_object, self.AudioProperty.ARTIST, formatted=True)
@@ -2099,7 +2114,7 @@ class AudioGod(object):
                                 filt_empty=True,
                                 filt_repeated=True,
                             )
-                            existed_object = eyed3.load(newname)
+                            existed_object = self.__prime_audio(newname)
                             existed_grouping = self.fetchx(
                                 existed_object, self.AudioProperty.GROUPING, formatted=True,
                             )
@@ -2138,7 +2153,7 @@ class AudioGod(object):
                     if target != audio:
                         os.makedirs(os.path.dirname(target), exist_ok=True)
                         self.rename(audio, target)
-                        ao = eyed3.load(target)
+                        ao = self.__prime_audio(target)
                         self.save(
                             ao, self.AudioProperty.GROUPING, groups[0], True,
                         )
@@ -2152,7 +2167,7 @@ class AudioGod(object):
                         if os.path.exists(link):
                             self.remove(link)
                         self.duplicate(target, link)
-                        ao = eyed3.load(link)
+                        ao = self.__prime_audio(link)
                         self.save(
                             ao, self.AudioProperty.GROUPING, group, True,
                         )
@@ -2182,7 +2197,7 @@ class AudioGod(object):
         
         audios, results = self.concerned_audios, {}
         for audio in audios:
-            audio_object = eyed3.load(audio)
+            audio_object = self.__prime_audio(audio)
             artist = self.fetchx(audio_object, self.AudioProperty.ARTIST, formatted=True)
             if not artist:
                 self.logger.fatal(f'Invalid artist of <{audio}>')
@@ -2292,7 +2307,7 @@ class AudioGod(object):
             case self.DataFormat.OUTPUTTED:
                 formatted, output_format = True, self.FileFormat.NOTE
         for audio in audios:
-            audio_object = eyed3.load(audio)
+            audio_object = self.__prime_audio(audio)
             results.append([
                 self.fetchx(
                     audio_object, self.AudioProperty(x[0]), formatted, output_format,
