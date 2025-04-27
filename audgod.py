@@ -145,13 +145,12 @@ DEFAULT_LOGGER_LEVEL = logging.WARNING
 class FatalLogger(logging.Logger):
     def __init__(self, level=DEFAULT_LOGGER_LEVEL, log_file=sys.stderr):
         super().__init__('fatal', level)
-        if log_file in [
-            None, '',
-            'stdout', 'stderr',
-            'sys.stdout', 'sys.stderr',
-            sys.stdout, sys.stderr,
-        ]:
-            console_handler = logging.StreamHandler(sys.stderr)
+        stdout_streams = ['stdout', 'sys.stdout', sys.stdout]
+        stderr_streams = [None, '', 'stderr', 'sys.stderr', sys.stderr]
+        if log_file in stdout_streams+stderr_streams:
+            console_handler = logging.StreamHandler(
+                sys.stderr if log_file in stderr_streams else sys.stdout
+            )
             console_handler.setFormatter(logging.Formatter('%(message)s'))
             console_handler.setLevel(level)
             self.addHandler(console_handler)
@@ -2174,10 +2173,11 @@ class AudioGod(object):
 
     def __glorify_exportation(self, outputs):
         ret = f'{"#"*78}\n\n'
-        ret += '# Summary: Collects {collects_count}, Items {items_count}\n\n'.format(
+        ret += '# Summary: Collects {collects_count}, Items {items_count}\n'.format(
             collects_count=len(outputs),
             items_count=sum([len(x) for _, x in outputs.items()]),
         )
+        ret += f'# Created Time: {self.current_time()}\n\n'
 
         collect_number = 0
         for collect, items in outputs.items():
