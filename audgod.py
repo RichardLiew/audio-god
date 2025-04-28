@@ -463,15 +463,38 @@ class AudioGod(object):
                     "sources": ["command", "file"],
                     "value": null
                 }
-            }\''''.replace(f'\n{" "*4*2}', '\n'),
+            }\'''',
         },
         'fields': { 'default': 'core' },
         'page_number': { 'default': 1 },
         'page_size': { 'default': 0 },
-        'sort': { 'default': '[]' },
-        'filter': { 'default': '{}' },
-        'align': { 'default': '{}' },
-        'numbered': { 'default': False },
+        'sort': {
+            'default': '''\'[
+                {"_comment": ""},
+                ["title,artist", true],
+                ["genre", false]
+            ]\'''',
+        },
+        'filter': {
+            'default': '''\'{
+                "_options": {
+                    "_comment": "relation choose from and/or",
+                    "relation": "or"
+                },
+                "title,core": {
+                    "_comment": "function choose from equal/search/empty",
+                    "function": "search",
+                    "parameters": ["", true, false]
+                }
+            }\'''',
+        },
+        'align': {
+            'default': '''\'{
+                "_comment": "align=l/c/r, valign=t/m/b",
+                "title,artist": "l:m"
+            }\'''',
+        },
+        'numbered': { 'default': 'true' },
         'style': {
             'default': DisplayStyle.TABLED,
             'choices': DisplayStyle.members(),
@@ -3361,12 +3384,16 @@ class AudioGod(object):
 
     @classmethod
     def render_usage(cls, usage) -> str:
+        kwargs = copy.deepcopy(cls.ARGUMENTS_DEFAULTS)
+        aliens = ['properties', 'sort', 'filter', 'align']
+        for alien in aliens:
+            kwargs[alien] = kwargs[alien].replace(f'\n{" " * 4 * 2}', '\n')
         ret = '\n' + Template(usage).safe_substitute(dict(
             audio_properties=cls.audio_properties(),
             special_fields=cls.special_fields(),
             special_characters=cls.special_characters(),
             cmd=cls.get_command(),
-            **cls.ARGUMENTS_DEFAULTS,
+            **kwargs,
         ))
         pos = next((i for i, c in enumerate(ret[2:], 1) if c != ' '), -1)
         if pos > 0:
@@ -3576,33 +3603,16 @@ class AudioGod(object):
                             --extensions=${extensions} \\
                             --recursive=${recursive} \\
                             --ignored-file=${ignored_file} \\
-                            --fields=core \\
-                            --page-number=1 \\
-                            --page-size=0 \\
-                            --sort='[
-                                {"_comment": ""},
-                                ["title,artist", true],
-                                ["genre", false]
-                            ]' \\
-                            --filter='{
-                                "_options": {
-                                    "_comment": "relation choose from and/or",
-                                    "relation": "and"
-                                },
-                                "title,core": {
-                                    "_comment": "function choose from equal/search/empty",
-                                    "function": "search",
-                                    "parameters": ["a", true, false]
-                                }
-                            }' \\
-                            --align='{
-                                "_comment": "align=l/c/r, valign=t/m/b",
-                                "title,artist": "l:m"
-                            }' \\
-                            --style=tabled \\
-                            --data-format=outputted \\
+                            --fields=${fields} \\
+                            --page-number=${page_number} \\
+                            --page-size=${page_size} \\
+                            --sort=${sort} \\
+                            --filter=${filter} \\
+                            --align=${align} \\
+                            --style=${style} \\
+                            --data-format=${data_format} \\
                             --field-type=cn \\
-                            --numbered \\
+                            --numbered=${numbered} \\
                             --output-file="" \\
                             --log-level=${log_level} \\
                             --log-file=${log_file}
@@ -3785,6 +3795,11 @@ General commands:
 ################################################################################
 
 def _add_arguments(parser, arguments=[]) -> None:
+    def Boolean(x):
+        if type(x) is str:
+            return x.lower() in ('true', '1', 'yes')
+        return bool(x)
+
     parser.add_argument(
         '--log-level', '-l',
         type=str,
@@ -3854,11 +3869,6 @@ def _add_arguments(parser, arguments=[]) -> None:
             help='properties for audios',
         )
     
-    def Boolean(x):
-        if type(x) is str:
-            return x.lower() in ('true', '1', 'yes')
-        return bool(x)
-
     if 'recursive' in arguments:
         parser.add_argument(
             '--recursive', '-r',
@@ -3947,7 +3957,9 @@ def _add_arguments(parser, arguments=[]) -> None:
     if 'numbered' in arguments:
         parser.add_argument(
             '--numbered', '-n',
-            action='store_true',
+            type=Boolean,
+            required=False,
+            default=AudioGod.ARGUMENTS_DEFAULTS['numbered'],
             dest='numbered',
             help='if show number for audios display',
         )
