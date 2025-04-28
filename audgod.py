@@ -3007,7 +3007,10 @@ class AudioGod(object):
 
     @log_decorator
     def generate_script(self):
-        content = '#!/usr/bin/env zsh\n'
+        content = '#!/usr/bin/env zsh\n\n'
+        content += '#' * 78 + '\n\n'
+        content += 'set -e\n\n'
+        content += '#' * 78 + '\n'
         steps = [
             'preprocess-notes',
             'fill-properties',
@@ -3025,9 +3028,9 @@ class AudioGod(object):
             else:
                 usage = self.ACTIONS()[step]['kwargs']['usage']
             usage = self.render_usage(usage).strip()
-            content += f'\n{usage} \\'
+            content += f'\n{usage}'
             if i < len(steps) - 1:
-                content += '\n& \\'
+                content += '\n'
         content = self.render_usage(content.rstrip(' \\') + '\n').lstrip()
         if not self.output_file:
             print(content)

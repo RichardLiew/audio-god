@@ -1,11 +1,17 @@
 #!/usr/bin/env zsh
 
+##############################################################################
+
+set -e
+
+##############################################################################
+
 pipenv run python audgod.py preprocess-notes \
     --source-file=./songs.note \
     --field-type=cn \
     --log-level=WARNING \
-    --log-file=stderr \
-& \
+    --log-file=stderr
+
 pipenv run python audgod.py fill-properties \
     --audios-source=~/Music/Source \
     --extensions=mp3,aac \
@@ -24,16 +30,16 @@ pipenv run python audgod.py fill-properties \
         \} \
     \}' \
     --log-level=WARNING \
-    --log-file=stderr \
-& \
+    --log-file=stderr
+
 pipenv run python audgod.py format-properties \
     --audios-source=~/Music/Source \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./ignored.txt \
     --log-level=WARNING \
-    --log-file=stderr \
-& \
+    --log-file=stderr
+
 pipenv run python audgod.py rename-audios \
     --audios-source=~/Music/Source \
     --extensions=mp3,aac \
@@ -41,8 +47,8 @@ pipenv run python audgod.py rename-audios \
     --ignored-file=./ignored.txt \
     --filename-pattern="@{artist} # @{title}" \
     --log-level=WARNING \
-    --log-file=stderr \
-& \
+    --log-file=stderr
+
 pipenv run python audgod.py organize-files \
     --audios-source=~/Music/Source \
     --extensions=mp3,aac \
@@ -51,8 +57,8 @@ pipenv run python audgod.py organize-files \
     --audios-root=~/Music/Grouped \
     --organize-type=grouped \
     --log-level=WARNING \
-    --log-file=stderr \
-& \
+    --log-file=stderr
+
 pipenv run python audgod.py export \
     --audios-source=~/Music/Grouped \
     --extensions=mp3,aac \
@@ -63,8 +69,8 @@ pipenv run python audgod.py export \
     --output-format=note \
     --output-file=./songs.note \
     --log-level=WARNING \
-    --log-file=stderr \
-& \
+    --log-file=stderr
+
 pipenv run python audgod.py list-repeated \
     --audios-source=~/Music/Grouped \
     --extensions=mp3,aac \
@@ -72,8 +78,8 @@ pipenv run python audgod.py list-repeated \
     --ignored-file=./ignored.txt \
     --output-file=./repeated.txt \
     --log-level=WARNING \
-    --log-file=stderr \
-& \
+    --log-file=stderr
+
 pipenv run python audgod.py organize-files \
     --audios-source=~/Music/Source \
     --extensions=mp3,aac \
@@ -82,8 +88,8 @@ pipenv run python audgod.py organize-files \
     --audios-root=~/music/iTunes/iTunes\ Media \
     --organize-type=ituned \
     --log-level=WARNING \
-    --log-file=stderr \
-& \
+    --log-file=stderr
+
 pipenv run python audgod.py export \
     --audios-source=~/music/iTunes/iTunes\ Media \
     --extensions=mp3,aac \
