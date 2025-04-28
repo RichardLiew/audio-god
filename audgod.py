@@ -579,16 +579,20 @@ class AudioGod(object):
         self.__audios_source = (
             self.abspath(audios_source[0]), audios_source[1],
         )
-        self.__properties = self.load_json(properties)
+        self.__properties = self.load_json(properties, {})
         self.__extensions = self.split(
             extensions.lower(), ',',
             escaped=True,
             del_blank=True,
             filt_empty=True,
             filt_repeated=True,
+            sortify=False,
+            reversify=False,
         )
         self.__fields = [
-            self.AudioProperty(x) for x in self.__resolve_fields(fields)
+            self.AudioProperty(x) for x in self.__resolve_fields(
+                fields, sortify=False, reversify=False, stringify=False,
+            )
         ]
         self.__clauses = ([], {}, {}, [], [])
         self.__clauses_counter = [0, 0, 0, 0, 0, 0]
@@ -674,56 +678,98 @@ class AudioGod(object):
         if self.FileFormat.NONE.eq(self.__output_format):
             self.__output_format = self.recognize_file_format(self.output_file)
 
-    def __resolve_fields(self, fields):
-        fields_ = self.split(fields, ',', escaped=True)
-        for key in self.FIELDS.keys():
-            try:
-                index = fields_.index(key)
-                fields_ = fields_[0:index] + \
-                        [x for x in self.FIELDS[key]] + \
-                        fields_[index+1:]
-            except:
-                pass
+    def __resolve_fields(self, fields, sortify=False, reversify=False, stringify=False):
+        fields_ = self.split(
+            fields.lower(), ',',
+            escaped=True,
+            del_blank=True,
+            filt_empty=True,
+            filt_repeated=True,
+            sortify=False,
+            reversify=False,
+        )
         ret = []
         for field in fields_:
-            if field not in ret:
+            if field in self.FIELDS.keys():
+                ret.extend(self.FIELDS[field])
+            else:
+                if field not in self.ALL_FIELDS:
+                    self.logger.fatal(f'Invalid field <{field}>!')
+                    return ret
                 ret.append(field)
+        ret = list(dict.fromkeys(ret))
+        if sortify:
+            ret.sort()
+        if reversify:
+            ret = list(reversed(ret))
+        if stringify:
+            ret = ','.join(ret)
         return ret
 
     @staticmethod
-    def load_json(content) -> list | dict | None:
+    def load_json(content, default=None) -> list | dict | None:
         def _remove_comments(data):
             comment_tag = '_comment'
             if isinstance(data, dict):
-                for key in list(data.keys()):
-                    if key == comment_tag:
-                        del data[key]
-                    else:
-                        data[key] = _remove_comments(data[key])
+                if comment_tag in data:
+                    del data[comment_tag]
+                for key in data:
+                    data[key] = _remove_comments(data[key])
             elif isinstance(data, list):
+                comment_indexes = []
                 for i in range(len(data)):
-                    data[i] = _remove_comments(data[i])
+                    if isinstance(data[i], dict):
+                        old_len = len(data[i])
+                        data[i] = _remove_comments(data[i])
+                        new_len = len(data[i])
+                        if  old_len > 0 and new_len == 0:
+                            comment_indexes.append(i)
+                    else:
+                        data[i] = _remove_comments(data[i])
+                for i in comment_indexes:
+                    del data[i]
             return data
 
         ret = None
         if content:
             ret = _remove_comments(json.loads(content))
+        if ret is None:
+            ret = default
         return ret
 
     def __rewrite_options(self, options):
         page_number = options[0]
         page_size = options[1]
-        sort_ = self.load_json(options[2])
-        filter_ = self.load_json(options[3])
-        fields_to_show = self.__resolve_fields(options[4])
-        align_ = self.load_json(options[5])
+        sort_ = self.load_json(options[2], [])
+        filter_ = self.load_json(options[3], {})
+        fields_to_show = self.__resolve_fields(
+            options[4], sortify=False, reversify=False, stringify=False,
+        )
+        align_ = self.load_json(options[5], {})
         numbered = options[6]
         style = self.DisplayStyle(options[7])
 
-        for key in self.FIELDS.keys():
-            if key in filter_.keys(): # type: ignore
-                keyword = ','.join([x for x in self.FIELDS[key]])
-                filter_[keyword] = filter_.pop(key) # type: ignore
+        for i in range(len(sort_)): # type: ignore
+            sort_[i][0] = self.__resolve_fields( # type: ignore
+                sort_[i][0], sortify=False, reversify=False, stringify=True, # type: ignore
+            )
+
+        filter_keys = [
+            key for key in list(filter_.keys()) # type: ignore
+            if key != '_options'
+        ]
+        for key in filter_keys:
+            new_key = self.__resolve_fields(
+                key, sortify=True, reversify=False, stringify=True,
+            )
+            filter_[new_key] = filter_.pop(key) # type: ignore
+
+        align_keys = list(align_.keys()) # type: ignore
+        for key in align_keys:
+            new_key = self.__resolve_fields(
+                key, sortify=True, reversify=False, stringify=True,
+            )
+            align_[new_key] = align_.pop(key) # type: ignore
 
         return [
             page_number,
@@ -965,7 +1011,12 @@ class AudioGod(object):
         ))
 
     @staticmethod
-    def split(s, pattern=None, escaped=False, del_blank=True, filt_empty=True, filt_repeated=True, *args, **kwargs) -> list:
+    def split(
+        s, pattern=None, escaped=False,
+        del_blank=True, filt_empty=True, filt_repeated=True,
+        sortify=False, reversify=False,
+        *args, **kwargs,
+    ) -> list:
         if not s:
             return []
         if not pattern:
@@ -979,6 +1030,10 @@ class AudioGod(object):
             ret = list(filter(lambda x: x, ret))
         if filt_repeated:
             ret = list(dict.fromkeys(ret))
+        if sortify:
+            ret.sort()
+        if reversify:
+            ret = list(reversed(ret))
         return ret
 
     @staticmethod
@@ -1178,9 +1233,22 @@ class AudioGod(object):
 
     @classmethod
     def parse_track_num(cls, track_num):
+        ret = [None, None]
         if track_num is None:
-            return (None, None)
-        ret = tuple(map(int, track_num.split(',')[:2]))
+            return ret
+        value = cls.split(
+            track_num, ',',
+            escaped=True,
+            del_blank=True,
+            filt_empty=True,
+            filt_repeated=False,
+            sortify=False,
+            reversify=False,
+        )
+        if len(value) >= 1:
+            ret[0] = int(value[0]) # type: ignore
+        if len(value) > 1:
+            ret[1] = int(value[1]) # type: ignore
         return ret
 
     @classmethod
@@ -1237,6 +1305,8 @@ class AudioGod(object):
             del_blank=True,
             filt_empty=True,
             filt_repeated=False,
+            sortify=False,
+            reversify=False,
         )
         return cls.GROUPING_SEPARATOR.join(groups)
 
@@ -1403,10 +1473,18 @@ class AudioGod(object):
         name, _ = os.path.splitext(os.path.basename(audio))
         if name.count(self.DIV_CHAR) == 1:
             return self.generate_key(
-                *self.split(name, self.DIV_CHAR, escaped=True, filt_empty=False, filt_repeated=False),
+                *self.split(
+                    name, self.DIV_CHAR, escaped=True,
+                    del_blank=False, filt_empty=False, filt_repeated=False,
+                    sortify=False, reversify=False,
+                ),
             )
         return self.generate_key(
-            *self.split(name, self.ORI_DIV_CHAR, escaped=True, filt_empty=False, filt_repeated=False),
+            *self.split(
+                name, self.ORI_DIV_CHAR, escaped=True,
+                del_blank=False, filt_empty=False, filt_repeated=False,
+                sortify=False, reversify=False,
+            ),
         )
 
     def __fetch_from_outside(self, audio, field):
@@ -1463,14 +1541,9 @@ class AudioGod(object):
                 audio_object.tag.comments.set(value)
             case _ if field in self.ZIP_FIELDS:
                 comments = audio_object.tag.comments
-                if comments is None:
-                    comments = '{}'
-                else:
+                if comments is not None:
                     comments = ''.join([comment.text for comment in comments])
-                try:
-                    comments = self.load_json(comments)
-                except:
-                    comments = {}
+                comments = self.load_json(comments, {})
                 comments[field] = value # type: ignore
                 audio_object.tag.comments.set(json.dumps(comments))
                 if self.AudioProperty.ARTWORK.eq(field):
@@ -1535,10 +1608,7 @@ class AudioGod(object):
                 comments = audio_object.tag.comments
                 if comments:
                     comments = ''.join([comment.text for comment in comments])
-                    try:
-                        ret = self.load_json(comments).get(field, None) # type: ignore
-                    except:
-                        pass
+                ret = self.load_json(comments, {}).get(field, None) # type: ignore
                 match field:
                     case AudioGod.AudioProperty.ARTWORK:
                         if len(audio_object.tag.images) == 0 and not ret:
@@ -1914,8 +1984,16 @@ class AudioGod(object):
                 formatted=True,
                 default=self.DEFAULT_GROUPING,
             )
-            for group in self.split(grouping, self.GROUPING_SEPARATOR, escaped=True): # type: ignore
-                tags = self.split(group, r'/', escaped=True, filt_repeated=False)
+            for group in self.split(
+                grouping, self.GROUPING_SEPARATOR, escaped=True,
+                del_blank=True, filt_empty=True, filt_repeated=True,
+                sortify=False, reversify=False,
+            ):
+                tags = self.split(
+                    group, r'/', escaped=True,
+                    del_blank=True, filt_empty=True, filt_repeated=False,
+                    sortify=False, reversify=False,
+                )
                 if not tags:
                     continue
                 tags = [self.AUDIOS_TREE_ROOT_TAG] + tags
@@ -2151,6 +2229,8 @@ class AudioGod(object):
                                 del_blank=True,
                                 filt_empty=True,
                                 filt_repeated=True,
+                                sortify=False,
+                                reversify=False,
                             )
                             existed_object = self.__prime_audio(newname)
                             existed_grouping = self.fetchx(
@@ -2163,6 +2243,8 @@ class AudioGod(object):
                                 del_blank=True,
                                 filt_empty=True,
                                 filt_repeated=True,
+                                sortify=False,
+                                reversify=False,
                             )
                             if not bool(set(current_groups) & set(existed_groups)):
                                 self.save(
@@ -2184,7 +2266,11 @@ class AudioGod(object):
                     if not grouping:
                         self.logger.fatal(f'Invalid grouping of <{audio}>')
                         return
-                    groups = self.split(grouping, self.GROUPING_SEPARATOR, escaped=True) # type: ignore
+                    groups = self.split(
+                        grouping, self.GROUPING_SEPARATOR, escaped=True,
+                        del_blank=True, filt_empty=True, filt_repeated=True,
+                        sortify=False, reversify=False,
+                    )
                     target = self.abspath(
                         self.audios_root, groups[0], os.path.basename(audio),
                     )
@@ -2362,20 +2448,20 @@ class AudioGod(object):
             fields = [x[0] for x in pair_fields]
 
             if align_:
-                for _fields in align_.keys():
+                keys = list(align_.keys())
+                for _fields in keys:
                     h, v = align_[_fields].split(':')
                     h, v = h.strip(), v.strip()
-                    for _field in filter(None, _fields.split(',')):
-                        _field = _field.strip()
+                    for _field in _fields.split(','):
                         if _field:
                             align_[_field] = (h if h else 'l', v if v else 'm')
 
             swaps = []
             for i, field in enumerate(fields_to_show):
-                index = fields.index(field)
-                if index < 0:
+                if field not in fields:
                     self.logger.fatal(f'Invalid field <{field}>!')
                     return
+                index = fields.index(field)
                 if index != i:
                     fields[i], fields[index] = \
                             fields[index], fields[i]
@@ -2452,13 +2538,13 @@ class AudioGod(object):
                         function = filter_[_fields].get('function', 'search')
                         parameters = filter_[_fields].get('parameters', [])
                         if function in filter_functions.keys():
-                            for _field in filter(None, _fields.split(',')):
-                                index = fields.index(_field.strip())
-                                if index < 0:
+                            for _field in _fields.split(','):
+                                if _field not in fields:
                                     self.logger.fatal(
                                         f'Invalid field <{_field}> when filter!',
                                     )
                                     return
+                                index = fields.index(_field)
                                 if relation == 'or':
                                     rows_set.update(filter_functions[function](
                                         rows, index, *parameters,
@@ -2489,13 +2575,13 @@ class AudioGod(object):
 
             if sort_:
                 for _fields, reverse in reversed(sort_):
-                    for _field in reversed(list(filter(None, _fields.split(',')))):
-                        index = fields.index(_field.strip())
-                        if index < 0:
+                    for _field in reversed(_fields.split(',')):
+                        if _field not in fields:
                             self.logger.fatal(
                                 f'Invalid field <{_field}> when sort!',
                             )
                             return
+                        index = fields.index(_field)
                         function = sort_functions['default']
                         if _field in sort_functions.keys():
                             function = sort_functions[_field]
