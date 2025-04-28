@@ -453,7 +453,7 @@ class AudioGod(object):
         'recursive': { 'default': 'true' },
         'audios_root': { 'default': '~/Music/Source' },
         'properties': {
-            'default': '''\'{
+            'default': '''{
                 "_comment": "sources choose from command/file/directory/filename",
                 "default": {
                     "sources": ["command", "file"],
@@ -463,20 +463,20 @@ class AudioGod(object):
                     "sources": ["command", "file"],
                     "value": null
                 }
-            }\'''',
+            }''',
         },
         'fields': { 'default': 'core' },
         'page_number': { 'default': 1 },
         'page_size': { 'default': 0 },
         'sort': {
-            'default': '''\'[
+            'default': '''[
                 {"_comment": ""},
                 ["title,artist", true],
                 ["genre", false]
-            ]\'''',
+            ]''',
         },
         'filter': {
-            'default': '''\'{
+            'default': '''{
                 "_options": {
                     "_comment": "relation choose from and/or",
                     "relation": "or"
@@ -486,13 +486,13 @@ class AudioGod(object):
                     "function": "search",
                     "parameters": ["", true, false]
                 }
-            }\'''',
+            }''',
         },
         'align': {
-            'default': '''\'{
+            'default': '''{
                 "_comment": "align=l/c/r, valign=t/m/b",
                 "title,artist": "l:m"
-            }\'''',
+            }''',
         },
         'numbered': { 'default': 'true' },
         'style': {

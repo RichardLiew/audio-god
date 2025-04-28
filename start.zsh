@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-04-29T03:00:20Z
+# Created Time: 2025-04-29T07:45:02Z
 
 ##############################################################################
 
@@ -23,7 +23,7 @@ pipenv run python audgod.py fill-properties \
     --ignored-file=./ignored.txt \
     --source-file=./songs.note \
     --audios-root=~/Music/Source \
-    --properties='{
+    --properties={
         "_comment": "sources choose from command/file/directory/filename",
         "default": {
             "sources": ["command", "file"],
@@ -33,7 +33,7 @@ pipenv run python audgod.py fill-properties \
             "sources": ["command", "file"],
             "value": null
         }
-    }' \
+    } \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -90,20 +90,20 @@ pipenv run python audgod.py organize-files \
     --extensions=mp3,aac \
     --recursive=true \
     --ignored-file=./ignored.txt \
-    --audios-root=~/music/iTunes/iTunes\ Media \
+    --audios-root=~/music/iTunes/iTunes\ Media/Music \
     --organize-type=ituned \
     --log-level=WARNING \
     --log-file=stderr
 
 pipenv run python audgod.py export \
-    --audios-source=~/music/iTunes/iTunes\ Media \
+    --audios-source=~/music/iTunes/iTunes\ Media/Music \
     --extensions=mp3,aac \
     --recursive=true \
     --ignored-file=./ignored.txt \
     --fields=ituned \
     --field-type=en \
     --itunes-version-plist=/System/Applications/Music.app/Contents/version.plist \
-    --itunes-media-folder=~/music/iTunes/iTunes\ Media \
+    --itunes-media-folder=~/music/iTunes/iTunes\ Media/Music \
     --track-initial-id=601 \
     --playlist-initial-id=3001 \
     --output-format=plist \
