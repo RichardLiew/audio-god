@@ -3172,22 +3172,7 @@ def _render_usage(usage) -> str:
         special_fields=_special_fields(),
         special_characters=_special_characters(),
         cmd=_get_command(),
-        track_initial_id=AudioGod.ARGUMENTS_DEFAULTS['track_initial_id'],
-        playlist_initial_id=AudioGod.ARGUMENTS_DEFAULTS['playlist_initial_id'],
-        music_source_folder=AudioGod.ARGUMENTS_DEFAULTS['music_source_folder'],
-        music_grouped_folder=AudioGod.ARGUMENTS_DEFAULTS['music_grouped_folder'],
-        music_artworks_folder=AudioGod.ARGUMENTS_DEFAULTS['music_artworks_folder'],
-        itunes_media_folder=AudioGod.ARGUMENTS_DEFAULTS['itunes_media_folder'],
-        itunes_library_plist=AudioGod.ARGUMENTS_DEFAULTS['itunes_library_plist'],
-        itunes_version_plist=AudioGod.ARGUMENTS_DEFAULTS['itunes_version_plist'],
-        ignored_file=AudioGod.ARGUMENTS_DEFAULTS['ignored_file'],
-        note_file=AudioGod.ARGUMENTS_DEFAULTS['note_file'],
-        repeated_file=AudioGod.ARGUMENTS_DEFAULTS['repeated_file'],
-        extensions=AudioGod.ARGUMENTS_DEFAULTS['extensions'],
-        filename_pattern=AudioGod.ARGUMENTS_DEFAULTS['filename_pattern'],
-        script_file=AudioGod.ARGUMENTS_DEFAULTS['script_file'],
-        log_level=AudioGod.ARGUMENTS_DEFAULTS['log_level'],
-        log_file=AudioGod.ARGUMENTS_DEFAULTS['log_file'],
+        **AudioGod.ARGUMENTS_DEFAULTS,
     )))
 
 
@@ -3400,7 +3385,7 @@ ACTIONS={
                     --ignored-file=${ignored_file} \\
                     --fields=core \\
                     --page-number=1 \\
-                    --page-size=10 \\
+                    --page-size=0 \\
                     --sort='[["title,artist", true], ["genre", false]]' \\
                     --filter='\\{ \\
                         "_options": \\{ \\
