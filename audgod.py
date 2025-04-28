@@ -2263,14 +2263,14 @@ class AudioGod(object):
                     grouping = self.fetchx(
                         audio_object, self.AudioProperty.GROUPING, formatted=True,
                     )
-                    if not grouping:
-                        self.logger.fatal(f'Invalid grouping of <{audio}>')
-                        return
                     groups = self.split(
                         grouping, self.GROUPING_SEPARATOR, escaped=True,
                         del_blank=True, filt_empty=True, filt_repeated=True,
                         sortify=False, reversify=False,
                     )
+                    if not groups:
+                        self.logger.fatal(f'Invalid grouping of <{audio}>')
+                        return
                     target = self.abspath(
                         self.audios_root, groups[0], os.path.basename(audio),
                     )
@@ -3648,15 +3648,26 @@ Precautions:
 
 General steps:
 
+Ready:
     Step.1: Download songs, and make sure that file named with "artist-title";
-    Step.2: Add detail of songs to notes, then grouped;
-    Step.3: Preprocess notes, until note file not changed;
-    Step.4: Fill properties;
-    Step.5: Format properties;
-    Step.6: Rename audios;
-    Step.7: Organize files;
-    Step.8: List repeated audios;
-    Step.9: Export plist, json, markdown and note file.
+    Step.2: Add detail of songs to notes, then grouped.
+
+Process Method 1:
+    Step.1: Preprocess notes, until note file not changed;
+    Step.2: Fill properties;
+    Step.3: Format properties;
+    Step.4: Rename audios;
+    Step.5: Organize grouped files;
+    Step.6: Export note file;
+    Step.7: List repeated audios of grouped;
+    Step.8: Organize ituned files;
+    Step.9: Export plist file.
+
+Process Method 2:
+    Step.1: Put audios to source folder (e.g. ~/Music/Source);
+    Step.2: Put note file to local folder (e.g. ./songs.note);
+    Step.3: Run <generate-script> subcommand to generate a shell script (e.g. ./start.zsh);
+    Step.4: Execute the shell script above.
 
 ------------------------------------------------------------------------------
 
