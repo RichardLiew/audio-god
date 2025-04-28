@@ -101,6 +101,7 @@ import logging
 import argparse
 import plistlib
 import datetime
+import functools
 
 from string import Template
 
@@ -142,6 +143,26 @@ DEFAULT_LOG_FILE = 'stderr'
 #                            CLASSES AND FUNCTIONS                             #
 #                                                                              #
 ################################################################################
+
+def log_decorator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        print_func = print
+        instance = args[0] if args else None
+        if instance:
+            logger = getattr(instance, 'logger', None)
+            if logger:
+                print_func = logger.warning
+        func_name, start_time = func.__name__.replace('_', '-'), time.time()
+        print_func(f'Starting <{func_name}> ...')
+        try:
+            result = func(*args, **kwargs)
+            return result
+        finally:
+            cost_time = time.time() - start_time
+            print_func(f'<{func_name}> finished, cost {cost_time:.2f} seconds.')
+    return wrapper
+
 
 class FatalLogger(logging.Logger):
     def __init__(self, level=DEFAULT_LOG_LEVEL, log_file=DEFAULT_LOG_FILE):
@@ -2012,11 +2033,13 @@ class AudioGod(object):
             )
         )
 
+    @log_decorator
     def fill_properties(self):
         self.__load_properties_from_file()
         self.__load_audios(matched=True)
         self.__fill_audio_properties()
 
+    @log_decorator
     def format_properties(self):
         self.__load_audios(matched=False)
         audios = self.concerned_audios
@@ -2030,6 +2053,7 @@ class AudioGod(object):
                     self.save(audio_object, field, property_, True)
         self.logger.warning(f'Formatted Audios: {len(audios)}\n')
 
+    @log_decorator
     def rename_audios(self):
         self.__load_audios(matched=False)
         audios = self.concerned_audios
@@ -2047,6 +2071,7 @@ class AudioGod(object):
             _path = os.path.dirname(audio)
             self.rename(self.abspath(_path, _old), self.abspath(_path, _new))
 
+    @log_decorator
     def derive_artworks(self):
         self.__load_audios(matched=False)
         audios = self.concerned_audios
@@ -2071,6 +2096,7 @@ class AudioGod(object):
                 with open(image_file, 'wb') as f:
                     f.write(image.image_data)
 
+    @log_decorator
     def organize_files(self):
         if not self.audios_root:
             self.logger.fatal('Invalid audios root!')
@@ -2185,6 +2211,7 @@ class AudioGod(object):
                 )
         return ret
 
+    @log_decorator
     def list_repeated(self):
         self.__load_audios(matched=False)
         
@@ -2713,6 +2740,7 @@ class AudioGod(object):
             key: self.summaries[key] for key in sorted(self.summaries)
         }
 
+    @log_decorator
     def preprocess_notes(self):
         self.output_format = self.FileFormat.NOTE
         self.__analysis_note()
@@ -2743,7 +2771,8 @@ class AudioGod(object):
             self.summaries[group] = (genre, list(map(lambda x: x.data[5], items)))
 
         self.__sort_summaries()
-        
+
+    @log_decorator
     def export(self):
         self.__summarize()
 
@@ -2972,9 +3001,11 @@ class AudioGod(object):
     
     _export_xml = _export_plist
 
+    @log_decorator
     def convert(self):
         pass
 
+    @log_decorator
     def generate_script(self):
         content = '#!/usr/bin/env zsh\n'
         steps = [
