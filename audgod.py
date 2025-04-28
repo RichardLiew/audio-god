@@ -134,7 +134,8 @@ __VERSION__ = 'Audio God 1.0'
 #                                                                              #
 ################################################################################
 
-DEFAULT_LOGGER_LEVEL = logging.WARNING
+DEFAULT_LOG_LEVEL = 'WARNING'
+DEFAULT_LOG_FILE = 'stderr'
 
 ################################################################################
 #                                                                              #
@@ -143,7 +144,7 @@ DEFAULT_LOGGER_LEVEL = logging.WARNING
 ################################################################################
 
 class FatalLogger(logging.Logger):
-    def __init__(self, level=DEFAULT_LOGGER_LEVEL, log_file=sys.stderr):
+    def __init__(self, level=DEFAULT_LOG_LEVEL, log_file=DEFAULT_LOG_FILE):
         super().__init__('fatal', level)
         stdout_streams = ['stdout', 'sys.stdout', sys.stdout]
         stderr_streams = [None, '', 'stderr', 'sys.stderr', sys.stderr]
@@ -171,7 +172,7 @@ class TreeX(Tree):
     def __init__(self, logger=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if logger is None:
-            logger = FatalLogger(DEFAULT_LOGGER_LEVEL)
+            logger = FatalLogger(DEFAULT_LOG_LEVEL, DEFAULT_LOG_FILE)
         self.logger = logger
 
     def perfect_merge(self, nid, new_tree, deep=False) -> None:
@@ -229,18 +230,6 @@ class AudioGod(object):
     ORI_DIV_CHAR = '-'
     DIV_CHAR = '#'
     GROUPING_SEPARATOR = '&'
-
-
-    DEFAULT_MUSIC_FOLDER = '~/Music'
-    DEFAULT_ITUNES_VERSION_PLIST = '/System/Applications/Music.app/Contents/version.plist'
-    DEFAULT_TEMP_FOLDER = os.path.join(DEFAULT_MUSIC_FOLDER, 'temp')
-    DEFAULT_ITUNES_FOLDER = os.path.join(DEFAULT_MUSIC_FOLDER, 'iTunes')
-    DEFAULT_ITUNES_MEDIA_FOLDER = os.path.join(DEFAULT_ITUNES_FOLDER, 'iTunes Media')
-    DEFAULT_ITUNES_LIBRARY_PLIST = os.path.join(DEFAULT_ITUNES_MEDIA_FOLDER, 'Library.xml')
-
-
-    DEFAULT_SOURCE_FILE = './source.txt'
-    DEFAULT_IGNORED_FILE = './ignored.txt'
 
 
     class FilenamePatternTemplate(Template):
@@ -386,6 +375,14 @@ class AudioGod(object):
         AudioProperty.GROUPING,
     ]
     
+    ZIP_FIELDS = [
+        AudioProperty.GROUPING,
+        AudioProperty.SELECTED,
+        AudioProperty.LIKED,
+        AudioProperty.RATING,
+        AudioProperty.ARTWORK,
+    ]
+
     CORE_FIELDS = [
         AudioProperty.TITLE,
         AudioProperty.ARTIST,
@@ -409,26 +406,18 @@ class AudioGod(object):
         AudioProperty.MTIME,
     ]
 
-    ZIP_FIELDS = [
-        AudioProperty.GROUPING,
-        AudioProperty.SELECTED,
-        AudioProperty.LIKED,
-        AudioProperty.RATING,
-        AudioProperty.ARTWORK,
-    ]
-
     ALL_FIELDS = AudioProperty.members(excepts=[
         AudioProperty.COMMENTS,
     ])
 
     FIELDS = {
+        'all': ALL_FIELDS,
         'default': DEFAULT_FIELDS,
         'note': NOTE_FIELDS,
         'simple': SIMPLE_FIELDS,
         'zip': ZIP_FIELDS,
         'core': CORE_FIELDS,
         'ituned': ITUNED_FIELDS,
-        'all': ALL_FIELDS,
     }
 
 
@@ -438,41 +427,20 @@ class AudioGod(object):
     DEFAULT_GENRE = 'Default'
     DEFAULT_GROUPING = 'Default'
 
-    DEFAULT_TRACK_INITIAL_ID = 601
-    DEFAULT_PLAYLIST_INITIAL_ID = 3001
-
-    DEFAULT_EXTENSIONS = ['mp3']
-
 
     ARGUMENTS={
-        'log_level': {
-            'default': logging.getLevelName(DEFAULT_LOGGER_LEVEL),
-            'choices': [
-                'NOTSET',
-                'DEBUG',
-                'INFO',
-                'WARN',
-                'WARNING',
-                'ERROR',
-                'FATAL',
-                'CRITICAL',
-            ],
-        },
-        'log_file': { 'default': 'stderr', },
-        'source_file': { 'default': DEFAULT_SOURCE_FILE, },
-        'ignored_file': { 'default': DEFAULT_IGNORED_FILE, },
-        'audios_source': { 'default': DEFAULT_TEMP_FOLDER, },
-        'recursive': { 'default': False, },
-        'audios_root': { 'default': DEFAULT_TEMP_FOLDER, },
-        'properties': { 'default': None, },
-        'extensions': { 'default': ','.join(DEFAULT_EXTENSIONS), },
-        'fields': { 'default': 'core', },
-        'page_number': { 'default': 1, },
-        'page_size': { 'default': None, },
-        'sort': { 'default': None, },
-        'filter': { 'default': None, },
-        'align': { 'default': None, },
-        'numbered': { 'default': False, },
+        'source_file': { 'default': './songs.note' },
+        'audios_source': { 'default': '~/Music/Source' },
+        'recursive': { 'default': False },
+        'audios_root': { 'default': '~/Music/Source' },
+        'properties': { 'default': None },
+        'fields': { 'default': 'core' },
+        'page_number': { 'default': 1 },
+        'page_size': { 'default': None },
+        'sort': { 'default': None },
+        'filter': { 'default': None },
+        'align': { 'default': None },
+        'numbered': { 'default': False },
         'style': {
             'default': DisplayStyle.TABLED,
             'choices': DisplayStyle.members(),
@@ -489,20 +457,45 @@ class AudioGod(object):
             'default': FileFormat.NONE,
             'choices': FileFormat.members(),
         },
-        'output_file': { 'default': None, },
-        'artwork_path': { 'default': None, },
-        'filename_pattern': { 'default': '{delimiter}{{artist}} {div_char} {delimiter}{{title}}'.format(
-            delimiter=FilenamePatternTemplate.delimiter,
-            div_char=DIV_CHAR,
-        ), },
+        'output_file': { 'default': None },
+        'artwork_path': { 'default': None },
         'organize_type': {
             'default': OrganizeType.ITUNED,
             'choices': OrganizeType.members(),
         },
-        'itunes_version_plist': { 'default': DEFAULT_ITUNES_VERSION_PLIST, },
-        'itunes_media_folder': { 'default': DEFAULT_ITUNES_MEDIA_FOLDER, },
-        'track_initial_id': { 'default': DEFAULT_TRACK_INITIAL_ID, },
-        'playlist_initial_id': { 'default': DEFAULT_PLAYLIST_INITIAL_ID, },
+        'track_initial_id': { 'default': 601 },
+        'playlist_initial_id': { 'default': 3001 },
+        'music_source_folder': { 'default': '~/Music/Source' },
+        'music_grouped_folder': { 'default': '~/Music/Grouped' },
+        'music_artworks_folder': { 'default': '~/Music/Artworks' },
+        'itunes_media_folder': { 'default': '~/music/iTunes/iTunes\ Media' }, # type: ignore
+        'itunes_library_plist': { 'default': '~/music/iTunes/iTunes\ Media/Library.xml' }, # type: ignore
+        'itunes_version_plist': { 'default': '/System/Applications/Music.app/Contents/version.plist' },
+        'ignored_file': { 'default': './ignored.txt' },
+        'note_file': { 'default': './songs.note' },
+        'repeated_file': { 'default': './repeated.txt' },
+        'extensions': { 'default': 'mp3,aac' },
+        'filename_pattern': {
+            'default': '{delimiter}{{artist}} {div_char} {delimiter}{{title}}'.format(
+                delimiter=FilenamePatternTemplate.delimiter,
+                div_char=DIV_CHAR,
+            ),
+        },
+        'script_file': { 'default': './start.zsh' },
+        'log_level': {
+            'default': DEFAULT_LOG_LEVEL,
+            'choices': [
+                'NOTSET',
+                'DEBUG',
+                'INFO',
+                'WARN',
+                'WARNING',
+                'ERROR',
+                'FATAL',
+                'CRITICAL',
+            ],
+        },
+        'log_file': { 'default': DEFAULT_LOG_FILE },
     }
 
     ARGUMENTS_DEFAULTS = {
@@ -1806,11 +1799,11 @@ class AudioGod(object):
             )
         )
 
-        if len(self.omitted_audios) > 0:
+        if False and len(self.omitted_audios) > 0:
             self.logger.warning('\nOmitted Audios:')
             for audio in self.omitted_audios:
                 self.logger.warning(f'\t{audio}')
-        if len(self.ignored_audios) > 0:
+        if False and len(self.ignored_audios) > 0:
             self.logger.warning('\nIgnored Audios:')
             for audio in self.ignored_audios:
                 self.logger.warning(f'\t{audio}')
@@ -2982,13 +2975,22 @@ class AudioGod(object):
     def convert(self):
         pass
 
+    def generate_script(self):
+        content = ''
+        if not self.output_file:
+            print(content)
+        else:
+            self.backup(self.output_file)
+            with open(self.output_file, mode='w', encoding='utf-8') as f:
+                f.write(content)
+
 ################################################################################
 #                                                                              #
 #                                USAGE DETAILS                                 #
 #                                                                              #
 ################################################################################
 
-def audio_properties() -> str:
+def _audio_properties() -> str:
     table = PrettyTable()
     table.field_names = [
         'Number',
@@ -3015,7 +3017,26 @@ def audio_properties() -> str:
     )
 
 
-def special_characters() -> str:
+def _special_fields() -> str:
+    table = PrettyTable()
+    table.field_names = AudioGod.FIELDS.keys()
+    for field in table.field_names:
+        table.align[field] = 'l'
+    rows = list(AudioGod.FIELDS.values())
+    for j in range(len(AudioGod.ALL_FIELDS)):
+        row = []
+        for i in range(len(rows)):
+            if j < len(rows[i]):
+                row.append(rows[i][j])
+            else:
+                row.append('')
+        table.add_row(row)
+    return table.get_string(
+        title='SPECIAL FIELDS',
+    )
+
+
+def _special_characters() -> str:
     table = PrettyTable()
     table.field_names = [
         'Number',
@@ -3045,6 +3066,9 @@ def special_characters() -> str:
 __USAGE__ = '''
 All fields:
 ${audio_properties}
+
+Special fields:
+${special_fields}
 
 Special characters:
 ${special_characters}
@@ -3115,7 +3139,7 @@ General commands:
 # You should set 'PROMPT_COMMAND="history -a"' in "~/.bashrc" or "~/.bash_profile".
 # And then run "source ~/.bashrc" or "source ~/.bash_profile".
 def _get_command() -> str:
-    interpreter = f'python {sys.argv[0]}'
+    interpreter = f'pipenv run python {sys.argv[0]}'
     try:
         match psutil.Process().parent().name().lower(): # type: ignore
             case 'bash':
@@ -3144,13 +3168,26 @@ def _render_usage(usage) -> str:
     if pos != -1:
         _usage = re.sub(r'\n {%s}' % (pos-1,), '\n', _usage)
     return(Template(_usage).safe_substitute(dict(
-        audio_properties=audio_properties(),
-        special_characters=special_characters(),
+        audio_properties=_audio_properties(),
+        special_fields=_special_fields(),
+        special_characters=_special_characters(),
         cmd=_get_command(),
-        music=AudioGod.DEFAULT_MUSIC_FOLDER,
-        local='.',
-        delimiter=AudioGod.FilenamePatternTemplate.delimiter,
-        div_char=AudioGod.DIV_CHAR,
+        track_initial_id=AudioGod.ARGUMENTS_DEFAULTS['track_initial_id'],
+        playlist_initial_id=AudioGod.ARGUMENTS_DEFAULTS['playlist_initial_id'],
+        music_source_folder=AudioGod.ARGUMENTS_DEFAULTS['music_source_folder'],
+        music_grouped_folder=AudioGod.ARGUMENTS_DEFAULTS['music_grouped_folder'],
+        music_artworks_folder=AudioGod.ARGUMENTS_DEFAULTS['music_artworks_folder'],
+        itunes_media_folder=AudioGod.ARGUMENTS_DEFAULTS['itunes_media_folder'],
+        itunes_library_plist=AudioGod.ARGUMENTS_DEFAULTS['itunes_library_plist'],
+        itunes_version_plist=AudioGod.ARGUMENTS_DEFAULTS['itunes_version_plist'],
+        ignored_file=AudioGod.ARGUMENTS_DEFAULTS['ignored_file'],
+        note_file=AudioGod.ARGUMENTS_DEFAULTS['note_file'],
+        repeated_file=AudioGod.ARGUMENTS_DEFAULTS['repeated_file'],
+        extensions=AudioGod.ARGUMENTS_DEFAULTS['extensions'],
+        filename_pattern=AudioGod.ARGUMENTS_DEFAULTS['filename_pattern'],
+        script_file=AudioGod.ARGUMENTS_DEFAULTS['script_file'],
+        log_level=AudioGod.ARGUMENTS_DEFAULTS['log_level'],
+        log_file=AudioGod.ARGUMENTS_DEFAULTS['log_file'],
     )))
 
 
@@ -3165,8 +3202,10 @@ ACTIONS={
             'help': 'preprocess the notes file',
             'usage': _render_usage('''
                 ${cmd} preprocess-notes \\
-                    --source-file=${local}/notes.txt \\
-                    --field-type=cn
+                    --source-file=${note_file} \\
+                    --field-type=cn \\
+                    --log-level=${log_level} \\
+                    --log-file=${log_file}
             '''),
         },
     },
@@ -3185,12 +3224,12 @@ ACTIONS={
             'help': 'fill properties of audios',
             'usage': _render_usage('''
                 ${cmd} fill-properties \\
-                    --audios-source=${music} \\
-                    --extensions=mp3,aac \\
+                    --audios-source=${music_source_folder} \\
+                    --extensions=${extensions} \\
                     --recursive \\
-                    --ignored-file=${local}/ignored.txt \\
-                    --source-file=${local}/notes.txt \\
-                    --audios-root=${music} \\
+                    --ignored-file=${ignored_file} \\
+                    --source-file=${note_file} \\
+                    --audios-root=${music_source_folder} \\
                     --properties='\\{ \\
                         "default": \\{ \\
                             "sources": ["command"], #(note: command/file/directory/filename) \\
@@ -3200,7 +3239,9 @@ ACTIONS={
                             "sources": ["command", "file"], #(note: command/file/directory/filename) \\
                             "value": "Pop" \\
                         \\} \\
-                    \\}'
+                    \\}' \\
+                    --log-level=${log_level} \\
+                    --log-file=${log_file}
             '''),
             },
     },
@@ -3216,10 +3257,12 @@ ACTIONS={
             'help': 'format properties of audios',
             'usage': _render_usage('''
                 ${cmd} format-properties \\
-                    --audios-source=${music} \\
-                    --extensions=mp3,aac \\
+                    --audios-source=${music_source_folder} \\
+                    --extensions=${extensions} \\
                     --recursive \\
-                    --ignored-file=${local}/ignored.txt
+                    --ignored-file=${ignored_file} \\
+                    --log-level=${log_level} \\
+                    --log-file=${log_file}
             '''),
         },
     },
@@ -3236,11 +3279,13 @@ ACTIONS={
             'help': 'rename audios',
             'usage': _render_usage('''
                 ${cmd} rename-audios \\
-                    --audios-source=${music} \\
-                    --extensions=mp3,aac \\
+                    --audios-source=${music_source_folder} \\
+                    --extensions=${extensions} \\
                     --recursive \\
-                    --ignored-file=${local}/ignored.txt \\
-                    --filename-pattern="${delimiter}{artist} ${div_char} ${delimiter}{title}"
+                    --ignored-file=${ignored_file} \\
+                    --filename-pattern="${filename_pattern}" \\
+                    --log-level=${log_level} \\
+                    --log-file=${log_file}
             '''),
         },
     },
@@ -3257,13 +3302,26 @@ ACTIONS={
             'description': '✋ Organize files',
             'help': 'organize files',
             'usage': _render_usage('''
+            grouped:
                 ${cmd} organize-files \\
-                    --audios-root=${music} \\
-                    --audios-source=${music} \\
-                    --extensions=mp3,aac \\
+                    --audios-source=${music_source_folder} \\
+                    --extensions=${extensions} \\
                     --recursive \\
-                    --ignored-file=${local}/ignored.txt \\
-                    --organize-type=grouped
+                    --ignored-file=${ignored_file} \\
+                    --audios-root=${music_grouped_folder} \\
+                    --organize-type=grouped \\
+                    --log-level=${log_level} \\
+                    --log-file=${log_file}
+            ituned:
+                ${cmd} organize-files \\
+                    --audios-source=${music_source_folder} \\
+                    --extensions=${extensions} \\
+                    --recursive \\
+                    --ignored-file=${ignored_file} \\
+                    --audios-root=${itunes_media_folder} \\
+                    --organize-type=ituned \\
+                    --log-level=${log_level} \\
+                    --log-file=${log_file}
             '''),
         },
     },
@@ -3280,11 +3338,13 @@ ACTIONS={
             'help': 'list repeated',
             'usage': _render_usage('''
                 ${cmd} list-repeated \\
-                    --audios-source=${music} \\
-                    --extensions=mp3,aac \\
+                    --audios-source=${music_grouped_folder} \\
+                    --extensions=${extensions} \\
                     --recursive \\
-                    --ignored-file=${local}/ignored.txt \\
-                    --output-file=""
+                    --ignored-file=${ignored_file} \\
+                    --output-file=${repeated_file} \\
+                    --log-level=${log_level} \\
+                    --log-file=${log_file}
             '''),
         },
     },
@@ -3301,11 +3361,13 @@ ACTIONS={
             'help': 'derive artworks',
             'usage': _render_usage('''
                 ${cmd} derive-artworks \\
-                    --audios-source=${music} \\
-                    --extensions=mp3,aac \\
+                    --audios-source=${music_source_folder} \\
+                    --extensions=${extensions} \\
                     --recursive \\
-                    --ignored-file=${local}/ignored.txt \\
-                    --artwork-path=${music}/artworks
+                    --ignored-file=${ignored_file} \\
+                    --artwork-path=${music_artworks_folder} \\
+                    --log-level=${log_level} \\
+                    --log-file=${log_file}
             '''),
         },
     },
@@ -3332,10 +3394,10 @@ ACTIONS={
             'help': 'display audios',
             'usage': _render_usage('''
                 ${cmd} display \\
-                    --audios-source=${music} \\
-                    --extensions=mp3,aac \\
+                    --audios-source=${music_source_folder} \\
+                    --extensions=${extensions} \\
                     --recursive \\
-                    --ignored-file=${local}/ignored.txt \\
+                    --ignored-file=${ignored_file} \\
                     --fields=core \\
                     --page-number=1 \\
                     --page-size=10 \\
@@ -3356,7 +3418,9 @@ ACTIONS={
                     --data-format=outputted \\
                     --field-type=cn \\
                     --numbered \\
-                    --output-file=""
+                    --output-file="" \\
+                    --log-level=${log_level} \\
+                    --log-file=${log_file}
             '''),
         },
     },
@@ -3379,19 +3443,34 @@ ACTIONS={
             'description': '✋ Export details to file',
             'help': 'export details to file',
             'usage': _render_usage('''
+            note:
                 ${cmd} export \\
-                    --audios-source=${music} \\
-                    --extensions=mp3,aac \\
+                    --audios-source=${music_grouped_folder} \\
+                    --extensions=${extensions} \\
                     --recursive \\
-                    --ignored-file=${local}/ignored.txt \\
-                    --fields=ituned \\
+                    --ignored-file=${ignored_file} \\
+                    --fields=note \\
                     --field-type=cn \\
+                    --output-format=note \\
+                    --output-file=${note_file} \\
+                    --log-level=${log_level} \\
+                    --log-file=${log_file}
+            plist:
+                ${cmd} export \\
+                    --audios-source=${itunes_media_folder} \\
+                    --extensions=${extensions} \\
+                    --recursive \\
+                    --ignored-file=${ignored_file} \\
+                    --fields=ituned \\
+                    --field-type=en \\
+                    --itunes-version-plist=${itunes_version_plist} \\
+                    --itunes-media-folder=${itunes_media_folder} \\
+                    --track-initial-id=${track_initial_id} \\
+                    --playlist-initial-id=${playlist_initial_id} \\
                     --output-format=plist \\
-                    --output-file=${local}/songs.xml \\
-                    --itunes-version-plist=/System/Applications/Music.app/Contents/version.plist \\
-                    --itunes-media-folder=${music}/iTunes/iTunes\\ Media \\
-                    --track-initial-id=601 \\
-                    --playlist-initial-id=3001
+                    --output-file=${itunes_library_plist} \\
+                    --log-level=${log_level} \\
+                    --log-file=${log_file}
             '''),
         },
     },
@@ -3407,10 +3486,27 @@ ACTIONS={
             'help': 'convert audios',
             'usage': _render_usage('''
                 ${cmd} convert \\
-                    --audios-source=${music} \\
-                    --extensions=mp3,aac \\
+                    --audios-source=${music_source_folder} \\
+                    --extensions=${extensions} \\
                     --recursive \\
-                    --ignored-file=${local}/ignored.txt
+                    --ignored-file=${ignored_file} \\
+                    --log-level=${log_level} \\
+                    --log-file=${log_file}
+            '''),
+        },
+    },
+    'generate-script': {
+        'arguments': [
+            'output_file',
+        ],
+        'kwargs': {
+            'description': '✋ Generate script',
+            'help': 'generate script',
+            'usage': _render_usage('''
+                ${cmd} generate-script \\
+                    --output-file=${script_file} \\
+                    --log-level=${log_level} \\
+                    --log-file=${log_file}
             '''),
         },
     },
