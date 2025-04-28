@@ -3004,6 +3004,7 @@ class AudioGod(object):
             self.backup(self.output_file)
             with open(self.output_file, mode='w', encoding='utf-8') as f:
                 f.write(content)
+                os.chmod(self.output_file, 0o755)
 
     @classmethod
     def audio_properties(cls) -> str:
