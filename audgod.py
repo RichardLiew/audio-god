@@ -2976,7 +2976,28 @@ class AudioGod(object):
         pass
 
     def generate_script(self):
-        content = ''
+        content = '#!/usr/bin/env zsh\n'
+        steps = [
+            'preprocess-notes',
+            'fill-properties',
+            'format-properties',
+            'rename-audios',
+            ('organize-files', 'grouped'),
+            ('export', 'note'),
+            'list-repeated',
+            ('organize-files', 'ituned'),
+            ('export', 'plist'),
+        ]
+        for i, step in enumerate(steps):
+            if type(step) is tuple:
+                usage = self.ACTIONS()[step[0]]['kwargs']['usage'][step[1]]
+            else:
+                usage = self.ACTIONS()[step]['kwargs']['usage']
+            usage = self.render_usage(usage).strip()
+            content += f'\n{usage} \\'
+            if i < len(steps) - 1:
+                content += '\n& \\'
+        content = self.render_usage(content.rstrip(' \\') + '\n').lstrip()
         if not self.output_file:
             print(content)
         else:
@@ -2984,83 +3005,455 @@ class AudioGod(object):
             with open(self.output_file, mode='w', encoding='utf-8') as f:
                 f.write(content)
 
+    @classmethod
+    def audio_properties(cls) -> str:
+        table = PrettyTable()
+        table.field_names = [
+            'Number',
+            'Field',
+            'Chinese Name',
+            'English Name',
+            'Type',
+        ]
+        for field in table.field_names:
+            table.align[field] = 'l'
+        for number, field in enumerate(cls.ALL_FIELDS):
+            chinese_name = cls.AUDIO_PROPERTIES[field][0][0]
+            english_name = cls.AUDIO_PROPERTIES[field][0][1]
+            field_type = cls.AUDIO_PROPERTIES[field][1]
+            table.add_row([
+                number+1,
+                field,
+                chinese_name,
+                english_name,
+                field_type,
+            ])
+        return table.get_string(
+            title='AUDIO PROPERTIES',
+        )
+
+    @classmethod
+    def special_fields(cls) -> str:
+        table = PrettyTable()
+        table.field_names = cls.FIELDS.keys()
+        for field in table.field_names:
+            table.align[field] = 'l'
+        rows = list(cls.FIELDS.values())
+        for j in range(len(cls.ALL_FIELDS)):
+            row = []
+            for i in range(len(rows)):
+                if j < len(rows[i]):
+                    row.append(rows[i][j])
+                else:
+                    row.append('')
+            table.add_row(row)
+        return table.get_string(
+            title='SPECIAL FIELDS',
+        )
+
+    @classmethod
+    def special_characters(cls) -> str:
+        table = PrettyTable()
+        table.field_names = [
+            'Number',
+            'Character',
+            'Introduction',
+        ]
+        for field in table.field_names:
+            table.align[field] = 'l'
+        characters = [
+            (cls.ORI_DIV_CHAR, 'Separator for origin audio file name.'),
+            (cls.DIV_CHAR, 'Separator for formatted audio file name.'),
+            (cls.GROUPING_SEPARATOR, 'Separator for several grouping property of audio file.'),
+            (cls.FilenamePatternTemplate.delimiter, 'Delimiter of template for filename pattern.'),
+        ]
+        for number, char in enumerate(characters):
+            table.add_row([
+                number+1,
+                char[0],
+                char[1],
+            ])
+        return table.get_string(
+            title='SPECIAL CHARACTERS',
+        )
+
+    # Successful for zsh, failed for bash.
+    # You should set 'PROMPT_COMMAND="history -a"' in "~/.bashrc" or "~/.bash_profile".
+    # And then run "source ~/.bashrc" or "source ~/.bash_profile".
+    @classmethod
+    def get_command(cls) -> str:
+        interpreter = f'pipenv run python {sys.argv[0]}'
+        try:
+            match psutil.Process().parent().name().lower(): # type: ignore
+                case 'bash':
+                    history_file = '~/.bash_history'
+                case 'zsh':
+                    history_file = '~/.zsh_history'
+            history_file = cls.abspath(history_file)
+            with open(history_file, 'r', errors='ignore') as f:
+                cache, history_pattern = [], r'^: *[0-9\.]+:[0-9\.]+[:;]'
+                for line in reversed(f.readlines()):
+                    cache.append(line.strip().strip('\\').strip())
+                    if re.match(history_pattern, line) is not None:
+                        break
+                cmd = re.sub(history_pattern, r'', ' '.join(reversed(cache))).strip()
+                index = cmd.find(' -')
+                if index != -1:
+                    interpreter = cmd[:index].strip()
+                else:
+                    interpreter = cmd.strip()
+                subcmd_pattern = r'\s*({0})\s*$'.format('|'.join(cls.ACTIONS().keys()))
+                interpreter = re.sub(subcmd_pattern, r'', interpreter)
+        except Exception as e:
+            pass
+        return interpreter
+
+    @classmethod
+    def render_usage(cls, usage) -> str:
+        _usage = '\n' + usage
+        pos = next((i for i, c in enumerate(_usage[2:], 1) if c != ' '), -1)
+        if pos != -1:
+            _usage = re.sub(r'\n {%s}' % (pos-1,), '\n', _usage)
+        return(Template(_usage).safe_substitute(dict(
+            audio_properties=cls.audio_properties(),
+            special_fields=cls.special_fields(),
+            special_characters=cls.special_characters(),
+            cmd=cls.get_command(),
+            **cls.ARGUMENTS_DEFAULTS,
+        )))
+
+
+    @classmethod
+    def ACTIONS(cls):
+        return {
+            'preprocess-notes': {
+                'arguments': [
+                    'source_file',
+                    'field_type',
+                ],
+                'kwargs': {
+                    'description': '✋ Preprocess the notes file',
+                    'help': 'preprocess the notes file',
+                    'usage': '''
+                        ${cmd} preprocess-notes \\
+                            --source-file=${note_file} \\
+                            --field-type=cn \\
+                            --log-level=${log_level} \\
+                            --log-file=${log_file}
+                    ''',
+                },
+            },
+            'fill-properties': {
+                'arguments': [
+                    'audios_source',
+                    'extensions',
+                    'recursive',
+                    'ignored_file',
+                    'source_file',
+                    'audios_root',
+                    'properties',
+                ],
+                'kwargs': {
+                    'description': '✋ Fill properties of audios',
+                    'help': 'fill properties of audios',
+                    'usage': '''
+                        ${cmd} fill-properties \\
+                            --audios-source=${music_source_folder} \\
+                            --extensions=${extensions} \\
+                            --recursive \\
+                            --ignored-file=${ignored_file} \\
+                            --source-file=${note_file} \\
+                            --audios-root=${music_source_folder} \\
+                            --properties='\\{ \\
+                                "default": \\{ \\
+                                    "sources": ["command"], #(note: command/file/directory/filename) \\
+                                    "value": "" \\
+                                \\}, \\
+                                "genre": \\{ \\
+                                    "sources": ["command", "file"], #(note: command/file/directory/filename) \\
+                                    "value": "Pop" \\
+                                \\} \\
+                            \\}' \\
+                            --log-level=${log_level} \\
+                            --log-file=${log_file}
+                    ''',
+                    },
+            },
+            'format-properties': {
+                'arguments': [
+                    'audios_source',
+                    'extensions',
+                    'recursive',
+                    'ignored_file',
+                ],
+                'kwargs': {
+                    'description': '✋ Format properties of audios',
+                    'help': 'format properties of audios',
+                    'usage': '''
+                        ${cmd} format-properties \\
+                            --audios-source=${music_source_folder} \\
+                            --extensions=${extensions} \\
+                            --recursive \\
+                            --ignored-file=${ignored_file} \\
+                            --log-level=${log_level} \\
+                            --log-file=${log_file}
+                    ''',
+                },
+            },
+            'rename-audios': {
+                'arguments': [
+                    'audios_source',
+                    'extensions',
+                    'recursive',
+                    'ignored_file',
+                    'filename_pattern',
+                ],
+                'kwargs': {
+                    'description': '✋ Rename audios',
+                    'help': 'rename audios',
+                    'usage': '''
+                        ${cmd} rename-audios \\
+                            --audios-source=${music_source_folder} \\
+                            --extensions=${extensions} \\
+                            --recursive \\
+                            --ignored-file=${ignored_file} \\
+                            --filename-pattern="${filename_pattern}" \\
+                            --log-level=${log_level} \\
+                            --log-file=${log_file}
+                    ''',
+                },
+            },
+            'organize-files': {
+                'arguments': [
+                    'audios_root',
+                    'audios_source',
+                    'extensions',
+                    'recursive',
+                    'ignored_file',
+                    'organize_type',
+                ],
+                'kwargs': {
+                    'description': '✋ Organize files',
+                    'help': 'organize files',
+                    'usage': {
+                        'grouped': '''
+                            ${cmd} organize-files \\
+                                --audios-source=${music_source_folder} \\
+                                --extensions=${extensions} \\
+                                --recursive \\
+                                --ignored-file=${ignored_file} \\
+                                --audios-root=${music_grouped_folder} \\
+                                --organize-type=grouped \\
+                                --log-level=${log_level} \\
+                                --log-file=${log_file}
+                        ''',
+                        'ituned': '''
+                            ${cmd} organize-files \\
+                                --audios-source=${music_source_folder} \\
+                                --extensions=${extensions} \\
+                                --recursive \\
+                                --ignored-file=${ignored_file} \\
+                                --audios-root=${itunes_media_folder} \\
+                                --organize-type=ituned \\
+                                --log-level=${log_level} \\
+                                --log-file=${log_file}
+                        ''',
+                    },
+                },
+            },
+            'list-repeated': {
+                'arguments': [
+                    'audios_source',
+                    'extensions',
+                    'recursive',
+                    'ignored_file',
+                    'output_file',
+                ],
+                'kwargs': {
+                    'description': '✋ List repeated audio files by artist and title',
+                    'help': 'list repeated',
+                    'usage': '''
+                        ${cmd} list-repeated \\
+                            --audios-source=${music_grouped_folder} \\
+                            --extensions=${extensions} \\
+                            --recursive \\
+                            --ignored-file=${ignored_file} \\
+                            --output-file=${repeated_file} \\
+                            --log-level=${log_level} \\
+                            --log-file=${log_file}
+                    ''',
+                },
+            },
+            'derive-artworks': {
+                'arguments': [
+                    'audios_source',
+                    'extensions',
+                    'recursive',
+                    'ignored_file',
+                    'artwork_path',
+                ],
+                'kwargs': {
+                    'description': '✋ Derive artworks',
+                    'help': 'derive artworks',
+                    'usage': '''
+                        ${cmd} derive-artworks \\
+                            --audios-source=${music_source_folder} \\
+                            --extensions=${extensions} \\
+                            --recursive \\
+                            --ignored-file=${ignored_file} \\
+                            --artwork-path=${music_artworks_folder} \\
+                            --log-level=${log_level} \\
+                            --log-file=${log_file}
+                    ''',
+                },
+            },
+            'display': {
+                'arguments': [
+                    'audios_source',
+                    'extensions',
+                    'recursive',
+                    'ignored_file',
+                    'fields',
+                    'page_number',
+                    'page_size',
+                    'sort',
+                    'filter',
+                    'align',
+                    'style',
+                    'data_format',
+                    'field_type',
+                    'numbered',
+                    'output_file',
+                ],
+                'kwargs': {
+                    'description': '✋ Display audios',
+                    'help': 'display audios',
+                    'usage': '''
+                        ${cmd} display \\
+                            --audios-source=${music_source_folder} \\
+                            --extensions=${extensions} \\
+                            --recursive \\
+                            --ignored-file=${ignored_file} \\
+                            --fields=core \\
+                            --page-number=1 \\
+                            --page-size=0 \\
+                            --sort='[["title,artist", true], ["genre", false]]' \\
+                            --filter='\\{ \\
+                                "_options": \\{ \\
+                                    "relation": "and" #(note: and/or) \\
+                                \\}, \\
+                                "title,core": \\{ \\
+                                    "function": "search", #(note: equal/search/empty) \\
+                                    "parameters": ["a", true, false] \\
+                                \\} \\
+                            \\}' \\
+                            --align='\\{ \\
+                                "title,artist": "l:m" #(note: align=l/c/r, valign=t/m/b) \\
+                            \\}' \\
+                            --style=tabled \\
+                            --data-format=outputted \\
+                            --field-type=cn \\
+                            --numbered \\
+                            --output-file="" \\
+                            --log-level=${log_level} \\
+                            --log-file=${log_file}
+                    ''',
+                },
+            },
+            'export': {
+                'arguments': [
+                    'audios_source',
+                    'extensions',
+                    'recursive',
+                    'ignored_file',
+                    'fields',
+                    'field_type',
+                    'output_format',
+                    'output_file',
+                    'itunes_version_plist',
+                    'itunes_media_folder',
+                    'track_initial_id',
+                    'playlist_initial_id',
+                ],
+                'kwargs': {
+                    'description': '✋ Export details to file',
+                    'help': 'export details to file',
+                    'usage': {
+                        'note': '''
+                            ${cmd} export \\
+                                --audios-source=${music_grouped_folder} \\
+                                --extensions=${extensions} \\
+                                --recursive \\
+                                --ignored-file=${ignored_file} \\
+                                --fields=note \\
+                                --field-type=cn \\
+                                --output-format=note \\
+                                --output-file=${note_file} \\
+                                --log-level=${log_level} \\
+                                --log-file=${log_file}
+                        ''',
+                        'plist': '''
+                            ${cmd} export \\
+                                --audios-source=${itunes_media_folder} \\
+                                --extensions=${extensions} \\
+                                --recursive \\
+                                --ignored-file=${ignored_file} \\
+                                --fields=ituned \\
+                                --field-type=en \\
+                                --itunes-version-plist=${itunes_version_plist} \\
+                                --itunes-media-folder=${itunes_media_folder} \\
+                                --track-initial-id=${track_initial_id} \\
+                                --playlist-initial-id=${playlist_initial_id} \\
+                                --output-format=plist \\
+                                --output-file=${itunes_library_plist} \\
+                                --log-level=${log_level} \\
+                                --log-file=${log_file}
+                        ''',
+                    },
+                },
+            },
+            'convert': {
+                'arguments': [
+                    'audios_source',
+                    'extensions',
+                    'recursive',
+                    'ignored_file',
+                ],
+                'kwargs': {
+                    'description': '✋ Convert audios',
+                    'help': 'convert audios',
+                    'usage': '''
+                        ${cmd} convert \\
+                            --audios-source=${music_source_folder} \\
+                            --extensions=${extensions} \\
+                            --recursive \\
+                            --ignored-file=${ignored_file} \\
+                            --log-level=${log_level} \\
+                            --log-file=${log_file}
+                    ''',
+                },
+            },
+            'generate-script': {
+                'arguments': [
+                    'output_file',
+                ],
+                'kwargs': {
+                    'description': '✋ Generate script',
+                    'help': 'generate script',
+                    'usage': '''
+                        ${cmd} generate-script \\
+                            --output-file=${script_file} \\
+                            --log-level=${log_level} \\
+                            --log-file=${log_file}
+                    ''',
+                },
+            },
+        }
+
 ################################################################################
 #                                                                              #
-#                                USAGE DETAILS                                 #
+#                                 USAGE DETAILS                                #
 #                                                                              #
-################################################################################
-
-def _audio_properties() -> str:
-    table = PrettyTable()
-    table.field_names = [
-        'Number',
-        'Field',
-        'Chinese Name',
-        'English Name',
-        'Type',
-    ]
-    for field in table.field_names:
-        table.align[field] = 'l'
-    for number, field in enumerate(AudioGod.ALL_FIELDS):
-        chinese_name = AudioGod.AUDIO_PROPERTIES[field][0][0]
-        english_name = AudioGod.AUDIO_PROPERTIES[field][0][1]
-        field_type = AudioGod.AUDIO_PROPERTIES[field][1]
-        table.add_row([
-            number+1,
-            field,
-            chinese_name,
-            english_name,
-            field_type,
-        ])
-    return table.get_string(
-        title='AUDIO PROPERTIES',
-    )
-
-
-def _special_fields() -> str:
-    table = PrettyTable()
-    table.field_names = AudioGod.FIELDS.keys()
-    for field in table.field_names:
-        table.align[field] = 'l'
-    rows = list(AudioGod.FIELDS.values())
-    for j in range(len(AudioGod.ALL_FIELDS)):
-        row = []
-        for i in range(len(rows)):
-            if j < len(rows[i]):
-                row.append(rows[i][j])
-            else:
-                row.append('')
-        table.add_row(row)
-    return table.get_string(
-        title='SPECIAL FIELDS',
-    )
-
-
-def _special_characters() -> str:
-    table = PrettyTable()
-    table.field_names = [
-        'Number',
-        'Character',
-        'Introduction',
-    ]
-    for field in table.field_names:
-        table.align[field] = 'l'
-    characters = [
-        (AudioGod.ORI_DIV_CHAR, 'Separator for origin audio file name.'),
-        (AudioGod.DIV_CHAR, 'Separator for formatted audio file name.'),
-        (AudioGod.GROUPING_SEPARATOR, 'Separator for several grouping property of audio file.'),
-        (AudioGod.FilenamePatternTemplate.delimiter, 'Delimiter of template for filename pattern.'),
-    ]
-    for number, char in enumerate(characters):
-        table.add_row([
-            number+1,
-            char[0],
-            char[1],
-        ])
-    return table.get_string(
-        title='SPECIAL CHARACTERS',
-    )
-
 ################################################################################
 
 __USAGE__ = '''
@@ -3130,373 +3523,6 @@ General commands:
 '''
 
 ################################################################################
-#                                                                              #
-#                          PUBLIC PARSER ARGUMENTS                             #
-#                                                                              #
-################################################################################
-
-# Successful for zsh, failed for bash.
-# You should set 'PROMPT_COMMAND="history -a"' in "~/.bashrc" or "~/.bash_profile".
-# And then run "source ~/.bashrc" or "source ~/.bash_profile".
-def _get_command() -> str:
-    interpreter = f'pipenv run python {sys.argv[0]}'
-    try:
-        match psutil.Process().parent().name().lower(): # type: ignore
-            case 'bash':
-                history_file = '~/.bash_history'
-            case 'zsh':
-                history_file = '~/.zsh_history'
-        history_file = AudioGod.abspath(history_file)
-        with open(history_file, 'r', errors='ignore') as f:
-            cmd = re.sub(
-                r'^: *[0-9\.]+:[0-9\.]+[:;]',
-                r'',
-                f.readlines()[-1].strip(),
-            ).strip()
-            index = cmd.find(' -')
-            if index != -1:
-                interpreter = cmd[:index].strip()
-            else:
-                interpreter = cmd.strip()
-    except Exception as e:
-        pass
-    return interpreter
-
-def _render_usage(usage) -> str:
-    _usage = '\n' + usage
-    pos = next((i for i, c in enumerate(_usage[2:], 1) if c != ' '), -1)
-    if pos != -1:
-        _usage = re.sub(r'\n {%s}' % (pos-1,), '\n', _usage)
-    return(Template(_usage).safe_substitute(dict(
-        audio_properties=_audio_properties(),
-        special_fields=_special_fields(),
-        special_characters=_special_characters(),
-        cmd=_get_command(),
-        **AudioGod.ARGUMENTS_DEFAULTS,
-    )))
-
-
-ACTIONS={
-    'preprocess-notes': {
-        'arguments': [
-            'source_file',
-            'field_type',
-        ],
-        'kwargs': {
-            'description': '✋ Preprocess the notes file',
-            'help': 'preprocess the notes file',
-            'usage': _render_usage('''
-                ${cmd} preprocess-notes \\
-                    --source-file=${note_file} \\
-                    --field-type=cn \\
-                    --log-level=${log_level} \\
-                    --log-file=${log_file}
-            '''),
-        },
-    },
-    'fill-properties': {
-        'arguments': [
-            'audios_source',
-            'extensions',
-            'recursive',
-            'ignored_file',
-            'source_file',
-            'audios_root',
-            'properties',
-        ],
-        'kwargs': {
-            'description': '✋ Fill properties of audios',
-            'help': 'fill properties of audios',
-            'usage': _render_usage('''
-                ${cmd} fill-properties \\
-                    --audios-source=${music_source_folder} \\
-                    --extensions=${extensions} \\
-                    --recursive \\
-                    --ignored-file=${ignored_file} \\
-                    --source-file=${note_file} \\
-                    --audios-root=${music_source_folder} \\
-                    --properties='\\{ \\
-                        "default": \\{ \\
-                            "sources": ["command"], #(note: command/file/directory/filename) \\
-                            "value": "" \\
-                        \\}, \\
-                        "genre": \\{ \\
-                            "sources": ["command", "file"], #(note: command/file/directory/filename) \\
-                            "value": "Pop" \\
-                        \\} \\
-                    \\}' \\
-                    --log-level=${log_level} \\
-                    --log-file=${log_file}
-            '''),
-            },
-    },
-    'format-properties': {
-        'arguments': [
-            'audios_source',
-            'extensions',
-            'recursive',
-            'ignored_file',
-        ],
-        'kwargs': {
-            'description': '✋ Format properties of audios',
-            'help': 'format properties of audios',
-            'usage': _render_usage('''
-                ${cmd} format-properties \\
-                    --audios-source=${music_source_folder} \\
-                    --extensions=${extensions} \\
-                    --recursive \\
-                    --ignored-file=${ignored_file} \\
-                    --log-level=${log_level} \\
-                    --log-file=${log_file}
-            '''),
-        },
-    },
-    'rename-audios': {
-        'arguments': [
-            'audios_source',
-            'extensions',
-            'recursive',
-            'ignored_file',
-            'filename_pattern',
-        ],
-        'kwargs': {
-            'description': '✋ Rename audios',
-            'help': 'rename audios',
-            'usage': _render_usage('''
-                ${cmd} rename-audios \\
-                    --audios-source=${music_source_folder} \\
-                    --extensions=${extensions} \\
-                    --recursive \\
-                    --ignored-file=${ignored_file} \\
-                    --filename-pattern="${filename_pattern}" \\
-                    --log-level=${log_level} \\
-                    --log-file=${log_file}
-            '''),
-        },
-    },
-    'organize-files': {
-        'arguments': [
-            'audios_root',
-            'audios_source',
-            'extensions',
-            'recursive',
-            'ignored_file',
-            'organize_type',
-        ],
-        'kwargs': {
-            'description': '✋ Organize files',
-            'help': 'organize files',
-            'usage': _render_usage('''
-            grouped:
-                ${cmd} organize-files \\
-                    --audios-source=${music_source_folder} \\
-                    --extensions=${extensions} \\
-                    --recursive \\
-                    --ignored-file=${ignored_file} \\
-                    --audios-root=${music_grouped_folder} \\
-                    --organize-type=grouped \\
-                    --log-level=${log_level} \\
-                    --log-file=${log_file}
-            ituned:
-                ${cmd} organize-files \\
-                    --audios-source=${music_source_folder} \\
-                    --extensions=${extensions} \\
-                    --recursive \\
-                    --ignored-file=${ignored_file} \\
-                    --audios-root=${itunes_media_folder} \\
-                    --organize-type=ituned \\
-                    --log-level=${log_level} \\
-                    --log-file=${log_file}
-            '''),
-        },
-    },
-    'list-repeated': {
-        'arguments': [
-            'audios_source',
-            'extensions',
-            'recursive',
-            'ignored_file',
-            'output_file',
-        ],
-        'kwargs': {
-            'description': '✋ List repeated audio files by artist and title',
-            'help': 'list repeated',
-            'usage': _render_usage('''
-                ${cmd} list-repeated \\
-                    --audios-source=${music_grouped_folder} \\
-                    --extensions=${extensions} \\
-                    --recursive \\
-                    --ignored-file=${ignored_file} \\
-                    --output-file=${repeated_file} \\
-                    --log-level=${log_level} \\
-                    --log-file=${log_file}
-            '''),
-        },
-    },
-    'derive-artworks': {
-        'arguments': [
-            'audios_source',
-            'extensions',
-            'recursive',
-            'ignored_file',
-            'artwork_path',
-        ],
-        'kwargs': {
-            'description': '✋ Derive artworks',
-            'help': 'derive artworks',
-            'usage': _render_usage('''
-                ${cmd} derive-artworks \\
-                    --audios-source=${music_source_folder} \\
-                    --extensions=${extensions} \\
-                    --recursive \\
-                    --ignored-file=${ignored_file} \\
-                    --artwork-path=${music_artworks_folder} \\
-                    --log-level=${log_level} \\
-                    --log-file=${log_file}
-            '''),
-        },
-    },
-    'display': {
-        'arguments': [
-            'audios_source',
-            'extensions',
-            'recursive',
-            'ignored_file',
-            'fields',
-            'page_number',
-            'page_size',
-            'sort',
-            'filter',
-            'align',
-            'style',
-            'data_format',
-            'field_type',
-            'numbered',
-            'output_file',
-        ],
-        'kwargs': {
-            'description': '✋ Display audios',
-            'help': 'display audios',
-            'usage': _render_usage('''
-                ${cmd} display \\
-                    --audios-source=${music_source_folder} \\
-                    --extensions=${extensions} \\
-                    --recursive \\
-                    --ignored-file=${ignored_file} \\
-                    --fields=core \\
-                    --page-number=1 \\
-                    --page-size=0 \\
-                    --sort='[["title,artist", true], ["genre", false]]' \\
-                    --filter='\\{ \\
-                        "_options": \\{ \\
-                            "relation": "and" #(note: and/or) \\
-                        \\}, \\
-                        "title,core": \\{ \\
-                            "function": "search", #(note: equal/search/empty) \\
-                            "parameters": ["a", true, false] \\
-                        \\} \\
-                    \\}' \\
-                    --align='\\{ \\
-                        "title,artist": "l:m" #(note: align=l/c/r, valign=t/m/b) \\
-                    \\}' \\
-                    --style=tabled \\
-                    --data-format=outputted \\
-                    --field-type=cn \\
-                    --numbered \\
-                    --output-file="" \\
-                    --log-level=${log_level} \\
-                    --log-file=${log_file}
-            '''),
-        },
-    },
-    'export': {
-        'arguments': [
-            'audios_source',
-            'extensions',
-            'recursive',
-            'ignored_file',
-            'fields',
-            'field_type',
-            'output_format',
-            'output_file',
-            'itunes_version_plist',
-            'itunes_media_folder',
-            'track_initial_id',
-            'playlist_initial_id',
-        ],
-        'kwargs': {
-            'description': '✋ Export details to file',
-            'help': 'export details to file',
-            'usage': _render_usage('''
-            note:
-                ${cmd} export \\
-                    --audios-source=${music_grouped_folder} \\
-                    --extensions=${extensions} \\
-                    --recursive \\
-                    --ignored-file=${ignored_file} \\
-                    --fields=note \\
-                    --field-type=cn \\
-                    --output-format=note \\
-                    --output-file=${note_file} \\
-                    --log-level=${log_level} \\
-                    --log-file=${log_file}
-            plist:
-                ${cmd} export \\
-                    --audios-source=${itunes_media_folder} \\
-                    --extensions=${extensions} \\
-                    --recursive \\
-                    --ignored-file=${ignored_file} \\
-                    --fields=ituned \\
-                    --field-type=en \\
-                    --itunes-version-plist=${itunes_version_plist} \\
-                    --itunes-media-folder=${itunes_media_folder} \\
-                    --track-initial-id=${track_initial_id} \\
-                    --playlist-initial-id=${playlist_initial_id} \\
-                    --output-format=plist \\
-                    --output-file=${itunes_library_plist} \\
-                    --log-level=${log_level} \\
-                    --log-file=${log_file}
-            '''),
-        },
-    },
-    'convert': {
-        'arguments': [
-            'audios_source',
-            'extensions',
-            'recursive',
-            'ignored_file',
-        ],
-        'kwargs': {
-            'description': '✋ Convert audios',
-            'help': 'convert audios',
-            'usage': _render_usage('''
-                ${cmd} convert \\
-                    --audios-source=${music_source_folder} \\
-                    --extensions=${extensions} \\
-                    --recursive \\
-                    --ignored-file=${ignored_file} \\
-                    --log-level=${log_level} \\
-                    --log-file=${log_file}
-            '''),
-        },
-    },
-    'generate-script': {
-        'arguments': [
-            'output_file',
-        ],
-        'kwargs': {
-            'description': '✋ Generate script',
-            'help': 'generate script',
-            'usage': _render_usage('''
-                ${cmd} generate-script \\
-                    --output-file=${script_file} \\
-                    --log-level=${log_level} \\
-                    --log-file=${log_file}
-            '''),
-        },
-    },
-}
-
 
 def _add_arguments(parser, arguments=[]) -> None:
     parser.add_argument(
@@ -3868,7 +3894,7 @@ class GreatArgumentParser(argparse.ArgumentParser):
 def main():
     parser = GreatArgumentParser(
         prog=sys.argv[0],
-        usage=_render_usage(__USAGE__),
+        usage=AudioGod.render_usage(__USAGE__),
         description='🎻 God of audios 🎸',
         epilog='🤔 Thinking ...',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -3897,7 +3923,7 @@ def main():
         help='subcommand statement:',
     )
 
-    for _action in ACTIONS:
+    for _action in AudioGod.ACTIONS():
         _kwargs = {
             'description': '',
             'help': '',
@@ -3914,11 +3940,18 @@ def main():
             #'allow_abbrev': True,
             #'exit_on_error': True,
         }
-        _kwargs.update(ACTIONS[_action].get('kwargs', {}))
+        _kwargs.update(AudioGod.ACTIONS()[_action].get('kwargs', {}))
+        if type(_kwargs['usage']) is dict:
+            _kwargs['usage'] = '\n\n' + '\n'.join([
+                f'{key}:\n{AudioGod.render_usage(value).lstrip()}'
+                for key, value in _kwargs['usage'].items()
+            ])
+        else:
+            _kwargs['usage'] = AudioGod.render_usage(_kwargs['usage'])
         _subparser = subparsers.add_parser(_action, **_kwargs)
         _add_arguments(
             _subparser,
-            ACTIONS[_action].get('arguments', []),
+            AudioGod.ACTIONS()[_action].get('arguments', []),
         )
         _subparser.set_defaults(execute=_handle_subcmd)
         parser.add_subparser((_action, _subparser))
