@@ -2253,7 +2253,6 @@ class AudioGod(object):
                                     self.GROUPING_SEPARATOR.join(existed_groups+current_groups),
                                     formatted=True,
                                 )
-                                self.remove(audio)
                             else:
                                 self.logger.fatal(
                                     f'Duplicate groupings between current <{audio}> and existed <{newname}>!',
