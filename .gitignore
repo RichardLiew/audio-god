@@ -3,6 +3,7 @@ songs.*
 *.note
 *.xml
 *.txt
+*.backup*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
