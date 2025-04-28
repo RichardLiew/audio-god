@@ -2488,11 +2488,11 @@ class AudioGod(object):
                     return rows
                 return list(filter(
                     lambda x: (( \
-                        ignorecase and x[index].lower() != value.lower() \
+                        ignorecase and (True if x[index] is None else x[index].lower() != value.lower()) \
                     ) or ( \
                         (not ignorecase) and x[index] != value \
                     )) if reverse else (( \
-                        ignorecase and x[index].lower() == value.lower() \
+                        ignorecase and (False if x[index] is None else x[index].lower() == value.lower()) \
                     ) or ( \
                         (not ignorecase) and x[index] == value \
                     )),
@@ -2504,13 +2504,13 @@ class AudioGod(object):
                     return rows
                 return list(filter(
                     lambda x: (( \
-                        ignorecase and x[index].lower().find(value.lower()) == -1 \
+                        ignorecase and (True if x[index] is None else x[index].lower().find(value.lower()) == -1) \
                     ) or ( \
-                        (not ignorecase) and x[index].find(value) == -1 \
+                        (not ignorecase) and (True if x[index] is None else x[index].find(value) == -1) \
                     )) if reverse else (( \
-                        ignorecase and x[index].lower().find(value.lower()) > -1 \
+                        ignorecase and (False if x[index] is None else x[index].lower().find(value.lower()) > -1) \
                     ) or ( \
-                        (not ignorecase) and x[index].find(value) > -1 \
+                        (not ignorecase) and (False if x[index] is None else x[index].find(value) > -1) \
                     )),
                     rows,
                 ))
