@@ -285,9 +285,6 @@ class AudioGod(object):
         FILENAME = 'filename'
         DIRECTORY = 'directory'
 
-    #DEFAULT_SOURCES = PropertySource.members()
-    DEFAULT_SOURCES = ['file']
-
 
     @StringEnum.unique
     class DisplayStyle(StringEnum):
@@ -375,7 +372,7 @@ class AudioGod(object):
         },
     ))
 
-    DEFAULT_FIELDS = [
+    DEFAULTS_FIELDS = [
         AudioProperty.TITLE,
         AudioProperty.ARTIST,
         AudioProperty.ALBUM,
@@ -434,7 +431,7 @@ class AudioGod(object):
 
     FIELDS = {
         'all': ALL_FIELDS,
-        'default': DEFAULT_FIELDS,
+        'defaults': DEFAULTS_FIELDS,
         'note': NOTE_FIELDS,
         'simple': SIMPLE_FIELDS,
         'zip': ZIP_FIELDS,
@@ -455,7 +452,19 @@ class AudioGod(object):
         'audios_source': { 'default': '~/Music/Source' },
         'recursive': { 'default': 'true' },
         'audios_root': { 'default': '~/Music/Source' },
-        'properties': { 'default': '{}' },
+        'properties': {
+            'default': '''\'{
+                "_comment": "sources choose from command/file/directory/filename",
+                "default": {
+                    "sources": ["command", "file"],
+                    "value": null
+                },
+                "genre": {
+                    "sources": ["command", "file"],
+                    "value": null
+                }
+            }\''''.replace(f'\n{" "*4*2}', '\n'),
+        },
         'fields': { 'default': 'core' },
         'page_number': { 'default': 1 },
         'page_size': { 'default': 0 },
@@ -489,7 +498,7 @@ class AudioGod(object):
         'music_source_folder': { 'default': '~/Music/Source' },
         'music_grouped_folder': { 'default': '~/Music/Grouped' },
         'artwork_path': { 'default': '~/Music/Artworks' },
-        'itunes_media_folder': { 'default': '~/music/iTunes/iTunes\ Media' }, # type: ignore
+        'itunes_media_folder': { 'default': '~/music/iTunes/iTunes\ Media/Music' }, # type: ignore
         'itunes_library_plist': { 'default': '~/music/iTunes/iTunes\ Media/Library.xml' }, # type: ignore
         'itunes_version_plist': { 'default': '/System/Applications/Music.app/Contents/version.plist' },
         'ignored_file': { 'default': './ignored.txt' },
@@ -579,7 +588,7 @@ class AudioGod(object):
         self.__audios_source = (
             self.abspath(audios_source[0]), audios_source[1],
         )
-        self.__properties = self.load_json(properties, {})
+        self.__properties = self.__resolve_properties(properties)
         self.__extensions = self.split(
             extensions.lower(), ',',
             escaped=True,
@@ -706,6 +715,38 @@ class AudioGod(object):
             ret = ','.join(ret)
         return ret
 
+    def __resolve_properties(self, properties):
+        ret = self.load_json(properties, {})
+        if type(ret) is not dict:
+            self.logger.fatal(f'Properties <{ret}> is not a dict type!')
+            return ret
+        keys = [
+            key for key in list(ret.keys()) # type: ignore
+            if key != 'default'
+        ]
+        for key in keys:
+            value = ret.pop(key) # type: ignore
+            new_keys = self.__resolve_fields(
+                key, sortify=True, reversify=False, stringify=False,
+            )
+            for new_key in new_keys:
+                ret[new_key] = value # type: ignore
+        for key in ret.keys(): # type: ignore
+            value = ret[key] # type: ignore
+            if type(value) is not dict:
+                self.logger.fatal(f'Value <{value}> is not a dict type!')
+                return ret
+            if 'sources' not in value:
+                self.logger.fatal(f'Lack sources in <{value}>!')
+                return ret
+            sources = value['sources']
+            if type(sources) is not list:
+                self.logger.fatal(f'Sources in <{value}> is not a list!')
+                return ret
+            for i in range(len(sources)):
+                sources[i] = self.PropertySource(sources[i])
+        return ret
+
     @staticmethod
     def load_json(content, default=None) -> list | dict | None:
         def _remove_comments(data):
@@ -749,11 +790,28 @@ class AudioGod(object):
         numbered = options[6]
         style = self.DisplayStyle(options[7])
 
+        # sort
+        if type(sort_) is not list:
+            self.logger.fatal(f'Sort <{sort_}> is not a list!')
+            return
         for i in range(len(sort_)): # type: ignore
+            if type(sort_[i]) is not list:
+                self.logger.fatal(f'Item <{sort_[i]}> in sort <{sort_}> is not a list!')
+                return
+            if len(sort_[i]) != 2:
+                self.logger.fatal(f'Length of item <{sort_[i]}> in sort <{sort_}> is not 2!')
+                return
+            if type(sort_[i][1]) is not bool:
+                self.logger.fatal(f'Second of item <{sort_[i]}> in sort <{sort_}> is not boolean!')
+                return
             sort_[i][0] = self.__resolve_fields( # type: ignore
                 sort_[i][0], sortify=False, reversify=False, stringify=True, # type: ignore
             )
 
+        # filter
+        if type(filter_) is not dict:
+            self.logger.fatal(f'Filter <{filter_}> is not a dict!')
+            return
         filter_keys = [
             key for key in list(filter_.keys()) # type: ignore
             if key != '_options'
@@ -763,13 +821,62 @@ class AudioGod(object):
                 key, sortify=True, reversify=False, stringify=True,
             )
             filter_[new_key] = filter_.pop(key) # type: ignore
+        if filter_:
+            if '_options' not in filter_.keys():
+                self.logger.fatal(f'Lack _options in <{filter_}>!')
+                return
+            filter_options = filter_['_options']
+            if type(filter_options) is not dict:
+                self.logger.fatal(f'The _options in <{filter_}> is not dict!')
+                return
+            if 'relation' not in filter_options:
+                self.logger.fatal(f'Lack relation of _options in <{filter_}>!')
+                return
+            if filter_options['relation'] not in ('and', 'or'):
+                self.logger.fatal(f'Invalid relation of _options in <{filter_}>!')
+                return
+            filter_keys = [
+                key for key in list(filter_.keys()) # type: ignore
+                if key != '_options'
+            ]
+            for key in filter_keys:
+                value = filter_[key]
+                if type(value) is not dict:
+                    self.logger.fatal(f'Value <{value}> is not a dict type!')
+                    return
+                if 'function' not in value:
+                    self.logger.fatal(f'Lack function in <{value}>!')
+                    return
+                if value['function'] not in ('equal', 'search', 'empty'):
+                    self.logger.fatal(f'Invalid function in <{value}>!')
+                    return
+                if value['function'] != 'empty':
+                    if 'parameters' not in value:
+                        self.logger.fatal(f'Lack parameters in <{value}>!')
+                        return
+                    if type(value['parameters']) is not list:
+                        self.logger.fatal(f'Invalid parameters in <{value}>!')
+                        return
 
+        # align
+        if type(align_) is not dict:
+            self.logger.fatal(f'Align <{align_}> is not a dict!')
+            return
         align_keys = list(align_.keys()) # type: ignore
         for key in align_keys:
             new_key = self.__resolve_fields(
                 key, sortify=True, reversify=False, stringify=True,
             )
             align_[new_key] = align_.pop(key) # type: ignore
+        align_keys = list(align_.keys()) # type: ignore
+        for key in align_keys:
+            value = align_[key]
+            if type(value) is not str:
+                self.logger.fatal(f'Invalid type of <{value}>!')
+                return
+            if re.match(r'^[lcr]:[tmb]$', value) is None:
+                self.logger.fatal(f'Invalid format of <{value}>!')
+                return
 
         return [
             page_number,
@@ -1490,15 +1597,17 @@ class AudioGod(object):
     def __fetch_from_outside(self, audio, field):
         format_ = self.format[field]
         parse_ = self.parse[field]
+        default = self.__resolve_properties(
+            self.ARGUMENTS_DEFAULTS['properties'],
+        )['default'] # type: ignore
         sources = self.properties.get('default', {}).get( # type: ignore
-            'sources', self.DEFAULT_SOURCES,
+            'sources', default['sources'],
         )
         if field in self.properties.keys(): # type: ignore
             sources = self.properties[field].get('sources', sources) # type: ignore
-        sources = [
-            self.PropertySource(source) for source in sources
-        ]
-        ret = self.properties.get('default', {}).get('value', None) # type: ignore
+        ret = self.properties.get('default', {}).get( # type: ignore
+            'value', default['value'],
+        )
         for source in sources:
             match source:
                 case self.PropertySource.COMMAND:
@@ -3252,17 +3361,17 @@ class AudioGod(object):
 
     @classmethod
     def render_usage(cls, usage) -> str:
-        _usage = '\n' + usage
-        pos = next((i for i, c in enumerate(_usage[2:], 1) if c != ' '), -1)
-        if pos != -1:
-            _usage = re.sub(r'\n {%s}' % (pos-1,), '\n', _usage)
-        return(Template(_usage).safe_substitute(dict(
+        ret = '\n' + Template(usage).safe_substitute(dict(
             audio_properties=cls.audio_properties(),
             special_fields=cls.special_fields(),
             special_characters=cls.special_characters(),
             cmd=cls.get_command(),
             **cls.ARGUMENTS_DEFAULTS,
-        )))
+        ))
+        pos = next((i for i, c in enumerate(ret[2:], 1) if c != ' '), -1)
+        if pos > 0:
+            ret = re.sub(r'\n {%s}' % (pos-1,), '\n', ret)
+        return ret
 
 
     @classmethod
@@ -3306,17 +3415,7 @@ class AudioGod(object):
                             --ignored-file=${ignored_file} \\
                             --source-file=${note_file} \\
                             --audios-root=${music_source_folder} \\
-                            --properties='{
-                                "_comment": "sources choose from command/file/directory/filename",
-                                "default": {
-                                    "sources": ["command", "file"],
-                                    "value": null
-                                },
-                                "genre": {
-                                    "sources": ["command", "file"],
-                                    "value": null
-                                }
-                            }' \\
+                            --properties=${properties} \\
                             --log-level=${log_level} \\
                             --log-file=${log_file}
                     ''',
