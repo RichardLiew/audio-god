@@ -3115,6 +3115,8 @@ class AudioGod(object):
     def generate_script(self):
         content = '#!/usr/bin/env zsh\n\n'
         content += '#' * 78 + '\n\n'
+        content += f'# Created Time: {self.current_time()}\n\n'
+        content += '#' * 78 + '\n\n'
         content += 'set -e\n\n'
         content += '#' * 78 + '\n'
         steps = [
