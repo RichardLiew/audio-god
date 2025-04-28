@@ -2339,7 +2339,7 @@ class AudioGod(object):
                 results[key] = [audio]
         
         results = { key: items for key, items in results.items() if len(items) > 1 }
-        content = f'\n{self.__glorify_exportation(results)}'
+        content = f'{self.__glorify_exportation(results)}'
 
         if not self.output_file:
             print(content)
