@@ -15,27 +15,28 @@ pipenv run python audgod.py preprocess-notes \
 pipenv run python audgod.py fill-properties \
     --audios-source=~/Music/Source \
     --extensions=mp3,aac \
-    --recursive \
+    --recursive=true \
     --ignored-file=./ignored.txt \
     --source-file=./songs.note \
     --audios-root=~/Music/Source \
-    --properties='\{ \
-        "default": \{ \
-            "sources": ["command"], #(note: command/file/directory/filename) \
-            "value": "" \
-        \}, \
-        "genre": \{ \
-            "sources": ["command", "file"], #(note: command/file/directory/filename) \
-            "value": "Pop" \
-        \} \
-    \}' \
+    --properties='{
+        "_comment": "sources choose from command/file/directory/filename",
+        "default": {
+            "sources": ["command", "file"],
+            "value": null
+        },
+        "genre": {
+            "sources": ["command", "file"],
+            "value": null
+        }
+    }' \
     --log-level=WARNING \
     --log-file=stderr
 
 pipenv run python audgod.py format-properties \
     --audios-source=~/Music/Source \
     --extensions=mp3,aac \
-    --recursive \
+    --recursive=true \
     --ignored-file=./ignored.txt \
     --log-level=WARNING \
     --log-file=stderr
@@ -43,7 +44,7 @@ pipenv run python audgod.py format-properties \
 pipenv run python audgod.py rename-audios \
     --audios-source=~/Music/Source \
     --extensions=mp3,aac \
-    --recursive \
+    --recursive=true \
     --ignored-file=./ignored.txt \
     --filename-pattern="@{artist} # @{title}" \
     --log-level=WARNING \
@@ -52,7 +53,7 @@ pipenv run python audgod.py rename-audios \
 pipenv run python audgod.py organize-files \
     --audios-source=~/Music/Source \
     --extensions=mp3,aac \
-    --recursive \
+    --recursive=true \
     --ignored-file=./ignored.txt \
     --audios-root=~/Music/Grouped \
     --organize-type=grouped \
@@ -62,7 +63,7 @@ pipenv run python audgod.py organize-files \
 pipenv run python audgod.py export \
     --audios-source=~/Music/Grouped \
     --extensions=mp3,aac \
-    --recursive \
+    --recursive=true \
     --ignored-file=./ignored.txt \
     --fields=note \
     --field-type=cn \
@@ -74,16 +75,16 @@ pipenv run python audgod.py export \
 pipenv run python audgod.py list-repeated \
     --audios-source=~/Music/Grouped \
     --extensions=mp3,aac \
-    --recursive \
+    --recursive=true \
     --ignored-file=./ignored.txt \
     --output-file=./repeated.txt \
     --log-level=WARNING \
     --log-file=stderr
 
 pipenv run python audgod.py organize-files \
-    --audios-source=~/Music/Source \
+    --audios-source=~/Music/Grouped \
     --extensions=mp3,aac \
-    --recursive \
+    --recursive=true \
     --ignored-file=./ignored.txt \
     --audios-root=~/music/iTunes/iTunes\ Media \
     --organize-type=ituned \
@@ -93,7 +94,7 @@ pipenv run python audgod.py organize-files \
 pipenv run python audgod.py export \
     --audios-source=~/music/iTunes/iTunes\ Media \
     --extensions=mp3,aac \
-    --recursive \
+    --recursive=true \
     --ignored-file=./ignored.txt \
     --fields=ituned \
     --field-type=en \

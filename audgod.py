@@ -154,13 +154,14 @@ def log_decorator(func):
             if logger:
                 print_func = logger.warning
         func_name, start_time = func.__name__.replace('_', '-'), time.time()
+        print_func('*' * 78 + '\n')
         print_func(f'Starting <{func_name}> ...')
         try:
             result = func(*args, **kwargs)
             return result
         finally:
             cost_time = time.time() - start_time
-            print_func(f'<{func_name}> finished, cost {cost_time:.2f} seconds.')
+            print_func(f'\n<{func_name}> finished, cost {cost_time:.2f} seconds.\n')
     return wrapper
 
 
@@ -452,15 +453,15 @@ class AudioGod(object):
     ARGUMENTS={
         'source_file': { 'default': './songs.note' },
         'audios_source': { 'default': '~/Music/Source' },
-        'recursive': { 'default': False },
+        'recursive': { 'default': 'true' },
         'audios_root': { 'default': '~/Music/Source' },
-        'properties': { 'default': None },
+        'properties': { 'default': '{}' },
         'fields': { 'default': 'core' },
         'page_number': { 'default': 1 },
-        'page_size': { 'default': None },
-        'sort': { 'default': None },
-        'filter': { 'default': None },
-        'align': { 'default': None },
+        'page_size': { 'default': 0 },
+        'sort': { 'default': '[]' },
+        'filter': { 'default': '{}' },
+        'align': { 'default': '{}' },
         'numbered': { 'default': False },
         'style': {
             'default': DisplayStyle.TABLED,
@@ -478,8 +479,7 @@ class AudioGod(object):
             'default': FileFormat.NONE,
             'choices': FileFormat.members(),
         },
-        'output_file': { 'default': None },
-        'artwork_path': { 'default': None },
+        'output_file': { 'default': "" },
         'organize_type': {
             'default': OrganizeType.ITUNED,
             'choices': OrganizeType.members(),
@@ -488,7 +488,7 @@ class AudioGod(object):
         'playlist_initial_id': { 'default': 3001 },
         'music_source_folder': { 'default': '~/Music/Source' },
         'music_grouped_folder': { 'default': '~/Music/Grouped' },
-        'music_artworks_folder': { 'default': '~/Music/Artworks' },
+        'artwork_path': { 'default': '~/Music/Artworks' },
         'itunes_media_folder': { 'default': '~/music/iTunes/iTunes\ Media' }, # type: ignore
         'itunes_library_plist': { 'default': '~/music/iTunes/iTunes\ Media/Library.xml' }, # type: ignore
         'itunes_version_plist': { 'default': '/System/Applications/Music.app/Contents/version.plist' },
@@ -579,7 +579,7 @@ class AudioGod(object):
         self.__audios_source = (
             self.abspath(audios_source[0]), audios_source[1],
         )
-        self.__properties = json.loads(properties) if properties else {}
+        self.__properties = self.load_json(properties)
         self.__extensions = self.split(
             extensions.lower(), ',',
             escaped=True,
@@ -690,20 +690,40 @@ class AudioGod(object):
                 ret.append(field)
         return ret
 
+    @staticmethod
+    def load_json(content) -> list | dict | None:
+        def _remove_comments(data):
+            comment_tag = '_comment'
+            if isinstance(data, dict):
+                for key in list(data.keys()):
+                    if key == comment_tag:
+                        del data[key]
+                    else:
+                        data[key] = _remove_comments(data[key])
+            elif isinstance(data, list):
+                for i in range(len(data)):
+                    data[i] = _remove_comments(data[i])
+            return data
+
+        ret = None
+        if content:
+            ret = _remove_comments(json.loads(content))
+        return ret
+
     def __rewrite_options(self, options):
         page_number = options[0]
         page_size = options[1]
-        sort_ = json.loads(options[2]) if options[2] else []
-        filter_ = json.loads(options[3]) if options[3] else {}
+        sort_ = self.load_json(options[2])
+        filter_ = self.load_json(options[3])
         fields_to_show = self.__resolve_fields(options[4])
-        align_ = json.loads(options[5]) if options[5] else {}
+        align_ = self.load_json(options[5])
         numbered = options[6]
         style = self.DisplayStyle(options[7])
 
         for key in self.FIELDS.keys():
-            if key in filter_.keys():
+            if key in filter_.keys(): # type: ignore
                 keyword = ','.join([x for x in self.FIELDS[key]])
-                filter_[keyword] = filter_.pop(key)
+                filter_[keyword] = filter_.pop(key) # type: ignore
 
         return [
             page_number,
@@ -999,8 +1019,8 @@ class AudioGod(object):
         if os.path.exists(src):
             timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
             self.duplicate(src, f'{src}.backup.{timestamp}')
-        #else:
-        #    self.logger.error(f'Backup warning: File {src} not exists!')
+        else:
+            self.logger.error(f'Backup warning: File {src} not exists!')
 
     @staticmethod
     def transform_utc(timestamp) -> str:
@@ -1392,20 +1412,20 @@ class AudioGod(object):
     def __fetch_from_outside(self, audio, field):
         format_ = self.format[field]
         parse_ = self.parse[field]
-        sources = self.properties.get('default', {}).get(
+        sources = self.properties.get('default', {}).get( # type: ignore
             'sources', self.DEFAULT_SOURCES,
         )
-        if field in self.properties.keys():
-            sources = self.properties[field].get('sources', sources)
+        if field in self.properties.keys(): # type: ignore
+            sources = self.properties[field].get('sources', sources) # type: ignore
         sources = [
             self.PropertySource(source) for source in sources
         ]
-        ret = self.properties.get('default', {}).get('value', None)
+        ret = self.properties.get('default', {}).get('value', None) # type: ignore
         for source in sources:
             match source:
                 case self.PropertySource.COMMAND:
-                    if field in self.properties.keys():
-                        _value = self.properties[field].get('value', None)
+                    if field in self.properties.keys(): # type: ignore
+                        _value = self.properties[field].get('value', None) # type: ignore
                         if _value is not None:
                             ret = _value
                             break
@@ -1448,10 +1468,10 @@ class AudioGod(object):
                 else:
                     comments = ''.join([comment.text for comment in comments])
                 try:
-                    comments = json.loads(comments)
+                    comments = self.load_json(comments)
                 except:
                     comments = {}
-                comments[field] = value
+                comments[field] = value # type: ignore
                 audio_object.tag.comments.set(json.dumps(comments))
                 if self.AudioProperty.ARTWORK.eq(field):
                     _, value = value
@@ -1516,7 +1536,7 @@ class AudioGod(object):
                 if comments:
                     comments = ''.join([comment.text for comment in comments])
                     try:
-                        ret = json.loads(comments).get(field, None)
+                        ret = self.load_json(comments).get(field, None) # type: ignore
                     except:
                         pass
                 match field:
@@ -2119,7 +2139,7 @@ class AudioGod(object):
                     if newname != audio:
                         if not os.path.exists(newname):
                             os.makedirs(os.path.dirname(newname), exist_ok=True)
-                            self.rename(audio, newname)
+                            self.duplicate(audio, newname)
                         else:
                             current_grouping = self.fetchx(
                                 audio_object, self.AudioProperty.GROUPING, formatted=True,
@@ -2170,7 +2190,7 @@ class AudioGod(object):
                     )
                     if target != audio:
                         os.makedirs(os.path.dirname(target), exist_ok=True)
-                        self.rename(audio, target)
+                        self.duplicate(audio, target)
                         ao = self.__prime_audio(target)
                         self.save(
                             ao, self.AudioProperty.GROUPING, groups[0], True,
@@ -3195,20 +3215,21 @@ class AudioGod(object):
                         ${cmd} fill-properties \\
                             --audios-source=${music_source_folder} \\
                             --extensions=${extensions} \\
-                            --recursive \\
+                            --recursive=${recursive} \\
                             --ignored-file=${ignored_file} \\
                             --source-file=${note_file} \\
                             --audios-root=${music_source_folder} \\
-                            --properties='\\{ \\
-                                "default": \\{ \\
-                                    "sources": ["command"], #(note: command/file/directory/filename) \\
-                                    "value": "" \\
-                                \\}, \\
-                                "genre": \\{ \\
-                                    "sources": ["command", "file"], #(note: command/file/directory/filename) \\
-                                    "value": "Pop" \\
-                                \\} \\
-                            \\}' \\
+                            --properties='{
+                                "_comment": "sources choose from command/file/directory/filename",
+                                "default": {
+                                    "sources": ["command", "file"],
+                                    "value": null
+                                },
+                                "genre": {
+                                    "sources": ["command", "file"],
+                                    "value": null
+                                }
+                            }' \\
                             --log-level=${log_level} \\
                             --log-file=${log_file}
                     ''',
@@ -3228,7 +3249,7 @@ class AudioGod(object):
                         ${cmd} format-properties \\
                             --audios-source=${music_source_folder} \\
                             --extensions=${extensions} \\
-                            --recursive \\
+                            --recursive=${recursive} \\
                             --ignored-file=${ignored_file} \\
                             --log-level=${log_level} \\
                             --log-file=${log_file}
@@ -3250,7 +3271,7 @@ class AudioGod(object):
                         ${cmd} rename-audios \\
                             --audios-source=${music_source_folder} \\
                             --extensions=${extensions} \\
-                            --recursive \\
+                            --recursive=${recursive} \\
                             --ignored-file=${ignored_file} \\
                             --filename-pattern="${filename_pattern}" \\
                             --log-level=${log_level} \\
@@ -3275,7 +3296,7 @@ class AudioGod(object):
                             ${cmd} organize-files \\
                                 --audios-source=${music_source_folder} \\
                                 --extensions=${extensions} \\
-                                --recursive \\
+                                --recursive=${recursive} \\
                                 --ignored-file=${ignored_file} \\
                                 --audios-root=${music_grouped_folder} \\
                                 --organize-type=grouped \\
@@ -3284,9 +3305,9 @@ class AudioGod(object):
                         ''',
                         'ituned': '''
                             ${cmd} organize-files \\
-                                --audios-source=${music_source_folder} \\
+                                --audios-source=${music_grouped_folder} \\
                                 --extensions=${extensions} \\
-                                --recursive \\
+                                --recursive=${recursive} \\
                                 --ignored-file=${ignored_file} \\
                                 --audios-root=${itunes_media_folder} \\
                                 --organize-type=ituned \\
@@ -3311,7 +3332,7 @@ class AudioGod(object):
                         ${cmd} list-repeated \\
                             --audios-source=${music_grouped_folder} \\
                             --extensions=${extensions} \\
-                            --recursive \\
+                            --recursive=${recursive} \\
                             --ignored-file=${ignored_file} \\
                             --output-file=${repeated_file} \\
                             --log-level=${log_level} \\
@@ -3334,9 +3355,9 @@ class AudioGod(object):
                         ${cmd} derive-artworks \\
                             --audios-source=${music_source_folder} \\
                             --extensions=${extensions} \\
-                            --recursive \\
+                            --recursive=${recursive} \\
                             --ignored-file=${ignored_file} \\
-                            --artwork-path=${music_artworks_folder} \\
+                            --artwork-path=${artwork_path} \\
                             --log-level=${log_level} \\
                             --log-file=${log_file}
                     ''',
@@ -3367,24 +3388,31 @@ class AudioGod(object):
                         ${cmd} display \\
                             --audios-source=${music_source_folder} \\
                             --extensions=${extensions} \\
-                            --recursive \\
+                            --recursive=${recursive} \\
                             --ignored-file=${ignored_file} \\
                             --fields=core \\
                             --page-number=1 \\
                             --page-size=0 \\
-                            --sort='[["title,artist", true], ["genre", false]]' \\
-                            --filter='\\{ \\
-                                "_options": \\{ \\
-                                    "relation": "and" #(note: and/or) \\
-                                \\}, \\
-                                "title,core": \\{ \\
-                                    "function": "search", #(note: equal/search/empty) \\
-                                    "parameters": ["a", true, false] \\
-                                \\} \\
-                            \\}' \\
-                            --align='\\{ \\
-                                "title,artist": "l:m" #(note: align=l/c/r, valign=t/m/b) \\
-                            \\}' \\
+                            --sort='[
+                                {"_comment": ""},
+                                ["title,artist", true],
+                                ["genre", false]
+                            ]' \\
+                            --filter='{
+                                "_options": {
+                                    "_comment": "relation choose from and/or",
+                                    "relation": "and"
+                                },
+                                "title,core": {
+                                    "_comment": "function choose from equal/search/empty",
+                                    "function": "search",
+                                    "parameters": ["a", true, false]
+                                }
+                            }' \\
+                            --align='{
+                                "_comment": "align=l/c/r, valign=t/m/b",
+                                "title,artist": "l:m"
+                            }' \\
                             --style=tabled \\
                             --data-format=outputted \\
                             --field-type=cn \\
@@ -3418,7 +3446,7 @@ class AudioGod(object):
                             ${cmd} export \\
                                 --audios-source=${music_grouped_folder} \\
                                 --extensions=${extensions} \\
-                                --recursive \\
+                                --recursive=${recursive} \\
                                 --ignored-file=${ignored_file} \\
                                 --fields=note \\
                                 --field-type=cn \\
@@ -3431,7 +3459,7 @@ class AudioGod(object):
                             ${cmd} export \\
                                 --audios-source=${itunes_media_folder} \\
                                 --extensions=${extensions} \\
-                                --recursive \\
+                                --recursive=${recursive} \\
                                 --ignored-file=${ignored_file} \\
                                 --fields=ituned \\
                                 --field-type=en \\
@@ -3461,7 +3489,7 @@ class AudioGod(object):
                         ${cmd} convert \\
                             --audios-source=${music_source_folder} \\
                             --extensions=${extensions} \\
-                            --recursive \\
+                            --recursive=${recursive} \\
                             --ignored-file=${ignored_file} \\
                             --log-level=${log_level} \\
                             --log-file=${log_file}
@@ -3629,10 +3657,17 @@ def _add_arguments(parser, arguments=[]) -> None:
             help='properties for audios',
         )
     
+    def Boolean(x):
+        if type(x) is str:
+            return x.lower() in ('true', '1', 'yes')
+        return bool(x)
+
     if 'recursive' in arguments:
         parser.add_argument(
             '--recursive', '-r',
-            action='store_true',
+            type=Boolean,
+            required=False,
+            default=AudioGod.ARGUMENTS_DEFAULTS['recursive'],
             dest='recursive',
             help='if recursive when traverse the audios directory',
         )
