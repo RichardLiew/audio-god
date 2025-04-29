@@ -453,46 +453,54 @@ class AudioGod(object):
         'recursive': { 'default': 'true' },
         'audios_root': { 'default': '~/Music/Source' },
         'properties': {
-            'default': '''\'{
-                "_comment": "sources choose from command/file/directory/filename",
-                "default": {
-                    "sources": ["command", "file"],
-                    "value": null
-                },
-                "genre": {
-                    "sources": ["command", "file"],
-                    "value": null
-                }
-            }\'''',
+            'default': '''
+                \'{
+                    "_comment": "sources choose from command/file/directory/filename",
+                    "default": {
+                        "sources": ["command", "file"],
+                        "value": null
+                    },
+                    "genre": {
+                        "sources": ["command", "file"],
+                        "value": null
+                    }
+                }\'
+            ''',
         },
         'fields': { 'default': 'core' },
         'page_number': { 'default': 1 },
         'page_size': { 'default': 0 },
         'sort': {
-            'default': '''\'[
-                {"_comment": ""},
-                ["title,artist", true],
-                ["genre", false]
-            ]\'''',
+            'default': '''
+                \'[
+                    {"_comment": ""},
+                    ["title,artist", true],
+                    ["genre", false]
+                ]\'
+            ''',
         },
         'filter': {
-            'default': '''\'{
-                "_options": {
-                    "_comment": "relation choose from and/or",
-                    "relation": "or"
-                },
-                "title,core": {
-                    "_comment": "function choose from equal/search/empty",
-                    "function": "search",
-                    "parameters": ["", true, false]
-                }
-            }\'''',
+            'default': '''
+                \'{
+                    "_options": {
+                        "_comment": "relation choose from and/or",
+                        "relation": "or"
+                    },
+                    "title,core": {
+                        "_comment": "function choose from equal/search/empty",
+                        "function": "search",
+                        "parameters": ["", true, false]
+                    }
+                }\'
+            ''',
         },
         'align': {
-            'default': '''\'{
-                "_comment": "align=l/c/r, valign=t/m/b",
-                "title,artist": "l:m"
-            }\'''',
+            'default': '''
+                \'{
+                    "_comment": "align=l/c/r, valign=t/m/b",
+                    "title,artist": "l:m"
+                }\'
+            ''',
         },
         'numbered': { 'default': 'true' },
         'style': {
@@ -764,7 +772,7 @@ class AudioGod(object):
 
         ret = None
         if content:
-            ret = _remove_comments(json.loads(content.strip("'")))
+            ret = _remove_comments(json.loads(content.strip().strip("'")))
         if ret is None:
             ret = default
         return ret
@@ -3242,6 +3250,47 @@ class AudioGod(object):
     def convert(self):
         pass
 
+    @staticmethod
+    def glorify_indents(content, indent=0):
+        def _calculate_min_indent(text):
+            min_indent, lines = None, text.split('\n')
+            for line in lines:
+                stripped_line = line.lstrip(' ')
+                if not stripped_line:
+                    continue
+                current_indent = len(line) - len(stripped_line)
+                if min_indent is None or current_indent < min_indent:
+                    min_indent = current_indent
+            return min_indent if min_indent is not None else 0
+        filler, min_indent = ' ', _calculate_min_indent(content)
+        if min_indent > 0:
+            content = re.sub(
+                r'\n%s{%s}' % (filler, min_indent), '\n', content,
+            )
+        if indent > 0:
+            content = re.sub(
+                r'\n', f'\n{filler * indent}', content,
+            )
+        return content
+
+    @classmethod
+    def render_usage(cls, usage) -> str:
+        kwargs = copy.deepcopy(cls.ARGUMENTS_DEFAULTS)
+        aliens = ['properties', 'sort', 'filter', 'align']
+        for alien in aliens:
+            kwargs[alien] = cls.glorify_indents(
+                kwargs[alien], indent=4,
+            ).strip()
+        return '\n' + Template(
+            cls.glorify_indents(usage, indent=0),
+        ).safe_substitute(dict(
+            audio_properties=cls.audio_properties(),
+            special_fields=cls.special_fields(),
+            special_characters=cls.special_characters(),
+            cmd=cls.get_command(),
+            **kwargs,
+        ))
+
     @log_decorator
     def generate_script(self):
         content = '#!/usr/bin/env zsh\n\n'
@@ -3381,24 +3430,6 @@ class AudioGod(object):
         except Exception as e:
             pass
         return interpreter
-
-    @classmethod
-    def render_usage(cls, usage) -> str:
-        kwargs = copy.deepcopy(cls.ARGUMENTS_DEFAULTS)
-        aliens = ['properties', 'sort', 'filter', 'align']
-        for alien in aliens:
-            kwargs[alien] = kwargs[alien].replace(f'\n{" " * 4 * 2}', '\n')
-        ret = '\n' + Template(usage).safe_substitute(dict(
-            audio_properties=cls.audio_properties(),
-            special_fields=cls.special_fields(),
-            special_characters=cls.special_characters(),
-            cmd=cls.get_command(),
-            **kwargs,
-        ))
-        pos = next((i for i, c in enumerate(ret[2:], 1) if c != ' '), -1)
-        if pos > 0:
-            ret = re.sub(r'\n {%s}' % (pos-1,), '\n', ret)
-        return ret
 
 
     @classmethod
