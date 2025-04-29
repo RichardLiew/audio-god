@@ -453,7 +453,7 @@ class AudioGod(object):
         'recursive': { 'default': 'true' },
         'audios_root': { 'default': '~/Music/Source' },
         'properties': {
-            'default': '''{
+            'default': '''\'{
                 "_comment": "sources choose from command/file/directory/filename",
                 "default": {
                     "sources": ["command", "file"],
@@ -463,20 +463,20 @@ class AudioGod(object):
                     "sources": ["command", "file"],
                     "value": null
                 }
-            }''',
+            }\'''',
         },
         'fields': { 'default': 'core' },
         'page_number': { 'default': 1 },
         'page_size': { 'default': 0 },
         'sort': {
-            'default': '''[
+            'default': '''\'[
                 {"_comment": ""},
                 ["title,artist", true],
                 ["genre", false]
-            ]''',
+            ]\'''',
         },
         'filter': {
-            'default': '''{
+            'default': '''\'{
                 "_options": {
                     "_comment": "relation choose from and/or",
                     "relation": "or"
@@ -486,13 +486,13 @@ class AudioGod(object):
                     "function": "search",
                     "parameters": ["", true, false]
                 }
-            }''',
+            }\'''',
         },
         'align': {
-            'default': '''{
+            'default': '''\'{
                 "_comment": "align=l/c/r, valign=t/m/b",
                 "title,artist": "l:m"
-            }''',
+            }\'''',
         },
         'numbered': { 'default': 'true' },
         'style': {
@@ -522,7 +522,7 @@ class AudioGod(object):
         'music_grouped_folder': { 'default': '~/Music/Grouped' },
         'artwork_path': { 'default': '~/Music/Artworks' },
         'itunes_media_folder': { 'default': '~/music/iTunes/iTunes\ Media/Music' }, # type: ignore
-        'itunes_library_plist': { 'default': '~/music/iTunes/iTunes\ Media/Library.xml' }, # type: ignore
+        'itunes_library_plist': { 'default': '~/music/iTunes/Library.xml' }, # type: ignore
         'itunes_version_plist': { 'default': '/System/Applications/Music.app/Contents/version.plist' },
         'ignored_file': { 'default': './ignored.txt' },
         'note_file': { 'default': './songs.note' },
@@ -738,6 +738,37 @@ class AudioGod(object):
             ret = ','.join(ret)
         return ret
 
+    @staticmethod
+    def load_json(content, default=None) -> list | dict | None:
+        def _remove_comments(data):
+            comment_tag = '_comment'
+            if isinstance(data, dict):
+                if comment_tag in data:
+                    del data[comment_tag]
+                for key in data:
+                    data[key] = _remove_comments(data[key])
+            elif isinstance(data, list):
+                comment_indexes = []
+                for i in range(len(data)):
+                    if isinstance(data[i], dict):
+                        old_len = len(data[i])
+                        data[i] = _remove_comments(data[i])
+                        new_len = len(data[i])
+                        if  old_len > 0 and new_len == 0:
+                            comment_indexes.append(i)
+                    else:
+                        data[i] = _remove_comments(data[i])
+                for i in comment_indexes:
+                    del data[i]
+            return data
+
+        ret = None
+        if content:
+            ret = _remove_comments(json.loads(content.strip("'")))
+        if ret is None:
+            ret = default
+        return ret
+
     def __resolve_properties(self, properties):
         ret = self.load_json(properties, {})
         if type(ret) is not dict:
@@ -768,37 +799,6 @@ class AudioGod(object):
                 return ret
             for i in range(len(sources)):
                 sources[i] = self.PropertySource(sources[i])
-        return ret
-
-    @staticmethod
-    def load_json(content, default=None) -> list | dict | None:
-        def _remove_comments(data):
-            comment_tag = '_comment'
-            if isinstance(data, dict):
-                if comment_tag in data:
-                    del data[comment_tag]
-                for key in data:
-                    data[key] = _remove_comments(data[key])
-            elif isinstance(data, list):
-                comment_indexes = []
-                for i in range(len(data)):
-                    if isinstance(data[i], dict):
-                        old_len = len(data[i])
-                        data[i] = _remove_comments(data[i])
-                        new_len = len(data[i])
-                        if  old_len > 0 and new_len == 0:
-                            comment_indexes.append(i)
-                    else:
-                        data[i] = _remove_comments(data[i])
-                for i in comment_indexes:
-                    del data[i]
-            return data
-
-        ret = None
-        if content:
-            ret = _remove_comments(json.loads(content))
-        if ret is None:
-            ret = default
         return ret
 
     def __rewrite_options(self, options):

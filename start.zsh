@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-04-29T07:45:02Z
+# Created Time: 2025-04-29T08:06:16Z
 
 ##############################################################################
 
@@ -23,7 +23,7 @@ pipenv run python audgod.py fill-properties \
     --ignored-file=./ignored.txt \
     --source-file=./songs.note \
     --audios-root=~/Music/Source \
-    --properties={
+    --properties='{
         "_comment": "sources choose from command/file/directory/filename",
         "default": {
             "sources": ["command", "file"],
@@ -33,7 +33,7 @@ pipenv run python audgod.py fill-properties \
             "sources": ["command", "file"],
             "value": null
         }
-    } \
+    }' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -107,6 +107,6 @@ pipenv run python audgod.py export \
     --track-initial-id=601 \
     --playlist-initial-id=3001 \
     --output-format=plist \
-    --output-file=~/music/iTunes/iTunes\ Media/Library.xml \
+    --output-file=~/music/iTunes/Library.xml \
     --log-level=WARNING \
     --log-file=stderr
