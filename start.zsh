@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-04-30T05:16:29Z
+# Created Time: 2025-06-09T05:44:04Z
 
 ##############################################################################
 
@@ -50,7 +50,7 @@ pipenv run python audgod.py rename-audios \
     --extensions=mp3,aac \
     --recursive=true \
     --ignored-file=./ignored.txt \
-    --filename-pattern="@{artist} # @{title}" \
+    --filename-pattern="@{artist} * @{title}" \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -90,23 +90,23 @@ pipenv run python audgod.py organize-files \
     --extensions=mp3,aac \
     --recursive=true \
     --ignored-file=./ignored.txt \
-    --audios-root=~/music/iTunes/iTunes\ Media/Music \
+    --audios-root=~/Music/iTunes/iTunes\ Media/Music \
     --organize-type=ituned \
     --log-level=WARNING \
     --log-file=stderr
 
 pipenv run python audgod.py export \
-    --audios-source=~/music/iTunes/iTunes\ Media/Music \
+    --audios-source=~/Music/iTunes/iTunes\ Media/Music \
     --extensions=mp3,aac \
     --recursive=true \
     --ignored-file=./ignored.txt \
     --fields=ituned \
     --field-type=en \
     --itunes-version-plist=/System/Applications/Music.app/Contents/version.plist \
-    --itunes-media-folder=~/music/iTunes/iTunes\ Media/Music \
+    --itunes-media-folder=~/Music/iTunes/iTunes\ Media/Music \
     --track-initial-id=601 \
     --playlist-initial-id=3001 \
     --output-format=plist \
-    --output-file=~/music/iTunes/Library.xml \
+    --output-file=~/Music/iTunes/Library.xml \
     --log-level=WARNING \
     --log-file=stderr
