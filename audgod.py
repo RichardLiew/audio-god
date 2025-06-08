@@ -250,12 +250,12 @@ class TreeX(Tree):
 
 class AudioGod(object):
     ORI_DIV_CHAR = '-'
-    DIV_CHAR = '#'
+    DIV_CHAR = '*'
     GROUPING_SEPARATOR = '&'
 
 
     class FilenamePatternTemplate(Template):
-        delimiter = '@'
+        delimiter = '%'
 
 
     @StringEnum.unique
@@ -568,72 +568,34 @@ class AudioGod(object):
     }
 
 
-    def __init__(
-        self,
-        source_file=ARGUMENTS_DEFAULTS['source_file'],
-        ignored_file=ARGUMENTS_DEFAULTS['ignored_file'],
-        audios_root=ARGUMENTS_DEFAULTS['audios_root'],
-        audios_source=(
-            ARGUMENTS_DEFAULTS['audios_source'],
-            ARGUMENTS_DEFAULTS['recursive'],
-        ),
-        properties=ARGUMENTS_DEFAULTS['properties'],
-        extensions=ARGUMENTS_DEFAULTS['extensions'],
-        fields=ARGUMENTS_DEFAULTS['fields'],
-        data_format=ARGUMENTS_DEFAULTS['data_format'],
-        display_options=[
-            ARGUMENTS_DEFAULTS['page_number'],
-            ARGUMENTS_DEFAULTS['page_size'],
-            ARGUMENTS_DEFAULTS['sort'],
-            ARGUMENTS_DEFAULTS['filter'],
-            ARGUMENTS_DEFAULTS['fields'],
-            ARGUMENTS_DEFAULTS['align'],
-            ARGUMENTS_DEFAULTS['numbered'],
-            ARGUMENTS_DEFAULTS['style'],
-        ],
-        itunes_options=[
-            ARGUMENTS_DEFAULTS['itunes_version_plist'],
-            ARGUMENTS_DEFAULTS['itunes_media_folder'],
-            ARGUMENTS_DEFAULTS['track_initial_id'],
-            ARGUMENTS_DEFAULTS['playlist_initial_id'],
-        ],
-        artwork_path=ARGUMENTS_DEFAULTS['artwork_path'],
-        filename_pattern=ARGUMENTS_DEFAULTS['filename_pattern'],
-        field_type=ARGUMENTS_DEFAULTS['field_type'],
-        output_options=(
-            ARGUMENTS_DEFAULTS['output_file'],
-            ARGUMENTS_DEFAULTS['output_format'],
-        ),
-        organize_type=ARGUMENTS_DEFAULTS['organize_type'],
-        logger_options=(
-            ARGUMENTS_DEFAULTS['log_level'],
-            ARGUMENTS_DEFAULTS['log_file'],
-        ),
-    ):
-        self.__logger = FatalLogger(*logger_options)
+    def __init__(self, **kwargs):
+        kwargs = copy.deepcopy(AudioGod.ARGUMENTS_DEFAULTS) | kwargs
+
+        self.__logger_options = self.__resolve_logger_options(
+            kwargs['log_level'],
+            kwargs['log_file'],
+        )
+        
+        self.__logger = FatalLogger(*self.logger_options)
         eyed3.log.setLevel(logging.ERROR)
 
-        self.__source_file = self.abspath(source_file)
-        self.__ignored_file = self.abspath(ignored_file)
-        self.__audios_root = self.abspath(audios_root)
-        self.__audios_source = (
-            self.abspath(audios_source[0]), audios_source[1],
-        )
-        self.__properties = self.__resolve_properties(properties)
-        self.__extensions = self.split(
-            extensions.lower(), ',',
-            escaped=True,
-            del_blank=True,
-            filt_empty=True,
-            filt_repeated=True,
-            sortify=False,
-            reversify=False,
-        )
+        # process first
         self.__fields = [
             self.AudioProperty(x) for x in self.__resolve_fields(
-                fields, sortify=False, reversify=False, stringify=False,
+                kwargs['fields'], sortify=False, reversify=False, stringify=False,
             )
         ]
+
+        self.__audsrc_options = self.__resolve_audsrc_options(
+            kwargs['audios_source'],
+            kwargs['recursive'],
+            kwargs['extensions'],
+        )
+
+        self.__source_file = self.abspath(kwargs['source_file'])
+        self.__ignored_file = self.abspath(kwargs['ignored_file'])
+        self.__audios_root = self.abspath(kwargs['audios_root'])
+
         self.__clauses = ([], {}, {}, [], [])
         self.__clauses_counter = [0, 0, 0, 0, 0, 0]
         self.__audios = ([], [], [], [], [], [])
@@ -702,21 +664,32 @@ class AudioGod(object):
             for field in self.ALL_FIELDS
         }
 
-        self.__data_format = self.DataFormat(data_format)
-        self.__display_options = self.__rewrite_options(display_options)
-        self.__artwork_path = self.abspath(artwork_path)
-        self.__organize_type = AudioGod.OrganizeType(organize_type)
-        self.__filename_pattern = filename_pattern
-        self.__field_type = AudioGod.FieldType(field_type)
+        self.__data_format = self.DataFormat(kwargs['data_format'])
+        self.__artwork_path = self.abspath(kwargs['artwork_path'])
+        self.__organize_type = AudioGod.OrganizeType(kwargs['organize_type'])
+        self.__filename_pattern = kwargs['filename_pattern']
+        self.__field_type = AudioGod.FieldType(kwargs['field_type'])
+        self.__properties = self.__resolve_properties(kwargs['properties'])
         
-        self.__itunes_options = itunes_options
-        self.__itunes_options[0] = self.abspath(self.__itunes_options[0])
-        self.__itunes_options[1] = self.abspath(self.__itunes_options[1])
-
-        self.__output_file = self.abspath(output_options[0])
-        self.__output_format = AudioGod.FileFormat(output_options[1])
-        if self.FileFormat.NONE.eq(self.__output_format):
-            self.__output_format = self.recognize_file_format(self.output_file)
+        self.__display_options = self.__resolve_display_options(
+            kwargs['page_number'],
+            kwargs['page_size'],
+            kwargs['sort'],
+            kwargs['filter'],
+            kwargs['align'],
+            kwargs['numbered'],
+            kwargs['style'],
+        )
+        self.__itunes_options = self.__resolve_itunes_options(
+            kwargs['itunes_version_plist'],
+            kwargs['itunes_media_folder'],
+            kwargs['track_initial_id'],
+            kwargs['playlist_initial_id'],
+        )
+        self.__output_options = self.__resolve_output_options(
+            kwargs['output_file'],
+            kwargs['output_format'],
+        )
 
     def __resolve_fields(self, fields, sortify=False, reversify=False, stringify=False):
         fields_ = self.split(
@@ -744,37 +717,6 @@ class AudioGod(object):
             ret = list(reversed(ret))
         if stringify:
             ret = ','.join(ret)
-        return ret
-
-    @staticmethod
-    def load_json(content, default=None) -> list | dict | None:
-        def _remove_comments(data):
-            comment_tag = '_comment'
-            if isinstance(data, dict):
-                if comment_tag in data:
-                    del data[comment_tag]
-                for key in data:
-                    data[key] = _remove_comments(data[key])
-            elif isinstance(data, list):
-                comment_indexes = []
-                for i in range(len(data)):
-                    if isinstance(data[i], dict):
-                        old_len = len(data[i])
-                        data[i] = _remove_comments(data[i])
-                        new_len = len(data[i])
-                        if  old_len > 0 and new_len == 0:
-                            comment_indexes.append(i)
-                    else:
-                        data[i] = _remove_comments(data[i])
-                for i in comment_indexes:
-                    del data[i]
-            return data
-
-        ret = None
-        if content:
-            ret = _remove_comments(json.loads(content.strip().strip("'")))
-        if ret is None:
-            ret = default
         return ret
 
     def __resolve_properties(self, properties):
@@ -809,17 +751,68 @@ class AudioGod(object):
                 sources[i] = self.PropertySource(sources[i])
         return ret
 
-    def __rewrite_options(self, options):
-        page_number = options[0]
-        page_size = options[1]
-        sort_ = self.load_json(options[2], [])
-        filter_ = self.load_json(options[3], {})
-        fields_to_show = self.__resolve_fields(
-            options[4], sortify=False, reversify=False, stringify=False,
+    def __resolve_logger_options(self, log_level, log_file):
+        return (log_level, log_file)
+
+    def __resolve_audsrc_options(
+            self,
+            audios_source,
+            recursive,
+            extensions,
+        ):
+        return (
+            self.abspath(audios_source),
+            recursive,
+            self.split(
+                extensions.lower(), ',',
+                escaped=True,
+                del_blank=True,
+                filt_empty=True,
+                filt_repeated=True,
+                sortify=False,
+                reversify=False,
+            ),
         )
-        align_ = self.load_json(options[5], {})
-        numbered = options[6]
-        style = self.DisplayStyle(options[7])
+    
+    def __resolve_output_options(self, output_file, output_format):
+        output_file = self.abspath(output_file)
+        output_format = AudioGod.FileFormat(output_format)
+        if self.FileFormat.NONE.eq(output_format):
+            output_format = self.recognize_file_format(output_file)
+        return (
+            output_file,
+            output_format,
+        )
+
+    def __resolve_itunes_options(
+            self,
+            itunes_version_plist,
+            itunes_media_folder,
+            track_initial_id,
+            playlist_initial_id,
+        ):
+        return (
+            self.abspath(itunes_version_plist),
+            self.abspath(itunes_media_folder),
+            track_initial_id,
+            playlist_initial_id,
+        )
+
+    def __resolve_display_options(
+            self,
+            page_number,
+            page_size,
+            sort_,
+            filter_,
+            align_,
+            numbered,
+            style,
+        ):
+        fields_to_show = self.fields
+        sort_ = self.load_json(sort_, [])
+        filter_ = self.load_json(filter_, {})
+        align_ = self.load_json(align_, {})
+        style = self.DisplayStyle(style)
 
         # sort
         if type(sort_) is not list:
@@ -909,7 +902,7 @@ class AudioGod(object):
                 self.logger.fatal(f'Invalid format of <{value}>!')
                 return
 
-        return [
+        return (
             page_number,
             page_size,
             sort_,
@@ -918,7 +911,7 @@ class AudioGod(object):
             align_,
             numbered,
             style,
-        ]
+        )
 
     @property
     def logger(self):
@@ -949,16 +942,32 @@ class AudioGod(object):
         return self.__field_type
 
     @property
+    def logger_options(self):
+        return self.__logger_options
+    
+    @property
+    def log_level(self):
+        return self.logger_options[0]
+    
+    @property
+    def log_file(self):
+        return self.logger_options[1]
+    
+    @property
+    def output_options(self):
+        return self.__output_options
+    
+    @property
+    def output_file(self):
+        return self.output_options[0]
+
+    @property
     def output_format(self):
-        return self.__output_format
+        return self.output_options[1]
     
     @output_format.setter
     def output_format(self, value):
-        self.__output_format = value
-
-    @property
-    def output_file(self):
-        return self.__output_file
+        self.output_format = value
 
     @property
     def source_file(self):
@@ -973,10 +982,6 @@ class AudioGod(object):
         return self.__audios_root
 
     @property
-    def audios_source(self):
-        return self.__audios_source
-
-    @property
     def audios_tree(self):
         return self.__audios_tree
 
@@ -985,8 +990,20 @@ class AudioGod(object):
         return self.__properties
 
     @property
+    def audsrc_options(self):
+        return self.__audsrc_options
+    
+    @property
+    def audios_source(self):
+        return self.audsrc_options[0]
+
+    @property
+    def recursive(self):
+        return self.audsrc_options[1]
+
+    @property
     def extensions(self):
-        return self.__extensions
+        return self.audsrc_options[2]
 
     @property
     def fields(self):
@@ -1090,29 +1107,29 @@ class AudioGod(object):
 
     @property
     def source_audios(self):
-        ret, (audios_source, recursive) = [], self.audios_source
-        if not os.path.exists(audios_source):
-            self.logger.fatal(f'Source <{audios_source}> not exists!')
+        ret = []
+        if not os.path.exists(self.audios_source):
+            self.logger.fatal(f'Source <{self.audios_source}> not exists!')
             return ret
-        if os.path.isfile(audios_source):
-            if not self.__check_extension(audios_source):
-                self.logger.fatal(f'Source <{audios_source}> invalid extension!')
+        if os.path.isfile(self.audios_source):
+            if not self.__check_extension(self.audios_source):
+                self.logger.fatal(f'Source <{self.audios_source}> invalid extension!')
                 return ret
-            ret.append(audios_source)
+            ret.append(self.audios_source)
             return ret
-        if not os.path.isdir(audios_source):
-            self.logger.fatal(f'Source <{audios_source}> not a directory!')
+        if not os.path.isdir(self.audios_source):
+            self.logger.fatal(f'Source <{self.audios_source}> not a directory!')
             return ret
-        if recursive:
-            for _root, _dirs, _files in os.walk(audios_source):
+        if self.recursive:
+            for _root, _dirs, _files in os.walk(self.audios_source):
                 for _dir in _dirs:
                     ret.append(self.abspath(_root, _dir))
                 for _file in _files:
                     ret.append(self.abspath(_root, _file))
         else:
             ret.extend([
-                self.abspath(audios_source, audio)
-                for audio in os.listdir(audios_source)
+                self.abspath(self.audios_source, audio)
+                for audio in os.listdir(self.audios_source)
             ])
         return ret
 
@@ -1147,6 +1164,37 @@ class AudioGod(object):
                 + self.matched_audios \
                 + self.notmatched_audios,
         ))
+
+    @staticmethod
+    def load_json(content, default=None) -> list | dict | None:
+        def _remove_comments(data):
+            comment_tag = '_comment'
+            if isinstance(data, dict):
+                if comment_tag in data:
+                    del data[comment_tag]
+                for key in data:
+                    data[key] = _remove_comments(data[key])
+            elif isinstance(data, list):
+                comment_indexes = []
+                for i in range(len(data)):
+                    if isinstance(data[i], dict):
+                        old_len = len(data[i])
+                        data[i] = _remove_comments(data[i])
+                        new_len = len(data[i])
+                        if  old_len > 0 and new_len == 0:
+                            comment_indexes.append(i)
+                    else:
+                        data[i] = _remove_comments(data[i])
+                for i in comment_indexes:
+                    del data[i]
+            return data
+
+        ret = None
+        if content:
+            ret = _remove_comments(json.loads(content.strip().strip("'")))
+        if ret is None:
+            ret = default
+        return ret
 
     @staticmethod
     def split(
@@ -2214,7 +2262,7 @@ class AudioGod(object):
         name = name.strip()
         if not name:
             return False
-        if name.count(AudioGod.DIV_CHAR) > 1 or not name:
+        if name.count(AudioGod.DIV_CHAR) > 1:
             return False
         if name.count(AudioGod.DIV_CHAR) == 1 and (name[0] == AudioGod.DIV_CHAR or name[-1] == AudioGod.DIV_CHAR):
             return False
@@ -4128,40 +4176,7 @@ def _handle_subcmd(args) -> None:
         if hasattr(args, _argument):
             _arguments[_argument] = getattr(args, _argument)
 
-    god = AudioGod(
-        source_file=_arguments['source_file'],
-        ignored_file=_arguments['ignored_file'],
-        audios_root=_arguments['audios_root'],
-        audios_source=(_arguments['audios_source'], _arguments['recursive']),
-        properties=_arguments['properties'],
-        extensions=_arguments['extensions'],
-        fields=_arguments['fields'],
-        data_format=_arguments['data_format'],
-        display_options=[
-            _arguments['page_number'],
-            _arguments['page_size'],
-            _arguments['sort'],
-            _arguments['filter'],
-            _arguments['fields'],
-            _arguments['align'],
-            _arguments['numbered'],
-            _arguments['style'],
-        ],
-        itunes_options=[
-            _arguments['itunes_version_plist'],
-            _arguments['itunes_media_folder'],
-            _arguments['track_initial_id'],
-            _arguments['playlist_initial_id'],
-        ],
-        artwork_path=_arguments['artwork_path'],
-        filename_pattern=_arguments['filename_pattern'],
-        field_type=_arguments['field_type'],
-        output_options=(_arguments['output_file'], _arguments['output_format']),
-        organize_type=_arguments['organize_type'],
-        logger_options=(_arguments['log_level'], _arguments['log_file']),
-    )
-
-    getattr(god, args.subcmd.replace('-', '_'))()
+    getattr(AudioGod(**_arguments), args.subcmd.replace('-', '_'))()
 
 ################################################################################
 #                                                                              #
