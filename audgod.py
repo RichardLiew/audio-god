@@ -875,7 +875,7 @@ class AudioGod(object):
     }
 
 
-    __USAGE__ = '''
+    USAGE = '''
 All fields:
 ${audio_properties}
 
@@ -4223,7 +4223,7 @@ class GreatArgumentParser(argparse.ArgumentParser):
 def main():
     parser = GreatArgumentParser(
         prog=sys.argv[0],
-        usage=AudioGod.render_usage(AudioGod.__USAGE__),
+        usage=AudioGod.render_usage(AudioGod.USAGE),
         description='🎻 God of audios 🎸',
         epilog='🤔 Thinking ...',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
