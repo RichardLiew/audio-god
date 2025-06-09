@@ -94,6 +94,7 @@ import time
 import uuid
 import json
 import copy
+import glob
 import pydoc
 import urllib
 import shutil
@@ -872,6 +873,18 @@ class AudioGod(object):
                 ''',
             },
         },
+        'clean-up': {
+            'arguments': [],
+            'kwargs': {
+                'description': '✋ Clean up dirs, backups and so on',
+                'help': 'clean up dirs, backups and so on',
+                'usage': '''
+                    ${cmd} clean-up \\
+                        --log-level=${log_level} \\
+                        --log-file=${log_file}
+                ''',
+            },
+        },
     }
 
 
@@ -920,19 +933,20 @@ Precautions:
 General steps:
 
 Ready:
-    Step.1: Download songs, and make sure that file named with "artist${ori_div_char}title";
-    Step.2: Add detail of songs to notes, then grouped.
+    Step.1: Run <clean-up> subcommand to clear repeats, backups, grouped folder, and iTunes related;
+    Step.2: Download songs, and make sure that file named with "artist${ori_div_char}title";
+    Step.3: Add detail of songs to notes, then grouped.
 
 Process Method 1:
-    Step.1: Preprocess notes, until note file not changed;
-    Step.2: Fill properties;
-    Step.3: Format properties;
-    Step.4: Rename audios;
-    Step.5: Organize grouped files;
-    Step.6: Export note file;
-    Step.7: List repeated audios of grouped;
-    Step.8: Organize ituned files;
-    Step.9: Export plist file.
+    Step.1: Preprocess notes, until note file not changed, with subcommand <preprocess-notes>;
+    Step.2: Fill properties, with subcommand <fill-properties>;
+    Step.3: Format properties, with subcommand <format-properties>;
+    Step.4: Rename audios, with subcommand <rename-audios>;
+    Step.5: Organize grouped files, with subcommand <organize-files>;
+    Step.6: Export note file, with subcommand <export>;
+    Step.7: List repeated audios of grouped, with subcommand <list-repeated>;
+    Step.8: Organize ituned files, with subcommand <organize-files>;
+    Step.9: Export plist file, with subcommand <export>.
 
 Process Method 2:
     Step.1: Put audios to source folder (e.g. "${music_source_folder}");
@@ -1616,12 +1630,6 @@ General commands:
             ret = list(reversed(ret))
         return ret
 
-    @staticmethod
-    def remove(file):
-        if not os.path.exists(file):
-            return
-        send2trash(file)
-
     @classmethod
     def rename(cls, old, new):
         if not os.path.exists(old):
@@ -1649,6 +1657,18 @@ General commands:
         if not ret:
             return ret
         return os.path.normpath(os.path.abspath(os.path.expanduser(ret)))
+
+    @classmethod
+    def remove(cls, *paths):
+        targets = []
+        for path in paths:
+            for item in glob.glob(path):
+                if item and item not in targets:
+                    targets.append(item)
+        for target in targets:
+            target = cls.abspath(target)
+            if os.path.exists(target):
+                send2trash(target)
 
     def backup(self, src):
         if os.path.exists(src):
@@ -3692,51 +3712,6 @@ General commands:
     def convert(self):
         pass
 
-    @staticmethod
-    def glorify_indents(content, indent=0):
-        def _calculate_min_indent(text):
-            min_indent, lines = None, text.split('\n')
-            for line in lines:
-                stripped_line = line.lstrip(' ')
-                if not stripped_line:
-                    continue
-                current_indent = len(line) - len(stripped_line)
-                if min_indent is None or current_indent < min_indent:
-                    min_indent = current_indent
-            return min_indent if min_indent is not None else 0
-        filler, min_indent = ' ', _calculate_min_indent(content)
-        if min_indent > 0:
-            content = re.sub(
-                r'\n%s{%s}' % (filler, min_indent), '\n', content,
-            )
-        if indent > 0:
-            content = re.sub(
-                r'\n', f'\n{filler * indent}', content,
-            )
-        return content
-
-    @classmethod
-    def render_usage(cls, usage) -> str:
-        kwargs = copy.deepcopy(cls.ARGUMENTS_DEFAULTS)
-        aliens = ['properties', 'sort', 'filter', 'align']
-        for alien in aliens:
-            kwargs[alien] = cls.glorify_indents(
-                kwargs[alien], indent=4,
-            ).strip()
-        return '\n' + Template(
-            cls.glorify_indents(usage, indent=0),
-        ).safe_substitute(dict(
-            audio_properties=cls.audio_properties(),
-            special_fields=cls.special_fields(),
-            special_characters=cls.special_characters(),
-            cmd=cls.get_command(),
-            ori_div_char=cls.ORI_DIV_CHAR,
-            div_char=cls.DIV_CHAR,
-            grouping_sep=cls.GROUPING_SEPARATOR,
-            fnp_delimiter=cls.FilenamePatternTemplate.delimiter,
-            **kwargs,
-        ))
-
     @log_decorator
     def generate_script(self):
         content = '#!/usr/bin/env zsh\n\n'
@@ -3773,6 +3748,19 @@ General commands:
             with open(self.output_file, mode='w', encoding='utf-8') as f:
                 f.write(content)
                 os.chmod(self.output_file, 0o755)
+
+    @log_decorator
+    def clean_up(self):
+        self.remove(
+            './songs.note.backup.*',
+            './repeated.txt*',
+            './start.zsh.backup.*',
+            '~/Music/Grouped',
+            '~/Music/iTunes/iTunes Media/Music/*',
+            '~/Music/iTunes/Library.xml',
+        )
+
+    ############################################################################
 
     @classmethod
     def audio_properties(cls) -> str:
@@ -3845,6 +3833,29 @@ General commands:
         return table.get_string(
             title='SPECIAL CHARACTERS',
         )
+    
+    @staticmethod
+    def glorify_indents(content, indent=0):
+        def _calculate_min_indent(text):
+            min_indent, lines = None, text.split('\n')
+            for line in lines:
+                stripped_line = line.lstrip(' ')
+                if not stripped_line:
+                    continue
+                current_indent = len(line) - len(stripped_line)
+                if min_indent is None or current_indent < min_indent:
+                    min_indent = current_indent
+            return min_indent if min_indent is not None else 0
+        filler, min_indent = ' ', _calculate_min_indent(content)
+        if min_indent > 0:
+            content = re.sub(
+                r'\n%s{%s}' % (filler, min_indent), '\n', content,
+            )
+        if indent > 0:
+            content = re.sub(
+                r'\n', f'\n{filler * indent}', content,
+            )
+        return content
 
     # Successful for zsh, failed for bash.
     # You should set 'PROMPT_COMMAND="history -a"' in "~/.bashrc" or "~/.bash_profile".
@@ -3876,6 +3887,28 @@ General commands:
         except Exception as e:
             pass
         return interpreter 
+
+    @classmethod
+    def render_usage(cls, usage) -> str:
+        kwargs = copy.deepcopy(cls.ARGUMENTS_DEFAULTS)
+        aliens = ['properties', 'sort', 'filter', 'align']
+        for alien in aliens:
+            kwargs[alien] = cls.glorify_indents(
+                kwargs[alien], indent=4,
+            ).strip()
+        return '\n' + Template(
+            cls.glorify_indents(usage, indent=0),
+        ).safe_substitute(dict(
+            audio_properties=cls.audio_properties(),
+            special_fields=cls.special_fields(),
+            special_characters=cls.special_characters(),
+            cmd=cls.get_command(),
+            ori_div_char=cls.ORI_DIV_CHAR,
+            div_char=cls.DIV_CHAR,
+            grouping_sep=cls.GROUPING_SEPARATOR,
+            fnp_delimiter=cls.FilenamePatternTemplate.delimiter,
+            **kwargs,
+        ))
 
 ################################################################################
 #                                                                              #
