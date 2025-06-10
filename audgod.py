@@ -927,9 +927,18 @@ Sample in note to import:
 
 Precautions:
 
-1. Don't contain blank characters in genres and groupings;
-2. Audios in the same group should have a same genre;
-3. In invalid detail line of note.txt file, "," -> "\\" and ":" -> "/";
+    1. Don't contain blank characters in genres and groupings;
+    2. Audios in the same group should have a same genre;
+    3. In invalid detail line of note.txt file, "," -> "\\" and ":" -> "/".
+
+------------------------------------------------------------------------------
+
+Attention:
+    Here is the cache folder, which contains backups and trash under it.
+    You should clear the cache when the size is so big.
+        ~/.audgod-cache
+            ├── backups
+            └── trash
 
 ------------------------------------------------------------------------------
 
@@ -1650,14 +1659,16 @@ General commands:
 
     def rename(self, old, new):
         if not os.path.exists(old):
-            raise Exception(f'File {old} not exists!')
+            self.logger.fatal(f'File {old} not exists!')
+            return
         if os.path.exists(new):
             self.remove(new)
         os.rename(old, new)
 
     def duplicate(self, src, dst):
         if not os.path.exists(src):
-            raise Exception(f'File {src} not exists!')
+            self.logger.fatal(f'File {src} not exists!')
+            return
         if os.path.exists(dst):
             self.remove(dst)
         shutil.copy2(src, dst)
