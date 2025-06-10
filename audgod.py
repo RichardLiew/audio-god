@@ -1648,20 +1648,18 @@ General commands:
             return ret
         return os.path.normpath(os.path.abspath(os.path.expanduser(ret)))
 
-    @classmethod
-    def rename(cls, old, new):
+    def rename(self, old, new):
         if not os.path.exists(old):
             raise Exception(f'File {old} not exists!')
         if os.path.exists(new):
-            cls.remove(new)
+            self.remove(new)
         os.rename(old, new)
 
-    @classmethod
-    def duplicate(cls, src, dst):
+    def duplicate(self, src, dst):
         if not os.path.exists(src):
             raise Exception(f'File {src} not exists!')
         if os.path.exists(dst):
-            cls.remove(dst)
+            self.remove(dst)
         shutil.copy2(src, dst)
     
     @classmethod
@@ -3792,6 +3790,7 @@ General commands:
     @log_decorator
     def clean_up(self):
         self.remove(
+            './*.tmp',
             './songs.note.backup.*',
             './repeated.txt*',
             './start.zsh.backup.*',
