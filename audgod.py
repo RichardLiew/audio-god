@@ -1018,10 +1018,42 @@ General commands:
         self.__source_file = self.abspath(kwargs['source_file'])
         self.__ignored_file = self.abspath(kwargs['ignored_file'])
         self.__audios_root = self.abspath(kwargs['audios_root'])
+        self.__artwork_path = self.abspath(kwargs['artwork_path'])
 
+        self.__data_format = self.DataFormat(kwargs['data_format'])
+        self.__organize_type = AudioGod.OrganizeType(kwargs['organize_type'])
+        self.__filename_pattern = kwargs['filename_pattern']
+        self.__field_type = AudioGod.FieldType(kwargs['field_type'])
+        self.__properties = self.__resolve_properties(kwargs['properties'])
+        
         self.__clauses = ([], {}, {}, [], [])
         self.__clauses_counter = [0, 0, 0, 0, 0, 0]
         self.__audios = ([], [], [], [], [], [])
+        self.__ignored_set = set()
+        self.__summaries = {}
+
+        self.__display_options = self.__resolve_display_options(
+            kwargs['page_number'],
+            kwargs['page_size'],
+            kwargs['sort'],
+            kwargs['filter'],
+            kwargs['align'],
+            kwargs['numbered'],
+            kwargs['style'],
+        )
+
+        self.__itunes_options = self.__resolve_itunes_options(
+            kwargs['itunes_version_plist'],
+            kwargs['itunes_media_folder'],
+            kwargs['track_initial_id'],
+            kwargs['playlist_initial_id'],
+        )
+
+        self.__output_options = self.__resolve_output_options(
+            kwargs['output_file'],
+            kwargs['output_format'],
+        )
+
         self.__audios_tree = TreeX(
             tree=None,
             deep=False,
@@ -1032,8 +1064,6 @@ General commands:
         self.audios_tree.create_node(
             self.AUDIOS_TREE_ROOT_TAG, self.AUDIOS_TREE_ROOT_NID,
         )
-        self.__ignored_set = set()
-        self.__summaries = {}
 
         self.__parse = {
             field: getattr(
@@ -1086,33 +1116,6 @@ General commands:
             field: __output(self.__output[field])
             for field in self.ALL_FIELDS
         }
-
-        self.__data_format = self.DataFormat(kwargs['data_format'])
-        self.__artwork_path = self.abspath(kwargs['artwork_path'])
-        self.__organize_type = AudioGod.OrganizeType(kwargs['organize_type'])
-        self.__filename_pattern = kwargs['filename_pattern']
-        self.__field_type = AudioGod.FieldType(kwargs['field_type'])
-        self.__properties = self.__resolve_properties(kwargs['properties'])
-        
-        self.__display_options = self.__resolve_display_options(
-            kwargs['page_number'],
-            kwargs['page_size'],
-            kwargs['sort'],
-            kwargs['filter'],
-            kwargs['align'],
-            kwargs['numbered'],
-            kwargs['style'],
-        )
-        self.__itunes_options = self.__resolve_itunes_options(
-            kwargs['itunes_version_plist'],
-            kwargs['itunes_media_folder'],
-            kwargs['track_initial_id'],
-            kwargs['playlist_initial_id'],
-        )
-        self.__output_options = self.__resolve_output_options(
-            kwargs['output_file'],
-            kwargs['output_format'],
-        )
 
     def __resolve_fields(self, fields, sortify=False, reversify=False, stringify=False):
         fields_ = self.split(
