@@ -56,7 +56,6 @@
 #       psutil = "*"
 #       treelib = "*"
 #       enumx = "*"
-#       send2trash = "*"
 #       prettytable = "*"
 #       eyed3 = "*"
 #       mdutils = "*"
@@ -110,7 +109,6 @@ import psutil
 
 from treelib import Tree
 from enumx import StringEnum
-from send2trash import send2trash
 from prettytable import PrettyTable
 
 import eyed3
@@ -250,6 +248,11 @@ class TreeX(Tree):
 ################################################################################
 
 class AudioGod(object):
+    CACHE_DIR = os.path.expanduser('~/.audgod-cache')
+    TRASH_DIR = os.path.join(CACHE_DIR, 'trash')
+    BACKUPS_DIR = os.path.join(CACHE_DIR, 'backups')
+
+
     ORI_DIV_CHAR = '-'
     DIV_CHAR = '*'
     GROUPING_SEPARATOR = '&'
@@ -979,18 +982,21 @@ General commands:
     def __init__(self, **kwargs):
         kwargs = copy.deepcopy(AudioGod.ARGUMENTS_DEFAULTS) | kwargs
 
+        # init logger
         self.__logger_options = self.__resolve_logger_options(
             kwargs['log_level'],
             kwargs['log_file'],
         )
-        
         self.__logger = FatalLogger(*self.logger_options)
         eyed3.log.setLevel(logging.ERROR)
 
         # process first
         self.__fields = [
             self.AudioProperty(x) for x in self.__resolve_fields(
-                kwargs['fields'], sortify=False, reversify=False, stringify=False,
+                kwargs['fields'],
+                sortify=False,
+                reversify=False,
+                stringify=False,
             )
         ]
 
@@ -1630,6 +1636,18 @@ General commands:
             ret = list(reversed(ret))
         return ret
 
+    @staticmethod
+    def abspath(path, *paths):
+        ret, paths = '', list(filter(lambda x: x, [path] + list(paths)))
+        if len(paths) > 0:
+            ret = paths[0]
+        if len(paths) > 1:
+            for path in paths[1:]:
+                ret = os.path.join(ret, path)
+        if not ret:
+            return ret
+        return os.path.normpath(os.path.abspath(os.path.expanduser(ret)))
+
     @classmethod
     def rename(cls, old, new):
         if not os.path.exists(old):
@@ -1646,34 +1664,56 @@ General commands:
             cls.remove(dst)
         shutil.copy2(src, dst)
     
+    @classmethod
+    def init_cache(cls):
+        os.makedirs(cls.CACHE_DIR, exist_ok=True)
+        os.makedirs(cls.TRASH_DIR, exist_ok=True)
+        os.makedirs(cls.BACKUPS_DIR, exist_ok=True)
+
     @staticmethod
-    def abspath(path, *paths):
-        ret, paths = '', list(filter(lambda x: x, [path] + list(paths)))
-        if len(paths) > 0:
-            ret = paths[0]
-        if len(paths) > 1:
-            for path in paths[1:]:
-                ret = os.path.join(ret, path)
-        if not ret:
-            return ret
-        return os.path.normpath(os.path.abspath(os.path.expanduser(ret)))
+    def timestamp():
+        return datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
 
     @classmethod
-    def remove(cls, *paths):
+    def treat_basename(cls, src, tag=''):
+        ret = f'{cls.timestamp()}.{os.path.basename(src)}'
+        if tag:
+            ret = f'{tag}.{ret}'
+        return ret
+
+    def remove(self, *paths):
+        self.init_cache()
         targets = []
         for path in paths:
-            for item in glob.glob(path):
-                if item and item not in targets:
-                    targets.append(item)
+            if not path:
+                continue
+            path = self.abspath(path)
+            items = glob.glob(path, recursive=True)
+            if not items:
+                self.logger.error(f'Remove warning: File {path} invalid!')
+            else:
+                for item in items:
+                    if item not in targets:
+                        targets.append(item)
         for target in targets:
-            target = cls.abspath(target)
+            target = self.abspath(target)
             if os.path.exists(target):
-                send2trash(target)
+                os.rename(
+                    target, os.path.join(
+                        self.TRASH_DIR, self.treat_basename(target, 'trash'),
+                    ),
+                )
+            else:
+                self.logger.error(f'Remove warning: File {target} not exists!')
 
     def backup(self, src):
+        self.init_cache()
         if os.path.exists(src):
-            timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
-            self.duplicate(src, f'{src}.backup.{timestamp}')
+            self.duplicate(
+                src, os.path.join(
+                    self.BACKUPS_DIR, self.treat_basename(src, 'backup'),
+                ),
+            )
         else:
             self.logger.error(f'Backup warning: File {src} not exists!')
 
