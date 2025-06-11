@@ -935,7 +935,7 @@ Precautions:
 
 Attention:
     Here is the cache folder, which contains backups and trash under it.
-    You should clear the cache when the size is so big.
+    You should clear the cache when the size is too big.
         ~/.audgod-cache
             ├── backups
             └── trash
