@@ -134,7 +134,7 @@ __VERSION__ = 'Audio God 1.0'
 #                                                                              #
 ################################################################################
 
-DEFAULT_LOG_LEVEL = 'ERROR'
+DEFAULT_LOG_LEVEL = 'WARNING'
 DEFAULT_LOG_FILE = 'stderr'
 
 ################################################################################
@@ -1702,7 +1702,7 @@ General commands:
             path = self.abspath(path)
             items = glob.glob(path, recursive=True)
             if not items:
-                self.logger.warning(f'Remove warning: File {path} invalid!')
+                self.logger.error(f'Remove warning: File {path} invalid!')
             else:
                 for item in items:
                     if item not in targets:
@@ -1716,7 +1716,7 @@ General commands:
                     ),
                 )
             else:
-                self.logger.warning(f'Remove warning: File {target} not exists!')
+                self.logger.error(f'Remove warning: File {target} not exists!')
 
     def backup(self, src):
         self.init_cache()

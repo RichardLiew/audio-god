@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-10T12:54:10Z
+# Created Time: 2025-06-11T12:43:34Z
 
 ##############################################################################
 
@@ -13,7 +13,7 @@ set -e
 pipenv run python audgod.py preprocess-notes \
     --source-file=./songs.note \
     --field-type=cn \
-    --log-level=WARNING \
+    --log-level=ERROR \
     --log-file=stderr
 
 pipenv run python audgod.py fill-properties \
@@ -34,7 +34,7 @@ pipenv run python audgod.py fill-properties \
             "value": null
         }
     }' \
-    --log-level=WARNING \
+    --log-level=ERROR \
     --log-file=stderr
 
 pipenv run python audgod.py format-properties \
@@ -42,7 +42,7 @@ pipenv run python audgod.py format-properties \
     --extensions=mp3,aac \
     --recursive=true \
     --ignored-file=./ignored.txt \
-    --log-level=WARNING \
+    --log-level=ERROR \
     --log-file=stderr
 
 pipenv run python audgod.py rename-audios \
@@ -51,7 +51,7 @@ pipenv run python audgod.py rename-audios \
     --recursive=true \
     --ignored-file=./ignored.txt \
     --filename-pattern="@{artist} * @{title}" \
-    --log-level=WARNING \
+    --log-level=ERROR \
     --log-file=stderr
 
 pipenv run python audgod.py organize-files \
@@ -61,7 +61,7 @@ pipenv run python audgod.py organize-files \
     --ignored-file=./ignored.txt \
     --audios-root=~/Music/Grouped \
     --organize-type=grouped \
-    --log-level=WARNING \
+    --log-level=ERROR \
     --log-file=stderr
 
 pipenv run python audgod.py export \
@@ -73,7 +73,7 @@ pipenv run python audgod.py export \
     --field-type=cn \
     --output-format=note \
     --output-file=./songs.note \
-    --log-level=WARNING \
+    --log-level=ERROR \
     --log-file=stderr
 
 pipenv run python audgod.py list-repeated \
@@ -82,7 +82,7 @@ pipenv run python audgod.py list-repeated \
     --recursive=true \
     --ignored-file=./ignored.txt \
     --output-file=./repeated.txt \
-    --log-level=WARNING \
+    --log-level=ERROR \
     --log-file=stderr
 
 pipenv run python audgod.py organize-files \
@@ -92,7 +92,7 @@ pipenv run python audgod.py organize-files \
     --ignored-file=./ignored.txt \
     --audios-root=~/Music/iTunes/iTunes\ Media/Music \
     --organize-type=ituned \
-    --log-level=WARNING \
+    --log-level=ERROR \
     --log-file=stderr
 
 pipenv run python audgod.py export \
@@ -108,5 +108,5 @@ pipenv run python audgod.py export \
     --playlist-initial-id=3001 \
     --output-format=plist \
     --output-file=~/Music/iTunes/Library.xml \
-    --log-level=WARNING \
+    --log-level=ERROR \
     --log-file=stderr
