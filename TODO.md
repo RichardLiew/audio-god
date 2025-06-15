@@ -1,5 +1,7 @@
 Processing:
 type: ignore
+抓包 Mac 酷我下载音乐的链接，然后集成到脚本中自动下载
+output_format, orgnize_type, convert_type -> type
 All done.
 
 Useful Paths:

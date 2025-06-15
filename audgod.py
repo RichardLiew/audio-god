@@ -53,19 +53,44 @@
 #       name = "pypi"
 #
 #       [packages]
-#       psutil = "*"
-#       treelib = "*"
-#       enumx = "*"
-#       prettytable = "*"
-#       eyed3 = "*"
-#       mdutils = "*"
+#       psutil = "==7.0.0"
+#       treelib = "==1.7.1"
+#       enumx = "==0.0.2"
+#       prettytable = "==3.2.0"
+#       eyed3 = "==0.9.7"
+#       mdutils = "==1.6.0"
 #
 #       [dev-packages]
-#       pylint = "*"
+#       pylint = "==3.3.6"
 #
 #       [requires]
 #       python_version = "3.10.6"
 #   ```].
+#
+# ---
+# Directories:
+#   1. iCloud Path: /Users/Zichoole/Library/Mobile\ Documents/com~apple~CloudDocs/;
+#   2. Mac Application Cache Path: /Users/Zichoole/Library/Containers/;
+#   3. QQMusic Download Path: /Users/Zichoole/Library/Containers/com.tencent.QQMusicMac/Data/Library/Application\ Support/QQMusicMac/iQmc/;
+#
+# ---
+# Tools:
+#   1. Apple Music Help Online: https://support.apple.com/en-hk/HT210403;
+#   2. QQMusic QMC->MP3: https://openyyy.com/;
+#   3. Youku KMX->MP4: https://gitee.com/RichardLiew/kmx-MP4;
+#   4. MP4->MP3: https: https://github.com/SiD-93/BatchMP3;
+#   5. Online Small Tools: https://tool.lu/;
+#   6. Format Convert: https://www.aconvert.com/;
+#   7. Videos Download: https://github.com/iawia002/annie;
+#   8. Mac Audio Processor: https://amvidia.com/;
+#
+# ---
+# Commands:
+#   1. View Directory Structure: tree -dN ~/Music;
+#
+# ---
+# Notes:
+#   1. None;
 #
 # ---
 # FAQs:
@@ -79,9 +104,11 @@
 #
 # ---
 # TODO (@Richard):
-#   1. 增加 qmc0 转 mp3 的功能;
-#   2. 增加 kmx 转 mp4 的功能;
-#   3. 增加 mp4 转 mp3 的功能.
+#   1. Convert qmc to mp3;
+#   2. Convert kmx to mp4;
+#   3. Convert mp4 to mp3;
+#   4. Convert note to markdown;
+#   4. Convert markdown to note;
 #
 ###############################################################################
 
@@ -263,7 +290,7 @@ class AudioGod(object):
 
 
     @StringEnum.unique
-    class AudioType(StringEnum):
+    class SourceType(StringEnum):
         VALID = 'valid'
         MATCHED = 'matched'
         NOTMATCHED = 'notmatched'
@@ -323,6 +350,17 @@ class AudioGod(object):
         ORIGINAL = 'ori'
         CHINESE = 'cn'
         ENGLISH = 'en'
+
+
+    @StringEnum.unique
+    class ConvertType(StringEnum):
+        QMC_MP3 = 'qmc->mp3'
+        KMX_MP4 = 'qmc->mp4'
+        MP4_MP3 = 'mp4->mp3'
+        NOTE_MD = 'note->md'
+        NOTE_MARKDOWN = 'note->markdown'
+        MD_NOTE = 'md->note'
+        MARKDOWN_NOTE = 'markdown->note'
 
 
     AUDIO_PROPERTIES = {
@@ -452,10 +490,10 @@ class AudioGod(object):
 
 
     ARGUMENTS = {
-        'source_file': { 'default': './songs.note' },
-        'audios_source': { 'default': '~/Music/Source' },
+        'document': { 'default': './songs.note' },
+        'source': { 'default': '~/Music/Source' },
         'recursive': { 'default': 'true' },
-        'audios_root': { 'default': '~/Music/Source' },
+        'root': { 'default': '~/Music/Source' },
         'properties': {
             'default': '''
                 \'{
@@ -523,14 +561,18 @@ class AudioGod(object):
             'default': FileFormat.NONE,
             'choices': FileFormat.members(),
         },
-        'output_file': { 'default': "" },
-        'organize_type': {
+        'output': { 'default': "" },
+        'type': {
             'default': OrganizeType.ITUNED,
             'choices': OrganizeType.members(),
         },
         'track_initial_id': { 'default': 601 },
         'playlist_initial_id': { 'default': 3001 },
         'music_source_folder': { 'default': '~/Music/Source' },
+        'music_source_qmc_folder': { 'default': '~/Music/Source/QMC' },
+        'music_source_kmx_folder': { 'default': '~/Music/Source/KMX' },
+        'music_source_mp4_folder': { 'default': '~/Music/Source/MP4' },
+        'music_source_mp3_folder': { 'default': '~/Music/Source/MP3' },
         'music_grouped_folder': { 'default': '~/Music/Grouped' },
         'artwork_path': { 'default': '~/Music/Artworks' },
         'itunes_media_folder': { 'default': '~/Music/iTunes/iTunes\ Media/Music' }, # type: ignore
@@ -575,7 +617,7 @@ class AudioGod(object):
     ACTIONS = {
         'preprocess-notes': {
             'arguments': [
-                'source_file',
+                'document',
                 'field_type',
             ],
             'kwargs': {
@@ -583,7 +625,7 @@ class AudioGod(object):
                 'help': 'preprocess the notes file',
                 'usage': '''
                     ${cmd} preprocess-notes \\
-                        --source-file=${note_file} \\
+                        --document=${note_file} \\
                         --field-type=cn \\
                         --log-level=${log_level} \\
                         --log-file=${log_file}
@@ -592,12 +634,12 @@ class AudioGod(object):
         },
         'fill-properties': {
             'arguments': [
-                'audios_source',
+                'source',
                 'extensions',
                 'recursive',
                 'ignored_file',
-                'source_file',
-                'audios_root',
+                'document',
+                'root',
                 'properties',
             ],
             'kwargs': {
@@ -605,12 +647,12 @@ class AudioGod(object):
                 'help': 'fill properties of audios',
                 'usage': '''
                     ${cmd} fill-properties \\
-                        --audios-source=${music_source_folder} \\
+                        --source=${music_source_mp3_folder} \\
                         --extensions=${extensions} \\
                         --recursive=${recursive} \\
                         --ignored-file=${ignored_file} \\
-                        --source-file=${note_file} \\
-                        --audios-root=${music_source_folder} \\
+                        --document=${note_file} \\
+                        --root=${music_source_mp3_folder} \\
                         --properties=${properties} \\
                         --log-level=${log_level} \\
                         --log-file=${log_file}
@@ -619,7 +661,7 @@ class AudioGod(object):
         },
         'format-properties': {
             'arguments': [
-                'audios_source',
+                'source',
                 'extensions',
                 'recursive',
                 'ignored_file',
@@ -629,7 +671,7 @@ class AudioGod(object):
                 'help': 'format properties of audios',
                 'usage': '''
                     ${cmd} format-properties \\
-                        --audios-source=${music_source_folder} \\
+                        --source=${music_source_mp3_folder} \\
                         --extensions=${extensions} \\
                         --recursive=${recursive} \\
                         --ignored-file=${ignored_file} \\
@@ -640,7 +682,7 @@ class AudioGod(object):
         },
         'rename-audios': {
             'arguments': [
-                'audios_source',
+                'source',
                 'extensions',
                 'recursive',
                 'ignored_file',
@@ -651,7 +693,7 @@ class AudioGod(object):
                 'help': 'rename audios',
                 'usage': '''
                     ${cmd} rename-audios \\
-                        --audios-source=${music_source_folder} \\
+                        --source=${music_source_mp3_folder} \\
                         --extensions=${extensions} \\
                         --recursive=${recursive} \\
                         --ignored-file=${ignored_file} \\
@@ -663,12 +705,12 @@ class AudioGod(object):
         },
         'organize-files': {
             'arguments': [
-                'audios_root',
-                'audios_source',
+                'root',
+                'source',
                 'extensions',
                 'recursive',
                 'ignored_file',
-                'organize_type',
+                'type',
             ],
             'kwargs': {
                 'description': '✋ Organize files',
@@ -676,23 +718,23 @@ class AudioGod(object):
                 'usage': {
                     'grouped': '''
                         ${cmd} organize-files \\
-                            --audios-source=${music_source_folder} \\
+                            --source=${music_source_mp3_folder} \\
                             --extensions=${extensions} \\
                             --recursive=${recursive} \\
                             --ignored-file=${ignored_file} \\
-                            --audios-root=${music_grouped_folder} \\
-                            --organize-type=grouped \\
+                            --root=${music_grouped_folder} \\
+                            --type=grouped \\
                             --log-level=${log_level} \\
                             --log-file=${log_file}
                     ''',
                     'ituned': '''
                         ${cmd} organize-files \\
-                            --audios-source=${music_grouped_folder} \\
+                            --source=${music_grouped_folder} \\
                             --extensions=${extensions} \\
                             --recursive=${recursive} \\
                             --ignored-file=${ignored_file} \\
-                            --audios-root=${itunes_media_folder} \\
-                            --organize-type=ituned \\
+                            --root=${itunes_media_folder} \\
+                            --type=ituned \\
                             --log-level=${log_level} \\
                             --log-file=${log_file}
                     ''',
@@ -701,22 +743,22 @@ class AudioGod(object):
         },
         'list-repeated': {
             'arguments': [
-                'audios_source',
+                'source',
                 'extensions',
                 'recursive',
                 'ignored_file',
-                'output_file',
+                'output',
             ],
             'kwargs': {
                 'description': '✋ List repeated audio files by artist and title',
                 'help': 'list repeated',
                 'usage': '''
                     ${cmd} list-repeated \\
-                        --audios-source=${music_grouped_folder} \\
+                        --source=${music_grouped_folder} \\
                         --extensions=${extensions} \\
                         --recursive=${recursive} \\
                         --ignored-file=${ignored_file} \\
-                        --output-file=${repeated_file} \\
+                        --output=${repeated_file} \\
                         --log-level=${log_level} \\
                         --log-file=${log_file}
                 ''',
@@ -724,7 +766,7 @@ class AudioGod(object):
         },
         'derive-artworks': {
             'arguments': [
-                'audios_source',
+                'source',
                 'extensions',
                 'recursive',
                 'ignored_file',
@@ -735,7 +777,7 @@ class AudioGod(object):
                 'help': 'derive artworks',
                 'usage': '''
                     ${cmd} derive-artworks \\
-                        --audios-source=${music_source_folder} \\
+                        --source=${music_source_mp3_folder} \\
                         --extensions=${extensions} \\
                         --recursive=${recursive} \\
                         --ignored-file=${ignored_file} \\
@@ -747,7 +789,7 @@ class AudioGod(object):
         },
         'display': {
             'arguments': [
-                'audios_source',
+                'source',
                 'extensions',
                 'recursive',
                 'ignored_file',
@@ -761,14 +803,14 @@ class AudioGod(object):
                 'data_format',
                 'field_type',
                 'numbered',
-                'output_file',
+                'output',
             ],
             'kwargs': {
                 'description': '✋ Display audios',
                 'help': 'display audios',
                 'usage': '''
                     ${cmd} display \\
-                        --audios-source=${music_source_folder} \\
+                        --source=${music_source_mp3_folder} \\
                         --extensions=${extensions} \\
                         --recursive=${recursive} \\
                         --ignored-file=${ignored_file} \\
@@ -782,7 +824,7 @@ class AudioGod(object):
                         --data-format=${data_format} \\
                         --field-type=cn \\
                         --numbered=${numbered} \\
-                        --output-file="" \\
+                        --output="" \\
                         --log-level=${log_level} \\
                         --log-file=${log_file}
                 ''',
@@ -790,14 +832,14 @@ class AudioGod(object):
         },
         'export': {
             'arguments': [
-                'audios_source',
+                'source',
                 'extensions',
                 'recursive',
                 'ignored_file',
                 'fields',
                 'field_type',
-                'output_format',
-                'output_file',
+                'type',
+                'output',
                 'itunes_version_plist',
                 'itunes_media_folder',
                 'track_initial_id',
@@ -809,20 +851,20 @@ class AudioGod(object):
                 'usage': {
                     'note': '''
                         ${cmd} export \\
-                            --audios-source=${music_grouped_folder} \\
+                            --source=${music_grouped_folder} \\
                             --extensions=${extensions} \\
                             --recursive=${recursive} \\
                             --ignored-file=${ignored_file} \\
                             --fields=note \\
                             --field-type=cn \\
                             --output-format=note \\
-                            --output-file=${note_file} \\
+                            --output=${note_file} \\
                             --log-level=${log_level} \\
                             --log-file=${log_file}
                     ''',
                     'plist': '''
                         ${cmd} export \\
-                            --audios-source=${itunes_media_folder} \\
+                            --source=${itunes_media_folder} \\
                             --extensions=${extensions} \\
                             --recursive=${recursive} \\
                             --ignored-file=${ignored_file} \\
@@ -833,7 +875,7 @@ class AudioGod(object):
                             --track-initial-id=${track_initial_id} \\
                             --playlist-initial-id=${playlist_initial_id} \\
                             --output-format=plist \\
-                            --output-file=${itunes_library_plist} \\
+                            --output=${itunes_library_plist} \\
                             --log-level=${log_level} \\
                             --log-file=${log_file}
                     ''',
@@ -842,35 +884,42 @@ class AudioGod(object):
         },
         'convert': {
             'arguments': [
-                'audios_source',
+                'source',
                 'extensions',
                 'recursive',
                 'ignored_file',
+                'type',
+                'executer',
             ],
             'kwargs': {
-                'description': '✋ Convert audios',
-                'help': 'convert audios',
-                'usage': '''
-                    ${cmd} convert \\
-                        --audios-source=${music_source_folder} \\
-                        --extensions=${extensions} \\
-                        --recursive=${recursive} \\
-                        --ignored-file=${ignored_file} \\
-                        --log-level=${log_level} \\
-                        --log-file=${log_file}
-                ''',
+                'description': '✋ Convert media',
+                'help': 'convert media',
+                'usage': {
+                    'qmc->mp3': '''
+                        ${cmd} convert \\
+                            --source=${music_source_qmc_folder} \\
+                            --extensions=${extensions} \\
+                            --recursive=${recursive} \\
+                            --ignored-file=${ignored_file} \\
+                            --type=qmc-mp3 \\
+                            --executer=${executer} \\
+                            --output=${music_source_mp3_folder} \\
+                            --log-level=${log_level} \\
+                            --log-file=${log_file}
+                    ''',
+                },
             },
         },
         'generate-script': {
             'arguments': [
-                'output_file',
+                'output',
             ],
             'kwargs': {
                 'description': '✋ Generate script',
                 'help': 'generate script',
                 'usage': '''
                     ${cmd} generate-script \\
-                        --output-file=${script_file} \\
+                        --output=${script_file} \\
                         --log-level=${log_level} \\
                         --log-file=${log_file}
                 ''',
@@ -961,7 +1010,7 @@ Process Method 1:
     Step.9: Export plist file, with subcommand <export>.
 
 Process Method 2:
-    Step.1: Put audios to source folder (e.g. "${music_source_folder}");
+    Step.1: Put audios to source folder (e.g. "${music_source_mp3_folder}");
     Step.2: Put note file to local folder (e.g. "${note_file}");
     Step.3: Put ignored file to local folder (e.g. "${ignored_file}");
     Step.4: Run <generate-script> subcommand to generate a shell script (e.g. "${script_file}");
@@ -988,7 +1037,9 @@ General commands:
     '''
 
 
-    def __init__(self, **kwargs):
+    def __init__(self, action, **kwargs):
+        self.__action = action
+
         kwargs = copy.deepcopy(AudioGod.ARGUMENTS_DEFAULTS) | kwargs
 
         # init logger
@@ -1010,25 +1061,26 @@ General commands:
         ]
 
         self.__audsrc_options = self.__resolve_audsrc_options(
-            kwargs['audios_source'],
+            kwargs['source'],
             kwargs['recursive'],
             kwargs['extensions'],
         )
 
-        self.__source_file = self.abspath(kwargs['source_file'])
+        self.__document = self.abspath(kwargs['document'])
         self.__ignored_file = self.abspath(kwargs['ignored_file'])
-        self.__audios_root = self.abspath(kwargs['audios_root'])
+        self.__root = self.abspath(kwargs['root'])
         self.__artwork_path = self.abspath(kwargs['artwork_path'])
+        self.__output = self.abspath(kwargs['output'])
 
         self.__data_format = self.DataFormat(kwargs['data_format'])
-        self.__organize_type = AudioGod.OrganizeType(kwargs['organize_type'])
+        self.__type = AudioGod.OrganizeType(kwargs['type'])
         self.__filename_pattern = kwargs['filename_pattern']
         self.__field_type = AudioGod.FieldType(kwargs['field_type'])
         self.__properties = self.__resolve_properties(kwargs['properties'])
         
         self.__clauses = ([], {}, {}, [], [])
         self.__clauses_counter = [0, 0, 0, 0, 0, 0]
-        self.__audios = ([], [], [], [], [], [])
+        self.__sources = ([], [], [], [], [], [])
         self.__ignored_set = set()
         self.__summaries = {}
 
@@ -1049,8 +1101,7 @@ General commands:
             kwargs['playlist_initial_id'],
         )
 
-        self.__output_options = self.__resolve_output_options(
-            kwargs['output_file'],
+        self.__output_format = self.__resolve_output_format(
             kwargs['output_format'],
         )
 
@@ -1065,39 +1116,39 @@ General commands:
             self.AUDIOS_TREE_ROOT_TAG, self.AUDIOS_TREE_ROOT_NID,
         )
 
-        self.__parse = {
+        self.__parse_func = {
             field: getattr(
                 self, f'parse_{field}', lambda x: x,
             )
             for field in self.ALL_FIELDS
         }
-        def __parse(parse_func):
+        def __parse_func(parse_func):
             def __func(*args):
                 ret = parse_func(*args)
                 return ret
             return __func
-        self.__parse = {
-            field: __parse(self.__parse[field])
+        self.__parse_func = {
+            field: __parse_func(self.__parse_func[field])
             for field in self.ALL_FIELDS
         }
 
-        self.__format = {
+        self.__format_func = {
             field: getattr(
                 self, f'format_{field}', lambda x: x,
             )
             for field in self.ALL_FIELDS
         }
-        def __format(format_func):
+        def __format_func(format_func):
             def __func(*args):
                 ret = format_func(*args)
                 return ret
             return __func
-        self.__format = {
-            field: __format(self.__format[field])
+        self.__format_func = {
+            field: __format_func(self.__format_func[field])
             for field in self.ALL_FIELDS
         }
 
-        self.__output = {
+        self.__output_func = {
             field: getattr(
                 self,
                 f'output_{field}',
@@ -1105,15 +1156,15 @@ General commands:
             )
             for field in self.ALL_FIELDS
         }
-        def __output(output_func):
+        def __output_func(output_func):
             def __func(*args):
                 ret = output_func(*args)
                 if (not isinstance(ret, int)) and (not isinstance(ret, float)) and (not ret):
                     return None
                 return ret
             return __func
-        self.__output = {
-            field: __output(self.__output[field])
+        self.__output_func = {
+            field: __output_func(self.__output_func[field])
             for field in self.ALL_FIELDS
         }
 
@@ -1177,17 +1228,23 @@ General commands:
                 sources[i] = self.PropertySource(sources[i])
         return ret
 
+    def __resolve_output_format(self, output_format):
+        output_format = AudioGod.FileFormat(output_format)
+        if self.FileFormat.NONE.eq(output_format):
+            output_format = self.recognize_file_format(self.output)
+        return output_format
+
     def __resolve_logger_options(self, log_level, log_file):
         return (log_level, log_file)
 
     def __resolve_audsrc_options(
             self,
-            audios_source,
+            source,
             recursive,
             extensions,
         ):
         return (
-            self.abspath(audios_source),
+            self.abspath(source),
             recursive,
             self.split(
                 extensions.lower(), ',',
@@ -1200,16 +1257,6 @@ General commands:
             ),
         )
     
-    def __resolve_output_options(self, output_file, output_format):
-        output_file = self.abspath(output_file)
-        output_format = AudioGod.FileFormat(output_format)
-        if self.FileFormat.NONE.eq(output_format):
-            output_format = self.recognize_file_format(output_file)
-        return [
-            output_file,
-            output_format,
-        ]
-
     def __resolve_itunes_options(
             self,
             itunes_version_plist,
@@ -1340,20 +1387,24 @@ General commands:
         )
 
     @property
+    def action(self):
+        return self.__action
+
+    @property
     def logger(self):
         return self.__logger
 
     @property
-    def format(self):
-        return self.__format
+    def format_func(self):
+        return self.__format_func
 
     @property
-    def parse(self):
-        return self.__parse
+    def parse_func(self):
+        return self.__parse_func
 
     @property
-    def output(self):
-        return self.__output
+    def output_func(self):
+        return self.__output_func
 
     @property
     def display_options(self):
@@ -1380,32 +1431,28 @@ General commands:
         return self.logger_options[1]
     
     @property
-    def output_options(self):
-        return self.__output_options
-    
-    @property
-    def output_file(self):
-        return self.output_options[0]
+    def output(self):
+        return self.__output
 
     @property
     def output_format(self):
-        return self.output_options[1]
+        return self.__output_format
     
     @output_format.setter
     def output_format(self, value):
-        self.output_options[1] = value
+        self.__output_format = value
 
     @property
-    def source_file(self):
-        return self.__source_file
+    def document(self):
+        return self.__document
 
     @property
     def ignored_file(self):
         return self.__ignored_file
 
     @property
-    def audios_root(self):
-        return self.__audios_root
+    def root(self):
+        return self.__root
 
     @property
     def audios_tree(self):
@@ -1420,7 +1467,7 @@ General commands:
         return self.__audsrc_options
     
     @property
-    def audios_source(self):
+    def source(self):
         return self.audsrc_options[0]
 
     @property
@@ -1444,8 +1491,8 @@ General commands:
         return self.__artwork_path
 
     @property
-    def organize_type(self):
-        return self.__organize_type
+    def type(self):
+        return self.__type
 
     @property
     def filename_pattern(self):
@@ -1532,63 +1579,61 @@ General commands:
         self.__clauses_counter[5] = value
 
     @property
-    def source_audios(self):
+    def plain_sources(self):
         ret = []
-        if not os.path.exists(self.audios_source):
-            self.logger.fatal(f'Source <{self.audios_source}> not exists!')
-            return ret
-        if os.path.isfile(self.audios_source):
-            if not self.__check_extension(self.audios_source):
-                self.logger.fatal(f'Source <{self.audios_source}> invalid extension!')
-                return ret
-            ret.append(self.audios_source)
-            return ret
-        if not os.path.isdir(self.audios_source):
-            self.logger.fatal(f'Source <{self.audios_source}> not a directory!')
-            return ret
-        if self.recursive:
-            for _root, _dirs, _files in os.walk(self.audios_source):
-                for _dir in _dirs:
-                    ret.append(self.abspath(_root, _dir))
-                for _file in _files:
-                    ret.append(self.abspath(_root, _file))
-        else:
-            ret.extend([
-                self.abspath(self.audios_source, audio)
-                for audio in os.listdir(self.audios_source)
-            ])
-        return ret
+        for item in self.expand_globbing(self.source, recursive=True):
+            if not os.path.exists(item):
+                self.logger.warning(f'Source <{item}> not exists!')
+                continue
+            if os.path.isfile(item):
+                ret.append(item)
+                continue
+            if not os.path.isdir(item):
+                self.logger.warning(f'Source <{item}> not a file or directory!')
+                continue
+            if self.recursive:
+                for _root, _dirs, _files in os.walk(item):
+                    for _dir in _dirs:
+                        ret.append(self.abspath(_root, _dir))
+                    for _file in _files:
+                        ret.append(self.abspath(_root, _file))
+            else:
+                ret.extend([
+                    self.abspath(item, target)
+                    for target in os.listdir(item)
+                ])
+        return list(dict.fromkeys(ret))
 
     @property
-    def invalid_ext_audios(self):
-        return self.__audios[0]
+    def invalid_ext_sources(self):
+        return self.__sources[0]
 
     @property
-    def invalid_name_audios(self):
-        return self.__audios[1]
+    def invalid_name_sources(self):
+        return self.__sources[1]
 
     @property
-    def omitted_audios(self):
-        return self.__audios[2]
+    def omitted_sources(self):
+        return self.__sources[2]
 
     @property
-    def ignored_audios(self):
-        return self.__audios[3]
+    def ignored_sources(self):
+        return self.__sources[3]
 
     @property
-    def matched_audios(self):
-        return self.__audios[4]
+    def matched_sources(self):
+        return self.__sources[4]
 
     @property
-    def notmatched_audios(self):
-        return self.__audios[5]
+    def notmatched_sources(self):
+        return self.__sources[5]
 
     @property
-    def concerned_audios(self):
+    def concerned_sources(self):
         return list(dict.fromkeys(
-            self.invalid_name_audios \
-                + self.matched_audios \
-                + self.notmatched_audios,
+            self.invalid_name_sources \
+                + self.matched_sources \
+                + self.notmatched_sources,
         ))
 
     @staticmethod
@@ -1693,30 +1738,38 @@ General commands:
             ret = f'{tag}.{ret}'
         return ret
 
-    def remove(self, *paths):
-        self.init_cache()
-        targets = []
+    @classmethod
+    def expand_globbing(cls, *paths, recursive=True):
+        ret = []
         for path in paths:
             if not path:
                 continue
-            path = self.abspath(path)
-            items = glob.glob(path, recursive=True)
-            if not items:
-                self.logger.error(f'Remove warning: File {path} invalid!')
-            else:
-                for item in items:
-                    if item not in targets:
-                        targets.append(item)
-        for target in targets:
-            target = self.abspath(target)
-            if os.path.exists(target):
+            if not isinstance(path, (list, tuple)):
+                path = [path]
+            for item in path:
+                item = cls.abspath(item)
+                if not item:
+                    continue
+                targets = glob.glob(item, recursive=recursive)
+                if not targets:
+                    targets = [item]
+                for target in targets:
+                    target = cls.abspath(target)
+                    if target and target not in ret:
+                        ret.append(target)
+        return list(dict.fromkeys(ret))
+
+    def remove(self, *paths):
+        self.init_cache()
+        for item in self.expand_globbing(*paths):
+            if os.path.exists(item):
                 os.rename(
-                    target, os.path.join(
-                        self.TRASH_DIR, self.treat_basename(target, 'trash'),
+                    item, os.path.join(
+                        self.TRASH_DIR, self.treat_basename(item, 'trash'),
                     ),
                 )
             else:
-                self.logger.error(f'Remove warning: File {target} not exists!')
+                self.logger.error(f'Remove warning: File {item} not exists!')
 
     def backup(self, src):
         self.init_cache()
@@ -1827,12 +1880,12 @@ General commands:
         if not file:
             return cls.FileFormat.NONE
         _, ext = os.path.splitext(os.path.basename(file))
-        ext = ext[1:].lower()
-        if ext in ['json']:
+        ext = ext.lower()
+        if ext in ['.json']:
             return cls.FileFormat.JSON
-        if ext in ['md', 'markdown']:
+        if ext in ['.md', '.markdown']:
             return cls.FileFormat.MARKDOWN
-        if ext in ['xml', 'plist']:
+        if ext in ['.xml', '.plist']:
             return cls.FileFormat.PLIST
         return cls.FileFormat.NOTE
 
@@ -2118,11 +2171,11 @@ General commands:
             return cls.transform_utc(mtime)
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(mtime))
 
-    def __generate_key_by_filename(self, audio):
-        if not self.__check_name(audio):
-            self.logger.fatal(f'Invalid name of audio <{audio}>!')
+    def __generate_key_by_filename(self, source):
+        if not self.__check_name(source):
+            self.logger.fatal(f'Invalid name of audio <{source}>!')
             return
-        name, _ = os.path.splitext(os.path.basename(audio))
+        name, _ = os.path.splitext(os.path.basename(source))
         if name.count(self.DIV_CHAR) == 1:
             return self.generate_key(
                 *self.split(
@@ -2140,8 +2193,8 @@ General commands:
         )
 
     def __fetch_from_outside(self, audio, field):
-        format_ = self.format[field]
-        parse_ = self.parse[field]
+        format_ = self.format_func[field]
+        parse_ = self.parse_func[field]
         default = self.__resolve_properties(
             self.ARGUMENTS_DEFAULTS['properties'],
         )['default'] # type: ignore
@@ -2175,7 +2228,7 @@ General commands:
                         case self.AudioProperty.GROUPING:
                             _value = re.sub(
                                 r'^%s/+' % (
-                                    re.escape(re.sub(r'/+$', r'', self.audios_root)),
+                                    re.escape(re.sub(r'/+$', r'', self.root)),
                                 ),
                                 r'',
                                 _value,
@@ -2189,7 +2242,7 @@ General commands:
         if value is None:
             return
         if formatted:
-            value = self.format[field](value)
+            value = self.format_func[field](value)
         match field:
             case self.AudioProperty.COMMENTS:
                 audio_object.tag.comments.set(value)
@@ -2283,9 +2336,9 @@ General commands:
         ret = self.fetch(audio_object, field)
         if ret is not None:
             if formatted:
-                ret = self.format[field](ret)
+                ret = self.format_func[field](ret)
             if self.FileFormat.NONE.ne(output_format):
-                ret = self.output[field](ret, output_format)
+                ret = self.output_func[field](ret, output_format)
         if default is not None and not ret:
             ret = default
         return ret
@@ -2298,8 +2351,10 @@ General commands:
         with open(self.ignored_file, 'r', encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
-                if line:
-                    self.ignored_set.add(self.abspath(line))
+                if not line:
+                    continue
+                for item in self.expand_globbing(line, recursive=True):
+                    self.ignored_set.add(item)
 
     def __generate_key_by_properties(self, properties):
         if self.AudioProperty.ARTIST not in properties:
@@ -2350,7 +2405,7 @@ General commands:
         )
         warn_pattern = r'(?:\s*[,，;；]+\s*)+(?:(?:\s*\S\s*)+)\s*[:：]+(?:\s*\S\s*)+'
 
-        with open(self.source_file, 'r', encoding='utf-8') as f:
+        with open(self.document, 'r', encoding='utf-8') as f:
             keys, (genre, grouping) = {}, ('', '')
             for line_number, line in enumerate(f, start=1):
                 if not line.strip():
@@ -2365,8 +2420,8 @@ General commands:
                     genre, grouping = tuple(map(
                         lambda x: x.strip(), grouping_match.groups(),
                     ))
-                    genre = self.format[self.AudioProperty.GENRE](genre)
-                    grouping = self.format[self.AudioProperty.GROUPING](grouping)
+                    genre = self.format_func[self.AudioProperty.GENRE](genre)
+                    grouping = self.format_func[self.AudioProperty.GROUPING](grouping)
                     if grouping and grouping in self.summaries:
                         genre, grouping = '', ''
                         invalid_info = 'grouping already exists'
@@ -2400,7 +2455,7 @@ General commands:
                         if field in properties:
                             valid, invalid_info = False, 'duplicate field existed'
                             break
-                        properties[field] = self.format[field](value)
+                        properties[field] = self.format_func[field](value)
                     if valid:
                         for field in self.NOTE_FIELDS:
                             if field not in properties:
@@ -2476,9 +2531,9 @@ General commands:
                 ))
 
     def import_(self):
-        file_format = self.recognize_file_format(self.source_file)
+        file_format = self.recognize_file_format(self.document)
         if self.FileFormat.NONE.eq(file_format):
-            self.logger.fatal(f'Invalid source file <{self.source_file}>.')
+            self.logger.fatal(f'Invalid source file <{self.document}>.')
             return
         getattr(self, f'_import_{file_format}')()
 
@@ -2499,91 +2554,113 @@ General commands:
     _import_xml = _import_plist
 
     def __load_properties_from_file(self):
-        if not os.path.exists(self.source_file):
-            self.logger.fatal(f'Source file <{self.source_file}> not exists!')
+        if not os.path.exists(self.document):
+            self.logger.fatal(f'Source file <{self.document}> not exists!')
             return
         self.import_()
 
-    def __load_audios(self, matched=False):
+    def __check_source(self, source):
+        _source = source
+        while True:
+            if re.match(r'^/*$', _audio) is not None:
+                break
+            if _audio in self.ignored_set or _source+'/' in self.ignored_set:
+                return self.SourceType.IGNORED
+            _audio = os.path.dirname(_audio)
+
+        if os.path.basename(source) == '.DS_Store':
+            return self.SourceType.OMITTED
+        if os.path.islink(source):
+            return self.SourceType.OMITTED
+        if not os.path.isfile(source):
+            return self.SourceType.OMITTED
+
+        if not self.__check_extension(source):
+            return self.SourceType.INVALID_EXT
+        if not self.__check_name(source):
+            return self.SourceType.INVALID_NAME
+
+        return self.SourceType.VALID
+
+    def __load_sources(self, matched=False):
         self.__load_ignored()
 
-        audios = self.source_audios
-        for audio in audios:
-            self.logger.debug(f'Loading <{audio}> ...')
-            _type = self.__check_audio(audio)
+        for source in self.plain_sources:
+            self.logger.debug(f'Loading <{source}> ...')
+            _type = self.__check_source(source)
             match _type:
-                case self.AudioType.INVALID_EXT:
-                    self.invalid_ext_audios.append(audio)
-                    self.logger.debug(self.AudioType.INVALID_EXT)
+                case self.SourceType.INVALID_EXT:
+                    self.invalid_ext_sources.append(source)
+                    self.logger.debug(self.SourceType.INVALID_EXT)
                     continue
-                case self.AudioType.INVALID_NAME:
-                    self.invalid_name_audios.append(audio)
-                    self.logger.debug(self.AudioType.INVALID_NAME)
+                case self.SourceType.INVALID_NAME:
+                    self.invalid_name_sources.append(source)
+                    self.logger.debug(self.SourceType.INVALID_NAME)
                     continue
-                case self.AudioType.OMITTED:
-                    self.omitted_audios.append(audio)
-                    self.logger.debug(self.AudioType.OMITTED)
+                case self.SourceType.OMITTED:
+                    self.omitted_sources.append(source)
+                    self.logger.debug(self.SourceType.OMITTED)
                     continue
-                case self.AudioType.IGNORED:
-                    self.ignored_audios.append(audio)
-                    self.logger.debug(self.AudioType.IGNORED)
+                case self.SourceType.IGNORED:
+                    self.ignored_sources.append(source)
+                    self.logger.debug(self.SourceType.IGNORED)
                     continue
-            key = self.__generate_key_by_filename(audio)
+            key = self.__generate_key_by_filename(source)
             if key in self.valid_clauses:
-                self.matched_audios.append(audio)
-                self.logger.debug(self.AudioType.MATCHED)
+                self.matched_sources.append(source)
+                self.logger.debug(self.SourceType.MATCHED)
             else:
-                self.notmatched_audios.append(audio)
-                self.logger.debug(self.AudioType.NOTMATCHED)
+                self.notmatched_sources.append(source)
+                self.logger.debug(self.SourceType.NOTMATCHED)
 
         self.logger.warning(f'\n{"#"*78}\n')
 
         self.logger.warning(
-            'Total Audios:   {total}\n\n'
-            'Invalid Audios: {invalid} '
+            'Total Sources:   {total}\n\n'
+            'Invalid Sources: {invalid} '
             '(Invalid Extension: {inv_ext}, Invalid Name: {inv_name})\n'
-            'Omitted Audios: {omitted}\n'
-            'Ignored Audios: {ignored}\n'
-            'Valid Audios:   {valid}{match_detail}'.format(
-                total=len(self.invalid_ext_audios) \
-                    + len(self.invalid_name_audios) \
-                    + len(self.omitted_audios) \
-                    + len(self.ignored_audios) \
-                    + len(self.matched_audios) \
-                    + len(self.notmatched_audios),
-                invalid=len(self.invalid_ext_audios) + len(self.invalid_name_audios),
-                inv_ext=len(self.invalid_ext_audios),
-                inv_name=len(self.invalid_name_audios),
-                omitted=len(self.omitted_audios),
-                ignored=len(self.ignored_audios),
-                valid=len(self.matched_audios) + len(self.notmatched_audios),
+            'Omitted Sources: {omitted}\n'
+            'Ignored Sources: {ignored}\n'
+            'Valid Sources:   {valid}{match_detail}'.format(
+                total=len(self.invalid_ext_sources) \
+                    + len(self.invalid_name_sources) \
+                    + len(self.omitted_sources) \
+                    + len(self.ignored_sources) \
+                    + len(self.matched_sources) \
+                    + len(self.notmatched_sources),
+                invalid=len(self.invalid_ext_sources) + len(self.invalid_name_sources),
+                inv_ext=len(self.invalid_ext_sources),
+                inv_name=len(self.invalid_name_sources),
+                omitted=len(self.omitted_sources),
+                ignored=len(self.ignored_sources),
+                valid=len(self.matched_sources) + len(self.notmatched_sources),
                 match_detail='\n' if not matched else ' (Matched: {matched}, NotMatched: {notmatched})\n'.format(
-                    matched=len(self.matched_audios),
-                    notmatched=len(self.notmatched_audios),
+                    matched=len(self.matched_sources),
+                    notmatched=len(self.notmatched_sources),
                 ),
             )
         )
 
-        if False and len(self.omitted_audios) > 0:
-            self.logger.warning('\nOmitted Audios:')
-            for audio in self.omitted_audios:
-                self.logger.warning(f'\t{audio}')
-        if False and len(self.ignored_audios) > 0:
-            self.logger.warning('\nIgnored Audios:')
-            for audio in self.ignored_audios:
-                self.logger.warning(f'\t{audio}')
-        if len(self.invalid_ext_audios) > 0:
-            self.logger.warning('\nInvalid Extension Audios:')
-            for audio in self.invalid_ext_audios:
-                self.logger.warning(f'\t{audio}')
-        if len(self.invalid_name_audios) > 0:
-            self.logger.warning('\nInvalid Name Audios:')
-            for audio in self.invalid_name_audios:
-                self.logger.warning(f'\t{audio}')
-        if matched and len(self.notmatched_audios) > 0:
-            self.logger.warning('\nNot Matched Audios:')
-            for audio in self.notmatched_audios:
-                self.logger.warning(f'\t{audio}')
+        if False and len(self.omitted_sources) > 0:
+            self.logger.warning('\nOmitted Sources:')
+            for source in self.omitted_sources:
+                self.logger.warning(f'\t{source}')
+        if False and len(self.ignored_sources) > 0:
+            self.logger.warning('\nIgnored Sources:')
+            for source in self.ignored_sources:
+                self.logger.warning(f'\t{source}')
+        if len(self.invalid_ext_sources) > 0:
+            self.logger.warning('\nInvalid Extension Sources:')
+            for source in self.invalid_ext_sources:
+                self.logger.warning(f'\t{source}')
+        if len(self.invalid_name_sources) > 0:
+            self.logger.warning('\nInvalid Name Sources:')
+            for source in self.invalid_name_sources:
+                self.logger.warning(f'\t{source}')
+        if matched and len(self.notmatched_sources) > 0:
+            self.logger.warning('\nNot Matched Sources:')
+            for source in self.notmatched_sources:
+                self.logger.warning(f'\t{source}')
 
     def __repack_audio_properties(self, properties):
         ret = {}
@@ -2618,10 +2695,10 @@ General commands:
         return audio_object
 
     def __fill_audios_tree(self) -> None:
-        self.__load_audios(matched=False)
+        self.__load_sources(matched=False)
 
         _, _, track_initial_id, playlist_initial_id = self.itunes_options
-        track_id, audios = track_initial_id, self.concerned_audios
+        track_id, audios = track_initial_id, self.concerned_sources
 
         for audio in audios:
             track_persistent_id = self.generate_persistent_id()
@@ -2718,13 +2795,13 @@ General commands:
                 continue
             node.data[5] = parent.identifier
 
-    def __check_extension(self, audio):
-        _, ext = os.path.splitext(os.path.basename(audio))
+    def __check_extension(self, source):
+        _, ext = os.path.splitext(os.path.basename(source))
         return ext[1:].lower() in self.extensions
 
     @staticmethod
-    def __check_name(audio):
-        name, _ = os.path.splitext(os.path.basename(audio))
+    def __check_name(source):
+        name, _ = os.path.splitext(os.path.basename(source))
         name = name.strip()
         if not name:
             return False
@@ -2739,31 +2816,8 @@ General commands:
                 return False
         return True
 
-    def __check_audio(self, audio):
-        _audio = audio
-        while True:
-            if re.match(r'^/*$', _audio) is not None:
-                break
-            if _audio in self.ignored_set or _audio+'/' in self.ignored_set:
-                return self.AudioType.IGNORED
-            _audio = os.path.dirname(_audio)
-
-        if os.path.basename(audio) == '.DS_Store':
-            return self.AudioType.OMITTED
-        if os.path.islink(audio):
-            return self.AudioType.OMITTED
-        if not os.path.isfile(audio):
-            return self.AudioType.OMITTED
-
-        if not self.__check_extension(audio):
-            return self.AudioType.INVALID_EXT
-        if not self.__check_name(audio):
-            return self.AudioType.INVALID_NAME
-
-        return self.AudioType.VALID
-
     def __fill_audio_properties(self):
-        audios = self.concerned_audios
+        audios = self.concerned_sources
         filled_count = 0
         self.logger.warning(f'\n{"#"*78}\n')
         for audio in audios:
@@ -2788,13 +2842,13 @@ General commands:
     @log_decorator
     def fill_properties(self):
         self.__load_properties_from_file()
-        self.__load_audios(matched=True)
+        self.__load_sources(matched=True)
         self.__fill_audio_properties()
 
     @log_decorator
     def format_properties(self):
-        self.__load_audios(matched=False)
-        audios = self.concerned_audios
+        self.__load_sources(matched=False)
+        audios = self.concerned_sources
         self.logger.warning(f'\n{"#"*78}\n')
         for audio in audios:
             self.logger.debug(f'Formatting <{audio}> ...')
@@ -2807,8 +2861,8 @@ General commands:
 
     @log_decorator
     def rename_audios(self):
-        self.__load_audios(matched=False)
-        audios = self.concerned_audios
+        self.__load_sources(matched=False)
+        audios = self.concerned_sources
         for audio in audios:
             audio_object = self.__prime_audio(audio)
             _old = os.path.basename(audio)
@@ -2825,8 +2879,8 @@ General commands:
 
     @log_decorator
     def derive_artworks(self):
-        self.__load_audios(matched=False)
-        audios = self.concerned_audios
+        self.__load_sources(matched=False)
+        audios = self.concerned_sources
         for audio in audios:
             _name, _ = os.path.splitext(os.path.basename(audio))
             _path = os.path.dirname(audio)
@@ -2850,14 +2904,14 @@ General commands:
 
     @log_decorator
     def organize_files(self):
-        if not self.audios_root:
+        if not self.root:
             self.logger.fatal('Invalid audios root!')
             return
-        self.__load_audios(matched=False)
-        audios = self.concerned_audios
+        self.__load_sources(matched=False)
+        audios = self.concerned_sources
         for audio in audios:
             audio_object = self.__prime_audio(audio)
-            match self.organize_type:
+            match self.type:
                 case self.OrganizeType.ITUNED:
                     artist = self.fetchx(audio_object, self.AudioProperty.ARTIST, formatted=True)
                     if not artist:
@@ -2867,7 +2921,7 @@ General commands:
                     if not album:
                         self.logger.fatal(f'Invalid album of <{audio}>')
                         return
-                    newname = self.abspath(self.audios_root, artist, album, os.path.basename(audio))
+                    newname = self.abspath(self.root, artist, album, os.path.basename(audio))
                     if newname != audio:
                         if not os.path.exists(newname):
                             os.makedirs(os.path.dirname(newname), exist_ok=True)
@@ -2925,7 +2979,7 @@ General commands:
                         self.logger.fatal(f'Invalid grouping of <{audio}>')
                         return
                     target = self.abspath(
-                        self.audios_root, groups[0], os.path.basename(audio),
+                        self.root, groups[0], os.path.basename(audio),
                     )
                     if target != audio:
                         os.makedirs(os.path.dirname(target), exist_ok=True)
@@ -2937,7 +2991,7 @@ General commands:
                     if len(groups) < 2:
                         continue
                     for group in groups[1:]:
-                        link = self.abspath(self.audios_root, group, os.path.basename(audio))
+                        link = self.abspath(self.root, group, os.path.basename(audio))
                         if link == target:
                             continue
                         os.makedirs(os.path.dirname(link), exist_ok=True)
@@ -2972,9 +3026,9 @@ General commands:
 
     @log_decorator
     def list_repeated(self):
-        self.__load_audios(matched=False)
+        self.__load_sources(matched=False)
         
-        audios, results = self.concerned_audios, {}
+        audios, results = self.concerned_sources, {}
         for audio in audios:
             audio_object = self.__prime_audio(audio)
             artist = self.fetchx(audio_object, self.AudioProperty.ARTIST, formatted=True)
@@ -2994,11 +3048,11 @@ General commands:
         results = { key: items for key, items in results.items() if len(items) > 1 }
         content = f'{self.__glorify_exportation(results)}'
 
-        if not self.output_file:
+        if not self.output:
             print(content)
         else:
-            self.backup(self.output_file)
-            with open(self.output_file, 'w', encoding='utf-8') as f:
+            self.backup(self.output)
+            with open(self.output, 'w', encoding='utf-8') as f:
                 f.write(content)
 
     def display(self):
@@ -3070,9 +3124,9 @@ General commands:
         #                                 time.localtime(tag.file_info.atime))))
         #print("# {}".format('=' * 78))
 
-        self.__load_audios(matched=False)
+        self.__load_sources(matched=False)
 
-        results, audios = [], self.concerned_audios
+        results, audios = [], self.concerned_sources
         all_fields = [
             (field, self.transform_field_name(field, self.field_type))
             for field in self.ALL_FIELDS
@@ -3449,7 +3503,7 @@ General commands:
             results,
             all_fields,
             self.display_options,
-            self.output_file,
+            self.output,
         )
 
     def _pack_properties_for_note(self, properties):
@@ -3504,11 +3558,11 @@ General commands:
         self.output_format = self.FileFormat.NOTE
         self.__analysis_note()
         self.__sort_summaries()
-        tmp_file = self.source_file + '.tmp'
+        tmp_file = self.document + '.tmp'
         with open(tmp_file, 'w', encoding='utf-8') as f:
             f.write(self.__summarize_for_note())
-        self.backup(self.source_file)
-        self.rename(tmp_file, self.source_file)
+        self.backup(self.document)
+        self.rename(tmp_file, self.document)
 
     def __summarize(self):
         self.__fill_audios_tree()
@@ -3537,16 +3591,16 @@ General commands:
 
         content = ''
         if self.FileFormat.NONE.eq(self.output_format):
-            self.logger.fatal('Please set <output-format> or <output-file> options.')
+            self.logger.fatal('Please set <output-format> or <output> options.')
             return
 
         content = getattr(self, f'_export_{self.output_format}')()
 
-        if not self.output_file:
+        if not self.output:
             print(content)
         else:
-            self.backup(self.output_file)
-            with open(self.output_file, mode='w', encoding='utf-8') as f:
+            self.backup(self.output)
+            with open(self.output, mode='w', encoding='utf-8') as f:
                 f.write(content)
 
     def _export_note(self):
@@ -3762,6 +3816,17 @@ General commands:
 
     @log_decorator
     def convert(self):
+        self.__convert_qmc_to_mp3()
+        self.__convert_kmx_to_mp4()
+        self.__convert_mp4_to_mp3()
+
+    def __convert_qmc_to_mp3(self):
+        pass
+
+    def __convert_kmx_to_mp4(self):
+        pass
+
+    def __convert_mp4_to_mp3(self):
         pass
 
     @log_decorator
@@ -3793,13 +3858,13 @@ General commands:
             if i < len(steps) - 1:
                 content += '\n'
         content = self.render_usage(content.rstrip(' \\') + '\n').lstrip()
-        if not self.output_file:
+        if not self.output:
             print(content)
         else:
-            self.backup(self.output_file)
-            with open(self.output_file, mode='w', encoding='utf-8') as f:
+            self.backup(self.output)
+            with open(self.output, mode='w', encoding='utf-8') as f:
                 f.write(content)
-                os.chmod(self.output_file, 0o755)
+                os.chmod(self.output, 0o755)
 
     @log_decorator
     def clean_up(self):
@@ -3992,13 +4057,13 @@ def _add_arguments(parser, arguments=[]) -> None:
         help='log file of logger',
     )
 
-    if 'source_file' in arguments:
+    if 'document' in arguments:
         parser.add_argument(
-            '--source-file', '-s',
+            '--document', '-s',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['source_file'],
-            dest='source_file',
+            default=AudioGod.ARGUMENTS_DEFAULTS['document'],
+            dest='document',
             help='source file to match',
         )
     
@@ -4012,24 +4077,24 @@ def _add_arguments(parser, arguments=[]) -> None:
             help='ignored files',
         )
     
-    if 'audios_source' in arguments:
+    if 'source' in arguments:
         parser.add_argument(
-            '--audios-source', '-c',
+            '--source', '-c',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['audios_source'],
-            dest='audios_source',
+            default=AudioGod.ARGUMENTS_DEFAULTS['source'],
+            dest='source',
             help='audio file or directory you want to process',
         )
     
-    if 'audios_root' in arguments:
+    if 'root' in arguments:
         parser.add_argument(
-            '--audios-root', '-d',
+            '--root', '-d',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['audios_root'],
-            dest='audios_root',
-            help='root directory of audios',
+            default=AudioGod.ARGUMENTS_DEFAULTS['root'],
+            dest='root',
+            help='root directory',
         )
     
     if 'properties' in arguments:
@@ -4181,14 +4246,14 @@ def _add_arguments(parser, arguments=[]) -> None:
             help='format of output content',
         )
     
-    if 'output_file' in arguments:
+    if 'output' in arguments:
         parser.add_argument(
-            '--output-file', '-o',
+            '--output', '-o',
             type=str,
             required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['output_file'],
-            dest='output_file',
-            help='output file',
+            default=AudioGod.ARGUMENTS_DEFAULTS['output'],
+            dest='output',
+            help='output file or folder',
         )
     
     if 'artwork_path' in arguments:
@@ -4211,15 +4276,15 @@ def _add_arguments(parser, arguments=[]) -> None:
             help='filename pattern to rename audios',
         )
     
-    if 'organize_type' in arguments:
+    if 'type' in arguments:
         parser.add_argument(
-            '--organize-type', '-g',
+            '--type', '-g',
             type=str,
-            choices=AudioGod.ARGUMENTS_CHOICES['organize_type'],
+            choices=AudioGod.ARGUMENTS_CHOICES['type'],
             required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['organize_type'],
-            dest='organize_type',
-            help='type of file organization',
+            default=AudioGod.ARGUMENTS_DEFAULTS['type'],
+            dest='type',
+            help='types',
         )
     
     if 'itunes_version_plist' in arguments:
@@ -4270,7 +4335,7 @@ def _handle_subcmd(args) -> None:
         if hasattr(args, _argument):
             _arguments[_argument] = getattr(args, _argument)
 
-    getattr(AudioGod(**_arguments), args.subcmd.replace('-', '_'))()
+    getattr(AudioGod(action=args.subcmd, **_arguments), args.subcmd.replace('-', '_'))()
 
 class GreatArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
