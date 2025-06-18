@@ -131,6 +131,7 @@ import datetime
 import functools
 
 from string import Template
+from collections import ChainMap
 
 import psutil
 
@@ -289,6 +290,32 @@ class AudioGod(object):
         delimiter = '@'
 
 
+    class PerfectTemplate(Template):
+        idpattern = r'(?a:[_-a-z][_-a-z0-9]*(\.[_-a-z][_-a-z0-9]*)*)'
+
+        def perfect_substitute(self, mapping, /, **kwargs):
+            if kwargs:
+                mapping = ChainMap(kwargs, mapping)
+            def _convert(matched):
+                named = matched.group('named') or matched.group('braced')
+                if named is not None:
+                    try:
+                        return str(
+                            AudioGod.repack_dict(mapping)[AudioGod.rewrite_key(named)],
+                        )
+                    except KeyError:
+                        return matched.group()
+                if matched.group('escaped') is not None:
+                    return self.delimiter
+                if matched.group('invalid') is not None:
+                    return matched.group()
+                raise ValueError(
+                    'Unrecognized named group in pattern',
+                    self.pattern,
+                )
+            return self.pattern.sub(_convert, self.template)
+
+
     @StringEnum.unique
     class SourceType(StringEnum):
         VALID = 'valid'
@@ -332,12 +359,6 @@ class AudioGod(object):
 
 
     @StringEnum.unique
-    class OrganizeType(StringEnum):
-        ITUNED = 'ituned'
-        GROUPED = 'grouped'
-
-
-    @StringEnum.unique
     class AudiosTreeNodeType(StringEnum):
         ROOT = 'root'
         FOLDER = 'folder'
@@ -350,18 +371,7 @@ class AudioGod(object):
         ORIGINAL = 'ori'
         CHINESE = 'cn'
         ENGLISH = 'en'
-
-
-    @StringEnum.unique
-    class ConvertType(StringEnum):
-        QMC_MP3 = 'qmc->mp3'
-        KMX_MP4 = 'qmc->mp4'
-        MP4_MP3 = 'mp4->mp3'
-        NOTE_MD = 'note->md'
-        NOTE_MARKDOWN = 'note->markdown'
-        MD_NOTE = 'md->note'
-        MARKDOWN_NOTE = 'markdown->note'
-
+    
 
     AUDIO_PROPERTIES = {
         'title': (('歌曲名', 'Name'), 'string'),
@@ -489,7 +499,13 @@ class AudioGod(object):
     DEFAULT_GROUPING = 'Default'
 
 
-    ARGUMENTS = {
+    PUBLIC_ARGUMENTS = {
+    }
+
+    COMMON_ARGUMENTS = {
+    }
+
+    _______COMMON_ARGUMENTS = {
         'document': { 'default': './songs.note' },
         'source': { 'default': '~/Music/Source' },
         'recursive': { 'default': 'true' },
@@ -557,14 +573,10 @@ class AudioGod(object):
             'default': FieldType.ORIGINAL,
             'choices': FieldType.members(),
         },
-        'output_format': {
-            'default': FileFormat.NONE,
-            'choices': FileFormat.members(),
-        },
         'output': { 'default': "" },
         'type': {
-            'default': OrganizeType.ITUNED,
-            'choices': OrganizeType.members(),
+            #'default': OrganizeType.ITUNED,
+            #'choices': OrganizeType.members(),
         },
         'track_initial_id': { 'default': 601 },
         'playlist_initial_id': { 'default': 3001 },
@@ -589,6 +601,13 @@ class AudioGod(object):
             ),
         },
         'script_file': { 'default': './start.zsh' },
+
+
+
+
+
+
+
         'log_level': {
             'default': DEFAULT_LOG_LEVEL,
             'choices': [
@@ -605,28 +624,20 @@ class AudioGod(object):
         'log_file': { 'default': DEFAULT_LOG_FILE },
     }
 
-    ARGUMENTS_DEFAULTS = {
-        key: value.get('default', None) for key, value in ARGUMENTS.items()
-    }
-
-    ARGUMENTS_CHOICES = {
-        key: value.get('choices', []) for key, value in ARGUMENTS.items()
-    }
-
 
     ACTIONS = {
         'preprocess-notes': {
             'arguments': [
-                'document',
-                'field_type',
+                {'document': {'default': './songs.note'}},
+                {'field_type': {'default': FieldType.CHINESE, 'choices': FieldType.members()}},
             ],
             'kwargs': {
                 'description': '✋ Preprocess the notes file',
                 'help': 'preprocess the notes file',
                 'usage': '''
                     ${cmd} preprocess-notes \\
-                        --document=${note_file} \\
-                        --field-type=cn \\
+                        --document=${document} \\
+                        --field-type=${field_type} \\
                         --log-level=${log_level} \\
                         --log-file=${log_file}
                 ''',
@@ -634,25 +645,39 @@ class AudioGod(object):
         },
         'fill-properties': {
             'arguments': [
-                'source',
-                'extensions',
-                'recursive',
-                'ignored_file',
-                'document',
-                'root',
-                'properties',
+                {'source': {'default': '~/Music/Source/MP3'}},
+                {'extensions': {'default': 'mp3,aac'}},
+                {'recursive': {'default': 'true', 'choices': []}},
+                {'ignored_file': {'default': './ignored.txt'}},
+                {'document': {'default': './songs.note'}},
+                {'root': {'default': '~/Music/Source/MP3'}},
+                {'properties': {
+                    'default': '''
+                        \'{
+                            "_comment": "sources choose from command/file/directory/filename",
+                            "default": {
+                                "sources": ["command", "file"],
+                                "value": null
+                            },
+                            "genre": {
+                                "sources": ["command", "file"],
+                                "value": null
+                            }
+                        }\'
+                    ''',
+                }},
             ],
             'kwargs': {
                 'description': '✋ Fill properties of audios',
                 'help': 'fill properties of audios',
                 'usage': '''
                     ${cmd} fill-properties \\
-                        --source=${music_source_mp3_folder} \\
+                        --source=${source} \\
                         --extensions=${extensions} \\
                         --recursive=${recursive} \\
                         --ignored-file=${ignored_file} \\
-                        --document=${note_file} \\
-                        --root=${music_source_mp3_folder} \\
+                        --document=${document} \\
+                        --root=${root} \\
                         --properties=${properties} \\
                         --log-level=${log_level} \\
                         --log-file=${log_file}
@@ -671,7 +696,7 @@ class AudioGod(object):
                 'help': 'format properties of audios',
                 'usage': '''
                     ${cmd} format-properties \\
-                        --source=${music_source_mp3_folder} \\
+                        --source=${source} \\
                         --extensions=${extensions} \\
                         --recursive=${recursive} \\
                         --ignored-file=${ignored_file} \\
@@ -693,7 +718,7 @@ class AudioGod(object):
                 'help': 'rename audios',
                 'usage': '''
                     ${cmd} rename-audios \\
-                        --source=${music_source_mp3_folder} \\
+                        --source=${source} \\
                         --extensions=${extensions} \\
                         --recursive=${recursive} \\
                         --ignored-file=${ignored_file} \\
@@ -703,41 +728,53 @@ class AudioGod(object):
                 ''',
             },
         },
-        'organize-files': {
-            'arguments': [
-                'root',
-                'source',
-                'extensions',
-                'recursive',
-                'ignored_file',
-                'type',
-            ],
-            'kwargs': {
-                'description': '✋ Organize files',
-                'help': 'organize files',
-                'usage': {
-                    'grouped': '''
-                        ${cmd} organize-files \\
-                            --source=${music_source_mp3_folder} \\
-                            --extensions=${extensions} \\
-                            --recursive=${recursive} \\
-                            --ignored-file=${ignored_file} \\
-                            --root=${music_grouped_folder} \\
-                            --type=grouped \\
-                            --log-level=${log_level} \\
-                            --log-file=${log_file}
-                    ''',
-                    'ituned': '''
-                        ${cmd} organize-files \\
-                            --source=${music_grouped_folder} \\
-                            --extensions=${extensions} \\
-                            --recursive=${recursive} \\
-                            --ignored-file=${ignored_file} \\
-                            --root=${itunes_media_folder} \\
-                            --type=ituned \\
-                            --log-level=${log_level} \\
-                            --log-file=${log_file}
-                    ''',
+        'organize': {
+            'branches': {
+                'grouped': {
+                    'arguments': [
+                        {'root': {'default': {}, 'choices': {}}},
+                        {'source': {'default': {}, 'choices': {}}},
+                        {'extensions': {'default': {}, 'choices': {}}},
+                        {'recursive': {'default': {}, 'choices': {}}},
+                        {'ignored_file': {'default': {}, 'choices': {}}},
+                    ],
+                    'kwargs': {
+                        'description': '✋ Organize files',
+                        'help': 'organize files',
+                        'usage': '''
+                            ${cmd} organize grouped \\
+                                --source=${source} \\
+                                --extensions=${extensions} \\
+                                --recursive=${recursive} \\
+                                --ignored-file=${ignored_file} \\
+                                --root=${root} \\
+                                --log-level=${log_level} \\
+                                --log-file=${log_file}
+                        ''',
+                    },
+                },
+                'ituned': {
+                    'arguments': [
+                        'root',
+                        'source',
+                        'extensions',
+                        'recursive',
+                        'ignored_file',
+                    ],
+                    'kwargs': {
+                        'description': '✋ Organize files',
+                        'help': 'organize files',
+                        'usage': '''
+                            ${cmd} organize ituned \\
+                                --source=${source} \\
+                                --extensions=${extensions} \\
+                                --recursive=${recursive} \\
+                                --ignored-file=${ignored_file} \\
+                                --root=${root} \\
+                                --log-level=${log_level} \\
+                                --log-file=${log_file}
+                        ''',
+                    },
                 },
             },
         },
@@ -754,11 +791,11 @@ class AudioGod(object):
                 'help': 'list repeated',
                 'usage': '''
                     ${cmd} list-repeated \\
-                        --source=${music_grouped_folder} \\
+                        --source=${source} \\
                         --extensions=${extensions} \\
                         --recursive=${recursive} \\
                         --ignored-file=${ignored_file} \\
-                        --output=${repeated_file} \\
+                        --output=${output} \\
                         --log-level=${log_level} \\
                         --log-file=${log_file}
                 ''',
@@ -777,7 +814,7 @@ class AudioGod(object):
                 'help': 'derive artworks',
                 'usage': '''
                     ${cmd} derive-artworks \\
-                        --source=${music_source_mp3_folder} \\
+                        --source=${source} \\
                         --extensions=${extensions} \\
                         --recursive=${recursive} \\
                         --ignored-file=${ignored_file} \\
@@ -810,7 +847,7 @@ class AudioGod(object):
                 'help': 'display audios',
                 'usage': '''
                     ${cmd} display \\
-                        --source=${music_source_mp3_folder} \\
+                        --source=${source} \\
                         --extensions=${extensions} \\
                         --recursive=${recursive} \\
                         --ignored-file=${ignored_file} \\
@@ -822,9 +859,9 @@ class AudioGod(object):
                         --align=${align} \\
                         --style=${style} \\
                         --data-format=${data_format} \\
-                        --field-type=cn \\
+                        --field-type=${field_type} \\
                         --numbered=${numbered} \\
-                        --output="" \\
+                        --output=${output} \\
                         --log-level=${log_level} \\
                         --log-file=${log_file}
                 ''',
@@ -838,7 +875,6 @@ class AudioGod(object):
                 'ignored_file',
                 'fields',
                 'field_type',
-                'type',
                 'output',
                 'itunes_version_plist',
                 'itunes_media_folder',
@@ -849,59 +885,63 @@ class AudioGod(object):
                 'description': '✋ Export details to file',
                 'help': 'export details to file',
                 'usage': {
-                    'note': '''
-                        ${cmd} export \\
-                            --source=${music_grouped_folder} \\
-                            --extensions=${extensions} \\
-                            --recursive=${recursive} \\
-                            --ignored-file=${ignored_file} \\
-                            --fields=note \\
-                            --field-type=cn \\
-                            --output-format=note \\
-                            --output=${note_file} \\
-                            --log-level=${log_level} \\
-                            --log-file=${log_file}
+                    FileFormat.NOTE: f'''
+                        $cmd export {FileFormat.NOTE} \\
+                            --source=$source \\
+                            --extensions=$extensions \\
+                            --recursive=$recursive \\
+                            --ignored-file=$ignored_file \\
+                            --fields=$fields \\
+                            --field-type=$field_type \\
+                            --output=$output \\
+                            --log-level=$log_level \\
+                            --log-file=$log_file
                     ''',
-                    'plist': '''
-                        ${cmd} export \\
-                            --source=${itunes_media_folder} \\
-                            --extensions=${extensions} \\
-                            --recursive=${recursive} \\
-                            --ignored-file=${ignored_file} \\
-                            --fields=ituned \\
-                            --field-type=en \\
-                            --itunes-version-plist=${itunes_version_plist} \\
-                            --itunes-media-folder=${itunes_media_folder} \\
-                            --track-initial-id=${track_initial_id} \\
-                            --playlist-initial-id=${playlist_initial_id} \\
-                            --output-format=plist \\
-                            --output=${itunes_library_plist} \\
-                            --log-level=${log_level} \\
-                            --log-file=${log_file}
+                    FileFormat.PLIST: f'''
+                        $cmd export {FileFormat.PLIST} \\
+                            --source=$source \\
+                            --extensions=$extensions \\
+                            --recursive=$recursive \\
+                            --ignored-file=$ignored_file \\
+                            --fields=$fields \\
+                            --field-type=$field_type \\
+                            --itunes-version-plist=$itunes_version_plist \\
+                            --itunes-media-folder=$itunes_media_folder \\
+                            --track-initial-id=$track_initial_id \\
+                            --playlist-initial-id=$playlist_initial_id \\
+                            --output=$output \\
+                            --log-level=$log_level \\
+                            --log-file=$log_file
                     ''',
                 },
             },
         },
         'convert': {
-            'arguments': [
-                'source',
-                'extensions',
-                'recursive',
-                'ignored_file',
-                'type',
-                'executer',
-            ],
+            'arguments': {
+                'source': {},
+                'extensions': {},
+                'recursive': {
+                    'use_public': False,
+                    'args': ['-r'],
+                    'kwargs': {
+                        'action': argparse.BooleanOptionalAction,
+                        'default': True,
+                        'help': 'the files or directories you want to process',
+                    },
+                },
+                'ignored_file': {},
+                'executer': {},
+            },
             'kwargs': {
                 'description': '✋ Convert media',
                 'help': 'convert media',
                 'usage': {
-                    'qmc->mp3': '''
+                    'qmc_to_mp3': '''
                         ${cmd} convert \\
                             --source=${music_source_qmc_folder} \\
                             --extensions=${extensions} \\
                             --recursive=${recursive} \\
                             --ignored-file=${ignored_file} \\
-                            --type=qmc-mp3 \\
                             --executer=${executer} \\
                             --output=${music_source_mp3_folder} \\
                             --log-level=${log_level} \\
@@ -919,25 +959,244 @@ class AudioGod(object):
                 'help': 'generate script',
                 'usage': '''
                     ${cmd} generate-script \\
-                        --output=${script_file} \\
+                        --output=${output} \\
                         --log-level=${log_level} \\
                         --log-file=${log_file}
                 ''',
             },
         },
-        'clean-up': {
-            'arguments': [],
+        'operate': {
             'kwargs': {
-                'description': '✋ Clean up dirs, backups and so on',
-                'help': 'clean up dirs, backups and so on',
-                'usage': '''
-                    ${cmd} clean-up \\
-                        --log-level=${log_level} \\
-                        --log-file=${log_file}
-                ''',
+                'description': '',
+                'help': '',
+                'usage': '',
+            },
+            'branches': {
+                'backup': {
+                    'arguments': {
+                        'source': {
+                            'use_public': False,
+                            'args': ['--source', '-c'],
+                            'kwargs': {
+                                'action': 'store',
+                                'type': str,
+                                'required': True,
+                                'help': 'the files or directories you want to process',
+                            },
+                        },
+                        'ignored_file': {
+                            'args': ['--ignored-file', '-i'],
+                            'kwargs': {
+                                'action': 'store',
+                                'type': str,
+                                'required': False,
+                                'default': './ignored.txt',
+                                'help': 'ignored files',
+                            },
+                        },
+                    },
+                    'kwargs': {
+                        'description': '✋ Backup files, directories and so on',
+                        'help': 'Backup files, directories and so on',
+                        'usage': '''
+                            ${cmd} ${action} ${branch} \\
+                                --log-level=${log_level} \\
+                                --log-file=${log_file}
+                        ''',
+                    },
+                },
+                'remove': {
+                    'arguments': [
+                    ],
+                    'kwargs': {
+                        'description': '✋ Remove files, directories and so on',
+                        'help': 'remove files, directories and so on',
+                        'usage': '''
+                            ${cmd} operate remove \\
+                                --log-level=${log_level} \\
+                                --log-file=${log_file}
+                        ''',
+                    },
+                },
+                'cleanup': {
+                    'arguments': [],
+                    'kwargs': {
+                        'description': '✋ Clean up directories, backups and so on',
+                        'help': 'clean up directories, backups and so on',
+                        'usage': '''
+                            ${cmd} operate cleanup \\
+                                --log-level=${log_level} \\
+                                --log-file=${log_file}
+                        ''',
+                    },
+                },
             },
         },
     }
+
+    @staticmethod
+    def replace_underline(key):
+        return key.lower().replace('_', '-')
+
+    @staticmethod
+    def replace_hyphen(key):
+        return key.lower().replace('-', '_')
+
+    @classmethod
+    def rewrite_key(cls, key):
+        units = key.lower().split('.')
+        units[-1] = cls.replace_hyphen(units[-1])
+        for i in range(len(units[:-1])):
+            units[i] = cls.replace_underline(units[i])
+        return '.'.join(units)
+
+    @classmethod
+    def repack_dict(cls, dict_, rewrite_key=rewrite_key):
+        for key in dict_:
+            new_key = rewrite_key(key)
+            if new_key == key:
+                continue
+            value = dict_.pop(key)
+            dict_[new_key] = value
+        return dict_
+
+    @classmethod
+    def rewrite_actions(cls):
+        cls.repack_dict(cls.PUBLIC_ARGUMENTS, cls.replace_hyphen)
+        cls.repack_dict(cls.COMMON_ARGUMENTS, cls.replace_hyphen)
+        cls.repack_dict(cls.ACTIONS, cls.replace_underline)
+        for action in cls.ACTIONS:
+            if 'arguments' in cls.ACTIONS[action]:
+                cls.repack_dict(cls.ACTIONS[action]['arguments'], cls.replace_hyphen)
+            if 'branches' in cls.ACTIONS[action]:
+                cls.repack_dict(cls.ACTIONS[action]['branches'], cls.replace_underline)
+                for branch in cls.ACTIONS[action]['branches']:
+                    if 'arguments' in cls.ACTIONS[action]['branches'][branch]:
+                        cls.repack_dict(
+                            cls.ACTIONS[action]['branches'][branch]['arguments'],
+                            cls.replace_hyphen,
+                        )
+
+        def _process_unit(action, branch, /, render_kwargs={}):
+            params = cls.ACTIONS[action]['branches'][branch] if branch else cls.ACTIONS[action]
+            if 'arguments' in params:
+                params['arguments'].update(copy.deepcopy(cls.COMMON_ARGUMENTS))
+                for argument in params['arguments']:
+                    use_public = params['arguments'][argument].pop('use_public', False)
+                    if use_public:
+                        params['arguments'][argument] = copy.deepcopy(cls.PUBLIC_ARGUMENTS[argument])
+                    params['arguments'][argument]['args'].insert(
+                        0, f'--{cls.replace_underline(argument)}',
+                    )
+                    params['arguments'][argument]['kwargs']['dest'] = argument
+                    
+                    type_ = params['arguments'][argument]['kwargs'].get('type', None)
+                    action_ = params['arguments'][argument]['kwargs'].get('action', 'store')
+                    if 'default' not in params['arguments'][argument]['kwargs']:
+                        default = None
+                        match type_:
+                            case str():
+                                default = ''
+                            case int():
+                                default = 0
+                        if default is None and action_ == argparse.BooleanOptionalAction:
+                            default = True
+                        params['arguments'][argument]['kwargs']['default'] = default
+            if 'kwargs' in params:
+                if 'usage' not in params['kwargs']:
+                    params['kwargs']['usage'] = f'''
+                        $cmd {action} {branch} \\
+                    ''' if branch else f'''
+                        $cmd {action} \\
+                    '''
+                    for argument in params['arguments']:
+                        label = params['arguments'][argument]['args'][0]
+                        action_ = params['arguments'][argument]['kwargs'].get('action', 'store')
+                        required = params['arguments'][argument]['kwargs'].get('required', False)
+                        default = '<INPUT>' if required else params['arguments'][argument]['kwargs']['default']
+                        if action_ == argparse.BooleanOptionalAction:
+                            no_label = label.replace('--', '--no-')
+                            params['kwargs']['usage'] += f'''
+                                {label if default else no_label} \\
+                            '''
+                        else:
+                            params['kwargs']['usage'] += f'''
+                                {label}={default} \\
+                            '''
+                    params['kwargs']['usage'] = params['kwargs']['usage'].rstrip().rstrip('\\').rstrip()
+                params['kwargs']['usage'] = cls.render_usage(
+                    params['kwargs']['usage'],
+                    kwargs=render_kwargs,
+                )
+
+        for action in cls.ACTIONS:
+            _process_unit(action, None)
+            if 'branches' in cls.ACTIONS[action]:
+                for branch in cls.ACTIONS[action]['branches']:
+                    _process_unit(action, branch)
+
+    #@classmethod
+    #def nntegrate_default_arguments(cls, action=None, branch=None):
+    #    ret = copy.deepcopy(cls.PUBLIC_ARGUMENTS) | copy.deepcopy(cls.COMMON_ARGUMENTS)
+    #    prefix, arguments = '', {}
+    #    if action:
+    #        if branch:
+    #            prefix = f'{action}.{branch}.'
+    #            arguments = cls.ACTIONS[action]['branches'][branch].get('arguments', {})
+    #        else:
+    #            prefix = f'{action}.'
+    #            arguments = cls.ACTIONS[action].get('arguments', {})
+    #    for argument, params in arguments.items():
+    #        if prefix:
+    #            arguments[f'{prefix}{argument}'] = params
+    #    return ret | copy.deepcopy(arguments)
+    
+    #@classmethod
+    #def integrate_plain_defaults(cls, action=None, branch=None):
+    #    ret, arguments = {}, cls.integrate_default_arguments(action, branch)
+    #    for argument, params in arguments.items():
+    #        if 'default' in params['kwargs']:
+    #            ret[argument] = params['kwargs']['default']
+    #    return ret
+    
+    @classmethod
+    def integrate_default_arguments(cls, action=None, branch=None, with_customized=False):
+        original_defaults = {
+            argument: params['default']
+            for argument, params in (
+                copy.deepcopy(cls.PUBLIC_ARGUMENTS) | copy.deepcopy(cls.COMMON_ARGUMENTS)
+            ).items()
+        }
+
+        customized_defaults = {}
+        for _action, action_params in cls.ACTIONS.items():
+            if 'arguments' in action_params:
+                for argument, argument_params in action_params['arguments']:
+                    key = f'{_action}.{argument}'
+                    customized_defaults[key] = argument_params['default']
+            if 'branches' in action_params:
+                for _branch, branch_params in action_params['branches'].items():
+                    if 'arguments' in branch_params:
+                        for argument, argument_params in branch_params['arguments']:
+                            key = f'{_action}.{_branch}.{argument}'
+                            customized_defaults[key] = argument_params['default']
+
+        defaults = copy.deepcopy(original_defaults)
+        prefix = ''
+        if action:
+            if branch:
+                prefix = f'{action}.{branch}.'
+            else:
+                prefix = f'{action}.'
+        if prefix:
+            for argument, default in copy.deepcopy(customized_defaults).items():
+                if argument.startswith(prefix):
+                    if prefix.count('.') == argument.count('.'):
+                        defaults[argument.replace(prefix, '')] = default
+        if with_customized:
+            defaults = defaults | copy.deepcopy(customized_defaults)
+
+        return defaults
 
 
     USAGE = '''
@@ -1003,10 +1262,10 @@ Process Method 1:
     Step.2: Fill properties, with subcommand <fill-properties>;
     Step.3: Format properties, with subcommand <format-properties>;
     Step.4: Rename audios, with subcommand <rename-audios>;
-    Step.5: Organize grouped files, with subcommand <organize-files>;
+    Step.5: Organize grouped files, with subcommand <organize>;
     Step.6: Export note file, with subcommand <export>;
     Step.7: List repeated audios of grouped, with subcommand <list-repeated>;
-    Step.8: Organize ituned files, with subcommand <organize-files>;
+    Step.8: Organize ituned files, with subcommand <organize>;
     Step.9: Export plist file, with subcommand <export>.
 
 Process Method 2:
@@ -1037,10 +1296,17 @@ General commands:
     '''
 
 
-    def __init__(self, action, **kwargs):
+    def __init__(self, action=None, branch=None, **kwargs):
         self.__action = action
+        self.__branch = branch
 
-        kwargs = copy.deepcopy(AudioGod.ARGUMENTS_DEFAULTS) | kwargs
+        self.__default_arguments = self.integrate_default_arguments(
+            action=self.action,
+            branch=self.branch,
+            with_customized=False,
+        )
+
+        kwargs = self.default_arguments | kwargs
 
         # init logger
         self.__logger_options = self.__resolve_logger_options(
@@ -1073,7 +1339,6 @@ General commands:
         self.__output = self.abspath(kwargs['output'])
 
         self.__data_format = self.DataFormat(kwargs['data_format'])
-        self.__type = AudioGod.OrganizeType(kwargs['type'])
         self.__filename_pattern = kwargs['filename_pattern']
         self.__field_type = AudioGod.FieldType(kwargs['field_type'])
         self.__properties = self.__resolve_properties(kwargs['properties'])
@@ -1101,9 +1366,7 @@ General commands:
             kwargs['playlist_initial_id'],
         )
 
-        self.__output_format = self.__resolve_output_format(
-            kwargs['output_format'],
-        )
+        self.__output_format = self.__resolve_output_format()
 
         self.__audios_tree = TreeX(
             tree=None,
@@ -1228,11 +1491,8 @@ General commands:
                 sources[i] = self.PropertySource(sources[i])
         return ret
 
-    def __resolve_output_format(self, output_format):
-        output_format = AudioGod.FileFormat(output_format)
-        if self.FileFormat.NONE.eq(output_format):
-            output_format = self.recognize_file_format(self.output)
-        return output_format
+    def __resolve_output_format(self):
+        return self.recognize_file_format(self.output)
 
     def __resolve_logger_options(self, log_level, log_file):
         return (log_level, log_file)
@@ -1391,6 +1651,14 @@ General commands:
         return self.__action
 
     @property
+    def branch(self):
+        return self.__branch
+
+    @property
+    def default_arguments(self):
+        return self.__default_arguments
+
+    @property
     def logger(self):
         return self.__logger
 
@@ -1441,7 +1709,7 @@ General commands:
     @output_format.setter
     def output_format(self, value):
         self.__output_format = value
-
+    
     @property
     def document(self):
         return self.__document
@@ -1489,10 +1757,6 @@ General commands:
     @property
     def artwork_path(self):
         return self.__artwork_path
-
-    @property
-    def type(self):
-        return self.__type
 
     @property
     def filename_pattern(self):
@@ -1758,6 +2022,11 @@ General commands:
                     if target and target not in ret:
                         ret.append(target)
         return list(dict.fromkeys(ret))
+
+    @staticmethod
+    def chmod(path, mode=0o755):
+        if path and os.path.exists(path):
+            os.chmod(path, mode)
 
     def remove(self, *paths):
         self.init_cache()
@@ -2196,7 +2465,7 @@ General commands:
         format_ = self.format_func[field]
         parse_ = self.parse_func[field]
         default = self.__resolve_properties(
-            self.ARGUMENTS_DEFAULTS['properties'],
+            self.default_arguments['properties'],
         )['default'] # type: ignore
         sources = self.properties.get('default', {}).get( # type: ignore
             'sources', default['sources'],
@@ -2903,105 +3172,116 @@ General commands:
                     f.write(image.image_data)
 
     @log_decorator
-    def organize_files(self):
+    def organize(self):
+        pass
+
+    @log_decorator
+    def organize__ituned(self):
         if not self.root:
-            self.logger.fatal('Invalid audios root!')
+            self.logger.fatal('Invalid root!')
             return
         self.__load_sources(matched=False)
         audios = self.concerned_sources
         for audio in audios:
             audio_object = self.__prime_audio(audio)
-            match self.type:
-                case self.OrganizeType.ITUNED:
-                    artist = self.fetchx(audio_object, self.AudioProperty.ARTIST, formatted=True)
-                    if not artist:
-                        self.logger.fatal(f'Invalid artist of <{audio}>')
-                        return
-                    album = self.fetchx(audio_object, self.AudioProperty.ALBUM, formatted=True)
-                    if not album:
-                        self.logger.fatal(f'Invalid album of <{audio}>')
-                        return
-                    newname = self.abspath(self.root, artist, album, os.path.basename(audio))
-                    if newname != audio:
-                        if not os.path.exists(newname):
-                            os.makedirs(os.path.dirname(newname), exist_ok=True)
-                            self.duplicate(audio, newname)
-                        else:
-                            current_grouping = self.fetchx(
-                                audio_object, self.AudioProperty.GROUPING, formatted=True,
-                            )
-                            current_groups = self.split(
-                                current_grouping,
-                                self.GROUPING_SEPARATOR,
-                                escaped=True,
-                                del_blank=True,
-                                filt_empty=True,
-                                filt_repeated=True,
-                                sortify=False,
-                                reversify=False,
-                            )
-                            existed_object = self.__prime_audio(newname)
-                            existed_grouping = self.fetchx(
-                                existed_object, self.AudioProperty.GROUPING, formatted=True,
-                            )
-                            existed_groups = self.split(
-                                existed_grouping,
-                                self.GROUPING_SEPARATOR,
-                                escaped=True,
-                                del_blank=True,
-                                filt_empty=True,
-                                filt_repeated=True,
-                                sortify=False,
-                                reversify=False,
-                            )
-                            if not bool(set(current_groups) & set(existed_groups)):
-                                self.save(
-                                    existed_object,
-                                    self.AudioProperty.GROUPING,
-                                    self.GROUPING_SEPARATOR.join(existed_groups+current_groups),
-                                    formatted=True,
-                                )
-                            else:
-                                self.logger.fatal(
-                                    f'Duplicate groupings between current <{audio}> and existed <{newname}>!',
-                                )
-                                return
-                case self.OrganizeType.GROUPED:
-                    grouping = self.fetchx(
+            artist = self.fetchx(audio_object, self.AudioProperty.ARTIST, formatted=True)
+            if not artist:
+                self.logger.fatal(f'Invalid artist of <{audio}>')
+                return
+            album = self.fetchx(audio_object, self.AudioProperty.ALBUM, formatted=True)
+            if not album:
+                self.logger.fatal(f'Invalid album of <{audio}>')
+                return
+            newname = self.abspath(self.root, artist, album, os.path.basename(audio))
+            if newname != audio:
+                if not os.path.exists(newname):
+                    os.makedirs(os.path.dirname(newname), exist_ok=True)
+                    self.duplicate(audio, newname)
+                else:
+                    current_grouping = self.fetchx(
                         audio_object, self.AudioProperty.GROUPING, formatted=True,
                     )
-                    groups = self.split(
-                        grouping, self.GROUPING_SEPARATOR, escaped=True,
-                        del_blank=True, filt_empty=True, filt_repeated=True,
-                        sortify=False, reversify=False,
+                    current_groups = self.split(
+                        current_grouping,
+                        self.GROUPING_SEPARATOR,
+                        escaped=True,
+                        del_blank=True,
+                        filt_empty=True,
+                        filt_repeated=True,
+                        sortify=False,
+                        reversify=False,
                     )
-                    if not groups:
-                        self.logger.fatal(f'Invalid grouping of <{audio}>')
+                    existed_object = self.__prime_audio(newname)
+                    existed_grouping = self.fetchx(
+                        existed_object, self.AudioProperty.GROUPING, formatted=True,
+                    )
+                    existed_groups = self.split(
+                        existed_grouping,
+                        self.GROUPING_SEPARATOR,
+                        escaped=True,
+                        del_blank=True,
+                        filt_empty=True,
+                        filt_repeated=True,
+                        sortify=False,
+                        reversify=False,
+                    )
+                    if not bool(set(current_groups) & set(existed_groups)):
+                        self.save(
+                            existed_object,
+                            self.AudioProperty.GROUPING,
+                            self.GROUPING_SEPARATOR.join(existed_groups+current_groups),
+                            formatted=True,
+                        )
+                    else:
+                        self.logger.fatal(
+                            f'Duplicate groupings between current <{audio}> and existed <{newname}>!',
+                        )
                         return
-                    target = self.abspath(
-                        self.root, groups[0], os.path.basename(audio),
-                    )
-                    if target != audio:
-                        os.makedirs(os.path.dirname(target), exist_ok=True)
-                        self.duplicate(audio, target)
-                        ao = self.__prime_audio(target)
-                        self.save(
-                            ao, self.AudioProperty.GROUPING, groups[0], True,
-                        )
-                    if len(groups) < 2:
-                        continue
-                    for group in groups[1:]:
-                        link = self.abspath(self.root, group, os.path.basename(audio))
-                        if link == target:
-                            continue
-                        os.makedirs(os.path.dirname(link), exist_ok=True)
-                        if os.path.exists(link):
-                            self.remove(link)
-                        self.duplicate(target, link)
-                        ao = self.__prime_audio(link)
-                        self.save(
-                            ao, self.AudioProperty.GROUPING, group, True,
-                        )
+
+    @log_decorator
+    def organize__grouped(self):
+        if not self.root:
+            self.logger.fatal('Invalid root!')
+            return
+        self.__load_sources(matched=False)
+        audios = self.concerned_sources
+        for audio in audios:
+            audio_object = self.__prime_audio(audio)
+            grouping = self.fetchx(
+                audio_object, self.AudioProperty.GROUPING, formatted=True,
+            )
+            groups = self.split(
+                grouping, self.GROUPING_SEPARATOR, escaped=True,
+                del_blank=True, filt_empty=True, filt_repeated=True,
+                sortify=False, reversify=False,
+            )
+            if not groups:
+                self.logger.fatal(f'Invalid grouping of <{audio}>')
+                return
+            target = self.abspath(
+                self.root, groups[0], os.path.basename(audio),
+            )
+            if target != audio:
+                os.makedirs(os.path.dirname(target), exist_ok=True)
+                self.duplicate(audio, target)
+                ao = self.__prime_audio(target)
+                self.save(
+                    ao, self.AudioProperty.GROUPING, groups[0], True,
+                )
+            if len(groups) < 2:
+                continue
+            for group in groups[1:]:
+                link = self.abspath(self.root, group, os.path.basename(audio))
+                if link == target:
+                    continue
+                os.makedirs(os.path.dirname(link), exist_ok=True)
+                if os.path.exists(link):
+                    self.remove(link)
+                self.duplicate(target, link)
+                ao = self.__prime_audio(link)
+                self.save(
+                    ao, self.AudioProperty.GROUPING, group, True,
+                )
 
     def __glorify_exportation(self, outputs):
         ret = f'{"#"*78}\n\n'
@@ -3023,6 +3303,14 @@ General commands:
                     content=item,
                 )
         return ret
+
+    def __handle_output(self, content):
+        if not self.output:
+            print(content)
+        else:
+            self.backup(self.output)
+            with open(self.output, 'w', encoding='utf-8') as f:
+                f.write(content)
 
     @log_decorator
     def list_repeated(self):
@@ -3048,12 +3336,7 @@ General commands:
         results = { key: items for key, items in results.items() if len(items) > 1 }
         content = f'{self.__glorify_exportation(results)}'
 
-        if not self.output:
-            print(content)
-        else:
-            self.backup(self.output)
-            with open(self.output, 'w', encoding='utf-8') as f:
-                f.write(content)
+        self.__handle_output(content)
 
     def display(self):
         #print("# {}".format('=' * 78))
@@ -3148,7 +3431,7 @@ General commands:
                 for x in all_fields
             ])
 
-        def _charting(rows, pair_fields, options, output_file):
+        def _charting(rows, pair_fields, options):
             page_number, page_size, sort_, filter_, fields_to_show, align_, numbered, style = options
 
             rl_fields_to_show = [dict(pair_fields)[x] for x in fields_to_show]
@@ -3491,19 +3774,13 @@ General commands:
             content = _wrap_table(
                 table_string, start=start, numbered=numbered, style=style,
             )
-            if not output_file:
-                print(content)
-            else:
-                self.backup(output_file)
-                with open(output_file, 'w', encoding='utf-8') as f:
-                    f.write(content)
+            self.__handle_output(content)
             return content
 
         _ = _charting(
             results,
             all_fields,
             self.display_options,
-            self.output,
         )
 
     def _pack_properties_for_note(self, properties):
@@ -3587,35 +3864,33 @@ General commands:
 
     @log_decorator
     def export(self):
+        pass
+
+    @log_decorator
+    def export__note(self):
+        self.output_format = self.FileFormat.NOTE
         self.__summarize()
+        self.__handle_output(self.__summarize_for_note())
 
-        content = ''
-        if self.FileFormat.NONE.eq(self.output_format):
-            self.logger.fatal('Please set <output-format> or <output> options.')
-            return
+    @log_decorator
+    def export__json(self):
+        self.output_format = self.FileFormat.JSON
+        self.__summarize()
+        self.__handle_output('')
 
-        content = getattr(self, f'_export_{self.output_format}')()
+    @log_decorator
+    def export__markdown(self):
+        self.output_format = self.FileFormat.MARKDOWN
+        self.__summarize()
+        self.__handle_output('')
 
-        if not self.output:
-            print(content)
-        else:
-            self.backup(self.output)
-            with open(self.output, mode='w', encoding='utf-8') as f:
-                f.write(content)
+    export__md = export__markdown
 
-    def _export_note(self):
-        ret = self.__summarize_for_note()
-        return ret
-
-    def _export_json(self) -> str:
-        return ''
-
-    def _export_markdown(self) -> str:
-        return ''
-
-    _export_md = _export_markdown
-
-    def _export_plist(self):
+    @log_decorator
+    def export__plist(self):
+        self.output_format = self.FileFormat.PLIST
+        self.__summarize()
+        
         itunes_version_plist, itunes_media_folder, _, _ = self.itunes_options
 
         def _get_itunes_version(itunes_version_plist) -> str:
@@ -3810,24 +4085,37 @@ General commands:
                 playlists = _pack_playlists(),
             ))
 
-        return _pack_plist()
+        return self.__handle_output(_pack_plist())
     
-    _export_xml = _export_plist
+    export__xml = export__plist
 
     @log_decorator
     def convert(self):
-        self.__convert_qmc_to_mp3()
-        self.__convert_kmx_to_mp4()
-        self.__convert_mp4_to_mp3()
-
-    def __convert_qmc_to_mp3(self):
         pass
 
-    def __convert_kmx_to_mp4(self):
+    @log_decorator
+    def convert__qmc_to_mp3(self):
         pass
 
-    def __convert_mp4_to_mp3(self):
+    @log_decorator
+    def convert__kmx_to_mp4(self):
         pass
+
+    @log_decorator
+    def convert__mp4_to_mp3(self):
+        pass
+
+    @log_decorator
+    def convert__note_to_markdown(self):
+        pass
+
+    convert__note_to_md = convert__note_to_markdown
+
+    @log_decorator
+    def convert__markdown_to_note(self):
+        pass
+
+    convert__md_to_note = convert__markdown_to_note
 
     @log_decorator
     def generate_script(self):
@@ -3842,29 +4130,32 @@ General commands:
             'fill-properties',
             'format-properties',
             'rename-audios',
-            ('organize-files', 'grouped'),
-            ('export', 'note'),
+            ('organize', 'grouped'),
+            ('export', self.FileFormat.NOTE),
             'list-repeated',
-            ('organize-files', 'ituned'),
-            ('export', 'plist'),
+            ('organize', 'ituned'),
+            ('export', self.FileFormat.PLIST),
         ]
         for i, step in enumerate(steps):
-            if type(step) is tuple:
-                usage = self.ACTIONS[step[0]]['kwargs']['usage'][step[1]]
+            if isinstance(step, tuple):
+                usage = self.render_usage(
+                    usage=self.ACTIONS[step[0]]['branches'][step[1]]['kwargs']['usage'],
+                    action=step[0],
+                    branch=step[1],
+                )
             else:
-                usage = self.ACTIONS[step]['kwargs']['usage']
-            usage = self.render_usage(usage).strip()
-            content += f'\n{usage}'
+                usage = self.render_usage(
+                    usage=self.ACTIONS[step]['kwargs']['usage'],
+                    action=step,
+                    branch=None,
+                )
+            content += f'\n{usage.strip()}'
             if i < len(steps) - 1:
                 content += '\n'
-        content = self.render_usage(content.rstrip(' \\') + '\n').lstrip()
-        if not self.output:
-            print(content)
-        else:
-            self.backup(self.output)
-            with open(self.output, mode='w', encoding='utf-8') as f:
-                f.write(content)
-                os.chmod(self.output, 0o755)
+        self.__handle_output(
+            self.render_usage(content.rstrip(' \\') + '\n').lstrip(),
+        )
+        self.chmod(self.output, 0o755)
 
     @log_decorator
     def clean_up(self):
@@ -3998,23 +4289,24 @@ General commands:
                     interpreter = cmd[:index].strip()
                 else:
                     interpreter = cmd.strip()
-                subcmd_pattern = r'\s*({0})\s*$'.format('|'.join(cls.ACTIONS.keys()))
+                subcmd_pattern = r'\s*({0})(\s+.*)?$'.format('|'.join(cls.ACTIONS.keys()))
                 interpreter = re.sub(subcmd_pattern, r'', interpreter)
         except Exception as e:
             pass
         return interpreter 
 
     @classmethod
-    def render_usage(cls, usage) -> str:
-        kwargs = copy.deepcopy(cls.ARGUMENTS_DEFAULTS)
-        aliens = ['properties', 'sort', 'filter', 'align']
-        for alien in aliens:
-            kwargs[alien] = cls.glorify_indents(
-                kwargs[alien], indent=4,
-            ).strip()
-        return '\n' + Template(
+    def render_usage(cls, usage, kwargs={}) -> str:
+        _kwargs = cls.integrate_default_arguments(with_customized=True)
+        #aliens = [('properties', 4), ('sort', 4), ('filter', 4), ('align', 4)]
+        #for alien in aliens:
+        #    _kwargs[alien[0]] = cls.glorify_indents(
+        #        _kwargs[alien[0]], indent=alien[1],
+        #    ).strip()
+        kwargs = _kwargs | kwargs
+        return '\n' + cls.PerfectTemplate(
             cls.glorify_indents(usage, indent=0),
-        ).safe_substitute(dict(
+        ).perfect_substitute(dict(
             audio_properties=cls.audio_properties(),
             special_fields=cls.special_fields(),
             special_characters=cls.special_characters(),
@@ -4023,8 +4315,11 @@ General commands:
             div_char=cls.DIV_CHAR,
             grouping_sep=cls.GROUPING_SEPARATOR,
             fnp_delimiter=cls.FilenamePatternTemplate.delimiter,
-            **kwargs,
-        ))
+         ) | kwargs)
+
+################################################################################
+
+AudioGod.rewrite_actions()
 
 ################################################################################
 #                                                                              #
@@ -4032,11 +4327,22 @@ General commands:
 #                                                                              #
 ################################################################################
 
-def _add_arguments(parser, arguments=[]) -> None:
-    def Boolean(x):
-        if type(x) is str:
-            return x.lower() in ('true', '1', 'yes')
-        return bool(x)
+def _add_arguments(parser, arguments) -> None:
+    arguments = arguments | AudioGod.COMMON_ARGUMENTS
+    for argument, params in arguments:
+        use_public = params.get('use_public', False)
+        if use_public:
+            params = AudioGod.PUBLIC_ARGUMENTS[argument]
+        parser.add_argument(*params['args'], **params['kwargs'])
+    return
+
+
+
+
+
+
+
+
 
     parser.add_argument(
         '--log-level', '-l',
@@ -4110,7 +4416,7 @@ def _add_arguments(parser, arguments=[]) -> None:
     if 'recursive' in arguments:
         parser.add_argument(
             '--recursive', '-r',
-            type=Boolean,
+            type=AudioGod.BooleanType,
             required=False,
             default=AudioGod.ARGUMENTS_DEFAULTS['recursive'],
             dest='recursive',
@@ -4328,14 +4634,58 @@ def _add_arguments(parser, arguments=[]) -> None:
         )
 
 
-def _handle_subcmd(args) -> None:
-    _arguments = copy.deepcopy(AudioGod.ARGUMENTS_DEFAULTS)
+def _handle_execute(args) -> None:
+    action, branch = args.action, None
+    if hasattr(args, 'branch'):
+        branch = args.branch
+    
+    arguments = AudioGod.integrate_default_arguments(
+        action=action,
+        branch=branch,
+        with_customized=False,
+    )
+    for argument in arguments:
+        if hasattr(args, argument):
+            arguments[argument] = getattr(args, argument)
 
-    for _argument in _arguments:
-        if hasattr(args, _argument):
-            _arguments[_argument] = getattr(args, _argument)
+    func = AudioGod.replace_hyphen(f'{action}__{branch}' if branch else action)
+    getattr(AudioGod(action=action, branch=branch, **arguments), func)()
 
-    getattr(AudioGod(action=args.subcmd, **_arguments), args.subcmd.replace('-', '_'))()
+
+def _add_subparser(mainparser, subparsers, name, action, branch=None, execute=None):
+    params = AudioGod.ACTIONS[action]
+    if branch and 'branches' in params:
+        params = params['branches'][branch]
+    arguments = params.get('arguments', None)
+    kwargs = params['kwargs']
+    kwargs = {
+        'description': '',
+        'help': '',
+        'epilog': '😴 Sleeping ...',
+        'formatter_class': argparse.ArgumentDefaultsHelpFormatter,
+        #'usage': '',
+        #'prog': None,
+        #'aliases': (),
+        #'prefix_chars': '-',
+        #'fromfile_prefix_chars': None,
+        #'argument_default': None,
+        #'conflict_handler': 'error',
+        #'add_help': True,
+        #'allow_abbrev': True,
+        #'exit_on_error': True,
+    } | kwargs
+    if 'usage' in kwargs:
+        kwargs['usage'] = AudioGod.render_usage(kwargs['usage'], action, branch)
+    subparser = subparsers.add_parser(name, **kwargs)
+
+    if arguments is not None:
+        _add_arguments(subparser, arguments)
+    if execute is not None:
+        subparser.set_defaults(execute=execute)
+    mainparser.add_subparser((name, subparser))
+
+    return subparser
+
 
 class GreatArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
@@ -4355,7 +4705,7 @@ class GreatArgumentParser(argparse.ArgumentParser):
         help_text = super().format_help()
         for name, subparser in self.__subparsers:
             help_text += '\n' + '@' * 78 + '\n'
-            help_text += f'\nSubcommand "{name}" help info:\n\n'
+            help_text += f'\nSubcommand <{name}> help info:\n\n'
             help_text += subparser.format_help()
         return help_text
 
@@ -4363,14 +4713,9 @@ class GreatArgumentParser(argparse.ArgumentParser):
         pydoc.pager(self.format_help())
         self.exit(0)
 
-    def error(self, message):
-        #if re.search(r'(required: \w+|需要以下参数: \w+)', message):
-        #    self.print_help()
-        super().error(message)
-
 
 def main():
-    parser = GreatArgumentParser(
+    main_parser = GreatArgumentParser(
         prog=sys.argv[0],
         usage=AudioGod.render_usage(AudioGod.USAGE),
         description='🎻 God of audios 🎸',
@@ -4385,56 +4730,53 @@ def main():
         #exit_on_error=True,
     )
     
-    parser.add_argument(
+    main_parser.add_argument(
         '--version', '-v',
         action='version',
         version=__VERSION__,
     )
 
-    subparsers = parser.add_subparsers(
+    action_parsers = main_parser.add_subparsers(
         prog=sys.argv[0],
-        title='Subcommands',
-        description='the available subcommands show below:',
-        dest='subcmd',
+        title='Actions',
+        description='the available actions show below:',
+        dest='action',
         required=False,
-        metavar='subcommand name:   ',
-        help='subcommand statement:',
+        parser_class=GreatArgumentParser,
+        metavar='action name:   ',
+        help='action statement:',
     )
 
-    for _action in AudioGod.ACTIONS:
-        _kwargs = {
-            'description': '',
-            'help': '',
-            'usage': '',
-            'epilog': '😴 Sleeping ...',
-            'formatter_class': argparse.ArgumentDefaultsHelpFormatter,
-            #'prog': None,
-            #'aliases': (),
-            #'prefix_chars': '-',
-            #'fromfile_prefix_chars': None,
-            #'argument_default': None,
-            #'conflict_handler': 'error',
-            #'add_help': True,
-            #'allow_abbrev': True,
-            #'exit_on_error': True,
-        }
-        _kwargs.update(AudioGod.ACTIONS[_action].get('kwargs', {}))
-        if type(_kwargs['usage']) is dict:
-            _kwargs['usage'] = '\n\n' + '\n'.join([
-                f'{key}:\n{AudioGod.render_usage(value).lstrip()}'
-                for key, value in _kwargs['usage'].items()
-            ])
-        else:
-            _kwargs['usage'] = AudioGod.render_usage(_kwargs['usage'])
-        _subparser = subparsers.add_parser(_action, **_kwargs)
-        _add_arguments(
-            _subparser,
-            AudioGod.ACTIONS[_action].get('arguments', []),
+    for action in AudioGod.ACTIONS:
+        action_parser = _add_subparser(
+            mainparser=main_parser,
+            subparsers=action_parsers,
+            name=action,
+            action=action,
+            branch=None,
+            execute=_handle_execute,
         )
-        _subparser.set_defaults(execute=_handle_subcmd)
-        parser.add_subparser((_action, _subparser))
+        if 'branches' in AudioGod.ACTIONS[action]:
+            branch_parsers = action_parser.add_subparsers(
+                prog=sys.argv[0],
+                title='Branches',
+                description='the available branches show below:',
+                dest='branch',
+                required=False,
+                metavar='branch name:   ',
+                help='branch statement:',
+            )
+            for branch in AudioGod.ACTIONS[action]['branches']:
+                _ = _add_subparser(
+                    mainparser=action_parser,
+                    subparsers=branch_parsers,
+                    name=branch,
+                    action=action,
+                    branch=branch,
+                    execute=_handle_execute,
+                )
 
-    args = parser.parse_args()
+    args = main_parser.parse_args()
     # only for subparsers, error for main parser
     args.execute(args)
 
