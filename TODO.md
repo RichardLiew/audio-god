@@ -3,6 +3,12 @@ type: ignore
 抓包 Mac 酷我下载音乐的链接，然后集成到脚本中自动下载
 output_format, orgnize_type, convert_type -> type
 写入usage：remove，backup，cleanup
+render_usage逻辑梳理, 加上intent参数？清理多余的render，zhe样
+去除素有简易属性，改为统一的dict存粗
+generate scrit 时就可以不调用render直接usage了？
+ACTIONS里dict可以设置同义词吗？比如markdown和md
+对比旧文件，看看public arguments是否齐全，actiongs里的arguments是否齐
+初始化AudioGod对象的时候，对于没传入的参数，不应该赋值默认值，可以直接给个None就行，看看是否影响主逻辑
 All done.
 
 Useful Paths:

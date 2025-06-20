@@ -330,10 +330,12 @@ class AudioGod(object):
     @StringEnum.unique
     class FileFormat(StringEnum):
         NONE = 'none'
+        NOTE = 'note'
         JSON = 'json'
         MARKDOWN = 'markdown'
+        MD = 'md'
         PLIST = 'plist'
-        NOTE = 'note'
+        XML = 'xml'
 
 
     @StringEnum.unique
@@ -371,7 +373,14 @@ class AudioGod(object):
         ORIGINAL = 'ori'
         CHINESE = 'cn'
         ENGLISH = 'en'
-    
+
+
+    @StringEnum.unique
+    class ReplaceType(StringEnum):
+        NONE = 'none'
+        PARTIAL = 'partial'
+        ENTIRE = 'entire'
+
 
     AUDIO_PROPERTIES = {
         'title': (('歌曲名', 'Name'), 'string'),
@@ -500,704 +509,764 @@ class AudioGod(object):
 
 
     PUBLIC_ARGUMENTS = {
+        'document': {
+            'args': ['-s'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': './songs.note',
+                'help': '😊 document to load',
+            },
+        },
+        'ignored_file': {
+            'args': ['-i'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': './ignored.txt',
+                'help': '😊 ignored files when load',
+            },
+        },
+        'source': {
+            'args': ['-c'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '~/Music/Source/MP3',
+                'help': '😊 files or directories you want to process',
+            },
+        },
+        'root': {
+            'args': ['-d'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '~/Music/Source/MP3',
+                'help': '😊 root directory',
+            },
+        },
+        'recursive': {
+            'args': ['-r'],
+            'kwargs': {
+                'action': argparse.BooleanOptionalAction,
+                'required': False,
+                'default': True,
+                'help': '😊 if recursive when traverse the directory',
+            },
+        },
+        'extensions': {
+            'args': ['-e'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': 'mp3,aac',
+                'help': '😊 valid extensions of sources',
+            },
+        },
+        'fields': {
+            'args': ['-f'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': 'core',
+                'help': '😊 fields to process: {fields}'.format(
+                    fields='; '.join([
+                        '({}: {})'.format(key, ','.join([f for f in fields]))
+                        for key, fields in FIELDS.items()
+                    ]),
+                ),
+            },
+        },
+        'field_type': {
+            'args': ['-8'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'choices': FieldType.members(),
+                'required': False,
+                'default': FieldType.CHINESE,
+                'help': '😊 type of field name',
+            },
+        },
+        'output': {
+            'args': ['-o'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '',
+                'help': '😊 file or folder to output',
+            },
+        },
+        'executer': {
+            'args': ['-9'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '',
+                'help': '😊 the executer for convert sources',
+            },
+        },
     }
 
     COMMON_ARGUMENTS = {
-    }
-
-    _______COMMON_ARGUMENTS = {
-        'document': { 'default': './songs.note' },
-        'source': { 'default': '~/Music/Source' },
-        'recursive': { 'default': 'true' },
-        'root': { 'default': '~/Music/Source' },
-        'properties': {
-            'default': '''
-                \'{
-                    "_comment": "sources choose from command/file/directory/filename",
-                    "default": {
-                        "sources": ["command", "file"],
-                        "value": null
-                    },
-                    "genre": {
-                        "sources": ["command", "file"],
-                        "value": null
-                    }
-                }\'
-            ''',
-        },
-        'fields': { 'default': 'core' },
-        'page_number': { 'default': 1 },
-        'page_size': { 'default': 0 },
-        'sort': {
-            'default': '''
-                \'[
-                    {"_comment": ""},
-                    ["title,artist", true],
-                    ["genre", false]
-                ]\'
-            ''',
-        },
-        'filter': {
-            'default': '''
-                \'{
-                    "_options": {
-                        "_comment": "relation choose from and/or",
-                        "relation": "or"
-                    },
-                    "title,core": {
-                        "_comment": "function choose from equal/search/empty",
-                        "function": "search",
-                        "parameters": ["", true, false]
-                    }
-                }\'
-            ''',
-        },
-        'align': {
-            'default': '''
-                \'{
-                    "_comment": "align=l/c/r, valign=t/m/b",
-                    "title,artist": "l:m"
-                }\'
-            ''',
-        },
-        'numbered': { 'default': 'true' },
-        'style': {
-            'default': DisplayStyle.TABLED,
-            'choices': DisplayStyle.members(),
-        },
-        'data_format': {
-            'default': DataFormat.OUTPUTTED,
-            'choices': DataFormat.members(),
-        },
-        'field_type': {
-            'default': FieldType.ORIGINAL,
-            'choices': FieldType.members(),
-        },
-        'output': { 'default': "" },
-        'type': {
-            #'default': OrganizeType.ITUNED,
-            #'choices': OrganizeType.members(),
-        },
-        'track_initial_id': { 'default': 601 },
-        'playlist_initial_id': { 'default': 3001 },
-        'music_source_folder': { 'default': '~/Music/Source' },
-        'music_source_qmc_folder': { 'default': '~/Music/Source/QMC' },
-        'music_source_kmx_folder': { 'default': '~/Music/Source/KMX' },
-        'music_source_mp4_folder': { 'default': '~/Music/Source/MP4' },
-        'music_source_mp3_folder': { 'default': '~/Music/Source/MP3' },
-        'music_grouped_folder': { 'default': '~/Music/Grouped' },
-        'artwork_path': { 'default': '~/Music/Artworks' },
-        'itunes_media_folder': { 'default': '~/Music/iTunes/iTunes\ Media/Music' }, # type: ignore
-        'itunes_library_plist': { 'default': '~/Music/iTunes/Library.xml' }, # type: ignore
-        'itunes_version_plist': { 'default': '/System/Applications/Music.app/Contents/version.plist' },
-        'ignored_file': { 'default': './ignored.txt' },
-        'note_file': { 'default': './songs.note' },
-        'repeated_file': { 'default': './repeated.txt' },
-        'extensions': { 'default': 'mp3,aac' },
-        'filename_pattern': {
-            'default': '{delimiter}{{artist}} {div_char} {delimiter}{{title}}'.format(
-                delimiter=FilenamePatternTemplate.delimiter,
-                div_char=DIV_CHAR,
-            ),
-        },
-        'script_file': { 'default': './start.zsh' },
-
-
-
-
-
-
-
         'log_level': {
-            'default': DEFAULT_LOG_LEVEL,
-            'choices': [
-                'NOTSET',
-                'DEBUG',
-                'INFO',
-                'WARN',
-                'WARNING',
-                'ERROR',
-                'FATAL',
-                'CRITICAL',
-            ],
+            'args': ['-l'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'choices': [
+                    'NOTSET',
+                    'DEBUG',
+                    'INFO',
+                    'WARN',
+                    'WARNING',
+                    'ERROR',
+                    'FATAL',
+                    'CRITICAL',
+                ],
+                'required': False,
+                'default': DEFAULT_LOG_LEVEL,
+                'help': '😊 level of logger',
+            },
         },
-        'log_file': { 'default': DEFAULT_LOG_FILE },
+        'log_file': {
+            'args': ['-7'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': DEFAULT_LOG_FILE,
+                'help': '😊 log file of logger',
+            },
+        },
     }
-
 
     ACTIONS = {
-        'preprocess-notes': {
-            'arguments': [
-                {'document': {'default': './songs.note'}},
-                {'field_type': {'default': FieldType.CHINESE, 'choices': FieldType.members()}},
-            ],
+        'preprocess-note': {
+            'arguments': {
+                'document': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'field_type': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+            },
             'kwargs': {
-                'description': '✋ Preprocess the notes file',
-                'help': 'preprocess the notes file',
-                'usage': '''
-                    ${cmd} preprocess-notes \\
-                        --document=${document} \\
-                        --field-type=${field_type} \\
-                        --log-level=${log_level} \\
-                        --log-file=${log_file}
-                ''',
+                'description': '✋ g greprocess the note file',
+                'help': '👍 preprocess the note file',
             },
         },
         'fill-properties': {
-            'arguments': [
-                {'source': {'default': '~/Music/Source/MP3'}},
-                {'extensions': {'default': 'mp3,aac'}},
-                {'recursive': {'default': 'true', 'choices': []}},
-                {'ignored_file': {'default': './ignored.txt'}},
-                {'document': {'default': './songs.note'}},
-                {'root': {'default': '~/Music/Source/MP3'}},
-                {'properties': {
-                    'default': '''
-                        \'{
-                            "_comment": "sources choose from command/file/directory/filename",
-                            "default": {
-                                "sources": ["command", "file"],
-                                "value": null
-                            },
-                            "genre": {
-                                "sources": ["command", "file"],
-                                "value": null
-                            }
-                        }\'
-                    ''',
-                }},
-            ],
+            'arguments': {
+                'source': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'extensions': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'recursive': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'ignored_file': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'document': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'root': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'properties': {
+                    'use_public': ReplaceType.NONE,
+                    'args': ['-p'],
+                    'kwargs': {
+                        'action': 'store',
+                        'type': str,
+                        'required': False,
+                        'default': '''
+                            \'{
+                                "_comment": "sources choose from command/file/directory/filename",
+                                "default": {
+                                    "sources": ["command", "file"],
+                                    "value": null
+                                },
+                                "genre": {
+                                    "sources": ["command", "file"],
+                                    "value": null
+                                }
+                            }\'
+                        ''',
+                        'help': '😊 properties for sources',
+                    },
+                },
+            },
             'kwargs': {
                 'description': '✋ Fill properties of audios',
-                'help': 'fill properties of audios',
-                'usage': '''
-                    ${cmd} fill-properties \\
-                        --source=${source} \\
-                        --extensions=${extensions} \\
-                        --recursive=${recursive} \\
-                        --ignored-file=${ignored_file} \\
-                        --document=${document} \\
-                        --root=${root} \\
-                        --properties=${properties} \\
-                        --log-level=${log_level} \\
-                        --log-file=${log_file}
-                ''',
-                },
+                'help': '👍 fill properties of audios',
+            },
         },
         'format-properties': {
-            'arguments': [
-                'source',
-                'extensions',
-                'recursive',
-                'ignored_file',
-            ],
+            'arguments': {
+                'source': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'extensions': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'recursive': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'ignored_file': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+            },
             'kwargs': {
                 'description': '✋ Format properties of audios',
-                'help': 'format properties of audios',
-                'usage': '''
-                    ${cmd} format-properties \\
-                        --source=${source} \\
-                        --extensions=${extensions} \\
-                        --recursive=${recursive} \\
-                        --ignored-file=${ignored_file} \\
-                        --log-level=${log_level} \\
-                        --log-file=${log_file}
-                ''',
+                'help': '👍 format properties of audios',
             },
         },
         'rename-audios': {
-            'arguments': [
-                'source',
-                'extensions',
-                'recursive',
-                'ignored_file',
-                'filename_pattern',
-            ],
+            'arguments': {
+                'source': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'extensions': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'recursive': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'ignored_file': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'filename_pattern': {
+                    'use_public': ReplaceType.NONE,
+                    'args': ['-t'],
+                    'kwargs': {
+                        'action': 'store',
+                        'type': str,
+                        'required': False,
+                        'default': '{delimiter}{{artist}} {div_char} {delimiter}{{title}}'.format(
+                            delimiter=FilenamePatternTemplate.delimiter,
+                            div_char=DIV_CHAR,
+                        ),
+                        'help': '😊 filename pattern to rename sources',
+                    },
+                },
+            },
             'kwargs': {
                 'description': '✋ Rename audios',
-                'help': 'rename audios',
-                'usage': '''
-                    ${cmd} rename-audios \\
-                        --source=${source} \\
-                        --extensions=${extensions} \\
-                        --recursive=${recursive} \\
-                        --ignored-file=${ignored_file} \\
-                        --filename-pattern="${filename_pattern}" \\
-                        --log-level=${log_level} \\
-                        --log-file=${log_file}
-                ''',
+                'help': '👍 rename audios',
             },
         },
         'organize': {
+            'kwargs': {
+                'description': '✋ Organize files',
+                'help': '👍 organize files',
+            },
             'branches': {
                 'grouped': {
-                    'arguments': [
-                        {'root': {'default': {}, 'choices': {}}},
-                        {'source': {'default': {}, 'choices': {}}},
-                        {'extensions': {'default': {}, 'choices': {}}},
-                        {'recursive': {'default': {}, 'choices': {}}},
-                        {'ignored_file': {'default': {}, 'choices': {}}},
-                    ],
+                    'arguments': {
+                        'source': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'extensions': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'recursive': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'ignored_file': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'root': {
+                            'use_public': ReplaceType.PARTIAL,
+                            'kwargs': {
+                                'default': '~/Music/Output/Grouped',
+                            },
+                        },
+                    },
                     'kwargs': {
-                        'description': '✋ Organize files',
-                        'help': 'organize files',
-                        'usage': '''
-                            ${cmd} organize grouped \\
-                                --source=${source} \\
-                                --extensions=${extensions} \\
-                                --recursive=${recursive} \\
-                                --ignored-file=${ignored_file} \\
-                                --root=${root} \\
-                                --log-level=${log_level} \\
-                                --log-file=${log_file}
-                        ''',
+                        'description': '⭐ Organize grouped files',
+                        'help': '😉 organize grouped files',
                     },
                 },
                 'ituned': {
-                    'arguments': [
-                        'root',
-                        'source',
-                        'extensions',
-                        'recursive',
-                        'ignored_file',
-                    ],
+                    'arguments': {
+                        'source': {
+                            'use_public': ReplaceType.PARTIAL,
+                            'kwargs': {
+                                'default': '~/Music/Output/Grouped',
+                            },
+                        },
+                        'extensions': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'recursive': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'ignored_file': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'root': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                    },
                     'kwargs': {
-                        'description': '✋ Organize files',
-                        'help': 'organize files',
-                        'usage': '''
-                            ${cmd} organize ituned \\
-                                --source=${source} \\
-                                --extensions=${extensions} \\
-                                --recursive=${recursive} \\
-                                --ignored-file=${ignored_file} \\
-                                --root=${root} \\
-                                --log-level=${log_level} \\
-                                --log-file=${log_file}
-                        ''',
+                        'description': '⭐ Organize ituned files',
+                        'help': '😉 organize ituned files',
                     },
                 },
             },
         },
         'list-repeated': {
-            'arguments': [
-                'source',
-                'extensions',
-                'recursive',
-                'ignored_file',
-                'output',
-            ],
+            'arguments': {
+                'source': {
+                    'use_public': ReplaceType.PARTIAL,
+                    'kwargs': {
+                        'default': '~/Music/Output/Grouped',
+                    },
+                },
+                'extensions': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'recursive': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'ignored_file': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'output': {
+                    'use_public': ReplaceType.PARTIAL,
+                    'kwargs': {
+                        'default': './repeated.txt',
+                    },
+                },
+            },
             'kwargs': {
-                'description': '✋ List repeated audio files by artist and title',
-                'help': 'list repeated',
-                'usage': '''
-                    ${cmd} list-repeated \\
-                        --source=${source} \\
-                        --extensions=${extensions} \\
-                        --recursive=${recursive} \\
-                        --ignored-file=${ignored_file} \\
-                        --output=${output} \\
-                        --log-level=${log_level} \\
-                        --log-file=${log_file}
-                ''',
+                'description': '✋ List repeated audios by artist and title',
+                'help': '👍 list repeated audios',
             },
         },
         'derive-artworks': {
-            'arguments': [
-                'source',
-                'extensions',
-                'recursive',
-                'ignored_file',
-                'artwork_path',
-            ],
+            'arguments': {
+                'source': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'extensions': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'recursive': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'ignored_file': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'artwork_path': {
+                    'use_public': ReplaceType.NONE,
+                    'args': ['-k'],
+                    'kwargs': {
+                        'action': 'store',
+                        'type': str,
+                        'required': False,
+                        'default': '~/Music/Output/Artworks',
+                        'help': '😊 the path for export artworks',
+                    },
+                },
+            },
             'kwargs': {
                 'description': '✋ Derive artworks',
-                'help': 'derive artworks',
-                'usage': '''
-                    ${cmd} derive-artworks \\
-                        --source=${source} \\
-                        --extensions=${extensions} \\
-                        --recursive=${recursive} \\
-                        --ignored-file=${ignored_file} \\
-                        --artwork-path=${artwork_path} \\
-                        --log-level=${log_level} \\
-                        --log-file=${log_file}
-                ''',
+                'help': '👍 derive artworks',
             },
         },
         'display': {
-            'arguments': [
-                'source',
-                'extensions',
-                'recursive',
-                'ignored_file',
-                'fields',
-                'page_number',
-                'page_size',
-                'sort',
-                'filter',
-                'align',
-                'style',
-                'data_format',
-                'field_type',
-                'numbered',
-                'output',
-            ],
+            'arguments': {
+                'source': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'extensions': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'recursive': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'ignored_file': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'fields': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'page_number': {
+                    'use_public': ReplaceType.NONE,
+                    'args': ['-m'],
+                    'kwargs': {
+                        'action': 'store',
+                        'type': int,
+                        'required': False,
+                        'default': 1,
+                        'help': '😊 page number for display',
+                    },
+                },
+                'page_size': {
+                    'use_public': ReplaceType.NONE,
+                    'args': ['-j'],
+                    'kwargs': {
+                        'action': 'store',
+                        'type': int,
+                        'required': False,
+                        'default': 0,
+                        'help': '😊 page size for display',
+                    },
+                },
+                'sort': {
+                    'use_public': ReplaceType.NONE,
+                    'args': ['-q'],
+                    'kwargs': {
+                        'action': 'store',
+                        'type': str,
+                        'required': False,
+                        'default': '''
+                            \'[
+                                {"_comment": ""},
+                                ["title,artist", true],
+                                ["genre", false]
+                            ]\'
+                        ''',
+                        'help': '😊 sort options for display',
+                    },
+                },
+                'filter': {
+                    'use_public': ReplaceType.NONE,
+                    'args': ['-b'],
+                    'kwargs': {
+                        'action': 'store',
+                        'type': str,
+                        'required': False,
+                        'default': '''
+                            \'{
+                                "_options": {
+                                    "_comment": "relation choose from and/or",
+                                    "relation": "or"
+                                },
+                                "title,core": {
+                                    "_comment": "function choose from equal/search/empty",
+                                    "function": "search",
+                                    "parameters": ["", true, false]
+                                }
+                            }\'
+                        ''',
+                        'help': '😊 filter options for display',
+                    },
+                },
+                'align': {
+                    'use_public': ReplaceType.NONE,
+                    'args': ['-w'],
+                    'kwargs': {
+                        'action': 'store',
+                        'type': str,
+                        'required': False,
+                        'default': '''
+                            \'{
+                                "_comment": "align=l/c/r, valign=t/m/b",
+                                "title,artist": "l:m"
+                            }\'
+                        ''',
+                        'help': '😊 align options for display',
+                    },
+                },
+                'style': {
+                    'use_public': ReplaceType.NONE,
+                    'args': ['-y'],
+                    'kwargs': {
+                        'action': 'store',
+                        'type': str,
+                        'choices': DisplayStyle.members(),
+                        'required': False,
+                        'default': DisplayStyle.TABLED,
+                        'help': '😊 style for display',
+                    },
+                },
+                'data_format': {
+                    'use_public': ReplaceType.NONE,
+                    'args': ['-x'],
+                    'kwargs': {
+                        'action': 'store',
+                        'type': str,
+                        'choices': DataFormat.members(),
+                        'required': False,
+                        'default': DataFormat.OUTPUTTED,
+                        'help': '😊 data format for display',
+                    },
+                },
+                'numbered': {
+                    'use_public': ReplaceType.NONE,
+                    'args': ['-n'],
+                    'kwargs': {
+                        'action': argparse.BooleanOptionalAction,
+                        'required': False,
+                        'default': True,
+                        'help': '😊 if show number when display',
+                    },
+                },
+                'field_type': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+                'output': {
+                    'use_public': ReplaceType.ENTIRE,
+                },
+            },
             'kwargs': {
-                'description': '✋ Display audios',
-                'help': 'display audios',
-                'usage': '''
-                    ${cmd} display \\
-                        --source=${source} \\
-                        --extensions=${extensions} \\
-                        --recursive=${recursive} \\
-                        --ignored-file=${ignored_file} \\
-                        --fields=${fields} \\
-                        --page-number=${page_number} \\
-                        --page-size=${page_size} \\
-                        --sort=${sort} \\
-                        --filter=${filter} \\
-                        --align=${align} \\
-                        --style=${style} \\
-                        --data-format=${data_format} \\
-                        --field-type=${field_type} \\
-                        --numbered=${numbered} \\
-                        --output=${output} \\
-                        --log-level=${log_level} \\
-                        --log-file=${log_file}
-                ''',
+                'description': '✋ Display details of audios',
+                'help': '👍 display details of audios',
             },
         },
         'export': {
-            'arguments': [
-                'source',
-                'extensions',
-                'recursive',
-                'ignored_file',
-                'fields',
-                'field_type',
-                'output',
-                'itunes_version_plist',
-                'itunes_media_folder',
-                'track_initial_id',
-                'playlist_initial_id',
-            ],
             'kwargs': {
-                'description': '✋ Export details to file',
-                'help': 'export details to file',
-                'usage': {
-                    FileFormat.NOTE: f'''
-                        $cmd export {FileFormat.NOTE} \\
-                            --source=$source \\
-                            --extensions=$extensions \\
-                            --recursive=$recursive \\
-                            --ignored-file=$ignored_file \\
-                            --fields=$fields \\
-                            --field-type=$field_type \\
-                            --output=$output \\
-                            --log-level=$log_level \\
-                            --log-file=$log_file
-                    ''',
-                    FileFormat.PLIST: f'''
-                        $cmd export {FileFormat.PLIST} \\
-                            --source=$source \\
-                            --extensions=$extensions \\
-                            --recursive=$recursive \\
-                            --ignored-file=$ignored_file \\
-                            --fields=$fields \\
-                            --field-type=$field_type \\
-                            --itunes-version-plist=$itunes_version_plist \\
-                            --itunes-media-folder=$itunes_media_folder \\
-                            --track-initial-id=$track_initial_id \\
-                            --playlist-initial-id=$playlist_initial_id \\
-                            --output=$output \\
-                            --log-level=$log_level \\
-                            --log-file=$log_file
-                    ''',
+                'description': '✋ Export audio details to file',
+                'help': '👍 export audio details to file',
+            },
+            'branches': {
+                FileFormat.NOTE: {
+                    'arguments': {
+                        'source': {
+                            'use_public': ReplaceType.PARTIAL,
+                            'kwargs': {
+                                'default': '~/Music/Output/Grouped',
+                            },
+                        },
+                        'extensions': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'recursive': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'ignored_file': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'fields': {
+                            'use_public': ReplaceType.PARTIAL,
+                            'kwargs': {
+                                'default': 'note',
+                            },
+                        },
+                        'field_type': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'output': {
+                            'use_public': ReplaceType.PARTIAL,
+                            'kwargs': {
+                                'default': './songs.note',
+                            },
+                        },
+                    },
+                    'kwargs': {
+                        'description': '⭐ Export audio details to note file',
+                        'help': '😉 export audio details to note file',
+                    },
                 },
+                FileFormat.PLIST: {
+                    'arguments': {
+                        'source': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'extensions': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'recursive': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'ignored_file': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'fields': {
+                            'use_public': ReplaceType.PARTIAL,
+                            'kwargs': {
+                                'default': 'ituned',
+                            },
+                        },
+                        'field_type': {
+                            'use_public': ReplaceType.PARTIAL,
+                            'kwargs': {
+                                'default': FieldType.ENGLISH,
+                            },
+                        },
+                        'output': {
+                            'use_public': ReplaceType.PARTIAL,
+                            'kwargs': {
+                                'default': '~/Music/iTunes/Library.xml',
+                            },
+                        },
+                        'itunes_version_plist': {
+                            'use_public': ReplaceType.NONE,
+                            'args': ['-1'],
+                            'kwargs': {
+                                'action': 'store',
+                                'type': str,
+                                'required': False,
+                                'default': '/System/Applications/Music.app/Contents/version.plist',
+                                'help': '😊 the version plist file of itunes or apple music',
+                            },
+                        },
+                        'itunes_media_folder': {
+                            'use_public': ReplaceType.NONE,
+                            'args': ['-2'],
+                            'kwargs': {
+                                'action': 'store',
+                                'type': str,
+                                'required': False,
+                                'default': '~/Music/iTunes/iTunes\ Media/Music', # type: ignore
+                                'help': '😊 the media folder of itunes or apple music',
+                            },
+                        },
+                        'track_initial_id': {
+                            'use_public': ReplaceType.NONE,
+                            'args': ['-3'],
+                            'kwargs': {
+                                'action': 'store',
+                                'type': int,
+                                'required': False,
+                                'default': 601,
+                                'help': '😊 initial id of tracks for itunes or apple music plist file',
+                            },
+                        },
+                        'playlist_initial_id': {
+                            'use_public': ReplaceType.NONE,
+                            'args': ['-4'],
+                            'kwargs': {
+                                'action': 'store',
+                                'type': int,
+                                'required': False,
+                                'default': 3001,
+                                'help': '😊 initial id of playlists for itunes or apple music plist file',
+                            },
+                        },
+                    },
+                    'kwargs': {
+                        'description': '⭐ Export audio details to plist file',
+                        'help': '😉 export audio details to plist file',
+                    },
+                },
+                FileFormat.JSON: {},
+                FileFormat.MARKDOWN: {},
+                FileFormat.MD: {},
+                FileFormat.XML: {},
             },
         },
         'convert': {
-            'arguments': {
-                'source': {},
-                'extensions': {},
-                'recursive': {
-                    'use_public': False,
-                    'args': ['-r'],
-                    'kwargs': {
-                        'action': argparse.BooleanOptionalAction,
-                        'default': True,
-                        'help': 'the files or directories you want to process',
-                    },
-                },
-                'ignored_file': {},
-                'executer': {},
-            },
             'kwargs': {
                 'description': '✋ Convert media',
-                'help': 'convert media',
-                'usage': {
-                    'qmc_to_mp3': '''
-                        ${cmd} convert \\
-                            --source=${music_source_qmc_folder} \\
-                            --extensions=${extensions} \\
-                            --recursive=${recursive} \\
-                            --ignored-file=${ignored_file} \\
-                            --executer=${executer} \\
-                            --output=${music_source_mp3_folder} \\
-                            --log-level=${log_level} \\
-                            --log-file=${log_file}
-                    ''',
+                'help': '👍 convert media',
+            },
+            'branches': {
+                'qmc-to-mp3': {
+                    'arguments': {
+                        'source': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'extensions': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'recursive': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'ignored_file': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                        'executer': {
+                            'use_public': ReplaceType.PARTIAL,
+                            'kwargs': {
+                                'default': './executers/qmc-to-mp3/decoder',
+                            },
+                        },
+                    },
+                    'kwargs': {
+                        'description': '⭐ Convert qmc to mp3',
+                        'help': '😉 convert qmc to mp3',
+                    },
                 },
+                'kmx_to_mp4': {},
+                'mp4_to_mp3': {},
+                'note_to_markdown': {},
+                'note_to_md': {},
+                'markdown_to_note': {},
+                'md_to_note': {},
             },
         },
         'generate-script': {
-            'arguments': [
-                'output',
-            ],
+            'arguments': {
+                'output': {
+                    'use_public': ReplaceType.PARTIAL,
+                    'kwargs': {
+                        'default': './start.zsh',
+                    },
+                },
+            },
             'kwargs': {
-                'description': '✋ Generate script',
-                'help': 'generate script',
-                'usage': '''
-                    ${cmd} generate-script \\
-                        --output=${output} \\
-                        --log-level=${log_level} \\
-                        --log-file=${log_file}
-                ''',
+                'description': '✋ Generate a grouped bash/zsh script',
+                'help': '👍 generate a grouped bash/zsh script',
             },
         },
         'operate': {
             'kwargs': {
-                'description': '',
-                'help': '',
-                'usage': '',
+                'description': '✋ Some common operations',
+                'help': '👍 some common operations',
             },
             'branches': {
                 'backup': {
                     'arguments': {
                         'source': {
-                            'use_public': False,
-                            'args': ['--source', '-c'],
+                            'use_public': ReplaceType.PARTIAL,
                             'kwargs': {
-                                'action': 'store',
-                                'type': str,
                                 'required': True,
-                                'help': 'the files or directories you want to process',
+                                'default': '',
                             },
                         },
                         'ignored_file': {
-                            'args': ['--ignored-file', '-i'],
-                            'kwargs': {
-                                'action': 'store',
-                                'type': str,
-                                'required': False,
-                                'default': './ignored.txt',
-                                'help': 'ignored files',
-                            },
+                            'use_public': ReplaceType.ENTIRE,
                         },
                     },
                     'kwargs': {
-                        'description': '✋ Backup files, directories and so on',
-                        'help': 'Backup files, directories and so on',
-                        'usage': '''
-                            ${cmd} ${action} ${branch} \\
-                                --log-level=${log_level} \\
-                                --log-file=${log_file}
-                        ''',
+                        'description': '⭐ Backup files, directories and so on',
+                        'help': '😉 backup files, directories and so on',
                     },
                 },
                 'remove': {
-                    'arguments': [
-                    ],
+                    'arguments': {
+                        'source': {
+                            'use_public': ReplaceType.PARTIAL,
+                            'kwargs': {
+                                'required': True,
+                                'default': '',
+                            },
+                        },
+                        'ignored_file': {
+                            'use_public': ReplaceType.ENTIRE,
+                        },
+                    },
                     'kwargs': {
-                        'description': '✋ Remove files, directories and so on',
-                        'help': 'remove files, directories and so on',
-                        'usage': '''
-                            ${cmd} operate remove \\
-                                --log-level=${log_level} \\
-                                --log-file=${log_file}
-                        ''',
+                        'description': '⭐ Remove files, directories and so on',
+                        'help': '😉 remove files, directories and so on',
                     },
                 },
                 'cleanup': {
-                    'arguments': [],
+                    'arguments': {},
                     'kwargs': {
-                        'description': '✋ Clean up directories, backups and so on',
-                        'help': 'clean up directories, backups and so on',
-                        'usage': '''
-                            ${cmd} operate cleanup \\
-                                --log-level=${log_level} \\
-                                --log-file=${log_file}
-                        ''',
+                        'description': '⭐ Cleanup directories, backups and so on',
+                        'help': '😉 cleanup directories, backups and so on',
                     },
                 },
             },
         },
     }
-
-    @staticmethod
-    def replace_underline(key):
-        return key.lower().replace('_', '-')
-
-    @staticmethod
-    def replace_hyphen(key):
-        return key.lower().replace('-', '_')
-
-    @classmethod
-    def rewrite_key(cls, key):
-        units = key.lower().split('.')
-        units[-1] = cls.replace_hyphen(units[-1])
-        for i in range(len(units[:-1])):
-            units[i] = cls.replace_underline(units[i])
-        return '.'.join(units)
-
-    @classmethod
-    def repack_dict(cls, dict_, rewrite_key=rewrite_key):
-        for key in dict_:
-            new_key = rewrite_key(key)
-            if new_key == key:
-                continue
-            value = dict_.pop(key)
-            dict_[new_key] = value
-        return dict_
-
-    @classmethod
-    def rewrite_actions(cls):
-        cls.repack_dict(cls.PUBLIC_ARGUMENTS, cls.replace_hyphen)
-        cls.repack_dict(cls.COMMON_ARGUMENTS, cls.replace_hyphen)
-        cls.repack_dict(cls.ACTIONS, cls.replace_underline)
-        for action in cls.ACTIONS:
-            if 'arguments' in cls.ACTIONS[action]:
-                cls.repack_dict(cls.ACTIONS[action]['arguments'], cls.replace_hyphen)
-            if 'branches' in cls.ACTIONS[action]:
-                cls.repack_dict(cls.ACTIONS[action]['branches'], cls.replace_underline)
-                for branch in cls.ACTIONS[action]['branches']:
-                    if 'arguments' in cls.ACTIONS[action]['branches'][branch]:
-                        cls.repack_dict(
-                            cls.ACTIONS[action]['branches'][branch]['arguments'],
-                            cls.replace_hyphen,
-                        )
-
-        def _process_unit(action, branch, /, render_kwargs={}):
-            params = cls.ACTIONS[action]['branches'][branch] if branch else cls.ACTIONS[action]
-            if 'arguments' in params:
-                params['arguments'].update(copy.deepcopy(cls.COMMON_ARGUMENTS))
-                for argument in params['arguments']:
-                    use_public = params['arguments'][argument].pop('use_public', False)
-                    if use_public:
-                        params['arguments'][argument] = copy.deepcopy(cls.PUBLIC_ARGUMENTS[argument])
-                    params['arguments'][argument]['args'].insert(
-                        0, f'--{cls.replace_underline(argument)}',
-                    )
-                    params['arguments'][argument]['kwargs']['dest'] = argument
-                    
-                    type_ = params['arguments'][argument]['kwargs'].get('type', None)
-                    action_ = params['arguments'][argument]['kwargs'].get('action', 'store')
-                    if 'default' not in params['arguments'][argument]['kwargs']:
-                        default = None
-                        match type_:
-                            case str():
-                                default = ''
-                            case int():
-                                default = 0
-                        if default is None and action_ == argparse.BooleanOptionalAction:
-                            default = True
-                        params['arguments'][argument]['kwargs']['default'] = default
-            if 'kwargs' in params:
-                if 'usage' not in params['kwargs']:
-                    params['kwargs']['usage'] = f'''
-                        $cmd {action} {branch} \\
-                    ''' if branch else f'''
-                        $cmd {action} \\
-                    '''
-                    for argument in params['arguments']:
-                        label = params['arguments'][argument]['args'][0]
-                        action_ = params['arguments'][argument]['kwargs'].get('action', 'store')
-                        required = params['arguments'][argument]['kwargs'].get('required', False)
-                        default = '<INPUT>' if required else params['arguments'][argument]['kwargs']['default']
-                        if action_ == argparse.BooleanOptionalAction:
-                            no_label = label.replace('--', '--no-')
-                            params['kwargs']['usage'] += f'''
-                                {label if default else no_label} \\
-                            '''
-                        else:
-                            params['kwargs']['usage'] += f'''
-                                {label}={default} \\
-                            '''
-                    params['kwargs']['usage'] = params['kwargs']['usage'].rstrip().rstrip('\\').rstrip()
-                params['kwargs']['usage'] = cls.render_usage(
-                    params['kwargs']['usage'],
-                    kwargs=render_kwargs,
-                )
-
-        for action in cls.ACTIONS:
-            _process_unit(action, None)
-            if 'branches' in cls.ACTIONS[action]:
-                for branch in cls.ACTIONS[action]['branches']:
-                    _process_unit(action, branch)
-
-    #@classmethod
-    #def nntegrate_default_arguments(cls, action=None, branch=None):
-    #    ret = copy.deepcopy(cls.PUBLIC_ARGUMENTS) | copy.deepcopy(cls.COMMON_ARGUMENTS)
-    #    prefix, arguments = '', {}
-    #    if action:
-    #        if branch:
-    #            prefix = f'{action}.{branch}.'
-    #            arguments = cls.ACTIONS[action]['branches'][branch].get('arguments', {})
-    #        else:
-    #            prefix = f'{action}.'
-    #            arguments = cls.ACTIONS[action].get('arguments', {})
-    #    for argument, params in arguments.items():
-    #        if prefix:
-    #            arguments[f'{prefix}{argument}'] = params
-    #    return ret | copy.deepcopy(arguments)
-    
-    #@classmethod
-    #def integrate_plain_defaults(cls, action=None, branch=None):
-    #    ret, arguments = {}, cls.integrate_default_arguments(action, branch)
-    #    for argument, params in arguments.items():
-    #        if 'default' in params['kwargs']:
-    #            ret[argument] = params['kwargs']['default']
-    #    return ret
-    
-    @classmethod
-    def integrate_default_arguments(cls, action=None, branch=None, with_customized=False):
-        original_defaults = {
-            argument: params['default']
-            for argument, params in (
-                copy.deepcopy(cls.PUBLIC_ARGUMENTS) | copy.deepcopy(cls.COMMON_ARGUMENTS)
-            ).items()
-        }
-
-        customized_defaults = {}
-        for _action, action_params in cls.ACTIONS.items():
-            if 'arguments' in action_params:
-                for argument, argument_params in action_params['arguments']:
-                    key = f'{_action}.{argument}'
-                    customized_defaults[key] = argument_params['default']
-            if 'branches' in action_params:
-                for _branch, branch_params in action_params['branches'].items():
-                    if 'arguments' in branch_params:
-                        for argument, argument_params in branch_params['arguments']:
-                            key = f'{_action}.{_branch}.{argument}'
-                            customized_defaults[key] = argument_params['default']
-
-        defaults = copy.deepcopy(original_defaults)
-        prefix = ''
-        if action:
-            if branch:
-                prefix = f'{action}.{branch}.'
-            else:
-                prefix = f'{action}.'
-        if prefix:
-            for argument, default in copy.deepcopy(customized_defaults).items():
-                if argument.startswith(prefix):
-                    if prefix.count('.') == argument.count('.'):
-                        defaults[argument.replace(prefix, '')] = default
-        if with_customized:
-            defaults = defaults | copy.deepcopy(customized_defaults)
-
-        return defaults
-
+ 
 
     USAGE = '''
 All fields:
@@ -1253,20 +1322,20 @@ Attention:
 General steps:
 
 Ready:
-    Step.1: Run <clean-up> subcommand to clear repeats, backups, grouped folder, and iTunes related;
+    Step.1: Run <operate cleanup> subcommand to clear repeats, backups, grouped folder, and iTunes related;
     Step.2: Download songs, and make sure that file named with "artist${ori_div_char}title";
     Step.3: Add detail of songs to notes, then grouped.
 
 Process Method 1:
-    Step.1: Preprocess notes, until note file not changed, with subcommand <preprocess-notes>;
+    Step.1: Preprocess note, until note file not changed, with subcommand <preprocess-note>;
     Step.2: Fill properties, with subcommand <fill-properties>;
     Step.3: Format properties, with subcommand <format-properties>;
     Step.4: Rename audios, with subcommand <rename-audios>;
-    Step.5: Organize grouped files, with subcommand <organize>;
-    Step.6: Export note file, with subcommand <export>;
+    Step.5: Organize grouped files, with subcommand <organize grouped>;
+    Step.6: Export note file, with subcommand <export note>;
     Step.7: List repeated audios of grouped, with subcommand <list-repeated>;
-    Step.8: Organize ituned files, with subcommand <organize>;
-    Step.9: Export plist file, with subcommand <export>.
+    Step.8: Organize ituned files, with subcommand <organize ituned>;
+    Step.9: Export plist file, with subcommand <export plist>.
 
 Process Method 2:
     Step.1: Put audios to source folder (e.g. "${music_source_mp3_folder}");
@@ -1899,6 +1968,158 @@ General commands:
                 + self.matched_sources \
                 + self.notmatched_sources,
         ))
+
+    @staticmethod
+    def replace_underline(key):
+        return key.lower().replace('_', '-')
+
+    @staticmethod
+    def replace_hyphen(key):
+        return key.lower().replace('-', '_')
+
+    @classmethod
+    def rewrite_key(cls, key):
+        units = key.lower().split('.')
+        units[-1] = cls.replace_hyphen(units[-1])
+        for i in range(len(units[:-1])):
+            units[i] = cls.replace_underline(units[i])
+        return '.'.join(units)
+
+    @classmethod
+    def repack_dict(cls, dict_, rewrite_key=rewrite_key):
+        for key in dict_:
+            new_key = rewrite_key(key)
+            if new_key == key:
+                continue
+            value = dict_.pop(key)
+            dict_[new_key] = value
+        return dict_
+
+    @classmethod
+    def rewrite_actions(cls):
+        cls.repack_dict(cls.PUBLIC_ARGUMENTS, cls.replace_hyphen)
+        cls.repack_dict(cls.COMMON_ARGUMENTS, cls.replace_hyphen)
+        cls.repack_dict(cls.ACTIONS, cls.replace_underline)
+        for action in cls.ACTIONS:
+            if 'arguments' in cls.ACTIONS[action]:
+                cls.repack_dict(cls.ACTIONS[action]['arguments'], cls.replace_hyphen)
+            if 'branches' in cls.ACTIONS[action]:
+                cls.repack_dict(cls.ACTIONS[action]['branches'], cls.replace_underline)
+                for branch in cls.ACTIONS[action]['branches']:
+                    if 'arguments' in cls.ACTIONS[action]['branches'][branch]:
+                        cls.repack_dict(
+                            cls.ACTIONS[action]['branches'][branch]['arguments'],
+                            cls.replace_hyphen,
+                        )
+
+        def _process_unit(action, branch, /, render_kwargs={}):
+            params = cls.ACTIONS[action]['branches'][branch] if branch else cls.ACTIONS[action]
+            if 'arguments' in params:
+                params['arguments'].update(copy.deepcopy(cls.COMMON_ARGUMENTS))
+                for argument in params['arguments']:
+                    use_public = params['arguments'][argument].pop('use_public', cls.ReplaceType.NONE)
+                    public_argument = copy.deepcopy(cls.PUBLIC_ARGUMENTS[argument])
+                    match use_public:
+                        case cls.ReplaceType.NONE:
+                            pass
+                        case cls.ReplaceType.ENTIRE:
+                            params['arguments'][argument] = public_argument
+                        case cls.ReplaceType.PARTIAL:
+                            if 'args' not in params['arguments'][argument]:
+                                params['arguments'][argument]['args'] = public_argument['args']
+                            if 'kwargs' not in params['arguments'][argument]:
+                                params['arguments'][argument]['kwargs'] = public_argument['kwargs']
+                            else:
+                                params['arguments'][argument]['kwargs'] = public_argument['kwargs'] | \
+                                                                          params['arguments'][argument]['kwargs']
+                    params['arguments'][argument]['args'].insert(
+                        0, f'--{cls.replace_underline(argument)}',
+                    )
+                    params['arguments'][argument]['kwargs']['dest'] = argument
+                    
+                    type_ = params['arguments'][argument]['kwargs'].get('type', None)
+                    action_ = params['arguments'][argument]['kwargs'].get('action', 'store')
+                    if 'default' not in params['arguments'][argument]['kwargs']:
+                        default = None
+                        match type_:
+                            case str():
+                                default = ''
+                            case int():
+                                default = 0
+                        if default is None and action_ == argparse.BooleanOptionalAction:
+                            default = True
+                        params['arguments'][argument]['kwargs']['default'] = default
+            if 'kwargs' in params:
+                if 'usage' not in params['kwargs']:
+                    params['kwargs']['usage'] = f'''
+                        $cmd {action} {branch} \\
+                    ''' if branch else f'''
+                        $cmd {action} \\
+                    '''
+                    for argument in params['arguments']:
+                        label = params['arguments'][argument]['args'][0]
+                        action_ = params['arguments'][argument]['kwargs'].get('action', 'store')
+                        required = params['arguments'][argument]['kwargs'].get('required', False)
+                        default = '<INPUT>' if required else params['arguments'][argument]['kwargs']['default']
+                        if action_ == argparse.BooleanOptionalAction:
+                            no_label = label.replace('--', '--no-')
+                            params['kwargs']['usage'] += f'''
+                                {label if default else no_label} \\
+                            '''
+                        else:
+                            params['kwargs']['usage'] += f'''
+                                {label}={default} \\
+                            '''
+                    params['kwargs']['usage'] = params['kwargs']['usage'].rstrip().rstrip('\\').rstrip()
+                params['kwargs']['usage'] = cls.render_usage(
+                    params['kwargs']['usage'],
+                    kwargs=render_kwargs,
+                )
+
+        for action in cls.ACTIONS:
+            _process_unit(action, None)
+            if 'branches' in cls.ACTIONS[action]:
+                for branch in cls.ACTIONS[action]['branches']:
+                    _process_unit(action, branch)
+
+    @classmethod
+    def integrate_default_arguments(cls, action=None, branch=None, with_customized=False):
+        original_defaults = {
+            argument: params['default']
+            for argument, params in (
+                copy.deepcopy(cls.PUBLIC_ARGUMENTS) | copy.deepcopy(cls.COMMON_ARGUMENTS)
+            ).items()
+        }
+
+        customized_defaults = {}
+        for _action, action_params in cls.ACTIONS.items():
+            if 'arguments' in action_params:
+                for argument, argument_params in action_params['arguments']:
+                    key = f'{_action}.{argument}'
+                    customized_defaults[key] = argument_params['default']
+            if 'branches' in action_params:
+                for _branch, branch_params in action_params['branches'].items():
+                    if 'arguments' in branch_params:
+                        for argument, argument_params in branch_params['arguments']:
+                            key = f'{_action}.{_branch}.{argument}'
+                            customized_defaults[key] = argument_params['default']
+
+        defaults = copy.deepcopy(original_defaults)
+        prefix = ''
+        if action:
+            if branch:
+                prefix = f'{action}.{branch}.'
+            else:
+                prefix = f'{action}.'
+        if prefix:
+            for argument, default in copy.deepcopy(customized_defaults).items():
+                if argument.startswith(prefix):
+                    if prefix.count('.') == argument.count('.'):
+                        defaults[argument.replace(prefix, '')] = default
+        if with_customized:
+            defaults = defaults | copy.deepcopy(customized_defaults)
+
+        return defaults
 
     @staticmethod
     def load_json(content, default=None) -> list | dict | None:
@@ -3831,7 +4052,7 @@ General commands:
         }
 
     @log_decorator
-    def preprocess_notes(self):
+    def preprocess_note(self):
         self.output_format = self.FileFormat.NOTE
         self.__analysis_note()
         self.__sort_summaries()
@@ -4126,7 +4347,7 @@ General commands:
         content += 'set -e\n\n'
         content += '#' * 78 + '\n'
         steps = [
-            'preprocess-notes',
+            'preprocess-note',
             'fill-properties',
             'format-properties',
             'rename-audios',
@@ -4138,23 +4359,13 @@ General commands:
         ]
         for i, step in enumerate(steps):
             if isinstance(step, tuple):
-                usage = self.render_usage(
-                    usage=self.ACTIONS[step[0]]['branches'][step[1]]['kwargs']['usage'],
-                    action=step[0],
-                    branch=step[1],
-                )
+                usage=self.ACTIONS[step[0]]['branches'][step[1]]['kwargs']['usage']
             else:
-                usage = self.render_usage(
-                    usage=self.ACTIONS[step]['kwargs']['usage'],
-                    action=step,
-                    branch=None,
-                )
+                usage=self.ACTIONS[step]['kwargs']['usage']
             content += f'\n{usage.strip()}'
             if i < len(steps) - 1:
                 content += '\n'
-        self.__handle_output(
-            self.render_usage(content.rstrip(' \\') + '\n').lstrip(),
-        )
+        self.__handle_output(content)
         self.chmod(self.output, 0o755)
 
     @log_decorator
@@ -4318,6 +4529,10 @@ General commands:
          ) | kwargs)
 
 ################################################################################
+#                                                                              #
+#                                 PRE PROCESS                                  #
+#                                                                              #
+################################################################################
 
 AudioGod.rewrite_actions()
 
@@ -4326,366 +4541,6 @@ AudioGod.rewrite_actions()
 #                                MAIN FUNCTION                                 #
 #                                                                              #
 ################################################################################
-
-def _add_arguments(parser, arguments) -> None:
-    arguments = arguments | AudioGod.COMMON_ARGUMENTS
-    for argument, params in arguments:
-        use_public = params.get('use_public', False)
-        if use_public:
-            params = AudioGod.PUBLIC_ARGUMENTS[argument]
-        parser.add_argument(*params['args'], **params['kwargs'])
-    return
-
-
-
-
-
-
-
-
-
-    parser.add_argument(
-        '--log-level', '-l',
-        type=str,
-        choices=AudioGod.ARGUMENTS_CHOICES['log_level'],
-        required=False,
-        default=AudioGod.ARGUMENTS_DEFAULTS['log_level'],
-        dest='log_level',
-        help='level of logger',
-    )
-
-    parser.add_argument(
-        '--log-file', '-7',
-        type=str,
-        required=False,
-        default=AudioGod.ARGUMENTS_DEFAULTS['log_file'],
-        dest='log_file',
-        help='log file of logger',
-    )
-
-    if 'document' in arguments:
-        parser.add_argument(
-            '--document', '-s',
-            type=str,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['document'],
-            dest='document',
-            help='source file to match',
-        )
-    
-    if 'ignored_file' in arguments:
-        parser.add_argument(
-            '--ignored-file', '-i',
-            type=str,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['ignored_file'],
-            dest='ignored_file',
-            help='ignored files',
-        )
-    
-    if 'source' in arguments:
-        parser.add_argument(
-            '--source', '-c',
-            type=str,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['source'],
-            dest='source',
-            help='audio file or directory you want to process',
-        )
-    
-    if 'root' in arguments:
-        parser.add_argument(
-            '--root', '-d',
-            type=str,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['root'],
-            dest='root',
-            help='root directory',
-        )
-    
-    if 'properties' in arguments:
-        parser.add_argument(
-            '--properties', '-p',
-            type=str,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['properties'],
-            dest='properties',
-            help='properties for audios',
-        )
-    
-    if 'recursive' in arguments:
-        parser.add_argument(
-            '--recursive', '-r',
-            type=AudioGod.BooleanType,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['recursive'],
-            dest='recursive',
-            help='if recursive when traverse the audios directory',
-        )
-    
-    if 'extensions' in arguments:
-        parser.add_argument(
-            '--extensions', '-e',
-            type=str,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['extensions'],
-            dest='extensions',
-            help='valid extensions of audios',
-        )
-    
-    if 'fields' in arguments:
-        parser.add_argument(
-            '--fields', '-f',
-            type=str,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['fields'],
-            dest='fields',
-            help='fields of audio to process: {fields}'.format(
-                fields='; '.join([
-                    '({}: {})'.format(key, ','.join([f for f in fields]))
-                    for key, fields in AudioGod.FIELDS.items()
-                ]),
-            ),
-        )
-    
-    if 'page_number' in arguments:
-        parser.add_argument(
-            '--page-number', '-m',
-            type=int,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['page_number'],
-            dest='page_number',
-            help='page number for audios display',
-        )
-    
-    if 'page_size' in arguments:
-        parser.add_argument(
-            '--page-size', '-j',
-            type=int,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['page_size'],
-            dest='page_size',
-            help='page size for audios display',
-        )
-    
-    if 'sort' in arguments:
-        parser.add_argument(
-            '--sort', '-q',
-            type=str,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['sort'],
-            dest='sort',
-            help='sort options for audios display',
-        )
-    
-    if 'filter' in arguments:
-        parser.add_argument(
-            '--filter', '-b',
-            type=str,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['filter'],
-            dest='filter',
-            help='filter options for audios display',
-        )
-    
-    if 'align' in arguments:
-        parser.add_argument(
-            '--align', '-w',
-            type=str,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['align'],
-            dest='align',
-            help='align options for audios display',
-        )
-    
-    if 'numbered' in arguments:
-        parser.add_argument(
-            '--numbered', '-n',
-            type=Boolean,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['numbered'],
-            dest='numbered',
-            help='if show number for audios display',
-        )
-    
-    if 'style' in arguments:
-        parser.add_argument(
-            '--style', '-y',
-            type=str,
-            choices=AudioGod.ARGUMENTS_CHOICES['style'],
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['style'],
-            dest='style',
-            help='display style for audios',
-        )
-    
-    if 'data_format' in arguments:
-        parser.add_argument(
-            '--data-format', '-x',
-            type=str,
-            choices=AudioGod.ARGUMENTS_CHOICES['data_format'],
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['data_format'],
-            dest='data_format',
-            help='the data format for audios to display',
-        )
-    
-    if 'field_type' in arguments:
-        parser.add_argument(
-            '--field-type', '-8',
-            type=str,
-            choices=AudioGod.ARGUMENTS_CHOICES['field_type'],
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['field_type'],
-            dest='field_type',
-            help='type of field name',
-        )
-    
-    if 'output_format' in arguments:
-        parser.add_argument(
-            '--output-format', '-9',
-            type=str,
-            choices=AudioGod.ARGUMENTS_CHOICES['output_format'],
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['output_format'],
-            dest='output_format',
-            help='format of output content',
-        )
-    
-    if 'output' in arguments:
-        parser.add_argument(
-            '--output', '-o',
-            type=str,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['output'],
-            dest='output',
-            help='output file or folder',
-        )
-    
-    if 'artwork_path' in arguments:
-        parser.add_argument(
-            '--artwork-path', '-k',
-            type=str,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['artwork_path'],
-            dest='artwork_path',
-            help='path to export artworks',
-        )
-    
-    if 'filename_pattern' in arguments:
-        parser.add_argument(
-            '--filename-pattern', '-t',
-            type=str,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['filename_pattern'],
-            dest='filename_pattern',
-            help='filename pattern to rename audios',
-        )
-    
-    if 'type' in arguments:
-        parser.add_argument(
-            '--type', '-g',
-            type=str,
-            choices=AudioGod.ARGUMENTS_CHOICES['type'],
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['type'],
-            dest='type',
-            help='types',
-        )
-    
-    if 'itunes_version_plist' in arguments:
-        parser.add_argument(
-            '--itunes-version-plist', '-1',
-            type=str,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['itunes_version_plist'],
-            dest='itunes_version_plist',
-            help='the version plist file of itunes or apple music',
-        )
-    
-    if 'itunes_media_folder' in arguments:
-        parser.add_argument(
-            '--itunes-media-folder', '-2',
-            type=str,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['itunes_media_folder'],
-            dest='itunes_media_folder',
-            help='the media folder of itunes or apple music',
-        )
-    
-    if 'track_initial_id' in arguments:
-        parser.add_argument(
-            '--track-initial-id', '-3',
-            type=int,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['track_initial_id'],
-            dest='track_initial_id',
-            help='initial id of tracks for itunes or apple music plist file',
-        )
-    
-    if 'playlist_initial_id' in arguments:
-        parser.add_argument(
-            '--playlist-initial-id', '-4',
-            type=int,
-            required=False,
-            default=AudioGod.ARGUMENTS_DEFAULTS['playlist_initial_id'],
-            dest='playlist_initial_id',
-            help='initial id of playlists for itunes or apple music plist file',
-        )
-
-
-def _handle_execute(args) -> None:
-    action, branch = args.action, None
-    if hasattr(args, 'branch'):
-        branch = args.branch
-    
-    arguments = AudioGod.integrate_default_arguments(
-        action=action,
-        branch=branch,
-        with_customized=False,
-    )
-    for argument in arguments:
-        if hasattr(args, argument):
-            arguments[argument] = getattr(args, argument)
-
-    func = AudioGod.replace_hyphen(f'{action}__{branch}' if branch else action)
-    getattr(AudioGod(action=action, branch=branch, **arguments), func)()
-
-
-def _add_subparser(mainparser, subparsers, name, action, branch=None, execute=None):
-    params = AudioGod.ACTIONS[action]
-    if branch and 'branches' in params:
-        params = params['branches'][branch]
-    arguments = params.get('arguments', None)
-    kwargs = params['kwargs']
-    kwargs = {
-        'description': '',
-        'help': '',
-        'epilog': '😴 Sleeping ...',
-        'formatter_class': argparse.ArgumentDefaultsHelpFormatter,
-        #'usage': '',
-        #'prog': None,
-        #'aliases': (),
-        #'prefix_chars': '-',
-        #'fromfile_prefix_chars': None,
-        #'argument_default': None,
-        #'conflict_handler': 'error',
-        #'add_help': True,
-        #'allow_abbrev': True,
-        #'exit_on_error': True,
-    } | kwargs
-    if 'usage' in kwargs:
-        kwargs['usage'] = AudioGod.render_usage(kwargs['usage'], action, branch)
-    subparser = subparsers.add_parser(name, **kwargs)
-
-    if arguments is not None:
-        _add_arguments(subparser, arguments)
-    if execute is not None:
-        subparser.set_defaults(execute=execute)
-    mainparser.add_subparser((name, subparser))
-
-    return subparser
-
 
 class GreatArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
@@ -4705,13 +4560,66 @@ class GreatArgumentParser(argparse.ArgumentParser):
         help_text = super().format_help()
         for name, subparser in self.__subparsers:
             help_text += '\n' + '@' * 78 + '\n'
-            help_text += f'\nSubcommand <{name}> help info:\n\n'
+            help_text += f'\n🔥 Subcommand <{name}> help info:\n\n'
             help_text += subparser.format_help()
         return help_text
 
     def print_help(self):
         pydoc.pager(self.format_help())
         self.exit(0)
+
+
+def _add_arguments(parser, arguments) -> None:
+    for _, params in arguments:
+        parser.add_argument(*params['args'], **params['kwargs'])
+
+def _handle_execute(args) -> None:
+    action, branch = args.action, None
+    if hasattr(args, 'branch'):
+        branch = args.branch
+    
+    arguments = AudioGod.integrate_default_arguments(
+        action=action,
+        branch=branch,
+        with_customized=False,
+    )
+    for argument in arguments:
+        if hasattr(args, argument):
+            arguments[argument] = getattr(args, argument)
+
+    func = AudioGod.replace_hyphen(f'{action}__{branch}' if branch else action)
+    getattr(AudioGod(action=action, branch=branch, **arguments), func)()
+
+def _add_subparser(mainparser, subparsers, name, action, branch=None, execute=None):
+    params = AudioGod.ACTIONS[action]
+    if branch and 'branches' in params:
+        params = params['branches'][branch]
+    arguments = params.get('arguments', None)
+    kwargs = {
+        'description': '',
+        'help': '',
+        'epilog': '😴 Sleeping ...',
+        'formatter_class': argparse.ArgumentDefaultsHelpFormatter,
+        #'usage': '',
+        #'prog': None,
+        #'aliases': (),
+        #'prefix_chars': '-',
+        #'fromfile_prefix_chars': None,
+        #'argument_default': None,
+        #'conflict_handler': 'error',
+        #'add_help': True,
+        #'allow_abbrev': True,
+        #'exit_on_error': True,
+    } | params['kwargs']
+    subparser = subparsers.add_parser(name, **kwargs)
+
+    if arguments:
+        _add_arguments(subparser, arguments)
+    if execute is not None:
+        subparser.set_defaults(execute=execute)
+    mainparser.add_subparser((name, subparser))
+
+    return subparser
 
 
 def main():
@@ -4738,13 +4646,13 @@ def main():
 
     action_parsers = main_parser.add_subparsers(
         prog=sys.argv[0],
-        title='Actions',
-        description='the available actions show below:',
+        title='🎉 Actions',
+        description='🫡 the available actions show below:',
         dest='action',
         required=False,
         parser_class=GreatArgumentParser,
-        metavar='action name:   ',
-        help='action statement:',
+        metavar='🚀 action name:   ',
+        help='🥹 action statement:',
     )
 
     for action in AudioGod.ACTIONS:
@@ -4759,12 +4667,12 @@ def main():
         if 'branches' in AudioGod.ACTIONS[action]:
             branch_parsers = action_parser.add_subparsers(
                 prog=sys.argv[0],
-                title='Branches',
-                description='the available branches show below:',
+                title='🤝 Branches',
+                description='🦁 the available branches show below:',
                 dest='branch',
                 required=False,
-                metavar='branch name:   ',
-                help='branch statement:',
+                metavar='🤠 branch name:   ',
+                help='☀️ branch statement:',
             )
             for branch in AudioGod.ACTIONS[action]['branches']:
                 _ = _add_subparser(
