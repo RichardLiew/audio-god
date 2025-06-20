@@ -1338,18 +1338,18 @@ Process Method 1:
     Step.9: Export plist file, with subcommand <export plist>.
 
 Process Method 2:
-    Step.1: Put audios to source folder (e.g. "${music_source_mp3_folder}");
-    Step.2: Put note file to local folder (e.g. "${note_file}");
-    Step.3: Put ignored file to local folder (e.g. "${ignored_file}");
-    Step.4: Run <generate-script> subcommand to generate a shell script (e.g. "${script_file}");
+    Step.1: Put note file to local folder (e.g. "${preprocess-note.document}");
+    Step.2: Put audios to source folder (e.g. "${fill-properties.source}");
+    Step.3: Put ignored file to local folder (e.g. "${fill-properties.ignored_file}");
+    Step.4: Run <generate-script> subcommand to generate a shell script (e.g. "${generate-script.output}");
     Step.5: Execute the shell script above.
     Results under folders below:
-        "${note_file}"
-        "${repeated_file}"
-        "${artwork_path}"
-        "${music_grouped_folder}"
-        "${itunes_media_folder}"
-        "${itunes_library_plist}"
+        "${preprocess-note.document}"
+        "${list-repeated.output}"
+        "${derive-artworks.artwork_path}"
+        "${organize.ituned.source}"
+        "${export.plist.itunes_media_folder}"
+        "${export.plist.itunes_library_plist}"
 
 ------------------------------------------------------------------------------
 
