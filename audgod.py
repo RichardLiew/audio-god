@@ -1365,18 +1365,7 @@ General commands:
     '''
 
 
-    def __init__(self, action=None, branch=None, **kwargs):
-        self.__action = action
-        self.__branch = branch
-
-        self.__default_arguments = self.integrate_default_arguments(
-            action=self.action,
-            branch=self.branch,
-            with_customized=False,
-        )
-
-        kwargs = self.default_arguments | kwargs
-
+    def __init__(self, **kwargs):
         # init logger
         self.__logger_options = self.__resolve_logger_options(
             kwargs['log_level'],
@@ -1714,18 +1703,6 @@ General commands:
             numbered,
             style,
         )
-
-    @property
-    def action(self):
-        return self.__action
-
-    @property
-    def branch(self):
-        return self.__branch
-
-    @property
-    def default_arguments(self):
-        return self.__default_arguments
 
     @property
     def logger(self):
@@ -4589,7 +4566,7 @@ def _handle_execute(args) -> None:
             arguments[argument] = getattr(args, argument)
 
     func = AudioGod.replace_hyphen(f'{action}__{branch}' if branch else action)
-    getattr(AudioGod(action=action, branch=branch, **arguments), func)()
+    getattr(AudioGod(**arguments), func)()
 
 def _add_subparser(mainparser, subparsers, name, action, branch=None, execute=None):
     params = AudioGod.ACTIONS[action]
