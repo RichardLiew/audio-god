@@ -2018,7 +2018,8 @@ General commands:
                 params['arguments'].update(copy.deepcopy(cls.COMMON_ARGUMENTS))
                 for argument in params['arguments']:
                     use_public = params['arguments'][argument].pop('use_public', cls.ReplaceType.NONE)
-                    public_argument = copy.deepcopy(cls.PUBLIC_ARGUMENTS[argument])
+                    if cls.ReplaceType.NONE.ne(use_public):
+                        public_argument = copy.deepcopy(cls.PUBLIC_ARGUMENTS[argument])
                     match use_public:
                         case cls.ReplaceType.NONE:
                             pass
@@ -2084,14 +2085,15 @@ General commands:
 
     @classmethod
     def integrate_default_arguments(cls, action=None, branch=None, with_customized=False):
-        original_defaults = {
-            argument: params['default']
-            for argument, params in (
-                copy.deepcopy(cls.PUBLIC_ARGUMENTS) | copy.deepcopy(cls.COMMON_ARGUMENTS)
-            ).items()
-        }
+        #defaults = copy.deepcopy(original_defaults)
+        #original_defaults = {
+        #    argument: params['default']
+        #    for argument, params in (
+        #        copy.deepcopy(cls.PUBLIC_ARGUMENTS) | copy.deepcopy(cls.COMMON_ARGUMENTS)
+        #    ).items()
+        #}
 
-        customized_defaults = {}
+        defaults, customized_defaults = {}, {}
         for _action, action_params in cls.ACTIONS.items():
             if 'arguments' in action_params:
                 for argument, argument_params in action_params['arguments']:
@@ -2104,7 +2106,6 @@ General commands:
                             key = f'{_action}.{_branch}.{argument}'
                             customized_defaults[key] = argument_params['default']
 
-        defaults = copy.deepcopy(original_defaults)
         prefix = ''
         if action:
             if branch:
