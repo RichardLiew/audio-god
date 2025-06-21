@@ -1437,7 +1437,7 @@ General commands:
             self.AUDIOS_TREE_ROOT_TAG, self.AUDIOS_TREE_ROOT_NID,
         )
 
-        self.__parse_func = {
+        self.__parse_funcs = {
             field: getattr(
                 self, f'parse_{field}', lambda x: x,
             )
@@ -1448,12 +1448,12 @@ General commands:
                 ret = parse_func(*args)
                 return ret
             return __func
-        self.__parse_func = {
-            field: __parse_func(self.__parse_func[field])
+        self.__parse_funcs = {
+            field: __parse_func(self.__parse_funcs[field])
             for field in self.ALL_FIELDS
         }
 
-        self.__format_func = {
+        self.__format_funcs = {
             field: getattr(
                 self, f'format_{field}', lambda x: x,
             )
@@ -1464,12 +1464,12 @@ General commands:
                 ret = format_func(*args)
                 return ret
             return __func
-        self.__format_func = {
-            field: __format_func(self.__format_func[field])
+        self.__format_funcs = {
+            field: __format_func(self.__format_funcs[field])
             for field in self.ALL_FIELDS
         }
 
-        self.__output_func = {
+        self.__output_funcs = {
             field: getattr(
                 self,
                 f'output_{field}',
@@ -1484,8 +1484,8 @@ General commands:
                     return None
                 return ret
             return __func
-        self.__output_func = {
-            field: __output_func(self.__output_func[field])
+        self.__output_funcs = {
+            field: __output_func(self.__output_funcs[field])
             for field in self.ALL_FIELDS
         }
 
@@ -1709,16 +1709,16 @@ General commands:
         return self.__logger
 
     @property
-    def format_func(self):
-        return self.__format_func
+    def format_funcs(self):
+        return self.__format_funcs
 
     @property
-    def parse_func(self):
-        return self.__parse_func
+    def parse_funcs(self):
+        return self.__parse_funcs
 
     @property
-    def output_func(self):
-        return self.__output_func
+    def output_funcs(self):
+        return self.__output_funcs
 
     @property
     def display_options(self):
@@ -2661,8 +2661,8 @@ General commands:
         )
 
     def __fetch_from_outside(self, audio, field):
-        format_ = self.format_func[field]
-        parse_ = self.parse_func[field]
+        format_ = self.format_funcs[field]
+        parse_ = self.parse_funcs[field]
         default = self.__resolve_properties(
             self.default_arguments['properties'],
         )['default'] # type: ignore
@@ -2710,7 +2710,7 @@ General commands:
         if value is None:
             return
         if formatted:
-            value = self.format_func[field](value)
+            value = self.format_funcs[field](value)
         match field:
             case self.AudioProperty.COMMENTS:
                 audio_object.tag.comments.set(value)
@@ -2804,9 +2804,9 @@ General commands:
         ret = self.fetch(audio_object, field)
         if ret is not None:
             if formatted:
-                ret = self.format_func[field](ret)
+                ret = self.format_funcs[field](ret)
             if self.FileFormat.NONE.ne(output_format):
-                ret = self.output_func[field](ret, output_format)
+                ret = self.output_funcs[field](ret, output_format)
         if default is not None and not ret:
             ret = default
         return ret
@@ -2888,8 +2888,8 @@ General commands:
                     genre, grouping = tuple(map(
                         lambda x: x.strip(), grouping_match.groups(),
                     ))
-                    genre = self.format_func[self.AudioProperty.GENRE](genre)
-                    grouping = self.format_func[self.AudioProperty.GROUPING](grouping)
+                    genre = self.format_funcs[self.AudioProperty.GENRE](genre)
+                    grouping = self.format_funcs[self.AudioProperty.GROUPING](grouping)
                     if grouping and grouping in self.summaries:
                         genre, grouping = '', ''
                         invalid_info = 'grouping already exists'
@@ -2923,7 +2923,7 @@ General commands:
                         if field in properties:
                             valid, invalid_info = False, 'duplicate field existed'
                             break
-                        properties[field] = self.format_func[field](value)
+                        properties[field] = self.format_funcs[field](value)
                     if valid:
                         for field in self.NOTE_FIELDS:
                             if field not in properties:
