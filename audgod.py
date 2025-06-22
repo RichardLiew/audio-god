@@ -1097,9 +1097,9 @@ class AudioGod(object):
 
     @classmethod
     def ARGUMENTS_DEFAULTS(cls):
-        if cls.ARGUMENTS is None:
-            return None
         ret = {}
+        if cls.ARGUMENTS is None:
+            return ret
         for argment, params in cls.ARGUMENTS.items():
             ret[argment] = params['kwargs']['default']
         return ret
@@ -2221,7 +2221,7 @@ def _get_carrier_arguments(action, branch):
 def _get_carrier_defaults(action, branch):
     carrier = _get_carrier(action, branch)
     if carrier is None:
-        return None
+        return {}
     return copy.deepcopy(carrier.ARGUMENTS_DEFAULTS())
 
 
@@ -2283,14 +2283,12 @@ def _handle_execute(args) -> None:
         raise Exception(f'Invalid carrier <{action} {branch}>!')
 
     arguments = _get_carrier_defaults(action, branch)
-    if arguments is None:
-        raise Exception(f'Invalid arguments <{action} {branch}!')
     for argument in arguments:
         if hasattr(args, argument):
             arguments[argument] = getattr(args, argument)
 
-    #carrier(**arguments).execute()
     carrier(**arguments).test()
+    #carrier(**arguments).execute()
 
 
 def _add_subparser(mainparser, subparsers, action, branch=None):
