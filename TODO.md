@@ -12,6 +12,8 @@ ACTIONS里dict可以设置同义词吗？比如markdown和md
 
 顶部的所有枚举类型以及AudioGod里的类成员或者私有成员函数或者变量看看不是公用的，都塞进自己的Action里
 
+ARGUMENTS 看看有没有可以放到 BaseAction 里的，比如类似 executer 可以放到 ConvertBaseAction里
+
 sys._getframe().f_code.co_name  init
 All done.
 

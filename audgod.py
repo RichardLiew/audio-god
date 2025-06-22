@@ -944,7 +944,7 @@ class AudioGod(object):
                 subcmd_pattern = r'\s*({0})(\s+.*)?$'.format('|'.join(ACTIONS.keys()))
                 interpreter = re.sub(subcmd_pattern, r'', interpreter)
         except Exception as e:
-            pass
+            raise Exception(e)
         return interpreter 
 
 
@@ -1022,7 +1022,12 @@ class AudioGod(object):
             cls.repack_dict(cls.PUBLIC_ARGUMENTS, cls.replace_hyphen)
             cls.repack_dict(cls.REQUISITE_ARGUMENTS, cls.replace_hyphen)
             cls.repack_dict(cls.ARGUMENTS, cls.replace_hyphen)
-            cls.ARGUMENTS.update(copy.deepcopy(cls.REQUISITE_ARGUMENTS))
+
+            for argument in cls.REQUISITE_ARGUMENTS:
+                if argument in cls.ARGUMENTS:
+                    continue
+                cls.ARGUMENTS[argument] = copy.deepcopy(cls.REQUISITE_ARGUMENTS[argument])
+
             for argument in cls.ARGUMENTS:
                 public_argument = {}
                 use_public = cls.ARGUMENTS[argument].pop('use_public', ReplaceType.NONE)
@@ -1067,7 +1072,7 @@ class AudioGod(object):
         if cls.KWARGS is not None:
             cls.KWARGS = copy.deepcopy(cls.BASIC_KWARGS) | cls.KWARGS
             if not cls.KWARGS.get('prog', None):
-                cls.KWARGS['prog'] = cls.render_usage('\n${cmd}')
+                cls.KWARGS['prog'] = '\n${cmd}'
         # decorate $KWARGS['usage']
         if cls.NAME and cls.ARGUMENTS is not None and cls.KWARGS is not None:
             cls.KWARGS['usage'] = '\n{} {} \\\n'.format(
@@ -1089,10 +1094,7 @@ class AudioGod(object):
                 cls.KWARGS['usage'] += '{}{} \\\n'.format(
                     ' ' * indent, argument_pair,
                 )
-            cls.KWARGS['usage'] = cls.render_usage(
-                cls.KWARGS['usage'].rstrip().rstrip('\\').rstrip(),
-                indent=0,
-            )
+            cls.KWARGS['usage'] = cls.KWARGS['usage'].rstrip().rstrip('\\').rstrip()
 
 
     @classmethod
@@ -2185,11 +2187,28 @@ def _summarize_actions_defaults():
             ret[f'{cls.NAME}.{argument}'] = default
     return ret
 
+
+def _render_actions():
+    for cls in _get_active_subclasses(AudioGod):
+        if not cls.KWARGS:
+            continue
+        if cls.KWARGS.get('prog', None):
+            cls.KWARGS['prog'] = AudioGod.render_usage(
+                cls.KWARGS['prog'],
+                indent=0,
+            )
+        if cls.KWARGS.get('usage', None):
+            cls.KWARGS['usage'] = AudioGod.render_usage(
+                cls.KWARGS['usage'],
+                indent=0,
+            )
+
 #-------------------------------------------------------------------------------
 
 _decorate_actions()
 ACTIONS = _summarize_actions()
 ACTIONS_DEFAULTS = _summarize_actions_defaults()
+_render_actions()
 
 #-------------------------------------------------------------------------------
 
