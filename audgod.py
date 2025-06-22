@@ -269,244 +269,254 @@ class TreeX(Tree):
                     deep=deep,
                 )
 
+####################################################V###########################
+#                                                                              #
+#                                 DEFINITIONS                                  #
+#                                                                              #
+################################################################################
+
+CACHE_DIR = os.path.expanduser('~/.audgod-cache')
+TRASH_DIR = os.path.join(CACHE_DIR, 'trash')
+BACKUPS_DIR = os.path.join(CACHE_DIR, 'backups')
+
+
+ORI_DIV_CHAR = '-'
+DIV_CHAR = '*'
+GROUPING_SEPARATOR = '&'
+
+
+DEFAULT_GENRE = 'Default'
+DEFAULT_GROUPING = 'Default'
+
+
+AUDIOS_TREE_ROOT_TAG = '--root-tag--'
+AUDIOS_TREE_ROOT_NID = '--root-nid--'
+
+
+class FilenamePatternTemplate(Template):
+    delimiter = '@'
+
+
+class PerfectTemplate(Template):
+    idpattern = r'(?a:[_-a-z][_-a-z0-9]*(\.[_-a-z][_-a-z0-9]*)*)'
+
+    def perfect_substitute(self, mapping, /, **kwargs):
+        if kwargs:
+            mapping = ChainMap(kwargs, mapping)
+        def _convert(matched):
+            named = matched.group('named') or matched.group('braced')
+            if named is not None:
+                try:
+                    return str(
+                        AudioGod.repack_dict(mapping)[AudioGod.rewrite_key(named)],
+                    )
+                except KeyError:
+                    return matched.group()
+            if matched.group('escaped') is not None:
+                return self.delimiter
+            if matched.group('invalid') is not None:
+                return matched.group()
+            raise ValueError(
+                'Unrecognized named group in pattern',
+                self.pattern,
+            )
+        return self.pattern.sub(_convert, self.template)
+
+
+@StringEnum.unique
+class SourceType(StringEnum):
+    VALID = 'valid'
+    MATCHED = 'matched'
+    NOTMATCHED = 'notmatched'
+    OMITTED = 'omitted'
+    IGNORED = 'ignored'
+    INVALID_EXT = 'invalid-ext'
+    INVALID_NAME = 'invalid-name'
+
+
+@StringEnum.unique
+class FileFormat(StringEnum):
+    NONE = 'none'
+    NOTE = 'note'
+    JSON = 'json'
+    MARKDOWN = 'markdown'
+    MD = 'md'
+    PLIST = 'plist'
+    XML = 'xml'
+
+
+@StringEnum.unique
+class PropertySource(StringEnum):
+    COMMAND = 'command'
+    FILE = 'file'
+    FILENAME = 'filename'
+    DIRECTORY = 'directory'
+
+
+@StringEnum.unique
+class DisplayStyle(StringEnum):
+    TABLED = 'tabled'
+    COMPACT = 'compact'
+    VERTICAL = 'vertical'
+
+
+@StringEnum.unique
+class DataFormat(StringEnum):
+    ORIGINAL = 'original'
+    FORMATTED = 'formatted'
+    OUTPUTTED = 'outputted'
+
+
+@StringEnum.unique
+class AudiosTreeNodeType(StringEnum):
+    ROOT = 'root'
+    FOLDER = 'folder'
+    PLAYLIST = 'playlist'
+    TRACK = 'track'
+
+
+@StringEnum.unique
+class FieldType(StringEnum):
+    ORIGINAL = 'ori'
+    CHINESE = 'cn'
+    ENGLISH = 'en'
+
+
+@StringEnum.unique
+class ReplaceType(StringEnum):
+    NONE = 'none'
+    PARTIAL = 'partial'
+    ENTIRE = 'entire'
+
+
+AUDIO_PROPERTIES = {
+    'title': (('歌曲名', 'Name'), 'string'),
+    'artist': (('歌手名', 'Artist'), 'string'),
+    'album': (('专辑名', 'Album'), 'string'),
+    'genre': (('流派', 'Genre'), 'string'),
+    'grouping': (('分组', 'Grouping'), 'string'),
+    'album_artist': (('专辑出品人', 'Album Artist'), 'string'),
+    'comments': (('备注', 'Comments'), 'string'),
+    'track_num': (('音轨号', 'Track Number'), 'integer'),
+    'composer': (('作曲人', 'Composer'), 'string'),
+    'publisher': (('出版公司', 'Publisher'), 'string'),
+    'mtime': (('修改时间', 'Date Modified'), 'date'),
+    'duration': (('时长', 'Total Time'), 'integer'),
+    'bit_rate': (('比特率', 'Bit Rate'), 'integer'),
+    'sample_freq': (('采样率', 'Sample Rate'), 'integer'),
+    'mode': (('模式', 'Mode'), 'string'),
+    'size': (('文件大小', 'Size'), 'integer'),
+    'name': (('文件名', 'File Name'), 'string'),
+    'path': (('文件路径', 'File Directory'), 'string'),
+    'selected': (('已选择', 'Selected'), 'boolean'),
+    'liked': (('喜欢', 'Liked'), 'boolean'),
+    'rating': (('评分', 'Rating'), 'integer'),
+    'artwork': (('封面', 'Artwork'), 'string'),
+}
+
+AUDIO_CN_PROPERTIES = {
+    key: value[0][0] for key, value in AUDIO_PROPERTIES.items()
+}
+
+AUDIO_CN_PROPERTY_SYNONYMS = {
+    value.lower(): key for key, value in AUDIO_CN_PROPERTIES.items()
+}
+
+AUDIO_EN_PROPERTIES = {
+    key: value[0][1] for key, value in AUDIO_PROPERTIES.items()
+}
+
+AUDIO_EN_PROPERTY_SYNONYMS = {
+    value.lower(): key for key, value in AUDIO_EN_PROPERTIES.items()
+}
+
+AUDIO_PROPERTY_TYPES = {
+    key: value[1] for key, value in AUDIO_PROPERTIES.items()
+}
+
+AudioProperty = StringEnum.unique(StringEnum(
+    'AudioProperty', {
+        prop.upper(): prop for prop in AUDIO_CN_PROPERTIES.keys()
+    },
+))
+
+DEFAULTS_FIELDS = [
+    AudioProperty.TITLE,
+    AudioProperty.ARTIST,
+    AudioProperty.ALBUM,
+    AudioProperty.GENRE,
+    AudioProperty.ALBUM_ARTIST,
+]
+
+NOTE_FIELDS = [
+    AudioProperty.TITLE,
+    AudioProperty.ARTIST,
+    AudioProperty.ALBUM,
+]
+
+SIMPLE_FIELDS = [
+    AudioProperty.TITLE,
+    AudioProperty.ARTIST,
+    AudioProperty.ALBUM,
+    AudioProperty.GENRE,
+    AudioProperty.GROUPING,
+]
+
+ZIP_FIELDS = [
+    AudioProperty.GROUPING,
+    AudioProperty.SELECTED,
+    AudioProperty.LIKED,
+    AudioProperty.RATING,
+    AudioProperty.ARTWORK,
+]
+
+CORE_FIELDS = [
+    AudioProperty.TITLE,
+    AudioProperty.ARTIST,
+    AudioProperty.ALBUM,
+    AudioProperty.GENRE,
+    AudioProperty.GROUPING,
+    AudioProperty.ALBUM_ARTIST,
+    AudioProperty.ARTWORK,
+]
+
+ITUNED_FIELDS = [
+    AudioProperty.TITLE,
+    AudioProperty.ARTIST,
+    AudioProperty.ALBUM,
+    AudioProperty.GENRE,
+    AudioProperty.ALBUM_ARTIST,
+    AudioProperty.SIZE,
+    AudioProperty.DURATION,
+    AudioProperty.BIT_RATE,
+    AudioProperty.SAMPLE_FREQ,
+    AudioProperty.MTIME,
+]
+
+ALL_FIELDS = AudioProperty.members(excepts=[
+    AudioProperty.COMMENTS,
+])
+
+FIELDS = {
+    'all': ALL_FIELDS,
+    'defaults': DEFAULTS_FIELDS,
+    'note': NOTE_FIELDS,
+    'simple': SIMPLE_FIELDS,
+    'zip': ZIP_FIELDS,
+    'core': CORE_FIELDS,
+    'ituned': ITUNED_FIELDS,
+}
+
 ################################################################################
 #                                                                              #
 #                                 Audio God                                    #
 #                                                                              #
 ################################################################################
 
-class AudioGod(object):
-    CACHE_DIR = os.path.expanduser('~/.audgod-cache')
-    TRASH_DIR = os.path.join(CACHE_DIR, 'trash')
-    BACKUPS_DIR = os.path.join(CACHE_DIR, 'backups')
+class BaseAction(object):
+    ACTIVE = True
 
-
-    ORI_DIV_CHAR = '-'
-    DIV_CHAR = '*'
-    GROUPING_SEPARATOR = '&'
-
-
-    class FilenamePatternTemplate(Template):
-        delimiter = '@'
-
-
-    class PerfectTemplate(Template):
-        idpattern = r'(?a:[_-a-z][_-a-z0-9]*(\.[_-a-z][_-a-z0-9]*)*)'
-
-        def perfect_substitute(self, mapping, /, **kwargs):
-            if kwargs:
-                mapping = ChainMap(kwargs, mapping)
-            def _convert(matched):
-                named = matched.group('named') or matched.group('braced')
-                if named is not None:
-                    try:
-                        return str(
-                            AudioGod.repack_dict(mapping)[AudioGod.rewrite_key(named)],
-                        )
-                    except KeyError:
-                        return matched.group()
-                if matched.group('escaped') is not None:
-                    return self.delimiter
-                if matched.group('invalid') is not None:
-                    return matched.group()
-                raise ValueError(
-                    'Unrecognized named group in pattern',
-                    self.pattern,
-                )
-            return self.pattern.sub(_convert, self.template)
-
-
-    @StringEnum.unique
-    class SourceType(StringEnum):
-        VALID = 'valid'
-        MATCHED = 'matched'
-        NOTMATCHED = 'notmatched'
-        OMITTED = 'omitted'
-        IGNORED = 'ignored'
-        INVALID_EXT = 'invalid-ext'
-        INVALID_NAME = 'invalid-name'
-
-
-    @StringEnum.unique
-    class FileFormat(StringEnum):
-        NONE = 'none'
-        NOTE = 'note'
-        JSON = 'json'
-        MARKDOWN = 'markdown'
-        MD = 'md'
-        PLIST = 'plist'
-        XML = 'xml'
-
-
-    @StringEnum.unique
-    class PropertySource(StringEnum):
-        COMMAND = 'command'
-        FILE = 'file'
-        FILENAME = 'filename'
-        DIRECTORY = 'directory'
-
-
-    @StringEnum.unique
-    class DisplayStyle(StringEnum):
-        TABLED = 'tabled'
-        COMPACT = 'compact'
-        VERTICAL = 'vertical'
-
-
-    @StringEnum.unique
-    class DataFormat(StringEnum):
-        ORIGINAL = 'original'
-        FORMATTED = 'formatted'
-        OUTPUTTED = 'outputted'
-
-
-    @StringEnum.unique
-    class AudiosTreeNodeType(StringEnum):
-        ROOT = 'root'
-        FOLDER = 'folder'
-        PLAYLIST = 'playlist'
-        TRACK = 'track'
-
-
-    @StringEnum.unique
-    class FieldType(StringEnum):
-        ORIGINAL = 'ori'
-        CHINESE = 'cn'
-        ENGLISH = 'en'
-
-
-    @StringEnum.unique
-    class ReplaceType(StringEnum):
-        NONE = 'none'
-        PARTIAL = 'partial'
-        ENTIRE = 'entire'
-
-
-    AUDIO_PROPERTIES = {
-        'title': (('歌曲名', 'Name'), 'string'),
-        'artist': (('歌手名', 'Artist'), 'string'),
-        'album': (('专辑名', 'Album'), 'string'),
-        'genre': (('流派', 'Genre'), 'string'),
-        'grouping': (('分组', 'Grouping'), 'string'),
-        'album_artist': (('专辑出品人', 'Album Artist'), 'string'),
-        'comments': (('备注', 'Comments'), 'string'),
-        'track_num': (('音轨号', 'Track Number'), 'integer'),
-        'composer': (('作曲人', 'Composer'), 'string'),
-        'publisher': (('出版公司', 'Publisher'), 'string'),
-        'mtime': (('修改时间', 'Date Modified'), 'date'),
-        'duration': (('时长', 'Total Time'), 'integer'),
-        'bit_rate': (('比特率', 'Bit Rate'), 'integer'),
-        'sample_freq': (('采样率', 'Sample Rate'), 'integer'),
-        'mode': (('模式', 'Mode'), 'string'),
-        'size': (('文件大小', 'Size'), 'integer'),
-        'name': (('文件名', 'File Name'), 'string'),
-        'path': (('文件路径', 'File Directory'), 'string'),
-        'selected': (('已选择', 'Selected'), 'boolean'),
-        'liked': (('喜欢', 'Liked'), 'boolean'),
-        'rating': (('评分', 'Rating'), 'integer'),
-        'artwork': (('封面', 'Artwork'), 'string'),
-    }
-
-    AUDIO_CN_PROPERTIES = {
-        key: value[0][0] for key, value in AUDIO_PROPERTIES.items()
-    }
-
-    AUDIO_CN_PROPERTY_SYNONYMS = {
-        value.lower(): key for key, value in AUDIO_CN_PROPERTIES.items()
-    }
-
-    AUDIO_EN_PROPERTIES = {
-        key: value[0][1] for key, value in AUDIO_PROPERTIES.items()
-    }
-
-    AUDIO_EN_PROPERTY_SYNONYMS = {
-        value.lower(): key for key, value in AUDIO_EN_PROPERTIES.items()
-    }
-
-    AUDIO_PROPERTY_TYPES = {
-        key: value[1] for key, value in AUDIO_PROPERTIES.items()
-    }
-
-    AudioProperty = StringEnum.unique(StringEnum(
-        'AudioProperty', {
-            prop.upper(): prop for prop in AUDIO_CN_PROPERTIES.keys()
-        },
-    ))
-
-    DEFAULTS_FIELDS = [
-        AudioProperty.TITLE,
-        AudioProperty.ARTIST,
-        AudioProperty.ALBUM,
-        AudioProperty.GENRE,
-        AudioProperty.ALBUM_ARTIST,
-    ]
-
-    NOTE_FIELDS = [
-        AudioProperty.TITLE,
-        AudioProperty.ARTIST,
-        AudioProperty.ALBUM,
-    ]
-
-    SIMPLE_FIELDS = [
-        AudioProperty.TITLE,
-        AudioProperty.ARTIST,
-        AudioProperty.ALBUM,
-        AudioProperty.GENRE,
-        AudioProperty.GROUPING,
-    ]
-    
-    ZIP_FIELDS = [
-        AudioProperty.GROUPING,
-        AudioProperty.SELECTED,
-        AudioProperty.LIKED,
-        AudioProperty.RATING,
-        AudioProperty.ARTWORK,
-    ]
-
-    CORE_FIELDS = [
-        AudioProperty.TITLE,
-        AudioProperty.ARTIST,
-        AudioProperty.ALBUM,
-        AudioProperty.GENRE,
-        AudioProperty.GROUPING,
-        AudioProperty.ALBUM_ARTIST,
-        AudioProperty.ARTWORK,
-    ]
-
-    ITUNED_FIELDS = [
-        AudioProperty.TITLE,
-        AudioProperty.ARTIST,
-        AudioProperty.ALBUM,
-        AudioProperty.GENRE,
-        AudioProperty.ALBUM_ARTIST,
-        AudioProperty.SIZE,
-        AudioProperty.DURATION,
-        AudioProperty.BIT_RATE,
-        AudioProperty.SAMPLE_FREQ,
-        AudioProperty.MTIME,
-    ]
-
-    ALL_FIELDS = AudioProperty.members(excepts=[
-        AudioProperty.COMMENTS,
-    ])
-
-    FIELDS = {
-        'all': ALL_FIELDS,
-        'defaults': DEFAULTS_FIELDS,
-        'note': NOTE_FIELDS,
-        'simple': SIMPLE_FIELDS,
-        'zip': ZIP_FIELDS,
-        'core': CORE_FIELDS,
-        'ituned': ITUNED_FIELDS,
-    }
-
-
-    AUDIOS_TREE_ROOT_TAG = '--root-tag--'
-    AUDIOS_TREE_ROOT_NID = '--root-nid--'
-
-    DEFAULT_GENRE = 'Default'
-    DEFAULT_GROUPING = 'Default'
-
+    NAME = ''
 
     PUBLIC_ARGUMENTS = {
         'document': {
@@ -616,7 +626,25 @@ class AudioGod(object):
         },
     }
 
-    COMMON_ARGUMENTS = {
+
+    BASIC_KWARGS = {
+        'description': '',
+        'help': '',
+        'epilog': '😴 Sleeping ...',
+        'formatter_class': argparse.ArgumentDefaultsHelpFormatter,
+        #'usage': '',
+        #'prog': None,
+        #'aliases': (),
+        #'prefix_chars': '-',
+        #'fromfile_prefix_chars': None,
+        #'argument_default': None,
+        #'conflict_handler': 'error',
+        #'add_help': True,
+        #'allow_abbrev': True,
+        #'exit_on_error': True,
+    }
+
+    REQUISITE_ARGUMENTS = {
         'log_level': {
             'args': ['-l'],
             'kwargs': {
@@ -648,625 +676,10 @@ class AudioGod(object):
             },
         },
     }
+    
+    ARGUMENTS = None
+    KWARGS = None
 
-    ACTIONS = {
-        'preprocess-note': {
-            'arguments': {
-                'document': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'field_type': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-            },
-            'kwargs': {
-                'description': '✋ g greprocess the note file',
-                'help': '👍 preprocess the note file',
-            },
-        },
-        'fill-properties': {
-            'arguments': {
-                'source': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'extensions': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'recursive': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'ignored_file': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'document': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'root': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'properties': {
-                    'use_public': ReplaceType.NONE,
-                    'args': ['-p'],
-                    'kwargs': {
-                        'action': 'store',
-                        'type': str,
-                        'required': False,
-                        'default': '''
-                            \'{
-                                "_comment": "sources choose from command/file/directory/filename",
-                                "default": {
-                                    "sources": ["command", "file"],
-                                    "value": null
-                                },
-                                "genre": {
-                                    "sources": ["command", "file"],
-                                    "value": null
-                                }
-                            }\'
-                        ''',
-                        'help': '😊 properties for sources',
-                    },
-                },
-            },
-            'kwargs': {
-                'description': '✋ Fill properties of audios',
-                'help': '👍 fill properties of audios',
-            },
-        },
-        'format-properties': {
-            'arguments': {
-                'source': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'extensions': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'recursive': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'ignored_file': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-            },
-            'kwargs': {
-                'description': '✋ Format properties of audios',
-                'help': '👍 format properties of audios',
-            },
-        },
-        'rename-audios': {
-            'arguments': {
-                'source': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'extensions': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'recursive': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'ignored_file': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'filename_pattern': {
-                    'use_public': ReplaceType.NONE,
-                    'args': ['-t'],
-                    'kwargs': {
-                        'action': 'store',
-                        'type': str,
-                        'required': False,
-                        'default': '{delimiter}{{artist}} {div_char} {delimiter}{{title}}'.format(
-                            delimiter=FilenamePatternTemplate.delimiter,
-                            div_char=DIV_CHAR,
-                        ),
-                        'help': '😊 filename pattern to rename sources',
-                    },
-                },
-            },
-            'kwargs': {
-                'description': '✋ Rename audios',
-                'help': '👍 rename audios',
-            },
-        },
-        'organize': {
-            'kwargs': {
-                'description': '✋ Organize files',
-                'help': '👍 organize files',
-            },
-            'branches': {
-                'grouped': {
-                    'arguments': {
-                        'source': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'extensions': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'recursive': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'ignored_file': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'root': {
-                            'use_public': ReplaceType.PARTIAL,
-                            'kwargs': {
-                                'default': '~/Music/Output/Grouped',
-                            },
-                        },
-                    },
-                    'kwargs': {
-                        'description': '⭐ Organize grouped files',
-                        'help': '😉 organize grouped files',
-                    },
-                },
-                'ituned': {
-                    'arguments': {
-                        'source': {
-                            'use_public': ReplaceType.PARTIAL,
-                            'kwargs': {
-                                'default': '~/Music/Output/Grouped',
-                            },
-                        },
-                        'extensions': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'recursive': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'ignored_file': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'root': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                    },
-                    'kwargs': {
-                        'description': '⭐ Organize ituned files',
-                        'help': '😉 organize ituned files',
-                    },
-                },
-            },
-        },
-        'list-repeated': {
-            'arguments': {
-                'source': {
-                    'use_public': ReplaceType.PARTIAL,
-                    'kwargs': {
-                        'default': '~/Music/Output/Grouped',
-                    },
-                },
-                'extensions': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'recursive': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'ignored_file': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'output': {
-                    'use_public': ReplaceType.PARTIAL,
-                    'kwargs': {
-                        'default': './repeated.txt',
-                    },
-                },
-            },
-            'kwargs': {
-                'description': '✋ List repeated audios by artist and title',
-                'help': '👍 list repeated audios',
-            },
-        },
-        'derive-artworks': {
-            'arguments': {
-                'source': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'extensions': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'recursive': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'ignored_file': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'artwork_path': {
-                    'use_public': ReplaceType.NONE,
-                    'args': ['-k'],
-                    'kwargs': {
-                        'action': 'store',
-                        'type': str,
-                        'required': False,
-                        'default': '~/Music/Output/Artworks',
-                        'help': '😊 the path for export artworks',
-                    },
-                },
-            },
-            'kwargs': {
-                'description': '✋ Derive artworks',
-                'help': '👍 derive artworks',
-            },
-        },
-        'display': {
-            'arguments': {
-                'source': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'extensions': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'recursive': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'ignored_file': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'fields': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'page_number': {
-                    'use_public': ReplaceType.NONE,
-                    'args': ['-m'],
-                    'kwargs': {
-                        'action': 'store',
-                        'type': int,
-                        'required': False,
-                        'default': 1,
-                        'help': '😊 page number for display',
-                    },
-                },
-                'page_size': {
-                    'use_public': ReplaceType.NONE,
-                    'args': ['-j'],
-                    'kwargs': {
-                        'action': 'store',
-                        'type': int,
-                        'required': False,
-                        'default': 0,
-                        'help': '😊 page size for display',
-                    },
-                },
-                'sort': {
-                    'use_public': ReplaceType.NONE,
-                    'args': ['-q'],
-                    'kwargs': {
-                        'action': 'store',
-                        'type': str,
-                        'required': False,
-                        'default': '''
-                            \'[
-                                {"_comment": ""},
-                                ["title,artist", true],
-                                ["genre", false]
-                            ]\'
-                        ''',
-                        'help': '😊 sort options for display',
-                    },
-                },
-                'filter': {
-                    'use_public': ReplaceType.NONE,
-                    'args': ['-b'],
-                    'kwargs': {
-                        'action': 'store',
-                        'type': str,
-                        'required': False,
-                        'default': '''
-                            \'{
-                                "_options": {
-                                    "_comment": "relation choose from and/or",
-                                    "relation": "or"
-                                },
-                                "title,core": {
-                                    "_comment": "function choose from equal/search/empty",
-                                    "function": "search",
-                                    "parameters": ["", true, false]
-                                }
-                            }\'
-                        ''',
-                        'help': '😊 filter options for display',
-                    },
-                },
-                'align': {
-                    'use_public': ReplaceType.NONE,
-                    'args': ['-w'],
-                    'kwargs': {
-                        'action': 'store',
-                        'type': str,
-                        'required': False,
-                        'default': '''
-                            \'{
-                                "_comment": "align=l/c/r, valign=t/m/b",
-                                "title,artist": "l:m"
-                            }\'
-                        ''',
-                        'help': '😊 align options for display',
-                    },
-                },
-                'style': {
-                    'use_public': ReplaceType.NONE,
-                    'args': ['-y'],
-                    'kwargs': {
-                        'action': 'store',
-                        'type': str,
-                        'choices': DisplayStyle.members(),
-                        'required': False,
-                        'default': DisplayStyle.TABLED,
-                        'help': '😊 style for display',
-                    },
-                },
-                'data_format': {
-                    'use_public': ReplaceType.NONE,
-                    'args': ['-x'],
-                    'kwargs': {
-                        'action': 'store',
-                        'type': str,
-                        'choices': DataFormat.members(),
-                        'required': False,
-                        'default': DataFormat.OUTPUTTED,
-                        'help': '😊 data format for display',
-                    },
-                },
-                'numbered': {
-                    'use_public': ReplaceType.NONE,
-                    'args': ['-n'],
-                    'kwargs': {
-                        'action': argparse.BooleanOptionalAction,
-                        'required': False,
-                        'default': True,
-                        'help': '😊 if show number when display',
-                    },
-                },
-                'field_type': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-                'output': {
-                    'use_public': ReplaceType.ENTIRE,
-                },
-            },
-            'kwargs': {
-                'description': '✋ Display details of audios',
-                'help': '👍 display details of audios',
-            },
-        },
-        'export': {
-            'kwargs': {
-                'description': '✋ Export audio details to file',
-                'help': '👍 export audio details to file',
-            },
-            'branches': {
-                FileFormat.NOTE: {
-                    'arguments': {
-                        'source': {
-                            'use_public': ReplaceType.PARTIAL,
-                            'kwargs': {
-                                'default': '~/Music/Output/Grouped',
-                            },
-                        },
-                        'extensions': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'recursive': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'ignored_file': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'fields': {
-                            'use_public': ReplaceType.PARTIAL,
-                            'kwargs': {
-                                'default': 'note',
-                            },
-                        },
-                        'field_type': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'output': {
-                            'use_public': ReplaceType.PARTIAL,
-                            'kwargs': {
-                                'default': './songs.note',
-                            },
-                        },
-                    },
-                    'kwargs': {
-                        'description': '⭐ Export audio details to note file',
-                        'help': '😉 export audio details to note file',
-                    },
-                },
-                FileFormat.PLIST: {
-                    'arguments': {
-                        'source': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'extensions': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'recursive': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'ignored_file': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'fields': {
-                            'use_public': ReplaceType.PARTIAL,
-                            'kwargs': {
-                                'default': 'ituned',
-                            },
-                        },
-                        'field_type': {
-                            'use_public': ReplaceType.PARTIAL,
-                            'kwargs': {
-                                'default': FieldType.ENGLISH,
-                            },
-                        },
-                        'output': {
-                            'use_public': ReplaceType.PARTIAL,
-                            'kwargs': {
-                                'default': '~/Music/iTunes/Library.xml',
-                            },
-                        },
-                        'itunes_version_plist': {
-                            'use_public': ReplaceType.NONE,
-                            'args': ['-1'],
-                            'kwargs': {
-                                'action': 'store',
-                                'type': str,
-                                'required': False,
-                                'default': '/System/Applications/Music.app/Contents/version.plist',
-                                'help': '😊 the version plist file of itunes or apple music',
-                            },
-                        },
-                        'itunes_media_folder': {
-                            'use_public': ReplaceType.NONE,
-                            'args': ['-2'],
-                            'kwargs': {
-                                'action': 'store',
-                                'type': str,
-                                'required': False,
-                                'default': '~/Music/iTunes/iTunes\ Media/Music', # type: ignore
-                                'help': '😊 the media folder of itunes or apple music',
-                            },
-                        },
-                        'track_initial_id': {
-                            'use_public': ReplaceType.NONE,
-                            'args': ['-3'],
-                            'kwargs': {
-                                'action': 'store',
-                                'type': int,
-                                'required': False,
-                                'default': 601,
-                                'help': '😊 initial id of tracks for itunes or apple music plist file',
-                            },
-                        },
-                        'playlist_initial_id': {
-                            'use_public': ReplaceType.NONE,
-                            'args': ['-4'],
-                            'kwargs': {
-                                'action': 'store',
-                                'type': int,
-                                'required': False,
-                                'default': 3001,
-                                'help': '😊 initial id of playlists for itunes or apple music plist file',
-                            },
-                        },
-                    },
-                    'kwargs': {
-                        'description': '⭐ Export audio details to plist file',
-                        'help': '😉 export audio details to plist file',
-                    },
-                },
-                FileFormat.JSON: {},
-                FileFormat.MARKDOWN: {},
-                FileFormat.MD: {},
-                FileFormat.XML: {},
-            },
-        },
-        'convert': {
-            'kwargs': {
-                'description': '✋ Convert media',
-                'help': '👍 convert media',
-            },
-            'branches': {
-                'qmc-to-mp3': {
-                    'arguments': {
-                        'source': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'extensions': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'recursive': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'ignored_file': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                        'executer': {
-                            'use_public': ReplaceType.PARTIAL,
-                            'kwargs': {
-                                'default': './executers/qmc-to-mp3/decoder',
-                            },
-                        },
-                    },
-                    'kwargs': {
-                        'description': '⭐ Convert qmc to mp3',
-                        'help': '😉 convert qmc to mp3',
-                    },
-                },
-                'kmx_to_mp4': {},
-                'mp4_to_mp3': {},
-                'note_to_markdown': {},
-                'note_to_md': {},
-                'markdown_to_note': {},
-                'md_to_note': {},
-            },
-        },
-        'generate-script': {
-            'arguments': {
-                'output': {
-                    'use_public': ReplaceType.PARTIAL,
-                    'kwargs': {
-                        'default': './start.zsh',
-                    },
-                },
-            },
-            'kwargs': {
-                'description': '✋ Generate a grouped bash/zsh script',
-                'help': '👍 generate a grouped bash/zsh script',
-            },
-        },
-        'operate': {
-            'kwargs': {
-                'description': '✋ Some common operations',
-                'help': '👍 some common operations',
-            },
-            'branches': {
-                'backup': {
-                    'arguments': {
-                        'source': {
-                            'use_public': ReplaceType.PARTIAL,
-                            'kwargs': {
-                                'required': True,
-                                'default': '',
-                            },
-                        },
-                        'ignored_file': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                    },
-                    'kwargs': {
-                        'description': '⭐ Backup files, directories and so on',
-                        'help': '😉 backup files, directories and so on',
-                    },
-                },
-                'remove': {
-                    'arguments': {
-                        'source': {
-                            'use_public': ReplaceType.PARTIAL,
-                            'kwargs': {
-                                'required': True,
-                                'default': '',
-                            },
-                        },
-                        'ignored_file': {
-                            'use_public': ReplaceType.ENTIRE,
-                        },
-                    },
-                    'kwargs': {
-                        'description': '⭐ Remove files, directories and so on',
-                        'help': '😉 remove files, directories and so on',
-                    },
-                },
-                'cleanup': {
-                    'arguments': {},
-                    'kwargs': {
-                        'description': '⭐ Cleanup directories, backups and so on',
-                        'help': '😉 cleanup directories, backups and so on',
-                    },
-                },
-            },
-        },
-    }
- 
 
     USAGE = '''
 All fields:
@@ -1365,7 +778,7 @@ General commands:
     '''
 
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         # init logger
         self.__logger_options = self.__resolve_logger_options(
             kwargs['log_level'],
@@ -1947,12 +1360,12 @@ General commands:
         ))
 
     @staticmethod
-    def replace_underline(key):
-        return key.lower().replace('_', '-')
+    def replace_underline(s):
+        return s.lower().replace('_', '-')
 
     @staticmethod
-    def replace_hyphen(key):
-        return key.lower().replace('-', '_')
+    def replace_hyphen(s):
+        return s.lower().replace('-', '_')
 
     @classmethod
     def rewrite_key(cls, key):
@@ -1973,131 +1386,134 @@ General commands:
         return dict_
 
     @classmethod
-    def rewrite_actions(cls):
-        cls.repack_dict(cls.PUBLIC_ARGUMENTS, cls.replace_hyphen)
-        cls.repack_dict(cls.COMMON_ARGUMENTS, cls.replace_hyphen)
-        cls.repack_dict(cls.ACTIONS, cls.replace_underline)
-        for action in cls.ACTIONS:
-            if 'arguments' in cls.ACTIONS[action]:
-                cls.repack_dict(cls.ACTIONS[action]['arguments'], cls.replace_hyphen)
-            if 'branches' in cls.ACTIONS[action]:
-                cls.repack_dict(cls.ACTIONS[action]['branches'], cls.replace_underline)
-                for branch in cls.ACTIONS[action]['branches']:
-                    if 'arguments' in cls.ACTIONS[action]['branches'][branch]:
-                        cls.repack_dict(
-                            cls.ACTIONS[action]['branches'][branch]['arguments'],
-                            cls.replace_hyphen,
-                        )
+    def decorate(cls):
+        # decorate $NAME
+        if not cls.__name__.endswith('BaseAction'):
+            cls.NAME = cls.replace_underline(
+                re.sub(
+                    r'([A-Z])([A-Z][a-z])',
+                    r'\1_\2',
+                    re.sub(
+                        r'([a-z0-9])([A-Z])',
+                        r'\1_\2',
+                        cls.__name__.rstrip('Action').replace('__', '.'),
+                    ),
+                ),
+            )
 
-        def _process_unit(action, branch, /, render_kwargs={}):
-            params = cls.ACTIONS[action]['branches'][branch] if branch else cls.ACTIONS[action]
-            if 'arguments' in params:
-                params['arguments'].update(copy.deepcopy(cls.COMMON_ARGUMENTS))
-                for argument in params['arguments']:
-                    use_public = params['arguments'][argument].pop('use_public', cls.ReplaceType.NONE)
-                    if cls.ReplaceType.NONE.ne(use_public):
-                        public_argument = copy.deepcopy(cls.PUBLIC_ARGUMENTS[argument])
-                    match use_public:
-                        case cls.ReplaceType.NONE:
-                            pass
-                        case cls.ReplaceType.ENTIRE:
-                            params['arguments'][argument] = public_argument
-                        case cls.ReplaceType.PARTIAL:
-                            if 'args' not in params['arguments'][argument]:
-                                params['arguments'][argument]['args'] = public_argument['args']
-                            if 'kwargs' not in params['arguments'][argument]:
-                                params['arguments'][argument]['kwargs'] = public_argument['kwargs']
-                            else:
-                                params['arguments'][argument]['kwargs'] = public_argument['kwargs'] | \
-                                                                          params['arguments'][argument]['kwargs']
-                    params['arguments'][argument]['args'].insert(
-                        0, f'--{cls.replace_underline(argument)}',
-                    )
-                    params['arguments'][argument]['kwargs']['dest'] = argument
-                    
-                    type_ = params['arguments'][argument]['kwargs'].get('type', None)
-                    action_ = params['arguments'][argument]['kwargs'].get('action', 'store')
-                    if 'default' not in params['arguments'][argument]['kwargs']:
-                        default = None
-                        match type_:
-                            case str():
-                                default = ''
-                            case int():
-                                default = 0
-                        if default is None and action_ == argparse.BooleanOptionalAction:
-                            default = True
-                        params['arguments'][argument]['kwargs']['default'] = default
-            if 'kwargs' in params:
-                if 'usage' not in params['kwargs']:
-                    params['kwargs']['usage'] = f'''
-                        $cmd {action} {branch} \\
-                    ''' if branch else f'''
-                        $cmd {action} \\
-                    '''
-                    for argument in params['arguments']:
-                        label = params['arguments'][argument]['args'][0]
-                        action_ = params['arguments'][argument]['kwargs'].get('action', 'store')
-                        required = params['arguments'][argument]['kwargs'].get('required', False)
-                        default = '<INPUT>' if required else params['arguments'][argument]['kwargs']['default']
-                        if action_ == argparse.BooleanOptionalAction:
-                            no_label = label.replace('--', '--no-')
-                            params['kwargs']['usage'] += f'''
-                                {label if default else no_label} \\
-                            '''
+        # decorate $ARGUMENTS
+        if cls.ARGUMENTS is not None:
+            cls.repack_dict(cls.PUBLIC_ARGUMENTS, cls.replace_hyphen)
+            cls.repack_dict(cls.REQUISITE_ARGUMENTS, cls.replace_hyphen)
+            cls.repack_dict(cls.ARGUMENTS, cls.replace_hyphen)
+            cls.ARGUMENTS.update(copy.deepcopy(cls.REQUISITE_ARGUMENTS))
+            for argument in cls.ARGUMENTS:
+                public_argument = {}
+                use_public = cls.ARGUMENTS[argument].pop('use_public', ReplaceType.NONE)
+                if ReplaceType.NONE.ne(use_public):
+                    public_argument = copy.deepcopy(cls.PUBLIC_ARGUMENTS[argument])
+                match use_public:
+                    case ReplaceType.NONE:
+                        pass
+                    case ReplaceType.ENTIRE:
+                        cls.ARGUMENTS[argument] = public_argument
+                    case ReplaceType.PARTIAL:
+                        if 'args' not in cls.ARGUMENTS[argument]:
+                            cls.ARGUMENTS[argument]['args'] = public_argument['args']
+                        if 'kwargs' not in cls.ARGUMENTS[argument]:
+                            cls.ARGUMENTS[argument]['kwargs'] = public_argument['kwargs']
                         else:
-                            params['kwargs']['usage'] += f'''
-                                {label}={default} \\
-                            '''
-                    params['kwargs']['usage'] = params['kwargs']['usage'].rstrip().rstrip('\\').rstrip()
-                params['kwargs']['usage'] = cls.render_usage(
-                    params['kwargs']['usage'],
-                    kwargs=render_kwargs,
+                            cls.ARGUMENTS[argument]['kwargs'] = public_argument['kwargs'] | \
+                                                                cls.ARGUMENTS[argument]['kwargs']
+                cls.ARGUMENTS[argument]['args'].insert(
+                    0, f'--{cls.replace_underline(argument)}',
                 )
+                cls.ARGUMENTS[argument]['kwargs']['dest'] = argument
+                type_ = cls.ARGUMENTS[argument]['kwargs'].get('type', None)
+                action_ = cls.ARGUMENTS[argument]['kwargs'].get('action', 'store')
+                if 'default' not in cls.ARGUMENTS[argument]['kwargs']:
+                    default = None
+                    match type_:
+                        case str():
+                            default = ''
+                        case int():
+                            default = 0
+                    if default is None and action_ == argparse.BooleanOptionalAction:
+                        default = True
+                    cls.ARGUMENTS[argument]['kwargs']['default'] = default
 
-        for action in cls.ACTIONS:
-            _process_unit(action, None)
-            if 'branches' in cls.ACTIONS[action]:
-                for branch in cls.ACTIONS[action]['branches']:
-                    _process_unit(action, branch)
+        # decorate $KWARGS
+        if cls.KWARGS is not None:
+            cls.KWARGS = copy.deepcopy(cls.BASIC_KWARGS) | cls.KWARGS
+        if cls.NAME and cls.ARGUMENTS is not None:
+            cls.KWARGS['usage'] = f'''
+                $cmd {" ".join(cls.NAME.split('.'))} \\
+            '''
+            for argument in cls.ARGUMENTS:
+                label = cls.ARGUMENTS[argument]['args'][0]
+                action_ = cls.ARGUMENTS[argument]['kwargs'].get('action', 'store')
+                required = cls.ARGUMENTS[argument]['kwargs'].get('required', False)
+                default = '<INPUT>' if required else cls.ARGUMENTS[argument]['kwargs']['default']
+                if action_ == argparse.BooleanOptionalAction:
+                    no_label = label.replace('--', '--no-')
+                    cls.KWARGS['usage'] += f'''
+                        {label if default else no_label} \\
+                    '''
+                else:
+                    cls.KWARGS['usage'] += f'''
+                        {label}={default} \\
+                    '''
+            cls.KWARGS['usage'] = cls.render_usage(
+                cls.KWARGS['usage'].rstrip().rstrip('\\').rstrip(),
+            )
 
     @classmethod
-    def integrate_default_arguments(cls, action=None, branch=None, with_customized=False):
-        #defaults = copy.deepcopy(original_defaults)
-        #original_defaults = {
-        #    argument: params['default']
-        #    for argument, params in (
-        #        copy.deepcopy(cls.PUBLIC_ARGUMENTS) | copy.deepcopy(cls.COMMON_ARGUMENTS)
-        #    ).items()
-        #}
+    def arguments_defaults(cls):
+        if cls.ARGUMENTS is None:
+            return None
+        ret = {}
+        for argment, params in cls.ARGUMENTS.items():
+            ret[argment] = params['kwargs']['default']
+        return ret
 
-        defaults, customized_defaults = {}, {}
-        for _action, action_params in cls.ACTIONS.items():
-            if 'arguments' in action_params:
-                for argument, argument_params in action_params['arguments']:
-                    key = f'{_action}.{argument}'
-                    customized_defaults[key] = argument_params['default']
-            if 'branches' in action_params:
-                for _branch, branch_params in action_params['branches'].items():
-                    if 'arguments' in branch_params:
-                        for argument, argument_params in branch_params['arguments']:
-                            key = f'{_action}.{_branch}.{argument}'
-                            customized_defaults[key] = argument_params['default']
+    #@classmethod
+    #def integrate_default_arguments(cls, action=None, branch=None, with_customized=False):
+    #    #defaults = copy.deepcopy(original_defaults)
+    #    #original_defaults = {
+    #    #    argument: params['default']
+    #    #    for argument, params in (
+    #    #        copy.deepcopy(cls.PUBLIC_ARGUMENTS) | copy.deepcopy(cls.COMMON_ARGUMENTS)
+    #    #    ).items()
+    #    #}
 
-        prefix = ''
-        if action:
-            if branch:
-                prefix = f'{action}.{branch}.'
-            else:
-                prefix = f'{action}.'
-        if prefix:
-            for argument, default in copy.deepcopy(customized_defaults).items():
-                if argument.startswith(prefix):
-                    if prefix.count('.') == argument.count('.'):
-                        defaults[argument.replace(prefix, '')] = default
-        if with_customized:
-            defaults = defaults | copy.deepcopy(customized_defaults)
+    #    defaults, customized_defaults = {}, {}
+    #    for _action, action_params in cls.ACTIONS.items():
+    #        if 'arguments' in action_params:
+    #            for argument, argument_params in action_params['arguments']:
+    #                key = f'{_action}.{argument}'
+    #                customized_defaults[key] = argument_params['default']
+    #        if 'branches' in action_params:
+    #            for _branch, branch_params in action_params['branches'].items():
+    #                if 'arguments' in branch_params:
+    #                    for argument, argument_params in branch_params['arguments']:
+    #                        key = f'{_action}.{_branch}.{argument}'
+    #                        customized_defaults[key] = argument_params['default']
 
-        return defaults
+    #    prefix = ''
+    #    if action:
+    #        if branch:
+    #            prefix = f'{action}.{branch}.'
+    #        else:
+    #            prefix = f'{action}.'
+    #    if prefix:
+    #        for argument, default in copy.deepcopy(customized_defaults).items():
+    #            if argument.startswith(prefix):
+    #                if prefix.count('.') == argument.count('.'):
+    #                    defaults[argument.replace(prefix, '')] = default
+    #    if with_customized:
+    #        defaults = defaults | copy.deepcopy(customized_defaults)
+
+    #    return defaults
 
     @staticmethod
     def load_json(content, default=None) -> list | dict | None:
@@ -4506,6 +3922,10 @@ General commands:
             fnp_delimiter=cls.FilenamePatternTemplate.delimiter,
          ) | kwargs)
 
+    @log_decorator
+    def execute(self):
+        pass
+
 ################################################################################
 #                                                                              #
 #                                 PRE PROCESS                                  #
@@ -4514,9 +3934,1076 @@ General commands:
 
 AudioGod.rewrite_actions()
 
-################################################################################
+####################################################V###########################
 #                                                                              #
-#                                MAIN FUNCTION                                 #
+#                                 SUB CLASSES                                  #
+#                                                                              #
+################################################################################
+
+class PreprocessNoteAction(BaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+        'document': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'field_type': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+    }
+
+    KWARGS = {
+        'description': '✋ g greprocess the note file',
+        'help': '👍 preprocess the note file',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+#-------------------------------------------------------------------------------
+
+class FillPropertiesAction(BaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'extensions': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'document': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'root': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'properties': {
+            'use_public': ReplaceType.NONE,
+            'args': ['-p'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '''
+                    \'{
+                        "_comment": "sources choose from command/file/directory/filename",
+                        "default": {
+                            "sources": ["command", "file"],
+                            "value": null
+                        },
+                        "genre": {
+                            "sources": ["command", "file"],
+                            "value": null
+                        }
+                    }\'
+                ''',
+                'help': '😊 properties for sources',
+            },
+        },
+    }
+
+    KWARGS = {
+        'description': '✋ Fill properties of audios',
+        'help': '👍 fill properties of audios',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+#-------------------------------------------------------------------------------
+
+class FormatPropertiesAction(BaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'extensions': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+    }
+
+    KWARGS = {
+        'description': '✋ Format properties of audios',
+        'help': '👍 format properties of audios',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+#-------------------------------------------------------------------------------
+
+class RenameAudiosAction(BaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'extensions': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'filename_pattern': {
+            'use_public': ReplaceType.NONE,
+            'args': ['-t'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '{delimiter}{{artist}} {div_char} {delimiter}{{title}}'.format(
+                    delimiter=FilenamePatternTemplate.delimiter,
+                    div_char=DIV_CHAR,
+                ),
+                'help': '😊 filename pattern to rename sources',
+            },
+        },
+    }
+
+    KWARGS = {
+        'description': '✋ Rename audios',
+        'help': '👍 rename audios',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+#-------------------------------------------------------------------------------
+
+class ListRepeatedAction(BaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Output/Grouped',
+            },
+        },
+        'extensions': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'output': {
+            'use_public': ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './repeated.txt',
+            },
+        },
+    }
+
+    KWARGS = {
+        'description': '✋ List repeated audios by artist and title',
+        'help': '👍 list repeated audios',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+#-------------------------------------------------------------------------------
+
+class DeriveArtworksAction(BaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'extensions': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'artwork_path': {
+            'use_public': ReplaceType.NONE,
+            'args': ['-k'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '~/Music/Output/Artworks',
+                'help': '😊 the path for export artworks',
+            },
+        },
+    }
+
+    KWARGS = {
+        'description': '✋ Derive artworks',
+        'help': '👍 derive artworks',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+#-------------------------------------------------------------------------------
+
+class DisplayAction(BaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'extensions': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'fields': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'page_number': {
+            'use_public': ReplaceType.NONE,
+            'args': ['-m'],
+            'kwargs': {
+                'action': 'store',
+                'type': int,
+                'required': False,
+                'default': 1,
+                'help': '😊 page number for display',
+            },
+        },
+        'page_size': {
+            'use_public': ReplaceType.NONE,
+            'args': ['-j'],
+            'kwargs': {
+                'action': 'store',
+                'type': int,
+                'required': False,
+                'default': 0,
+                'help': '😊 page size for display',
+            },
+        },
+        'sort': {
+            'use_public': ReplaceType.NONE,
+            'args': ['-q'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '''
+                    \'[
+                        {"_comment": ""},
+                        ["title,artist", true],
+                        ["genre", false]
+                    ]\'
+                ''',
+                'help': '😊 sort options for display',
+            },
+        },
+        'filter': {
+            'use_public': ReplaceType.NONE,
+            'args': ['-b'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '''
+                    \'{
+                        "_options": {
+                            "_comment": "relation choose from and/or",
+                            "relation": "or"
+                        },
+                        "title,core": {
+                            "_comment": "function choose from equal/search/empty",
+                            "function": "search",
+                            "parameters": ["", true, false]
+                        }
+                    }\'
+                ''',
+                'help': '😊 filter options for display',
+            },
+        },
+        'align': {
+            'use_public': ReplaceType.NONE,
+            'args': ['-w'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '''
+                    \'{
+                        "_comment": "align=l/c/r, valign=t/m/b",
+                        "title,artist": "l:m"
+                    }\'
+                ''',
+                'help': '😊 align options for display',
+            },
+        },
+        'style': {
+            'use_public': ReplaceType.NONE,
+            'args': ['-y'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'choices': DisplayStyle.members(),
+                'required': False,
+                'default': DisplayStyle.TABLED,
+                'help': '😊 style for display',
+            },
+        },
+        'data_format': {
+            'use_public': ReplaceType.NONE,
+            'args': ['-x'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'choices': DataFormat.members(),
+                'required': False,
+                'default': DataFormat.OUTPUTTED,
+                'help': '😊 data format for display',
+            },
+        },
+        'numbered': {
+            'use_public': ReplaceType.NONE,
+            'args': ['-n'],
+            'kwargs': {
+                'action': argparse.BooleanOptionalAction,
+                'required': False,
+                'default': True,
+                'help': '😊 if show number when display',
+            },
+        },
+        'field_type': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'output': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+    }
+
+    KWARGS = {
+        'description': '✋ Display details of audios',
+        'help': '👍 display details of audios',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+#-------------------------------------------------------------------------------
+
+class GenerateScriptAction(BaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+        'output': {
+            'use_public': ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './start.zsh',
+            },
+        },
+    }
+
+    KWARGS = {
+        'description': '✋ Generate a grouped bash/zsh script',
+        'help': '👍 generate a grouped bash/zsh script',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+#===============================================================================
+
+class OrganizeBaseAction(BaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = None
+    KWARGS = None
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class OrganizeAction(OrganizeBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = None
+
+    KWARGS = {
+        'description': '✋ Organize files',
+        'help': '👍 organize files',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class Organize__GroupedAction(OrganizeBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'extensions': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'root': {
+            'use_public': ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Output/Grouped',
+            },
+        },
+    }
+
+    KWARGS = {
+        'description': '⭐ Organize grouped files',
+        'help': '😉 organize grouped files',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class Organize__ItunedAction(OrganizeBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Output/Grouped',
+            },
+        },
+        'extensions': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'root': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+    }
+
+    KWARGS = {
+        'description': '⭐ Organize ituned files',
+        'help': '😉 organize ituned files',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+#-------------------------------------------------------------------------------
+
+class ExportBaseAction(BaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = None
+    KWARGS = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class ExportAction(ExportBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = None
+
+    KWARGS = {
+        'description': '✋ Export audio details to file',
+        'help': '👍 export audio details to file',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class Export__NoteAction(ExportBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Output/Grouped',
+            },
+        },
+        'extensions': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'fields': {
+            'use_public': ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': 'note',
+            },
+        },
+        'field_type': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'output': {
+            'use_public': ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './songs.note',
+            },
+        },
+    }
+
+    KWARGS = {
+        'description': '⭐ Export audio details to note file',
+        'help': '😉 export audio details to note file',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class Export__PlistAction(ExportBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'extensions': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'fields': {
+            'use_public': ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': 'ituned',
+            },
+        },
+        'field_type': {
+            'use_public': ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': FieldType.ENGLISH,
+            },
+        },
+        'output': {
+            'use_public': ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/iTunes/Library.xml',
+            },
+        },
+        'itunes_version_plist': {
+            'use_public': ReplaceType.NONE,
+            'args': ['-1'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '/System/Applications/Music.app/Contents/version.plist',
+                'help': '😊 the version plist file of itunes or apple music',
+            },
+        },
+        'itunes_media_folder': {
+            'use_public': ReplaceType.NONE,
+            'args': ['-2'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '~/Music/iTunes/iTunes\ Media/Music', # type: ignore
+                'help': '😊 the media folder of itunes or apple music',
+            },
+        },
+        'track_initial_id': {
+            'use_public': ReplaceType.NONE,
+            'args': ['-3'],
+            'kwargs': {
+                'action': 'store',
+                'type': int,
+                'required': False,
+                'default': 601,
+                'help': '😊 initial id of tracks for itunes or apple music plist file',
+            },
+        },
+        'playlist_initial_id': {
+            'use_public': ReplaceType.NONE,
+            'args': ['-4'],
+            'kwargs': {
+                'action': 'store',
+                'type': int,
+                'required': False,
+                'default': 3001,
+                'help': '😊 initial id of playlists for itunes or apple music plist file',
+            },
+        },
+    }
+
+    KWARGS = {
+        'description': '⭐ Export audio details to plist file',
+        'help': '😉 export audio details to plist file',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class Export__MarkdownAction(ExportBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+    }
+
+    KWARGS = {
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class Export__XmlAction(ExportBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+    }
+
+    KWARGS = {
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class Export__JsonAction(ExportBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+    }
+
+    KWARGS = {
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+#-------------------------------------------------------------------------------
+
+class ConvertBaseAction(BaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = None
+    KWARGS = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class ConvertAction(ConvertBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = None
+
+    KWARGS = {
+        'description': '✋ Convert media',
+        'help': '👍 convert media',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class Convert__QmcToMp3Action(ConvertBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'extensions': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+        'executer': {
+            'use_public': ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './executers/qmc-to-mp3/decoder',
+            },
+        },
+    }
+
+    KWARGS = {
+        'description': '⭐ Convert qmc to mp3',
+        'help': '😉 convert qmc to mp3',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class Convert__KmxToMp4Action(ConvertBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+    }
+
+    KWARGS = {
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class Convert__Mp4ToMp3Action(ConvertBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+    }
+
+    KWARGS = {
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class Convert__NoteToMarkdownAction(ConvertBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+    }
+
+    KWARGS = {
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class Convert__MarkdownToNoteAction(ConvertBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+    }
+
+    KWARGS = {
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+#-------------------------------------------------------------------------------
+
+class OperateBaseAction(BaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = None
+    KWARGS = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class OperateAction(OperateBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = None
+
+    KWARGS = {
+        'description': '✋ Some common operations',
+        'help': '👍 some common operations',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class Operate__BackupAction(OperateBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': ReplaceType.PARTIAL,
+            'kwargs': {
+                'required': True,
+                'default': '',
+            },
+        },
+        'ignored_file': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+    }
+
+    KWARGS = {
+        'description': '⭐ Backup files, directories and so on',
+        'help': '😉 backup files, directories and so on',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class Operate__RemoveAction(OperateBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': ReplaceType.PARTIAL,
+            'kwargs': {
+                'required': True,
+                'default': '',
+            },
+        },
+        'ignored_file': {
+            'use_public': ReplaceType.ENTIRE,
+        },
+    }
+
+    KWARGS = {
+        'description': '⭐ Remove files, directories and so on',
+        'help': '😉 remove files, directories and so on',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+
+class Operate__CleanupAction(OperateBaseAction):
+    ACTIVE = True
+
+    ARGUMENTS = {}
+
+    KWARGS = {
+        'description': '⭐ Cleanup directories, backups and so on',
+        'help': '😉 cleanup directories, backups and so on',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @log_decorator
+    def execute(self):
+        pass
+
+####################################################V###########################
+
+def get_all_subclasses(cls):
+    all_subclasses = []
+    for subclass in cls.__subclasses__():
+        all_subclasses.append(subclass)
+        all_subclasses.extend(get_all_subclasses(subclass))
+    return all_subclasses
+
+def get_active_subclasses(cls):
+    ret = []
+    for subclass in get_all_subclasses(cls):
+        if not subclass.ACTIVE:
+            continue
+        ret.append(subclass)
+    return ret
+
+def decorate_actions():
+    for cls in get_active_subclasses(BaseAction):
+        cls.decorate()
+
+def summarize_actions():
+    ret = {}
+    for cls in get_active_subclasses(BaseAction):
+        if not cls.NAME:
+            continue
+        units = cls.NAME.split('.')
+        match len(units):
+            case 1:
+                ret[units[0]] = cls
+            case 2:
+                if units[0] not in ret:
+                    ret[units[0]] = { units[1]: cls }
+                else:
+                    ret[units[0]][units[1]] = cls
+    return ret
+
+def summarize_actions_defaults():
+    ret = {}
+    for cls in get_active_subclasses(BaseAction):
+        if not cls.NAME or not cls.ARGUMENTS:
+            continue
+        defaults = cls.arguments_defaults()
+        if not defaults:
+            continue
+        for argument, default in defaults.items():
+            ret[f'{cls.NAME}.{argument}'] = default
+    return ret
+
+#-------------------------------------------------------------------------------
+
+decorate_actions()
+ACTIONS = summarize_actions()
+ACTIONS_DEFAULTS = summarize_actions_defaults()
+
+####################################################V###########################
+#                                                                              #
+#                                 MAIN FUNCTION                                #
 #                                                                              #
 ################################################################################
 
@@ -4546,6 +5033,7 @@ class GreatArgumentParser(argparse.ArgumentParser):
         pydoc.pager(self.format_help())
         self.exit(0)
 
+#-------------------------------------------------------------------------------
 
 def _add_arguments(parser, arguments) -> None:
     for _, params in arguments:
@@ -4599,6 +5087,7 @@ def _add_subparser(mainparser, subparsers, name, action, branch=None, execute=No
 
     return subparser
 
+#-------------------------------------------------------------------------------
 
 def main():
     main_parser = GreatArgumentParser(
