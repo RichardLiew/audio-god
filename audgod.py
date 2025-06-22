@@ -130,8 +130,12 @@ import plistlib
 import datetime
 import functools
 
+#-------------------------------------------------------------------------------
+
 from string import Template
 from collections import ChainMap
+
+#-------------------------------------------------------------------------------
 
 import psutil
 
@@ -143,6 +147,11 @@ import eyed3
 from eyed3.id3 import Genre, frames
 from eyed3.id3.tag import CommentsAccessor
 
+################################################################################
+#                                                                              #
+#                                 DESCRIPTION                                  #
+#                                                                              #
+################################################################################
 
 '''
     The god processor for audios.
@@ -156,6 +165,104 @@ from eyed3.id3.tag import CommentsAccessor
 
 __VERSION__ = 'Audio God 1.0'
 
+__USAGE__ = '''
+
+All fields:
+${audio_properties}
+
+Special fields:
+${special_fields}
+
+Special characters:
+${special_characters}
+
+------------------------------------------------------------------------------
+
+Samples of audio file name:
+
+Original  audio file name: "artist${ori_div_char}title.mp3"
+Formatted audio file name: "artist ${div_char} title.mp3"
+Pattern of filename to rename: "${fnp_delimiter}{artist} ${div_char} ${fnp_delimiter}{title}"
+
+------------------------------------------------------------------------------
+
+Sample in note to import:
+
+# Support annotation.
+(1) @[Pop] Vocals/Explosive/English:
+1.[x]title：Star Sky, artist：Two Steps From Hell/Thomas Bergersen, album：Battlecry
+2.[]歌曲名：Horizon, 歌手名：Janji, 专辑名：Horizon, 分组：a/b/c${grouping_sep}d/e/f
+歌曲名：Rise And Fall (DJ版), 歌手名：Camelot, 专辑名：Rise And Fall
+[]歌曲名：Drag Me Down, artist：One Direction, 专辑名：Drag Me Down, genre：Electronic
+@[Pop] Vocals/ppp/qqq
+1. []title：Star Sky, artist：Two Steps From Hell/Thomas Bergersen, album：Battlecry
+2.[]歌曲名：Horizon, 歌手名：Janji, 专辑名：Horizon, 分组：a/b/c${grouping_sep}d/e/f
+
+------------------------------------------------------------------------------
+
+Precautions:
+
+    1. Don't contain blank characters in genres and groupings;
+    2. Audios in the same group should have a same genre;
+    3. In invalid detail line of note.txt file, "," -> "\\" and ":" -> "/".
+
+------------------------------------------------------------------------------
+
+Attention:
+    Here is the cache folder, which contains backups and trash under it.
+    You should clear the cache when the size is too big.
+        ~/.audgod-cache
+            ├── backups
+            └── trash
+
+------------------------------------------------------------------------------
+
+General commands:
+
+    * Show help information:
+        ${cmd} -h/--help
+
+    * Show version of program:
+        ${cmd} -v/--version
+
+------------------------------------------------------------------------------
+
+General steps:
+
+Ready:
+    Step.1: Run <operate cleanup> subcommand to clear repeats, backups, grouped folder, and iTunes related;
+    Step.2: Download songs, and make sure that file named with "artist${ori_div_char}title";
+    Step.3: Add detail of songs to notes, then grouped.
+
+Process Method 1:
+    Step.1: Preprocess note, until note file not changed, with subcommand <preprocess-note>;
+    Step.2: Fill properties, with subcommand <fill-properties>;
+    Step.3: Format properties, with subcommand <format-properties>;
+    Step.4: Rename audios, with subcommand <rename-audios>;
+    Step.5: Organize grouped files, with subcommand <organize grouped>;
+    Step.6: Export note file, with subcommand <export note>;
+    Step.7: List repeated audios of grouped, with subcommand <list-repeated>;
+    Step.8: Organize ituned files, with subcommand <organize ituned>;
+    Step.9: Export plist file, with subcommand <export plist>.
+
+Process Method 2:
+    Step.1: Put note file to local folder (e.g. "${preprocess-note.document}");
+    Step.2: Put audios to source folder (e.g. "${fill-properties.source}");
+    Step.3: Put ignored file to local folder (e.g. "${fill-properties.ignored_file}");
+    Step.4: Run <generate-script> subcommand to generate a shell script (e.g. "${generate-script.output}");
+    Step.5: Execute the shell script above.
+    Results under folders below:
+        "${preprocess-note.document}"
+        "${list-repeated.output}"
+        "${derive-artworks.artwork_path}"
+        "${organize.ituned.source}"
+        "${export.plist.itunes_media_folder}"
+        "${export.plist.itunes_library_plist}"
+
+------------------------------------------------------------------------------
+
+'''
+
 ################################################################################
 #                                                                              #
 #                                  PRESETS                                     #
@@ -164,6 +271,23 @@ __VERSION__ = 'Audio God 1.0'
 
 DEFAULT_LOG_LEVEL = 'WARNING'
 DEFAULT_LOG_FILE = 'stderr'
+
+CACHE_DIR = os.path.expanduser('~/.audgod-cache')
+TRASH_DIR = os.path.join(CACHE_DIR, 'trash')
+BACKUPS_DIR = os.path.join(CACHE_DIR, 'backups')
+
+ORI_DIV_CHAR = '-'
+DIV_CHAR = '*'
+GROUPING_SEPARATOR = '&'
+FILENAME_PATTERN_DELIMITER = '@'
+
+DEFAULT_GENRE = 'Default'
+DEFAULT_GROUPING = 'Default'
+
+#-------------------------------------------------------------------------------
+
+AUDIOS_TREE_ROOT_TAG = '--root-tag--'
+AUDIOS_TREE_ROOT_NID = '--root-nid--'
 
 ################################################################################
 #                                                                              #
@@ -191,6 +315,7 @@ def log_decorator(func):
             print_func(f'\n<{func_name}> finished, cost {cost_time:.2f} seconds.\n')
     return wrapper
 
+#-------------------------------------------------------------------------------
 
 class FatalLogger(logging.Logger):
     def __init__(self, level=DEFAULT_LOG_LEVEL, log_file=DEFAULT_LOG_FILE):
@@ -216,6 +341,7 @@ class FatalLogger(logging.Logger):
         super().critical(msg, *args, **kwargs)
         sys.exit(1)
 
+#-------------------------------------------------------------------------------
 
 class TreeX(Tree):
     def __init__(self, logger=None, *args, **kwargs):
@@ -275,27 +401,10 @@ class TreeX(Tree):
 #                                                                              #
 ################################################################################
 
-CACHE_DIR = os.path.expanduser('~/.audgod-cache')
-TRASH_DIR = os.path.join(CACHE_DIR, 'trash')
-BACKUPS_DIR = os.path.join(CACHE_DIR, 'backups')
-
-
-ORI_DIV_CHAR = '-'
-DIV_CHAR = '*'
-GROUPING_SEPARATOR = '&'
-
-
-DEFAULT_GENRE = 'Default'
-DEFAULT_GROUPING = 'Default'
-
-
-AUDIOS_TREE_ROOT_TAG = '--root-tag--'
-AUDIOS_TREE_ROOT_NID = '--root-nid--'
-
-
 class FilenamePatternTemplate(Template):
-    delimiter = '@'
+    delimiter = FILENAME_PATTERN_DELIMITER
 
+#-------------------------------------------------------------------------------
 
 class PerfectTemplate(Template):
     idpattern = r'(?a:[_-a-z][_-a-z0-9]*(\.[_-a-z][_-a-z0-9]*)*)'
@@ -322,6 +431,7 @@ class PerfectTemplate(Template):
             )
         return self.pattern.sub(_convert, self.template)
 
+#-------------------------------------------------------------------------------
 
 @StringEnum.unique
 class SourceType(StringEnum):
@@ -333,7 +443,6 @@ class SourceType(StringEnum):
     INVALID_EXT = 'invalid-ext'
     INVALID_NAME = 'invalid-name'
 
-
 @StringEnum.unique
 class FileFormat(StringEnum):
     NONE = 'none'
@@ -344,7 +453,6 @@ class FileFormat(StringEnum):
     PLIST = 'plist'
     XML = 'xml'
 
-
 @StringEnum.unique
 class PropertySource(StringEnum):
     COMMAND = 'command'
@@ -352,20 +460,17 @@ class PropertySource(StringEnum):
     FILENAME = 'filename'
     DIRECTORY = 'directory'
 
-
 @StringEnum.unique
 class DisplayStyle(StringEnum):
     TABLED = 'tabled'
     COMPACT = 'compact'
     VERTICAL = 'vertical'
 
-
 @StringEnum.unique
 class DataFormat(StringEnum):
     ORIGINAL = 'original'
     FORMATTED = 'formatted'
     OUTPUTTED = 'outputted'
-
 
 @StringEnum.unique
 class AudiosTreeNodeType(StringEnum):
@@ -374,13 +479,11 @@ class AudiosTreeNodeType(StringEnum):
     PLAYLIST = 'playlist'
     TRACK = 'track'
 
-
 @StringEnum.unique
 class FieldType(StringEnum):
     ORIGINAL = 'ori'
     CHINESE = 'cn'
     ENGLISH = 'en'
-
 
 @StringEnum.unique
 class ReplaceType(StringEnum):
@@ -388,6 +491,7 @@ class ReplaceType(StringEnum):
     PARTIAL = 'partial'
     ENTIRE = 'entire'
 
+#-------------------------------------------------------------------------------
 
 AUDIO_PROPERTIES = {
     'title': (('歌曲名', 'Name'), 'string'),
@@ -439,6 +543,8 @@ AudioProperty = StringEnum.unique(StringEnum(
         prop.upper(): prop for prop in AUDIO_CN_PROPERTIES.keys()
     },
 ))
+
+#-------------------------------------------------------------------------------
 
 DEFAULTS_FIELDS = [
     AudioProperty.TITLE,
@@ -509,11 +615,11 @@ FIELDS = {
 
 ################################################################################
 #                                                                              #
-#                                 Audio God                                    #
+#                                 AUDIO GOD                                    #
 #                                                                              #
 ################################################################################
 
-class BaseAction(object):
+class AudioGod(object):
     ACTIVE = True
 
     NAME = ''
@@ -626,7 +732,6 @@ class BaseAction(object):
         },
     }
 
-
     BASIC_KWARGS = {
         'description': '',
         'help': '',
@@ -680,103 +785,7 @@ class BaseAction(object):
     ARGUMENTS = None
     KWARGS = None
 
-
-    USAGE = '''
-All fields:
-${audio_properties}
-
-Special fields:
-${special_fields}
-
-Special characters:
-${special_characters}
-
-------------------------------------------------------------------------------
-
-Samples of audio file name:
-
-Original  audio file name: "artist${ori_div_char}title.mp3"
-Formatted audio file name: "artist ${div_char} title.mp3"
-Pattern of filename to rename: "${fnp_delimiter}{artist} ${div_char} ${fnp_delimiter}{title}"
-
-------------------------------------------------------------------------------
-
-Sample in note to import:
-
-# Support annotation.
-(1) @[Pop] Vocals/Explosive/English:
-1.[x]title：Star Sky, artist：Two Steps From Hell/Thomas Bergersen, album：Battlecry
-2.[]歌曲名：Horizon, 歌手名：Janji, 专辑名：Horizon, 分组：a/b/c${grouping_sep}d/e/f
-歌曲名：Rise And Fall (DJ版), 歌手名：Camelot, 专辑名：Rise And Fall
-[]歌曲名：Drag Me Down, artist：One Direction, 专辑名：Drag Me Down, genre：Electronic
-@[Pop] Vocals/ppp/qqq
-1. []title：Star Sky, artist：Two Steps From Hell/Thomas Bergersen, album：Battlecry
-2.[]歌曲名：Horizon, 歌手名：Janji, 专辑名：Horizon, 分组：a/b/c${grouping_sep}d/e/f
-
-------------------------------------------------------------------------------
-
-Precautions:
-
-    1. Don't contain blank characters in genres and groupings;
-    2. Audios in the same group should have a same genre;
-    3. In invalid detail line of note.txt file, "," -> "\\" and ":" -> "/".
-
-------------------------------------------------------------------------------
-
-Attention:
-    Here is the cache folder, which contains backups and trash under it.
-    You should clear the cache when the size is too big.
-        ~/.audgod-cache
-            ├── backups
-            └── trash
-
-------------------------------------------------------------------------------
-
-General steps:
-
-Ready:
-    Step.1: Run <operate cleanup> subcommand to clear repeats, backups, grouped folder, and iTunes related;
-    Step.2: Download songs, and make sure that file named with "artist${ori_div_char}title";
-    Step.3: Add detail of songs to notes, then grouped.
-
-Process Method 1:
-    Step.1: Preprocess note, until note file not changed, with subcommand <preprocess-note>;
-    Step.2: Fill properties, with subcommand <fill-properties>;
-    Step.3: Format properties, with subcommand <format-properties>;
-    Step.4: Rename audios, with subcommand <rename-audios>;
-    Step.5: Organize grouped files, with subcommand <organize grouped>;
-    Step.6: Export note file, with subcommand <export note>;
-    Step.7: List repeated audios of grouped, with subcommand <list-repeated>;
-    Step.8: Organize ituned files, with subcommand <organize ituned>;
-    Step.9: Export plist file, with subcommand <export plist>.
-
-Process Method 2:
-    Step.1: Put note file to local folder (e.g. "${preprocess-note.document}");
-    Step.2: Put audios to source folder (e.g. "${fill-properties.source}");
-    Step.3: Put ignored file to local folder (e.g. "${fill-properties.ignored_file}");
-    Step.4: Run <generate-script> subcommand to generate a shell script (e.g. "${generate-script.output}");
-    Step.5: Execute the shell script above.
-    Results under folders below:
-        "${preprocess-note.document}"
-        "${list-repeated.output}"
-        "${derive-artworks.artwork_path}"
-        "${organize.ituned.source}"
-        "${export.plist.itunes_media_folder}"
-        "${export.plist.itunes_library_plist}"
-
-------------------------------------------------------------------------------
-
-General commands:
-
-    * Show help information:
-        ${cmd} -h/--help
-
-    * Show version of program:
-        ${cmd} -v/--version
-
-------------------------------------------------------------------------------
-    '''
-
+#-------------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         # init logger
@@ -901,6 +910,8 @@ General commands:
             field: __output_func(self.__output_funcs[field])
             for field in self.ALL_FIELDS
         }
+
+    #---------------------------------------------------------------------------
 
     def __resolve_fields(self, fields, sortify=False, reversify=False, stringify=False):
         fields_ = self.split(
@@ -1388,7 +1399,7 @@ General commands:
     @classmethod
     def decorate(cls):
         # decorate $NAME
-        if not cls.__name__.endswith('BaseAction'):
+        if not cls.__name__.endswith('AudioGod'):
             cls.NAME = cls.replace_underline(
                 re.sub(
                     r'([A-Z])([A-Z][a-z])',
@@ -1468,7 +1479,7 @@ General commands:
             )
 
     @classmethod
-    def arguments_defaults(cls):
+    def ARGUMENTS_DEFAULTS(cls):
         if cls.ARGUMENTS is None:
             return None
         ret = {}
@@ -2751,7 +2762,7 @@ General commands:
             audio_object = self.__prime_audio(audio)
             _old = os.path.basename(audio)
             _, ext = os.path.splitext(_old)
-            _new = self.FilenamePatternTemplate(self.filename_pattern).safe_substitute({
+            _new = FILENAME_PATTERN_DELIMITER(self.filename_pattern).safe_substitute({
                 field: self.fetchx(
                     audio_object, field, formatted=True,
                 ) for field in self.ALL_FIELDS
@@ -3834,7 +3845,7 @@ General commands:
             (cls.ORI_DIV_CHAR, 'Separator for origin audio file name.'),
             (cls.DIV_CHAR, 'Separator for formatted audio file name.'),
             (cls.GROUPING_SEPARATOR, 'Separator for several grouping property of audio file.'),
-            (cls.FilenamePatternTemplate.delimiter, 'Delimiter of template for filename pattern.'),
+            (cls.FILENAME_PATTERN_DELIMITER, 'Delimiter of template for filename pattern.'),
         ]
         for number, char in enumerate(characters):
             table.add_row([
@@ -3902,45 +3913,37 @@ General commands:
 
     @classmethod
     def render_usage(cls, usage, kwargs={}) -> str:
-        _kwargs = cls.integrate_default_arguments(with_customized=True)
+        #_kwargs = cls.integrate_default_arguments(with_customized=True)
         #aliens = [('properties', 4), ('sort', 4), ('filter', 4), ('align', 4)]
         #for alien in aliens:
         #    _kwargs[alien[0]] = cls.glorify_indents(
         #        _kwargs[alien[0]], indent=alien[1],
         #    ).strip()
-        kwargs = _kwargs | kwargs
-        return '\n' + cls.PerfectTemplate(
+        #kwargs = _kwargs | kwargs
+        return '\n' + PerfectTemplate(
             cls.glorify_indents(usage, indent=0),
         ).perfect_substitute(dict(
             audio_properties=cls.audio_properties(),
             special_fields=cls.special_fields(),
             special_characters=cls.special_characters(),
             cmd=cls.get_command(),
-            ori_div_char=cls.ORI_DIV_CHAR,
-            div_char=cls.DIV_CHAR,
-            grouping_sep=cls.GROUPING_SEPARATOR,
-            fnp_delimiter=cls.FilenamePatternTemplate.delimiter,
+            ori_div_char=ORI_DIV_CHAR,
+            div_char=DIV_CHAR,
+            grouping_sep=GROUPING_SEPARATOR,
+            fnp_delimiter=FILENAME_PATTERN_DELIMITER,
          ) | kwargs)
 
     @log_decorator
     def execute(self):
         pass
 
-################################################################################
-#                                                                              #
-#                                 PRE PROCESS                                  #
-#                                                                              #
-################################################################################
-
-AudioGod.rewrite_actions()
-
 ####################################################V###########################
 #                                                                              #
-#                                 SUB CLASSES                                  #
+#                                     ACTIONS                                  #
 #                                                                              #
 ################################################################################
 
-class PreprocessNoteAction(BaseAction):
+class PreprocessNoteAction(AudioGod):
     ACTIVE = True
 
     ARGUMENTS = {
@@ -3966,7 +3969,7 @@ class PreprocessNoteAction(BaseAction):
 
 #-------------------------------------------------------------------------------
 
-class FillPropertiesAction(BaseAction):
+class FillPropertiesAction(AudioGod):
     ACTIVE = True
 
     ARGUMENTS = {
@@ -4027,7 +4030,7 @@ class FillPropertiesAction(BaseAction):
 
 #-------------------------------------------------------------------------------
 
-class FormatPropertiesAction(BaseAction):
+class FormatPropertiesAction(AudioGod):
     ACTIVE = True
 
     ARGUMENTS = {
@@ -4059,7 +4062,7 @@ class FormatPropertiesAction(BaseAction):
 
 #-------------------------------------------------------------------------------
 
-class RenameAudiosAction(BaseAction):
+class RenameAudiosAction(AudioGod):
     ACTIVE = True
 
     ARGUMENTS = {
@@ -4105,7 +4108,7 @@ class RenameAudiosAction(BaseAction):
 
 #-------------------------------------------------------------------------------
 
-class ListRepeatedAction(BaseAction):
+class ListRepeatedAction(AudioGod):
     ACTIVE = True
 
     ARGUMENTS = {
@@ -4146,7 +4149,7 @@ class ListRepeatedAction(BaseAction):
 
 #-------------------------------------------------------------------------------
 
-class DeriveArtworksAction(BaseAction):
+class DeriveArtworksAction(AudioGod):
     ACTIVE = True
 
     ARGUMENTS = {
@@ -4189,7 +4192,7 @@ class DeriveArtworksAction(BaseAction):
 
 #-------------------------------------------------------------------------------
 
-class DisplayAction(BaseAction):
+class DisplayAction(AudioGod):
     ACTIVE = True
 
     ARGUMENTS = {
@@ -4342,7 +4345,7 @@ class DisplayAction(BaseAction):
 
 #-------------------------------------------------------------------------------
 
-class GenerateScriptAction(BaseAction):
+class GenerateScriptAction(AudioGod):
     ACTIVE = True
 
     ARGUMENTS = {
@@ -4368,7 +4371,7 @@ class GenerateScriptAction(BaseAction):
 
 #===============================================================================
 
-class OrganizeBaseAction(BaseAction):
+class OrganizeBaseAction(AudioGod):
     ACTIVE = True
 
     ARGUMENTS = None
@@ -4475,7 +4478,7 @@ class Organize__ItunedAction(OrganizeBaseAction):
 
 #-------------------------------------------------------------------------------
 
-class ExportBaseAction(BaseAction):
+class ExportBaseAction(AudioGod):
     ACTIVE = True
 
     ARGUMENTS = None
@@ -4701,7 +4704,7 @@ class Export__JsonAction(ExportBaseAction):
 
 #-------------------------------------------------------------------------------
 
-class ConvertBaseAction(BaseAction):
+class ConvertBaseAction(AudioGod):
     ACTIVE = True
 
     ARGUMENTS = None
@@ -4839,7 +4842,7 @@ class Convert__MarkdownToNoteAction(ConvertBaseAction):
 
 #-------------------------------------------------------------------------------
 
-class OperateBaseAction(BaseAction):
+class OperateBaseAction(AudioGod):
     ACTIVE = True
 
     ARGUMENTS = None
@@ -4948,47 +4951,54 @@ class Operate__CleanupAction(OperateBaseAction):
 
 ####################################################V###########################
 
-def get_all_subclasses(cls):
+def _get_all_subclasses(cls):
     all_subclasses = []
     for subclass in cls.__subclasses__():
         all_subclasses.append(subclass)
-        all_subclasses.extend(get_all_subclasses(subclass))
+        all_subclasses.extend(_get_all_subclasses(subclass))
     return all_subclasses
 
-def get_active_subclasses(cls):
+
+def _get_active_subclasses(cls):
     ret = []
-    for subclass in get_all_subclasses(cls):
+    for subclass in _get_all_subclasses(cls):
         if not subclass.ACTIVE:
             continue
         ret.append(subclass)
     return ret
 
-def decorate_actions():
-    for cls in get_active_subclasses(BaseAction):
+
+def _decorate_actions():
+    for cls in _get_active_subclasses(AudioGod):
         cls.decorate()
 
-def summarize_actions():
+
+def _summarize_actions():
     ret = {}
-    for cls in get_active_subclasses(BaseAction):
+    for cls in _get_active_subclasses(AudioGod):
         if not cls.NAME:
             continue
         units = cls.NAME.split('.')
         match len(units):
             case 1:
-                ret[units[0]] = cls
+                if units[0] not in ret:
+                    ret[units[0]] = { 'carrier': cls }
+                else:
+                    ret[units[0]]['carrier'] = cls
             case 2:
                 if units[0] not in ret:
-                    ret[units[0]] = { units[1]: cls }
+                    ret[units[0]] = { 'branches': { units[1]: { 'carrier': cls } } }
                 else:
-                    ret[units[0]][units[1]] = cls
+                    ret[units[0]]['branches'][units[1]] = { 'carrier': cls }
     return ret
 
-def summarize_actions_defaults():
+
+def _summarize_actions_defaults():
     ret = {}
-    for cls in get_active_subclasses(BaseAction):
+    for cls in _get_active_subclasses(AudioGod):
         if not cls.NAME or not cls.ARGUMENTS:
             continue
-        defaults = cls.arguments_defaults()
+        defaults = copy.deepcopy(cls.ARGUMENTS_DEFAULTS())
         if not defaults:
             continue
         for argument, default in defaults.items():
@@ -4997,9 +5007,49 @@ def summarize_actions_defaults():
 
 #-------------------------------------------------------------------------------
 
-decorate_actions()
-ACTIONS = summarize_actions()
-ACTIONS_DEFAULTS = summarize_actions_defaults()
+_decorate_actions()
+ACTIONS = _summarize_actions()
+ACTIONS_DEFAULTS = _summarize_actions_defaults()
+
+#-------------------------------------------------------------------------------
+
+def _get_carrier(action, branch):
+    if not action:
+        return None
+    if action not in ACTIONS:
+        return None
+    if not branch:
+        if 'carrier' not in ACTIONS[action]:
+            return None
+        return ACTIONS[action]['carrier']
+    if 'branches' not in ACTIONS[action]:
+        return None
+    if branch not in ACTIONS[action]['branches']:
+        return None
+    if 'carrier' not in ACTIONS[action]['branches'][branch]:
+        return None
+    return ACTIONS[action]['branches'][branch]['carrier']
+
+
+def _get_carrier_arguments(action, branch):
+    carrier = _get_carrier(action, branch)
+    if carrier is None:
+        return None
+    return copy.deepcopy(carrier.ARGUMENTS)
+
+
+def _get_carrier_defaults(action, branch):
+    carrier = _get_carrier(action, branch)
+    if carrier is None:
+        return None
+    return copy.deepcopy(carrier.ARGUMENTS_DEFAULTS())
+
+
+def _get_carrier_kwargs(action, branch):
+    carrier = _get_carrier(action, branch)
+    if carrier is None:
+        return None
+    return copy.deepcopy(carrier.KWARGS)
 
 ####################################################V###########################
 #                                                                              #
@@ -5007,7 +5057,7 @@ ACTIONS_DEFAULTS = summarize_actions_defaults()
 #                                                                              #
 ################################################################################
 
-class GreatArgumentParser(argparse.ArgumentParser):
+class PerfectArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__subparsers = []
@@ -5039,50 +5089,39 @@ def _add_arguments(parser, arguments) -> None:
     for _, params in arguments:
         parser.add_argument(*params['args'], **params['kwargs'])
 
+
 def _handle_execute(args) -> None:
     action, branch = args.action, None
     if hasattr(args, 'branch'):
         branch = args.branch
-    
-    arguments = AudioGod.integrate_default_arguments(
-        action=action,
-        branch=branch,
-        with_customized=False,
-    )
+
+    carrier = _get_carrier(action, branch)
+    if carrier is None:
+        raise Exception(f'Invalid carrier <{action} {branch}>!')
+
+    arguments = _get_carrier_defaults(action, branch)
+    if arguments is None:
+        raise Exception(f'Invalid arguments <{action} {branch}!')
     for argument in arguments:
         if hasattr(args, argument):
             arguments[argument] = getattr(args, argument)
 
-    func = AudioGod.replace_hyphen(f'{action}__{branch}' if branch else action)
-    getattr(AudioGod(**arguments), func)()
+    carrier(**arguments).execute()
+
 
 def _add_subparser(mainparser, subparsers, name, action, branch=None, execute=None):
-    params = AudioGod.ACTIONS[action]
-    if branch and 'branches' in params:
-        params = params['branches'][branch]
-    arguments = params.get('arguments', None)
-    kwargs = {
-        'description': '',
-        'help': '',
-        'epilog': '😴 Sleeping ...',
-        'formatter_class': argparse.ArgumentDefaultsHelpFormatter,
-        #'usage': '',
-        #'prog': None,
-        #'aliases': (),
-        #'prefix_chars': '-',
-        #'fromfile_prefix_chars': None,
-        #'argument_default': None,
-        #'conflict_handler': 'error',
-        #'add_help': True,
-        #'allow_abbrev': True,
-        #'exit_on_error': True,
-    } | params['kwargs']
+    kwargs = _get_carrier_kwargs(action, branch)
+    if not kwargs:
+        raise Exception(f'Invalid carrier by <{action} {branch}>!')
     subparser = subparsers.add_parser(name, **kwargs)
 
+    arguments = _get_carrier_arguments(action, branch)
     if arguments:
         _add_arguments(subparser, arguments)
+
     if execute is not None:
         subparser.set_defaults(execute=execute)
+
     mainparser.add_subparser((name, subparser))
 
     return subparser
@@ -5090,9 +5129,9 @@ def _add_subparser(mainparser, subparsers, name, action, branch=None, execute=No
 #-------------------------------------------------------------------------------
 
 def main():
-    main_parser = GreatArgumentParser(
+    main_parser = PerfectArgumentParser(
         prog=sys.argv[0],
-        usage=AudioGod.render_usage(AudioGod.USAGE),
+        usage=AudioGod.render_usage(__USAGE__),
         description='🎻 God of audios 🎸',
         epilog='🤔 Thinking ...',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -5117,12 +5156,12 @@ def main():
         description='🫡 the available actions show below:',
         dest='action',
         required=False,
-        parser_class=GreatArgumentParser,
+        parser_class=PerfectArgumentParser,
         metavar='🚀 action name:   ',
         help='🥹 action statement:',
     )
 
-    for action in AudioGod.ACTIONS:
+    for action in ACTIONS:
         action_parser = _add_subparser(
             mainparser=main_parser,
             subparsers=action_parsers,
@@ -5131,7 +5170,7 @@ def main():
             branch=None,
             execute=_handle_execute,
         )
-        if 'branches' in AudioGod.ACTIONS[action]:
+        if 'branches' in ACTIONS[action]:
             branch_parsers = action_parser.add_subparsers(
                 prog=sys.argv[0],
                 title='🤝 Branches',
@@ -5141,7 +5180,7 @@ def main():
                 metavar='🤠 branch name:   ',
                 help='☀️ branch statement:',
             )
-            for branch in AudioGod.ACTIONS[action]['branches']:
+            for branch in ACTIONS[action]['branches']:
                 _ = _add_subparser(
                     mainparser=action_parser,
                     subparsers=branch_parsers,
