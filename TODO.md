@@ -10,6 +10,8 @@ ACTIONS里dict可以设置同义词吗？比如markdown和md
 对比旧文件，看看public arguments是否齐全，actiongs里的arguments是否齐
 初始化AudioGod对象的时候，对于没传入的参数，不应该赋值默认值，可以直接给个None就行，看看是否影响主逻辑
 
+顶部的所有枚举类型以及AudioGod里的类成员或者私有成员函数或者变量看看不是公用的，都塞进自己的Action里
+
 sys._getframe().f_code.co_name  init
 All done.
 
