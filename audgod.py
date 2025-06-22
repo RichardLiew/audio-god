@@ -258,7 +258,7 @@ Process Method 2:
         "${derive-artworks.artwork_path}"
         "${organize.ituned.source}"
         "${export.plist.itunes_media_folder}"
-        "${export.plist.itunes_library_plist}"
+        "${export.plist.output}"
 
 ------------------------------------------------------------------------------
 
@@ -411,7 +411,7 @@ class FilenamePatternTemplate(Template):
 #-------------------------------------------------------------------------------
 
 class PerfectTemplate(Template):
-    idpattern = r'(?a:[_-a-z][_-a-z0-9]*(\.[_-a-z][_-a-z0-9]*)*)'
+    idpattern = r'(?a:[_a-z-][_a-z0-9-]*(\.[_a-z-][_a-z0-9-]*)*)'
 
     def perfect_substitute(self, mapping, /, **kwargs):
         if kwargs:
@@ -423,7 +423,7 @@ class PerfectTemplate(Template):
                     return str(
                         AudioGod.repack_dict(mapping)[AudioGod.rewrite_key(named)],
                     )
-                except KeyError:
+                except KeyError as e:
                     return matched.group()
             if matched.group('escaped') is not None:
                 return self.delimiter
@@ -987,7 +987,9 @@ class AudioGod(object):
 
 
     @classmethod
-    def repack_dict(cls, dict_, rewrite_key=rewrite_key):
+    def repack_dict(cls, dict_, rewrite_key=None):
+        if not rewrite_key:
+            rewrite_key = cls.rewrite_key
         for key in dict_:
             new_key = rewrite_key(key)
             if new_key == key:
