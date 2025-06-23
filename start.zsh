@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-24T06:43:32Z
+# Created Time: 2025-06-24T07:59:16Z
 
 ##############################################################################
 
@@ -17,13 +17,13 @@ set -e
     --log-file=stderr
 
 ./audio-god fill-properties \
-    --source=~/Music/Source/MP3 \
+    --source='~/Music/Source/MP3' \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./ignored.txt \
     --document=./songs.note \
-    --root=~/Music/Source/MP3 \
-    --properties='{
+    --root='~/Music/Source/MP3' \
+    --properties=''"'"'{
         "_comment": "sources choose from command/file/directory/filename",
         "default": {
             "sources": ["command", "file"],
@@ -33,12 +33,12 @@ set -e
             "sources": ["command", "file"],
             "value": null
         }
-    }' \
+    }'"'"'' \
     --log-level=WARNING \
     --log-file=stderr
 
 ./audio-god format-properties \
-    --source=~/Music/Source/MP3 \
+    --source='~/Music/Source/MP3' \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./ignored.txt \
@@ -46,17 +46,17 @@ set -e
     --log-file=stderr
 
 ./audio-god rename-audios \
-    --source=~/Music/Source/MP3 \
+    --source='~/Music/Source/MP3' \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./ignored.txt \
-    --filename-pattern=@{artist} * @{title} \
+    --filename-pattern='@{artist} * @{title}' \
     --log-level=WARNING \
     --log-file=stderr
 
 ./audio-god organize grouped \
-    --source=~/Music/Source/MP3 \
-    --root=~/Music/Output/Grouped \
+    --source='~/Music/Source/MP3' \
+    --root='~/Music/Output/Grouped' \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./ignored.txt \
@@ -64,7 +64,7 @@ set -e
     --log-file=stderr
 
 ./audio-god export note \
-    --source=~/Music/Output/Grouped \
+    --source='~/Music/Output/Grouped' \
     --fields=note \
     --field-type=cn \
     --output=./songs.note \
@@ -77,7 +77,7 @@ set -e
     --log-file=stderr
 
 ./audio-god list-repeated \
-    --source=~/Music/Output/Grouped \
+    --source='~/Music/Output/Grouped' \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./ignored.txt \
@@ -86,8 +86,8 @@ set -e
     --log-file=stderr
 
 ./audio-god organize ituned \
-    --source=~/Music/Output/Grouped \
-    --root=~/Music/Source/MP3 \
+    --source='~/Music/Output/Grouped' \
+    --root='~/Music/Source/MP3' \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./ignored.txt \
@@ -95,12 +95,12 @@ set -e
     --log-file=stderr
 
 ./audio-god export plist \
-    --source=~/Music/Source/MP3 \
+    --source='~/Music/Source/MP3' \
     --fields=ituned \
     --field-type=en \
-    --output=~/Music/iTunes/Library.xml \
+    --output='~/Music/iTunes/Library.xml' \
     --itunes-version-plist=/System/Applications/Music.app/Contents/version.plist \
-    --itunes-media-folder=~/Music/iTunes/iTunes\ Media/Music \
+    --itunes-media-folder='~/Music/iTunes/iTunes\ Media/Music' \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./ignored.txt \

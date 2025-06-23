@@ -122,6 +122,7 @@ import json
 import copy
 import glob
 import pydoc
+import shlex
 import urllib
 import shutil
 import logging
@@ -1648,6 +1649,8 @@ class AudioGod(object):
                 if action_ == argparse.BooleanOptionalAction:
                     argument_pair = label if default else label.replace('--', '--no-')
                 else:
+                    if isinstance(default, str):
+                        default = shlex.quote(default)
                     argument_pair = f'{label}={default}'
                 cls.KWARGS['usage'] += '{}{} \\\n'.format(
                     ' ' * indent, argument_pair,
