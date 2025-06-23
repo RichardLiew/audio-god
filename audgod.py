@@ -177,7 +177,7 @@ ${special_fields}
 Special characters:
 ${special_characters}
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 Samples of audio file name:
 
@@ -185,7 +185,7 @@ Original  audio file name: "artist${ori_div_char}title.mp3"
 Formatted audio file name: "artist ${div_char} title.mp3"
 Pattern of filename to rename: "${fnp_delimiter}{artist} ${div_char} ${fnp_delimiter}{title}"
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 Sample in note to import:
 
@@ -199,7 +199,7 @@ Sample in note to import:
 1. []title：Star Sky, artist：Two Steps From Hell/Thomas Bergersen, album：Battlecry
 2.[]歌曲名：Horizon, 歌手名：Janji, 专辑名：Horizon, 分组：a/b/c${grouping_sep}d/e/f
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 Precautions:
 
@@ -207,7 +207,7 @@ Precautions:
     2. Audios in the same group should have a same genre;
     3. In invalid detail line of note.txt file, "," -> "\\" and ":" -> "/".
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 Attention:
     Here is the cache folder, which contains backups and trash under it.
@@ -216,7 +216,7 @@ Attention:
             ├── ${trash_dir}
             └── ${backups_dir}
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 General commands:
 
@@ -226,7 +226,7 @@ General commands:
     * Show version of program:
         ${cmd} -v/--version
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 General steps:
 
@@ -260,38 +260,9 @@ Process Method 2:
         "${export.plist.itunes_media_folder}"
         "${export.plist.output}"
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 '''
-
-################################################################################
-#                                                                              #
-#                                  PRESETS                                     #
-#                                                                              #
-################################################################################
-
-DEFAULT_LOG_LEVEL = 'WARNING'
-DEFAULT_LOG_FILE = 'stderr'
-
-
-CACHE_DIR = os.path.expanduser('~/.audgod-cache')
-TRASH_DIR = os.path.join(CACHE_DIR, 'trash')
-BACKUPS_DIR = os.path.join(CACHE_DIR, 'backups')
-
-
-ORI_DIV_CHAR = '-'
-DIV_CHAR = '*'
-GROUPING_SEPARATOR = '&'
-FILENAME_PATTERN_DELIMITER = '@'
-
-
-DEFAULT_GENRE = 'Default'
-DEFAULT_GROUPING = 'Default'
-
-#-------------------------------------------------------------------------------
-
-AUDIOS_TREE_ROOT_TAG = '--root-tag--'
-AUDIOS_TREE_ROOT_NID = '--root-nid--'
 
 ################################################################################
 #                                                                              #
@@ -319,311 +290,6 @@ def log_decorator(func):
             print_func(f'\n<{func_name}> finished, cost {cost_time:.2f} seconds.\n')
     return wrapper
 
-#-------------------------------------------------------------------------------
-
-class FatalLogger(logging.Logger):
-    def __init__(self, level=DEFAULT_LOG_LEVEL, log_file=DEFAULT_LOG_FILE):
-        super().__init__('fatal', level)
-        stdout_streams = ['stdout', 'sys.stdout', sys.stdout]
-        stderr_streams = [None, '', 'stderr', 'sys.stderr', sys.stderr]
-        if log_file in stdout_streams+stderr_streams:
-            console_handler = logging.StreamHandler(
-                sys.stderr if log_file in stderr_streams else sys.stdout
-            )
-            console_handler.setFormatter(logging.Formatter('%(message)s'))
-            console_handler.setLevel(level)
-            self.addHandler(console_handler)
-        else:
-            file_handler = logging.FileHandler(
-                log_file, encoding='utf-8', delay=False, # type: ignore
-            )
-            file_handler.setFormatter(logging.Formatter('%(message)s'))
-            file_handler.setLevel(level)
-            self.addHandler(file_handler)
-
-    def critical(self, msg, *args, **kwargs):
-        super().critical(msg, *args, **kwargs)
-        sys.exit(1)
-
-#-------------------------------------------------------------------------------
-
-class TreeX(Tree):
-    def __init__(self, logger=None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if logger is None:
-            logger = FatalLogger(DEFAULT_LOG_LEVEL, DEFAULT_LOG_FILE)
-        self.logger = logger
-
-    def perfect_merge(self, nid, new_tree, deep=False) -> None:
-        if not (isinstance(new_tree, Tree) or isinstance(new_tree, TreeX)):
-            self.logger.fatal('The new tree to merge is not a valid tree.')
-            return
-
-        if new_tree is None:
-            return
-
-        if new_tree.root is None:
-            return
-
-        if nid is None:
-            if self.root is None:
-                self.add_node(new_tree[new_tree.root])
-            nid = self.root
-
-        if not self.contains(nid):
-            self.logger.fatal(f'Node <{nid}> is not in the tree!')
-            return
-
-        current_node = self[nid]
-
-        if current_node.tag != new_tree[new_tree.root].tag:
-            self.logger.fatal('Current node not same with root of new tree.')
-            return
-
-        childs = self.children(nid)
-        child_tags = [child.tag for child in childs]
-        new_childs = new_tree.children(new_tree.root)
-        new_subtrees = [new_tree.subtree(child.identifier) for child in new_childs]
-
-        if not childs:
-            for new_subtree in new_subtrees:
-                self.paste(nid=nid, new_tree=new_subtree, deep=deep)
-        else:
-            for new_child in new_childs:
-                if new_child.tag not in child_tags:
-                    self.paste(nid=nid, new_tree=new_tree.subtree(new_child.identifier), deep=deep)
-                    continue
-                self.perfect_merge(
-                    childs[child_tags.index(new_child.tag)].identifier,
-                    new_tree.subtree(new_child.identifier),
-                    deep=deep,
-                )
-
-####################################################V###########################
-#                                                                              #
-#                                 DEFINITIONS                                  #
-#                                                                              #
-################################################################################
-
-class FilenamePatternTemplate(Template):
-    delimiter = FILENAME_PATTERN_DELIMITER
-
-#-------------------------------------------------------------------------------
-
-class PerfectTemplate(Template):
-    idpattern = r'(?a:[_a-z-][_a-z0-9-]*(\.[_a-z-][_a-z0-9-]*)*)'
-
-    def perfect_substitute(self, mapping, /, **kwargs):
-        if kwargs:
-            mapping = ChainMap(kwargs, mapping)
-        def _convert(matched):
-            named = matched.group('named') or matched.group('braced')
-            if named is not None:
-                try:
-                    return str(
-                        AudioGod.repack_dict(mapping)[AudioGod.rewrite_key(named)],
-                    )
-                except KeyError as e:
-                    return matched.group()
-            if matched.group('escaped') is not None:
-                return self.delimiter
-            if matched.group('invalid') is not None:
-                return matched.group()
-            raise ValueError(
-                'Unrecognized named group in pattern',
-                self.pattern,
-            )
-        return self.pattern.sub(_convert, self.template)
-
-#-------------------------------------------------------------------------------
-
-@StringEnum.unique
-class SourceType(StringEnum):
-    VALID = 'valid'
-    MATCHED = 'matched'
-    NOTMATCHED = 'notmatched'
-    OMITTED = 'omitted'
-    IGNORED = 'ignored'
-    INVALID_EXT = 'invalid-ext'
-    INVALID_NAME = 'invalid-name'
-
-
-@StringEnum.unique
-class FileFormat(StringEnum):
-    NONE = 'none'
-    NOTE = 'note'
-    JSON = 'json'
-    MARKDOWN = 'markdown'
-    MD = 'md'
-    PLIST = 'plist'
-    XML = 'xml'
-
-
-@StringEnum.unique
-class PropertySource(StringEnum):
-    COMMAND = 'command'
-    FILE = 'file'
-    FILENAME = 'filename'
-    DIRECTORY = 'directory'
-
-
-@StringEnum.unique
-class DisplayStyle(StringEnum):
-    TABLED = 'tabled'
-    COMPACT = 'compact'
-    VERTICAL = 'vertical'
-
-
-@StringEnum.unique
-class DataFormat(StringEnum):
-    ORIGINAL = 'original'
-    FORMATTED = 'formatted'
-    OUTPUTTED = 'outputted'
-
-
-@StringEnum.unique
-class AudiosTreeNodeType(StringEnum):
-    ROOT = 'root'
-    FOLDER = 'folder'
-    PLAYLIST = 'playlist'
-    TRACK = 'track'
-
-
-@StringEnum.unique
-class FieldType(StringEnum):
-    ORIGINAL = 'ori'
-    CHINESE = 'cn'
-    ENGLISH = 'en'
-
-
-@StringEnum.unique
-class ReplaceType(StringEnum):
-    NONE = 'none'
-    PARTIAL = 'partial'
-    ENTIRE = 'entire'
-
-#-------------------------------------------------------------------------------
-
-AUDIO_PROPERTIES = {
-    'title': (('歌曲名', 'Name'), 'string'),
-    'artist': (('歌手名', 'Artist'), 'string'),
-    'album': (('专辑名', 'Album'), 'string'),
-    'genre': (('流派', 'Genre'), 'string'),
-    'grouping': (('分组', 'Grouping'), 'string'),
-    'album_artist': (('专辑出品人', 'Album Artist'), 'string'),
-    'comments': (('备注', 'Comments'), 'string'),
-    'track_num': (('音轨号', 'Track Number'), 'integer'),
-    'composer': (('作曲人', 'Composer'), 'string'),
-    'publisher': (('出版公司', 'Publisher'), 'string'),
-    'mtime': (('修改时间', 'Date Modified'), 'date'),
-    'duration': (('时长', 'Total Time'), 'integer'),
-    'bit_rate': (('比特率', 'Bit Rate'), 'integer'),
-    'sample_freq': (('采样率', 'Sample Rate'), 'integer'),
-    'mode': (('模式', 'Mode'), 'string'),
-    'size': (('文件大小', 'Size'), 'integer'),
-    'name': (('文件名', 'File Name'), 'string'),
-    'path': (('文件路径', 'File Directory'), 'string'),
-    'selected': (('已选择', 'Selected'), 'boolean'),
-    'liked': (('喜欢', 'Liked'), 'boolean'),
-    'rating': (('评分', 'Rating'), 'integer'),
-    'artwork': (('封面', 'Artwork'), 'string'),
-}
-
-AUDIO_CN_PROPERTIES = {
-    key: value[0][0] for key, value in AUDIO_PROPERTIES.items()
-}
-
-AUDIO_CN_PROPERTY_SYNONYMS = {
-    value.lower(): key for key, value in AUDIO_CN_PROPERTIES.items()
-}
-
-AUDIO_EN_PROPERTIES = {
-    key: value[0][1] for key, value in AUDIO_PROPERTIES.items()
-}
-
-AUDIO_EN_PROPERTY_SYNONYMS = {
-    value.lower(): key for key, value in AUDIO_EN_PROPERTIES.items()
-}
-
-AUDIO_PROPERTY_TYPES = {
-    key: value[1] for key, value in AUDIO_PROPERTIES.items()
-}
-
-AudioProperty = StringEnum.unique(StringEnum(
-    'AudioProperty', {
-        prop.upper(): prop for prop in AUDIO_CN_PROPERTIES.keys()
-    },
-))
-
-#-------------------------------------------------------------------------------
-
-DEFAULTS_FIELDS = [
-    AudioProperty.TITLE,
-    AudioProperty.ARTIST,
-    AudioProperty.ALBUM,
-    AudioProperty.GENRE,
-    AudioProperty.ALBUM_ARTIST,
-]
-
-NOTE_FIELDS = [
-    AudioProperty.TITLE,
-    AudioProperty.ARTIST,
-    AudioProperty.ALBUM,
-]
-
-SIMPLE_FIELDS = [
-    AudioProperty.TITLE,
-    AudioProperty.ARTIST,
-    AudioProperty.ALBUM,
-    AudioProperty.GENRE,
-    AudioProperty.GROUPING,
-]
-
-ZIP_FIELDS = [
-    AudioProperty.GROUPING,
-    AudioProperty.SELECTED,
-    AudioProperty.LIKED,
-    AudioProperty.RATING,
-    AudioProperty.ARTWORK,
-]
-
-CORE_FIELDS = [
-    AudioProperty.TITLE,
-    AudioProperty.ARTIST,
-    AudioProperty.ALBUM,
-    AudioProperty.GENRE,
-    AudioProperty.GROUPING,
-    AudioProperty.ALBUM_ARTIST,
-    AudioProperty.ARTWORK,
-]
-
-ITUNED_FIELDS = [
-    AudioProperty.TITLE,
-    AudioProperty.ARTIST,
-    AudioProperty.ALBUM,
-    AudioProperty.GENRE,
-    AudioProperty.ALBUM_ARTIST,
-    AudioProperty.SIZE,
-    AudioProperty.DURATION,
-    AudioProperty.BIT_RATE,
-    AudioProperty.SAMPLE_FREQ,
-    AudioProperty.MTIME,
-]
-
-ALL_FIELDS = AudioProperty.members(excepts=[
-    AudioProperty.COMMENTS,
-])
-
-FIELDS = {
-    'all': ALL_FIELDS,
-    'defaults': DEFAULTS_FIELDS,
-    'note': NOTE_FIELDS,
-    'simple': SIMPLE_FIELDS,
-    'zip': ZIP_FIELDS,
-    'core': CORE_FIELDS,
-    'ituned': ITUNED_FIELDS,
-}
-
 ################################################################################
 #                                                                              #
 #                                 AUDIO GOD                                    #
@@ -631,9 +297,257 @@ FIELDS = {
 ################################################################################
 
 class AudioGod(object):
-    ACTIVE = True
+    ORI_DIV_CHAR = '-'
+    DIV_CHAR = '*'
+    GROUPING_SEPARATOR = '&'
+
+    #---------------------------------------------------------------------------
+
+    CACHE_DIR = os.path.expanduser('~/.audgod-cache')
+    TRASH_DIR = os.path.join(CACHE_DIR, 'trash')
+    BACKUPS_DIR = os.path.join(CACHE_DIR, 'backups')
+
+    #---------------------------------------------------------------------------
+
+    class PerfectTemplate(Template):
+        idpattern = r'(?a:[_a-z-][_a-z0-9-]*(\.[_a-z-][_a-z0-9-]*)*)'
+    
+        def perfect_substitute(self, mapping, /, **kwargs):
+            if kwargs:
+                mapping = ChainMap(kwargs, mapping)
+            def _convert(matched):
+                named = matched.group('named') or matched.group('braced')
+                if named is not None:
+                    try:
+                        return str(
+                            AudioGod.repack_dict(mapping)[AudioGod.rewrite_key(named)],
+                        )
+                    except KeyError as e:
+                        return matched.group()
+                if matched.group('escaped') is not None:
+                    return self.delimiter
+                if matched.group('invalid') is not None:
+                    return matched.group()
+                raise ValueError(
+                    'Unrecognized named group in pattern',
+                    self.pattern,
+                )
+            return self.pattern.sub(_convert, self.template)
+
+
+    class FatalLogger(logging.Logger):
+        def __init__(self, level=None, log_file=None):
+            level = level or logging.DEBUG
+            log_file = log_file or 'stderr'
+            super().__init__('fatal', level)
+            stdout_streams = ['stdout', 'sys.stdout', sys.stdout]
+            stderr_streams = [None, '', 'stderr', 'sys.stderr', sys.stderr]
+            if log_file in stdout_streams+stderr_streams:
+                console_handler = logging.StreamHandler(
+                    sys.stderr if log_file in stderr_streams else sys.stdout
+                )
+                console_handler.setFormatter(logging.Formatter('%(message)s'))
+                console_handler.setLevel(level)
+                self.addHandler(console_handler)
+            else:
+                file_handler = logging.FileHandler(
+                    log_file, encoding='utf-8', delay=False, # type: ignore
+                )
+                file_handler.setFormatter(logging.Formatter('%(message)s'))
+                file_handler.setLevel(level)
+                self.addHandler(file_handler)
+
+        def critical(self, msg, *args, **kwargs):
+            super().critical(msg, *args, **kwargs)
+            sys.exit(1)
+
+    #---------------------------------------------------------------------------
+
+    @StringEnum.unique
+    class SourceType(StringEnum):
+        VALID = 'valid'
+        MATCHED = 'matched'
+        NOTMATCHED = 'notmatched'
+        OMITTED = 'omitted'
+        IGNORED = 'ignored'
+        INVALID_EXT = 'invalid-ext'
+        INVALID_NAME = 'invalid-name'
+
+
+    @StringEnum.unique
+    class FileFormat(StringEnum):
+        NONE = 'none'
+        NOTE = 'note'
+        JSON = 'json'
+        MARKDOWN = 'markdown'
+        MD = 'md'
+        PLIST = 'plist'
+        XML = 'xml'
+
+
+    @StringEnum.unique
+    class FieldType(StringEnum):
+        ORIGINAL = 'ori'
+        CHINESE = 'cn'
+        ENGLISH = 'en'
+
+
+    @StringEnum.unique
+    class ReplaceType(StringEnum):
+        NONE = 'none'
+        PARTIAL = 'partial'
+        ENTIRE = 'entire'
+
+    #---------------------------------------------------------------------------
+
+    AUDIO_PROPERTIES = {
+        'title': (('歌曲名', 'Name'), 'string'),
+        'artist': (('歌手名', 'Artist'), 'string'),
+        'album': (('专辑名', 'Album'), 'string'),
+        'genre': (('流派', 'Genre'), 'string'),
+        'grouping': (('分组', 'Grouping'), 'string'),
+        'album_artist': (('专辑出品人', 'Album Artist'), 'string'),
+        'comments': (('备注', 'Comments'), 'string'),
+        'track_num': (('音轨号', 'Track Number'), 'integer'),
+        'composer': (('作曲人', 'Composer'), 'string'),
+        'publisher': (('出版公司', 'Publisher'), 'string'),
+        'mtime': (('修改时间', 'Date Modified'), 'date'),
+        'duration': (('时长', 'Total Time'), 'integer'),
+        'bit_rate': (('比特率', 'Bit Rate'), 'integer'),
+        'sample_freq': (('采样率', 'Sample Rate'), 'integer'),
+        'mode': (('模式', 'Mode'), 'string'),
+        'size': (('文件大小', 'Size'), 'integer'),
+        'name': (('文件名', 'File Name'), 'string'),
+        'path': (('文件路径', 'File Directory'), 'string'),
+        'selected': (('已选择', 'Selected'), 'boolean'),
+        'liked': (('喜欢', 'Liked'), 'boolean'),
+        'rating': (('评分', 'Rating'), 'integer'),
+        'artwork': (('封面', 'Artwork'), 'string'),
+    }
+    
+    AUDIO_CN_PROPERTIES = {
+        key: value[0][0] for key, value in AUDIO_PROPERTIES.items()
+    }
+    
+    AUDIO_CN_PROPERTY_SYNONYMS = {
+        value.lower(): key for key, value in AUDIO_CN_PROPERTIES.items()
+    }
+    
+    AUDIO_EN_PROPERTIES = {
+        key: value[0][1] for key, value in AUDIO_PROPERTIES.items()
+    }
+    
+    AUDIO_EN_PROPERTY_SYNONYMS = {
+        value.lower(): key for key, value in AUDIO_EN_PROPERTIES.items()
+    }
+    
+    AUDIO_PROPERTY_TYPES = {
+        key: value[1] for key, value in AUDIO_PROPERTIES.items()
+    }
+    
+    AudioProperty = StringEnum.unique(StringEnum(
+        'AudioProperty', {
+            prop.upper(): prop for prop in AUDIO_CN_PROPERTIES.keys()
+        },
+    ))
+    
+    #---------------------------------------------------------------------------
+    
+    DEFAULTS_FIELDS = [
+        AudioProperty.TITLE,
+        AudioProperty.ARTIST,
+        AudioProperty.ALBUM,
+        AudioProperty.GENRE,
+        AudioProperty.ALBUM_ARTIST,
+    ]
+    
+    NOTE_FIELDS = [
+        AudioProperty.TITLE,
+        AudioProperty.ARTIST,
+        AudioProperty.ALBUM,
+    ]
+    
+    SIMPLE_FIELDS = [
+        AudioProperty.TITLE,
+        AudioProperty.ARTIST,
+        AudioProperty.ALBUM,
+        AudioProperty.GENRE,
+        AudioProperty.GROUPING,
+    ]
+ 
+    ZIP_FIELDS = [
+        AudioProperty.GROUPING,
+        AudioProperty.SELECTED,
+        AudioProperty.LIKED,
+        AudioProperty.RATING,
+        AudioProperty.ARTWORK,
+    ]
+
+    CORE_FIELDS = [
+        AudioProperty.TITLE,
+        AudioProperty.ARTIST,
+        AudioProperty.ALBUM,
+        AudioProperty.GENRE,
+        AudioProperty.GROUPING,
+        AudioProperty.ALBUM_ARTIST,
+        AudioProperty.ARTWORK,
+    ]
+    
+    ITUNED_FIELDS = [
+        AudioProperty.TITLE,
+        AudioProperty.ARTIST,
+        AudioProperty.ALBUM,
+        AudioProperty.GENRE,
+        AudioProperty.ALBUM_ARTIST,
+        AudioProperty.SIZE,
+        AudioProperty.DURATION,
+        AudioProperty.BIT_RATE,
+        AudioProperty.SAMPLE_FREQ,
+        AudioProperty.MTIME,
+    ]
+    
+    ALL_FIELDS = AudioProperty.members(excepts=[
+        AudioProperty.COMMENTS,
+    ])
+    
+    FIELDS = {
+        'all': ALL_FIELDS,
+        'defaults': DEFAULTS_FIELDS,
+        'note': NOTE_FIELDS,
+        'simple': SIMPLE_FIELDS,
+        'zip': ZIP_FIELDS,
+        'core': CORE_FIELDS,
+        'ituned': ITUNED_FIELDS,
+    }
+
+    #---------------------------------------------------------------------------
 
     NAME = ''
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = None
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
+    BASIC_KWARGS = {
+        'prog': None,
+        'description': '',
+        'help': '',
+        'usage': None,
+        'epilog': '😴 Sleeping ...',
+        'formatter_class': argparse.ArgumentDefaultsHelpFormatter,
+        #'aliases': (),
+        #'prefix_chars': '-',
+        #'fromfile_prefix_chars': None,
+        #'argument_default': None,
+        #'conflict_handler': 'error',
+        #'add_help': True,
+        #'allow_abbrev': True,
+        #'exit_on_error': True,
+    }
 
     PUBLIC_ARGUMENTS = {
         'document': {
@@ -731,33 +645,6 @@ class AudioGod(object):
                 'help': 'file or folder to output',
             },
         },
-        'executer': {
-            'args': ['-9'],
-            'kwargs': {
-                'action': 'store',
-                'type': str,
-                'required': False,
-                'default': '',
-                'help': 'the executer for convert sources',
-            },
-        },
-    }
-
-    BASIC_KWARGS = {
-        'prog': None,
-        'description': '',
-        'help': '',
-        'usage': None,
-        'epilog': '😴 Sleeping ...',
-        'formatter_class': argparse.ArgumentDefaultsHelpFormatter,
-        #'aliases': (),
-        #'prefix_chars': '-',
-        #'fromfile_prefix_chars': None,
-        #'argument_default': None,
-        #'conflict_handler': 'error',
-        #'add_help': True,
-        #'allow_abbrev': True,
-        #'exit_on_error': True,
     }
 
     REQUISITE_ARGUMENTS = {
@@ -777,7 +664,7 @@ class AudioGod(object):
                     'CRITICAL',
                 ],
                 'required': False,
-                'default': DEFAULT_LOG_LEVEL,
+                'default': 'WARNING',
                 'help': 'level of logger',
             },
         },
@@ -787,19 +674,42 @@ class AudioGod(object):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': DEFAULT_LOG_FILE,
+                'default': 'stderr',
                 'help': 'log file of logger',
             },
         },
     }
-    
-    ARGUMENTS = None
-    KWARGS = None
 
-#-------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
-        pass 
+        self.__parameters = copy.deepcopy(kwargs)
+
+        # init logger
+        self.__logger_options = self.__resolve_logger_options(
+            self.parameters.get('log_level', self.DEFAULT_LOG_LEVEL),
+            self.parameters.get('log_file', self.DEFAULT_LOG_FILE),
+        )
+        self.__logger = self.FatalLogger(*self.logger_options)
+
+
+    @property
+    def parameters(self):
+        return self.__parameters
+
+
+    @property
+    def logger_options(self):
+        return self.__logger_options
+
+
+    @property
+    def logger(self):
+        return self.__logger
+
+
+    def __resolve_logger_options(self, log_level, log_file):
+        return (log_level, log_file)
 
 
     @staticmethod
@@ -813,81 +723,6 @@ class AudioGod(object):
         if not ret:
             return ret
         return os.path.normpath(os.path.abspath(os.path.expanduser(ret)))
-
-
-    @classmethod
-    def audio_properties(cls) -> str:
-        table = PrettyTable()
-        table.field_names = [
-            'Number',
-            'Field',
-            'Chinese Name',
-            'English Name',
-            'Type',
-        ]
-        for field in table.field_names:
-            table.align[field] = 'l'
-        for number, field in enumerate(ALL_FIELDS):
-            chinese_name = AUDIO_PROPERTIES[field][0][0]
-            english_name = AUDIO_PROPERTIES[field][0][1]
-            field_type = AUDIO_PROPERTIES[field][1]
-            table.add_row([
-                number+1,
-                field,
-                chinese_name,
-                english_name,
-                field_type,
-            ])
-        return table.get_string(
-            title='AUDIO PROPERTIES',
-        )
-
-
-    @classmethod
-    def special_fields(cls) -> str:
-        table = PrettyTable()
-        table.field_names = FIELDS.keys()
-        for field in table.field_names:
-            table.align[field] = 'l'
-        rows = list(FIELDS.values())
-        for j in range(len(ALL_FIELDS)):
-            row = []
-            for i in range(len(rows)):
-                if j < len(rows[i]):
-                    row.append(rows[i][j])
-                else:
-                    row.append('')
-            table.add_row(row)
-        return table.get_string(
-            title='SPECIAL FIELDS',
-        )
-
-
-    @classmethod
-    def special_characters(cls) -> str:
-        table = PrettyTable()
-        table.field_names = [
-            'Number',
-            'Character',
-            'Introduction',
-        ]
-        for field in table.field_names:
-            table.align[field] = 'l'
-        characters = [
-            (ORI_DIV_CHAR, 'Separator for origin audio file name.'),
-            (DIV_CHAR, 'Separator for formatted audio file name.'),
-            (GROUPING_SEPARATOR, 'Separator for several grouping property of audio file.'),
-            (FILENAME_PATTERN_DELIMITER, 'Delimiter of template for filename pattern.'),
-        ]
-        for number, char in enumerate(characters):
-            table.add_row([
-                number+1,
-                char[0],
-                char[1],
-            ])
-        return table.get_string(
-            title='SPECIAL CHARACTERS',
-        )
 
 
     @staticmethod
@@ -950,20 +785,10 @@ class AudioGod(object):
 
     @classmethod
     def render_usage(cls, usage, /, indent=0, kwargs={}) -> str:
-        return '\n' + PerfectTemplate(
+        return '\n' + cls.PerfectTemplate(
             cls.glorify_indents(usage, indent=indent),
         ).perfect_substitute(dict(
-            audio_properties=cls.audio_properties(),
-            special_fields=cls.special_fields(),
-            special_characters=cls.special_characters(),
             cmd=cls.get_command(),
-            ori_div_char=ORI_DIV_CHAR,
-            div_char=DIV_CHAR,
-            grouping_sep=GROUPING_SEPARATOR,
-            fnp_delimiter=FILENAME_PATTERN_DELIMITER,
-            cache_dir=f'~/{os.path.basename(CACHE_DIR)}',
-            trash_dir=os.path.basename(TRASH_DIR),
-            backups_dir=os.path.basename(BACKUPS_DIR),
          ) | copy.deepcopy(kwargs))
 
 
@@ -1028,17 +853,17 @@ class AudioGod(object):
                     continue
                 cls.ARGUMENTS[argument] = copy.deepcopy(cls.REQUISITE_ARGUMENTS[argument])
 
-            for argument in cls.ARGUMENTS:
+            for argument in cls.ARGUMENTS: # type: ignore
                 public_argument = {}
-                use_public = cls.ARGUMENTS[argument].pop('use_public', ReplaceType.NONE)
-                if ReplaceType.NONE.ne(use_public):
+                use_public = cls.ARGUMENTS[argument].pop('use_public', cls.ReplaceType.NONE)
+                if cls.ReplaceType.NONE.ne(use_public):
                     public_argument = copy.deepcopy(cls.PUBLIC_ARGUMENTS[argument])
                 match use_public:
-                    case ReplaceType.NONE:
+                    case cls.ReplaceType.NONE:
                         pass
-                    case ReplaceType.ENTIRE:
+                    case cls.ReplaceType.ENTIRE:
                         cls.ARGUMENTS[argument] = public_argument
-                    case ReplaceType.PARTIAL:
+                    case cls.ReplaceType.PARTIAL:
                         if 'args' not in cls.ARGUMENTS[argument]:
                             cls.ARGUMENTS[argument]['args'] = public_argument['args']
                         if 'kwargs' not in cls.ARGUMENTS[argument]:
@@ -1079,7 +904,7 @@ class AudioGod(object):
                 '${cmd}', ' '.join(cls.NAME.split('.')),
             )
             indent = 4
-            for argument in cls.ARGUMENTS:
+            for argument in cls.ARGUMENTS: # type: ignore
                 label = cls.ARGUMENTS[argument]['args'][0]
                 action_ = cls.ARGUMENTS[argument]['kwargs'].get('action', 'store')
                 required = cls.ARGUMENTS[argument]['kwargs'].get('required', False)
@@ -1102,7 +927,7 @@ class AudioGod(object):
         ret = {}
         if cls.ARGUMENTS is None:
             return ret
-        for argment, params in cls.ARGUMENTS.items():
+        for argment, params in cls.ARGUMENTS.items(): # type: ignore
             ret[argment] = params['kwargs']['default']
         return ret
 
@@ -1114,7 +939,7 @@ class AudioGod(object):
 
     @log_decorator
     def test(self):
-        print(self.__class__.__name__)
+        print(self.__class__.__name__, self.NAME)
 
 ####################################################V###########################
 #                                                                              #
@@ -1125,53 +950,220 @@ class AudioGod(object):
 class PreprocessNoteAction(AudioGod):
     ACTIVE = True
 
-    ARGUMENTS = {
-        'document': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'field_type': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-    }
+    #---------------------------------------------------------------------------
 
     KWARGS = {
         'description': '✋ Preprocess the note file',
         'help': 'preprocess the note file',
     }
 
+    ARGUMENTS = {
+        'document': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'field_type': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+
+    def __analysis_note(self):
+        grouping_pattern = r'^\s*(?:\s*\(\s*(?:\s*[0-9]\s*)+\s*\)\s*)?\s*@\s*\[\s*((?:\s*\S\s*)+)\s*\]\s*((?:\s*[^:：\s]\s*)+)[:：]?\s*$'
+        fields_pattern = '|'.join(
+            list(self.AUDIO_CN_PROPERTIES.keys()) + \
+            list(self.AUDIO_EN_PROPERTY_SYNONYMS.keys()) + \
+            list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
+        )
+        detail_pattern = \
+                r'^(?:(?:(?:\s*[0-9]\s*)+\.\s*)?(?:\s*\[\s*[a-zA-Z]?\s*\]\s*)?)?(?:\s*[,，;；]+\s*)?\s*({0})\s*[:：]+((?:\s*\S\s*)+?)((?:\s*[,，;；]+\s*(?:{0})\s*[:：]+(?:\s*\S\s*)+)*)$'.format(
+            fields_pattern,
+        )
+        warn_pattern = r'(?:\s*[,，;；]+\s*)+(?:(?:\s*\S\s*)+)\s*[:：]+(?:\s*\S\s*)+'
+
+        with open(self.document, 'r', encoding='utf-8') as f:
+            keys, (genre, grouping) = {}, ('', '')
+            for line_number, line in enumerate(f, start=1):
+                if not line.strip():
+                    continue
+                if re.match(r'^\s*#+', line, re.IGNORECASE) is not None:
+                    continue
+                self.total_clauses_counter += 1
+                line_with_no, invalid_info = f'&{line_number}: {line}'.strip(), 'not matched'
+                # grouping line
+                grouping_match = re.match(grouping_pattern, line, re.IGNORECASE)
+                if grouping_match is not None:
+                    genre, grouping = tuple(map(
+                        lambda x: x.strip(), grouping_match.groups(),
+                    ))
+                    genre = self.format_funcs[self.AudioProperty.GENRE](genre)
+                    grouping = self.format_funcs[self.AudioProperty.GROUPING](grouping)
+                    if grouping and grouping in self.summaries:
+                        genre, grouping = '', ''
+                        invalid_info = 'grouping already exists'
+                    if grouping:
+                        self.grouping_clauses.append(line_with_no)
+                        self.grouping_clauses_counter += 1
+                        continue
+                # detail line
+                detail_match = re.match(detail_pattern, line, re.IGNORECASE)
+                if grouping and detail_match is not None:
+                    valid, repeated = True, False
+                    curr_key, properties = '', {}
+                    temp_line = line
+                    while True:
+                        temp_match = re.match(detail_pattern, temp_line, re.IGNORECASE)
+                        if not temp_match:
+                            break
+                        temp_line = temp_match.group(3)
+                        if not temp_line:
+                            temp_line = ''
+                        key, value = tuple(map(
+                            lambda x: x.strip(), temp_match.groups()[:2],
+                        ))
+                        if re.search(warn_pattern, value, re.IGNORECASE) is not None:
+                            self.warn_clauses.append(line_with_no)
+                            self.warn_clauses_counter += 1
+                        field = self.transform_field_name_synonyms(key)
+                        if not field:
+                            valid, invalid_info = False, 'invalid field name'
+                            break
+                        if field in properties:
+                            valid, invalid_info = False, 'duplicate field existed'
+                            break
+                        properties[field] = self.format_funcs[field](value)
+                    if valid:
+                        for field in self.NOTE_FIELDS:
+                            if field not in properties:
+                                valid, invalid_info = False, 'lack note fields'
+                                break
+                    if valid:
+                        curr_key = self.__generate_key_by_properties(properties)
+                        if curr_key not in keys:
+                            keys[curr_key] = set([genre])
+                        else:
+                            keys[curr_key].add(genre)
+                            if len(keys[curr_key]) > 1:
+                                valid, invalid_info = False, 'more than one genres for one detail item'
+                            repeated = True
+                    if valid:
+                        if grouping not in self.summaries:
+                            self.summaries[grouping] = (genre, [properties])
+                        else:
+                            _, items = self.summaries[grouping]
+                            if curr_key in [self.__generate_key_by_properties(x) for x in items]:
+                                valid, invalid_info = False, 'duplicate detail items under same grouping'
+                            else:
+                                items.append(properties)
+                    if valid:
+                        if repeated:
+                            if curr_key not in self.repeated_clauses:
+                                self.repeated_clauses[curr_key] = [line_with_no]
+                            else:
+                                self.repeated_clauses[curr_key].append(line_with_no)
+                            self.repeated_clauses_counter += 1
+                        self.valid_clauses_counter += 1
+                        continue
+                self.invalid_clauses.append((line_with_no, invalid_info))
+                self.invalid_clauses_counter += 1
+
+        for grouping in self.summaries:
+            genre, items = self.summaries[grouping]
+            for i, properties in enumerate(items):
+                items[i] = self.__repack_audio_properties(properties)
+
+        self.__transform_summaries_to_clauses()
+        
+        self.logger.warning(f'\n{"#"*78}\n')
+        self.logger.warning(
+            'Total Clauses:    {total}\n\n'
+            'Valid Clauses:    {valid}\n'
+            'Grouping Clauses: {grouping}\n'
+            'Warn Clauses:     {warn}\n'
+            'Repeated Clauses: {repeated}\n'
+            'Invalid Clauses:  {invalid}\n'.format(
+                total=self.total_clauses_counter,
+                valid=self.valid_clauses_counter,
+                grouping=self.grouping_clauses_counter,
+                warn=self.warn_clauses_counter,
+                repeated=self.repeated_clauses_counter,
+                invalid=self.invalid_clauses_counter,
+            )
+        )
+        if len(self.warn_clauses) > 0:
+            self.logger.warning('\nWarn Clauses:')
+            for item in self.warn_clauses:
+                self.logger.warning(f'{item}')
+        if len(self.invalid_clauses) > 0:
+            self.logger.warning('\nInvalid Clauses:')
+            for item in self.invalid_clauses:
+                self.logger.warning(f'\t{item[0]}\n\t{item[1]}')
+        if len(self.repeated_clauses) > 0:
+            self.logger.warning('\nRepeated Clauses:')
+            for key in self.repeated_clauses:
+                self.logger.warning('\t{key}: [{repeated}]'.format(
+                    key=key,
+                    repeated='｜'.join(self.repeated_clauses[key]),
+                ))
+
+
     @log_decorator
     def execute(self):
-        pass
+        self.output_format = self.FileFormat.NOTE
+        self.__analysis_note()
+        self.__sort_summaries()
+        tmp_file = self.document + '.tmp'
+        with open(tmp_file, 'w', encoding='utf-8') as f:
+            f.write(self.__summarize_for_note())
+        self.backup(self.document)
+        self.rename(tmp_file, self.document)
 
-#-------------------------------------------------------------------------------
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 class FillPropertiesAction(AudioGod):
     ACTIVE = True
 
+    #---------------------------------------------------------------------------
+
+    @StringEnum.unique
+    class PropertySource(StringEnum):
+        COMMAND = 'command'
+        FILE = 'file'
+        FILENAME = 'filename'
+        DIRECTORY = 'directory'
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Fill properties of audios',
+        'help': 'fill properties of audios',
+    }
+
     ARGUMENTS = {
         'source': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'extensions': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'recursive': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'ignored_file': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'document': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'root': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'properties': {
-            'use_public': ReplaceType.NONE,
+            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-p'],
             'kwargs': {
                 'action': 'store',
@@ -1195,77 +1187,92 @@ class FillPropertiesAction(AudioGod):
         },
     }
 
-    KWARGS = {
-        'description': '✋ Fill properties of audios',
-        'help': 'fill properties of audios',
-    }
+    #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
-#-------------------------------------------------------------------------------
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 class FormatPropertiesAction(AudioGod):
     ACTIVE = True
 
-    ARGUMENTS = {
-        'source': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'extensions': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'recursive': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'ignored_file': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-    }
+    #---------------------------------------------------------------------------
 
     KWARGS = {
         'description': '✋ Format properties of audios',
         'help': 'format properties of audios',
     }
 
+    ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'extensions': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
-#-------------------------------------------------------------------------------
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 class RenameAudiosAction(AudioGod):
     ACTIVE = True
 
+    #---------------------------------------------------------------------------
+
+    class FilenamePatternTemplate(Template):
+        delimiter = '@'
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Rename audios',
+        'help': 'rename audios',
+    }
+
     ARGUMENTS = {
         'source': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'extensions': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'recursive': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'ignored_file': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'filename_pattern': {
-            'use_public': ReplaceType.NONE,
+            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-t'],
             'kwargs': {
                 'action': 'store',
                 'type': str,
                 'required': False,
                 'default': '{delimiter}{{artist}} {div_char} {delimiter}{{title}}'.format(
-                    delimiter=FILENAME_PATTERN_DELIMITER,
+                    delimiter=FilenamePatternTemplate.delimiter,
                     div_char=DIV_CHAR,
                 ),
                 'help': 'filename pattern to rename sources',
@@ -1273,79 +1280,89 @@ class RenameAudiosAction(AudioGod):
         },
     }
 
-    KWARGS = {
-        'description': '✋ Rename audios',
-        'help': 'rename audios',
-    }
+    #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
-#-------------------------------------------------------------------------------
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 class ListRepeatedAction(AudioGod):
     ACTIVE = True
 
-    ARGUMENTS = {
-        'source': {
-            'use_public': ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': '~/Music/Output/Grouped',
-            },
-        },
-        'extensions': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'recursive': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'ignored_file': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'output': {
-            'use_public': ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': './repeated.txt',
-            },
-        },
-    }
+    #---------------------------------------------------------------------------
 
     KWARGS = {
         'description': '✋ List repeated audios by artist and title',
         'help': 'list repeated audios',
     }
 
+    ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Output/Grouped',
+            },
+        },
+        'extensions': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './repeated.txt',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
-#-------------------------------------------------------------------------------
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 class DeriveArtworksAction(AudioGod):
     ACTIVE = True
 
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Derive artworks',
+        'help': 'derive artworks',
+    }
+
     ARGUMENTS = {
         'source': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'extensions': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'recursive': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'ignored_file': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'artwork_path': {
-            'use_public': ReplaceType.NONE,
+            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-k'],
             'kwargs': {
                 'action': 'store',
@@ -1357,41 +1374,61 @@ class DeriveArtworksAction(AudioGod):
         },
     }
 
-    KWARGS = {
-        'description': '✋ Derive artworks',
-        'help': 'derive artworks',
-    }
+    #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
-#-------------------------------------------------------------------------------
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 class DisplayAction(AudioGod):
     ACTIVE = True
 
+    #---------------------------------------------------------------------------
+
+    @StringEnum.unique
+    class DisplayStyle(StringEnum):
+        TABLED = 'tabled'
+        COMPACT = 'compact'
+        VERTICAL = 'vertical'
+    
+    
+    @StringEnum.unique
+    class DataFormat(StringEnum):
+        ORIGINAL = 'original'
+        FORMATTED = 'formatted'
+        OUTPUTTED = 'outputted'
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Display details of audios',
+        'help': 'display details of audios',
+    }
+
     ARGUMENTS = {
         'source': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'extensions': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'recursive': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'ignored_file': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'fields': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'page_number': {
-            'use_public': ReplaceType.NONE,
+            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-m'],
             'kwargs': {
                 'action': 'store',
@@ -1402,7 +1439,7 @@ class DisplayAction(AudioGod):
             },
         },
         'page_size': {
-            'use_public': ReplaceType.NONE,
+            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-j'],
             'kwargs': {
                 'action': 'store',
@@ -1413,7 +1450,7 @@ class DisplayAction(AudioGod):
             },
         },
         'sort': {
-            'use_public': ReplaceType.NONE,
+            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-q'],
             'kwargs': {
                 'action': 'store',
@@ -1430,7 +1467,7 @@ class DisplayAction(AudioGod):
             },
         },
         'filter': {
-            'use_public': ReplaceType.NONE,
+            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-b'],
             'kwargs': {
                 'action': 'store',
@@ -1453,7 +1490,7 @@ class DisplayAction(AudioGod):
             },
         },
         'align': {
-            'use_public': ReplaceType.NONE,
+            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-w'],
             'kwargs': {
                 'action': 'store',
@@ -1469,7 +1506,7 @@ class DisplayAction(AudioGod):
             },
         },
         'style': {
-            'use_public': ReplaceType.NONE,
+            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-y'],
             'kwargs': {
                 'action': 'store',
@@ -1481,7 +1518,7 @@ class DisplayAction(AudioGod):
             },
         },
         'data_format': {
-            'use_public': ReplaceType.NONE,
+            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-x'],
             'kwargs': {
                 'action': 'store',
@@ -1493,7 +1530,7 @@ class DisplayAction(AudioGod):
             },
         },
         'numbered': {
-            'use_public': ReplaceType.NONE,
+            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-n'],
             'kwargs': {
                 'action': argparse.BooleanOptionalAction,
@@ -1503,46 +1540,69 @@ class DisplayAction(AudioGod):
             },
         },
         'field_type': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'output': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
     }
 
-    KWARGS = {
-        'description': '✋ Display details of audios',
-        'help': 'display details of audios',
-    }
+    #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
-#-------------------------------------------------------------------------------
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 class GenerateScriptAction(AudioGod):
     ACTIVE = True
 
-    ARGUMENTS = {
-        'output': {
-            'use_public': ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': './start.zsh',
-            },
-        },
-    }
+    #---------------------------------------------------------------------------
 
     KWARGS = {
         'description': '✋ Generate a grouped bash/zsh script',
         'help': 'generate a grouped bash/zsh script',
     }
 
+    ARGUMENTS = {
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './start.zsh',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+    @log_decorator
+    def execute(self):
+        pass
+
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+class OrganizeBaseAction(AudioGod):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = None
+    ARGUMENTS = None
+    
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
@@ -1550,230 +1610,329 @@ class GenerateScriptAction(AudioGod):
 
 #===============================================================================
 
-class OrganizeBaseAction(AudioGod):
-    ACTIVE = True
-
-    ARGUMENTS = None
-    KWARGS = None
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    @log_decorator
-    def execute(self):
-        pass
-
-
 class OrganizeAction(OrganizeBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = None
+    #---------------------------------------------------------------------------
 
     KWARGS = {
         'description': '✋ Organize files',
         'help': 'organize files',
     }
 
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        pass
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class Organize__GroupedAction(OrganizeBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = {
-        'source': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'extensions': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'recursive': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'ignored_file': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'root': {
-            'use_public': ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': '~/Music/Output/Grouped',
-            },
-        },
-    }
+    #---------------------------------------------------------------------------
 
     KWARGS = {
         'description': '⭐ Organize grouped files',
         'help': 'organize grouped files',
     }
 
+    ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'extensions': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'root': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Output/Grouped',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class Organize__ItunedAction(OrganizeBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = {
-        'source': {
-            'use_public': ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': '~/Music/Output/Grouped',
-            },
-        },
-        'extensions': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'recursive': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'ignored_file': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'root': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-    }
+    #---------------------------------------------------------------------------
 
     KWARGS = {
         'description': '⭐ Organize ituned files',
         'help': 'organize ituned files',
     }
 
+    ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Output/Grouped',
+            },
+        },
+        'extensions': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'root': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
-#-------------------------------------------------------------------------------
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 class ExportBaseAction(AudioGod):
     ACTIVE = True
 
-    ARGUMENTS = None
+    #---------------------------------------------------------------------------
+
+    DEFAULT_GENRE = 'Default'
+    DEFAULT_GROUPING = 'Default'
+    
+    AUDIOS_TREE_ROOT_TAG = '--root-tag--'
+    AUDIOS_TREE_ROOT_NID = '--root-nid--'
+
+    #---------------------------------------------------------------------------
+
+    @StringEnum.unique
+    class AudiosTreeNodeType(StringEnum):
+        ROOT = 'root'
+        FOLDER = 'folder'
+        PLAYLIST = 'playlist'
+        TRACK = 'track'
+
+    #---------------------------------------------------------------------------
+
+    class TreeX(Tree):
+        def __init__(self, logger=None, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            if logger is None:
+                logger = logging.getLogger()
+            self.logger = logger
+    
+        def perfect_merge(self, nid, new_tree, deep=False) -> None:
+            if not (isinstance(new_tree, Tree) or isinstance(new_tree, self.__class__)):
+                self.logger.fatal('The new tree to merge is not a valid tree.')
+                return
+    
+            if new_tree is None:
+                return
+    
+            if new_tree.root is None:
+                return
+    
+            if nid is None:
+                if self.root is None:
+                    self.add_node(new_tree[new_tree.root])
+                nid = self.root
+    
+            if not self.contains(nid):
+                self.logger.fatal(f'Node <{nid}> is not in the tree!')
+                return
+    
+            current_node = self[nid]
+    
+            if current_node.tag != new_tree[new_tree.root].tag:
+                self.logger.fatal('Current node not same with root of new tree.')
+                return
+    
+            childs = self.children(nid)
+            child_tags = [child.tag for child in childs]
+            new_childs = new_tree.children(new_tree.root)
+            new_subtrees = [new_tree.subtree(child.identifier) for child in new_childs]
+    
+            if not childs:
+                for new_subtree in new_subtrees:
+                    self.paste(nid=nid, new_tree=new_subtree, deep=deep)
+            else:
+                for new_child in new_childs:
+                    if new_child.tag not in child_tags:
+                        self.paste(nid=nid, new_tree=new_tree.subtree(new_child.identifier), deep=deep)
+                        continue
+                    self.perfect_merge(
+                        childs[child_tags.index(new_child.tag)].identifier,
+                        new_tree.subtree(new_child.identifier),
+                        deep=deep,
+                    )
+
+    #---------------------------------------------------------------------------
+
     KWARGS = None
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class ExportAction(ExportBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = None
+    #---------------------------------------------------------------------------
 
     KWARGS = {
         'description': '✋ Export audio details to file',
         'help': 'export audio details to file',
     }
 
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        pass
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class Export__NoteAction(ExportBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = {
-        'source': {
-            'use_public': ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': '~/Music/Output/Grouped',
-            },
-        },
-        'extensions': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'recursive': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'ignored_file': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'fields': {
-            'use_public': ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': 'note',
-            },
-        },
-        'field_type': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'output': {
-            'use_public': ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': './songs.note',
-            },
-        },
-    }
+    #---------------------------------------------------------------------------
 
     KWARGS = {
         'description': '⭐ Export audio details to note file',
         'help': 'export audio details to note file',
     }
 
+    ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Output/Grouped',
+            },
+        },
+        'extensions': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'fields': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': 'note',
+            },
+        },
+        'field_type': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './songs.note',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class Export__PlistAction(ExportBaseAction):
     ACTIVE = True
 
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '⭐ Export audio details to plist file',
+        'help': 'export audio details to plist file',
+    }
+
     ARGUMENTS = {
         'source': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'extensions': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'recursive': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'ignored_file': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'fields': {
-            'use_public': ReplaceType.PARTIAL,
+            'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
                 'default': 'ituned',
             },
         },
         'field_type': {
-            'use_public': ReplaceType.PARTIAL,
+            'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': FieldType.ENGLISH,
+                'default': AudioGod.FieldType.ENGLISH,
             },
         },
         'output': {
-            'use_public': ReplaceType.PARTIAL,
+            'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
                 'default': '~/Music/iTunes/Library.xml',
             },
         },
         'itunes_version_plist': {
-            'use_public': ReplaceType.NONE,
+            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-1'],
             'kwargs': {
                 'action': 'store',
@@ -1784,7 +1943,7 @@ class Export__PlistAction(ExportBaseAction):
             },
         },
         'itunes_media_folder': {
-            'use_public': ReplaceType.NONE,
+            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-2'],
             'kwargs': {
                 'action': 'store',
@@ -1795,7 +1954,7 @@ class Export__PlistAction(ExportBaseAction):
             },
         },
         'track_initial_id': {
-            'use_public': ReplaceType.NONE,
+            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-3'],
             'kwargs': {
                 'action': 'store',
@@ -1806,7 +1965,7 @@ class Export__PlistAction(ExportBaseAction):
             },
         },
         'playlist_initial_id': {
-            'use_public': ReplaceType.NONE,
+            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-4'],
             'kwargs': {
                 'action': 'store',
@@ -1818,311 +1977,410 @@ class Export__PlistAction(ExportBaseAction):
         },
     }
 
-    KWARGS = {
-        'description': '⭐ Export audio details to plist file',
-        'help': 'export audio details to plist file',
-    }
+    #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class Export__MarkdownAction(ExportBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = {
-    }
+    #---------------------------------------------------------------------------
 
     KWARGS = {
     }
 
+    ARGUMENTS = {
+    }
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class Export__XmlAction(ExportBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = {
-    }
+    #---------------------------------------------------------------------------
 
     KWARGS = {
     }
 
+    ARGUMENTS = {
+    }
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class Export__JsonAction(ExportBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = {
-    }
+    #---------------------------------------------------------------------------
 
     KWARGS = {
     }
 
+    ARGUMENTS = {
+    }
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
-#-------------------------------------------------------------------------------
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 class ConvertBaseAction(AudioGod):
     ACTIVE = True
 
-    ARGUMENTS = None
+    #---------------------------------------------------------------------------
+
     KWARGS = None
+    ARGUMENTS = None
+
+    PUBLIC_ARGUMENTS = copy.deepcopy(AudioGod.PUBLIC_ARGUMENTS) | {
+        'executer': {
+            'args': ['-9'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '',
+                'help': 'the executer for convert sources',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class ConvertAction(ConvertBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = None
+    #---------------------------------------------------------------------------
 
     KWARGS = {
         'description': '✋ Convert media',
         'help': 'convert media',
     }
 
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        pass
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class Convert__QmcToMp3Action(ConvertBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = {
-        'source': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'extensions': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'recursive': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'ignored_file': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-        'executer': {
-            'use_public': ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': './executers/qmc-to-mp3/decoder',
-            },
-        },
-    }
+    #---------------------------------------------------------------------------
 
     KWARGS = {
         'description': '⭐ Convert qmc to mp3',
         'help': 'convert qmc to mp3',
     }
 
+    ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'extensions': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'executer': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './executers/qmc-to-mp3/decoder',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class Convert__KmxToMp4Action(ConvertBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = {
-    }
+    #---------------------------------------------------------------------------
 
     KWARGS = {
     }
 
+    ARGUMENTS = {
+    }
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class Convert__Mp4ToMp3Action(ConvertBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = {
-    }
+    #---------------------------------------------------------------------------
 
     KWARGS = {
     }
 
+    ARGUMENTS = {
+    }
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class Convert__NoteToMarkdownAction(ConvertBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = {
-    }
+    #---------------------------------------------------------------------------
 
     KWARGS = {
     }
 
+    ARGUMENTS = {
+    }
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class Convert__MarkdownToNoteAction(ConvertBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = {
-    }
+    #---------------------------------------------------------------------------
 
     KWARGS = {
     }
 
+    ARGUMENTS = {
+    }
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
-#-------------------------------------------------------------------------------
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 class OperateBaseAction(AudioGod):
     ACTIVE = True
 
-    ARGUMENTS = None
+    #---------------------------------------------------------------------------
+
     KWARGS = None
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class OperateAction(OperateBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = None
+    #---------------------------------------------------------------------------
 
     KWARGS = {
         'description': '✋ Some common operations',
         'help': 'some common operations',
     }
 
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        pass
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class Operate__BackupAction(OperateBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = {
-        'source': {
-            'use_public': ReplaceType.PARTIAL,
-            'kwargs': {
-                'required': True,
-                'default': '',
-            },
-        },
-        'ignored_file': {
-            'use_public': ReplaceType.ENTIRE,
-        },
-    }
+    #---------------------------------------------------------------------------
 
     KWARGS = {
         'description': '⭐ Backup files, directories and so on',
         'help': 'backup files, directories and so on',
     }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    @log_decorator
-    def execute(self):
-        pass
-
-
-class Operate__RemoveAction(OperateBaseAction):
-    ACTIVE = True
-
     ARGUMENTS = {
         'source': {
-            'use_public': ReplaceType.PARTIAL,
+            'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
                 'required': True,
                 'default': '',
             },
         },
         'ignored_file': {
-            'use_public': ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
     }
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+    @log_decorator
+    def execute(self):
+        pass
+
+#===============================================================================
+
+class Operate__RemoveAction(OperateBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
 
     KWARGS = {
         'description': '⭐ Remove files, directories and so on',
         'help': 'remove files, directories and so on',
     }
 
+    ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'required': True,
+                'default': '',
+            },
+        },
+        'ignored_file': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
         pass
 
+#===============================================================================
 
 class Operate__CleanupAction(OperateBaseAction):
     ACTIVE = True
 
-    ARGUMENTS = {}
+    #---------------------------------------------------------------------------
 
     KWARGS = {
         'description': '⭐ Cleanup directories, backups and so on',
         'help': 'cleanup directories, backups and so on',
     }
 
+    ARGUMENTS = {}
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     @log_decorator
     def execute(self):
@@ -2306,8 +2564,8 @@ def _handle_execute(args) -> None:
         if hasattr(args, argument):
             arguments[argument] = getattr(args, argument)
 
-    carrier(**arguments).test()
-    #carrier(**arguments).execute()
+    #carrier(**arguments).test()
+    carrier(**arguments).execute()
 
 
 def _add_subparser(mainparser, subparsers, action, branch=None):
@@ -2327,13 +2585,97 @@ def _add_subparser(mainparser, subparsers, action, branch=None):
 
 #-------------------------------------------------------------------------------
 
+def _audio_properties() -> str:
+    table = PrettyTable()
+    table.field_names = [
+        'Number',
+        'Field',
+        'Chinese Name',
+        'English Name',
+        'Type',
+    ]
+    for field in table.field_names:
+        table.align[field] = 'l'
+    for number, field in enumerate(AudioGod.ALL_FIELDS):
+        chinese_name = AudioGod.AUDIO_PROPERTIES[field][0][0]
+        english_name = AudioGod.AUDIO_PROPERTIES[field][0][1]
+        field_type = AudioGod.AUDIO_PROPERTIES[field][1]
+        table.add_row([
+            number+1,
+            field,
+            chinese_name,
+            english_name,
+            field_type,
+        ])
+    return table.get_string(
+        title='AUDIO PROPERTIES',
+    )
+
+
+def _special_fields() -> str:
+    table = PrettyTable()
+    table.field_names = AudioGod.FIELDS.keys()
+    for field in table.field_names:
+        table.align[field] = 'l'
+    rows = list(AudioGod.FIELDS.values())
+    for j in range(len(AudioGod.ALL_FIELDS)):
+        row = []
+        for i in range(len(rows)):
+            if j < len(rows[i]):
+                row.append(rows[i][j])
+            else:
+                row.append('')
+        table.add_row(row)
+    return table.get_string(
+        title='SPECIAL FIELDS',
+    )
+
+
+def _special_characters() -> str:
+    table = PrettyTable()
+    table.field_names = [
+        'Number',
+        'Character',
+        'Introduction',
+    ]
+    for field in table.field_names:
+        table.align[field] = 'l'
+    characters = [
+        (ORI_DIV_CHAR, 'Separator for origin audio file name.'),
+        (DIV_CHAR, 'Separator for formatted audio file name.'),
+        (GROUPING_SEPARATOR, 'Separator for several grouping property of audio file.'),
+        (RenameAudiosAction.FilenamePatternTemplate.delimiter, 'Delimiter of template for filename pattern.'),
+    ]
+    for number, char in enumerate(characters):
+        table.add_row([
+            number+1,
+            char[0],
+            char[1],
+        ])
+    return table.get_string(
+        title='SPECIAL CHARACTERS',
+    )
+
+#-------------------------------------------------------------------------------
+
 def main():
     main_parser = PerfectArgumentParser(
         prog=sys.argv[0],
         usage=AudioGod.render_usage(
             __USAGE__,
             indent=0,
-            kwargs=ACTIONS_DEFAULTS,
+            kwargs=dict(
+                audio_properties=_audio_properties(),
+                special_fields=_special_fields(),
+                special_characters=_special_characters(),
+                ori_div_char=ORI_DIV_CHAR,
+                div_char=DIV_CHAR,
+                grouping_sep=GROUPING_SEPARATOR,
+                fnp_delimiter=RenameAudiosAction.FilenamePatternTemplate.delimiter,
+                cache_dir=f'~/{os.path.basename(AudioGod.CACHE_DIR)}',
+                trash_dir=os.path.basename(AudioGod.TRASH_DIR),
+                backups_dir=os.path.basename(AudioGod.BACKUPS_DIR),
+            ) | ACTIONS_DEFAULTS,
         ),
         description='🎻 God of audios 🎸',
         epilog='🤔 Thinking ...',
