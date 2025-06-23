@@ -1516,7 +1516,7 @@ class AudioGod(object):
                 subcmd_pattern = r'\s*({0})(\s+.*)?$'.format('|'.join(ACTIONS.keys()))
                 interpreter = re.sub(subcmd_pattern, r'', interpreter)
         except Exception as e:
-            raise Exception(e)
+            raise e
         return interpreter 
 
 
@@ -3203,6 +3203,359 @@ class DisplayAction(AudioGod):
 
     #---------------------------------------------------------------------------
 
+    @classmethod
+    def wrap_table(
+        cls,
+        table_string,
+        table_fields,
+        start=1,
+        numbered=True,
+        style=DisplayStyle.TABLED,
+    ):
+        def _xlen_(s):
+            length = len(s)
+            utf8_length = len(s.encode('utf-8'))
+            length = (utf8_length - length) / 2 + length
+            return int(length)
+
+        rl_number = '--'
+
+        _total = table_string.count('\n') - 6
+        offset = 0
+        if numbered:
+            offset = max(len(str(start+_total-1)), _xlen_(rl_number)) + 3
+        result = re.sub(r'\n\+[\+-]+\+$', r'\n', table_string)
+
+        beg = result.find('\n|', 0)
+        end = result.find('\n+', beg)
+
+        surplus = end - 2 * beg - 1
+
+        pos = result.find('+\n|', 0)
+        result = '{}{}+\n|{}{}'.format(
+            result[:pos],
+            '-' * (offset + surplus),
+            ' ' * int(offset / 2),
+            result[pos+3:],
+        )
+        pos = result.find('|\n', pos)
+        result = '{}{}|\n{}'.format(
+            result[:pos],
+            ' ' * (offset - int(offset / 2)),
+            result[pos+2:],
+        )
+        pos = result.find('|\n', pos)
+        beg = pos + 2
+        pos = result.find('+\n', pos)
+        end = pos + 1
+        split_line = '{}{}{}{}+'.format(
+            '+' if numbered else '',
+            '-' * (offset - 1) if numbered else '',
+            result[beg:end-1],
+            '-' * surplus,
+        )
+        result= '{}{}{}'.format(
+            result[:beg],
+            split_line,
+            result[end:],
+        )
+        pos = result.find('+\n', pos)
+
+        _offset = offset-2
+        _offset -= len(re.compile(r'[\u4E00-\u9FA5]').findall(rl_number))
+
+        result= '{}{}{}'.format(
+            result[:pos+2],
+            # 这里 offset-2-2
+            ('|{0:>%s} ' % (_offset)).format(rl_number) \
+            if numbered else '',
+            result[pos+2:],
+        )
+        pos = result.find('|\n', pos)
+        result= '{}{}{}'.format(
+            result[:pos],
+            ' ' * surplus,
+            result[pos:],
+        )
+        pos = result.find('\n+', pos)
+        beg = pos + 1
+        pos = result.find('+\n', pos)
+        end = pos + 1
+        result= '{}{}{}'.format(
+            result[:beg],
+            split_line,
+            result[end:],
+        )
+        if start > 0:
+            index = start
+            while pos > 0:
+                pos = result.find('\n|', pos)
+                if pos < 0:
+                    break
+                result= '{}{}{}'.format(
+                    result[:pos+1],
+                    ('|{0:>%s} ' % (offset-2)).format(index) \
+                    if numbered else '',
+                    result[pos+1:],
+                )
+                pos = result.find('|\n', pos)
+                if pos < 0:
+                    break
+                result= '{}{}{}'.format(
+                    result[:pos],
+                    ' ' * surplus,
+                    result[pos:],
+                )
+                pos = result.find('|\n', pos)
+                result= '{}{}\n{}'.format(
+                    result[:pos+2],
+                    split_line,
+                    result[pos+2:],
+                )
+                index += 1
+
+        if cls.DisplayStyle.TABLED.ne(style):
+            beg = result.find('|\n+', 0)
+            end = result.find('|\n+', beg+3)
+            result = result[:beg+2] + result[end+2:]
+            result = re.sub(r'\+[\+-]*\n', r'', result)
+            result = re.sub(r'[^\S\n\r]*\|[^\S\n\r]*', r'|', result)
+            result = re.sub(r'^[^\S\n\r]*\|', r'', result)
+            result = re.sub(r'\|[^\S\n\r]*$', r'\n', result)
+            result = re.sub(r'\|\n\|', r'\n', result)
+
+        if cls.DisplayStyle.VERTICAL.eq(style):
+            _result= result
+            result = '\n'
+            result += '#' * 78
+            result += '\n\n'
+            beg = _result.find('\n', 0)
+            result += '\n'.join([
+                '{0:<14}{1}'.format(
+                    item.split(': ')[0] + ':',
+                    item.split(': ')[1],
+                )
+                for item in _result[:beg].split(', ')
+            ])
+            result += '\n\n'
+            result += '#' * 78
+            result += '\n\n'
+            field_width = 2 + max(*([_xlen_(rl_number) if numbered else 0]+[
+                _xlen_(field) for field in table_fields
+            ]))
+
+            while True:
+                end = _result.find('\n', beg+1)
+                if end < 0:
+                    break
+                row = _result[beg+1:end]
+                if not row.strip():
+                    break
+
+                fields = ([rl_number] if numbered else []) + table_fields
+                is_cn_field_name = False
+                if len(table_fields) > 0:
+                    matched = re.search(
+                        r'[\u4e00-\u9fff]', table_fields[0], re.IGNORECASE,
+                    )
+                    if matched is not None:
+                        is_cn_field_name = True
+                
+                for i, value in enumerate(row.split('|')):
+                    if is_cn_field_name:
+                        result += '{}{}{}\n'.format(
+                            f'{fields[i]}:',
+                            '\u3000' * int((field_width-_xlen_(fields[i]))/2),
+                            value,
+                        )
+                    else:
+                        result += '{}{}\n'.format(
+                            ('{0:<%s}' % (field_width,)).format(
+                                fields[i]+':',
+                            ),
+                            value,
+                        )
+                result += '\n'
+                result += '-' * 78
+                result += '\n\n'
+                beg = end
+            result = re.sub(r'\s+$', r'\n', result)
+        return result
+
+    @classmethod
+    def charting(cls, rows, pair_fields, options):
+        page_number, page_size, sort_, filter_, align_, fields_to_show, numbered, style = options
+
+        rl_fields_to_show = [dict(pair_fields)[x] for x in fields_to_show]
+        fields = [x[0] for x in pair_fields]
+
+        if align_:
+            keys = list(align_.keys())
+            for _fields in keys:
+                h, v = align_[_fields].split(':')
+                h, v = h.strip(), v.strip()
+                for _field in _fields.split(','):
+                    if _field:
+                        align_[_field] = (h if h else 'l', v if v else 'm')
+
+        swaps = []
+        for i, field in enumerate(fields_to_show):
+            if field not in fields:
+                raise Exception(f'Invalid field <{field}>!')
+            index = fields.index(field)
+            if index != i:
+                fields[i], fields[index] = \
+                        fields[index], fields[i]
+                swaps.append((i, index))
+
+        for row in rows:
+            for l, r in swaps:
+                row[l], row[r] = row[r], row[l]
+
+        rl_fields = [dict(pair_fields)[x] for x in fields]
+
+        table = PrettyTable()
+        table.field_names = rl_fields
+
+        for field in table.field_names:
+            table.align[field] = 'l'
+            table.valign[field] = 'm'
+            if align_:
+                if field in align_.keys():
+                    table.align[field], table.valign[field] = align_[field]
+
+        def _equal(rows, index, value, ignorecase=True, reverse=False):
+            if index < 0:
+                return rows
+            return list(filter(
+                lambda x: (( \
+                    ignorecase and (True if x[index] is None else x[index].lower() != value.lower()) \
+                ) or ( \
+                    (not ignorecase) and x[index] != value \
+                )) if reverse else (( \
+                    ignorecase and (False if x[index] is None else x[index].lower() == value.lower()) \
+                ) or ( \
+                    (not ignorecase) and x[index] == value \
+                )),
+                rows,
+            ))
+
+        def _search(rows, index, value, ignorecase=True, reverse=False):
+            if index < 0:
+                return rows
+            return list(filter(
+                lambda x: (( \
+                    ignorecase and (True if x[index] is None else x[index].lower().find(value.lower()) == -1) \
+                ) or ( \
+                    (not ignorecase) and (True if x[index] is None else x[index].find(value) == -1) \
+                )) if reverse else (( \
+                    ignorecase and (False if x[index] is None else x[index].lower().find(value.lower()) > -1) \
+                ) or ( \
+                    (not ignorecase) and (False if x[index] is None else x[index].find(value) > -1) \
+                )),
+                rows,
+            ))
+
+        def _empty(rows, index, reverse=False):
+            if index < 0:
+                return rows
+            return list(filter(
+                lambda x: x[index] if reverse else not x[index], rows,
+            ))
+
+        filter_functions = {
+            'equal': _equal,
+            'search': _search,
+            'empty': _empty,
+        }
+
+        if filter_:
+            _options = filter_.pop('_options', {})
+            relation = _options.get('relation', 'and')
+            if filter_:
+                rows = [tuple(row) for row in rows]
+                rows_set = set() if relation == 'or' else set(rows)
+                for _fields in filter_:
+                    function = filter_[_fields].get('function', 'search')
+                    parameters = filter_[_fields].get('parameters', [])
+                    if function in filter_functions.keys():
+                        for _field in _fields.split(','):
+                            if _field not in fields:
+                                raise Exception(
+                                    f'Invalid field <{_field}> when filter!',
+                                )
+                            index = fields.index(_field)
+                            if relation == 'or':
+                                rows_set.update(filter_functions[function](
+                                    rows, index, *parameters,
+                                ))
+                            else:
+                                rows_set = set(filter_functions[function](
+                                    list(rows_set), index, *parameters,
+                                ))
+                    else:
+                        raise Exception(
+                            f'Invalid function <{function}>!',
+                        )
+                rows = [list(row) for row in list(rows_set)]
+
+        def _default_sort(rows, index, reverse):
+            if index < 0:
+                return rows
+            return list(sorted(
+                rows,
+                key=lambda x: x[index].lower(),
+                reverse=reverse,
+            ))
+
+        sort_functions = {
+            'default': _default_sort,
+        }
+
+        if sort_:
+            for _fields, reverse in reversed(sort_):
+                for _field in reversed(_fields.split(',')):
+                    if _field not in fields:
+                        raise Exception(
+                            f'Invalid field <{_field}> when sort!',
+                        )
+                    index = fields.index(_field)
+                    function = sort_functions['default']
+                    if _field in sort_functions.keys():
+                        function = sort_functions[_field]
+                    rows = function(rows, index, reverse)
+
+        total_rows, start = len(rows), 0
+        table_title = f'Total Audios: {total_rows}'
+
+        if total_rows > 0:
+            if page_size is None or page_size < 1:
+                page_size = total_rows
+            total_pages = math.ceil(total_rows / page_size)
+            page_number = min(max(page_number, 1), total_pages)
+            start = (min(page_number, total_pages) - 1) * page_size + 1
+            end = min(page_number * page_size, total_rows)
+            for row in rows[start-1:end]:
+                table.add_row(row)
+
+            table_title += f', Page Size: {page_size}'
+            table_title += f', Page Number: {page_number} / {total_pages}'
+
+        table_string = table.get_string(
+            title=table_title,
+            fields=rl_fields_to_show,
+        )
+
+        return cls.wrap_table(
+            table_string,
+            rl_fields_to_show,
+            start=start,
+            numbered=numbered,
+            style=style,
+        )
+
+    #---------------------------------------------------------------------------
+
     def execute(self):
         #print("# {}".format('=' * 78))
         #print("Track Name:     {}".format(tag.title))
@@ -3296,352 +3649,8 @@ class DisplayAction(AudioGod):
                 for x in all_fields
             ])
 
-        def _charting(rows, pair_fields, options):
-            page_number, page_size, sort_, filter_, align_, fields_to_show, numbered, style = options
-
-            rl_fields_to_show = [dict(pair_fields)[x] for x in fields_to_show]
-            fields = [x[0] for x in pair_fields]
-
-            if align_:
-                keys = list(align_.keys())
-                for _fields in keys:
-                    h, v = align_[_fields].split(':')
-                    h, v = h.strip(), v.strip()
-                    for _field in _fields.split(','):
-                        if _field:
-                            align_[_field] = (h if h else 'l', v if v else 'm')
-
-            swaps = []
-            for i, field in enumerate(fields_to_show):
-                if field not in fields:
-                    self.logger.fatal(f'Invalid field <{field}>!')
-                    return
-                index = fields.index(field)
-                if index != i:
-                    fields[i], fields[index] = \
-                            fields[index], fields[i]
-                    swaps.append((i, index))
-
-            for row in rows:
-                for l, r in swaps:
-                    row[l], row[r] = row[r], row[l]
-
-            rl_fields = [dict(pair_fields)[x] for x in fields]
-
-            table = PrettyTable()
-            table.field_names = rl_fields
-
-            for field in table.field_names:
-                table.align[field] = 'l'
-                table.valign[field] = 'm'
-                if align_:
-                    if field in align_.keys():
-                        table.align[field], table.valign[field] = align_[field]
-
-            def _equal(rows, index, value, ignorecase=True, reverse=False):
-                if index < 0:
-                    return rows
-                return list(filter(
-                    lambda x: (( \
-                        ignorecase and (True if x[index] is None else x[index].lower() != value.lower()) \
-                    ) or ( \
-                        (not ignorecase) and x[index] != value \
-                    )) if reverse else (( \
-                        ignorecase and (False if x[index] is None else x[index].lower() == value.lower()) \
-                    ) or ( \
-                        (not ignorecase) and x[index] == value \
-                    )),
-                    rows,
-                ))
-
-            def _search(rows, index, value, ignorecase=True, reverse=False):
-                if index < 0:
-                    return rows
-                return list(filter(
-                    lambda x: (( \
-                        ignorecase and (True if x[index] is None else x[index].lower().find(value.lower()) == -1) \
-                    ) or ( \
-                        (not ignorecase) and (True if x[index] is None else x[index].find(value) == -1) \
-                    )) if reverse else (( \
-                        ignorecase and (False if x[index] is None else x[index].lower().find(value.lower()) > -1) \
-                    ) or ( \
-                        (not ignorecase) and (False if x[index] is None else x[index].find(value) > -1) \
-                    )),
-                    rows,
-                ))
-
-            def _empty(rows, index, reverse=False):
-                if index < 0:
-                    return rows
-                return list(filter(
-                    lambda x: x[index] if reverse else not x[index], rows,
-                ))
-
-            filter_functions = {
-                'equal': _equal,
-                'search': _search,
-                'empty': _empty,
-            }
-
-            if filter_:
-                _options = filter_.pop('_options', {})
-                relation = _options.get('relation', 'and')
-                if filter_:
-                    rows = [tuple(row) for row in rows]
-                    rows_set = set() if relation == 'or' else set(rows)
-                    for _fields in filter_:
-                        function = filter_[_fields].get('function', 'search')
-                        parameters = filter_[_fields].get('parameters', [])
-                        if function in filter_functions.keys():
-                            for _field in _fields.split(','):
-                                if _field not in fields:
-                                    self.logger.fatal(
-                                        f'Invalid field <{_field}> when filter!',
-                                    )
-                                    return
-                                index = fields.index(_field)
-                                if relation == 'or':
-                                    rows_set.update(filter_functions[function](
-                                        rows, index, *parameters,
-                                    ))
-                                else:
-                                    rows_set = set(filter_functions[function](
-                                        list(rows_set), index, *parameters,
-                                    ))
-                        else:
-                            self.logger.fatal(
-                                f'Invalid function <{function}>!',
-                            )
-                            return
-                    rows = [list(row) for row in list(rows_set)]
-
-            def _default_sort(rows, index, reverse):
-                if index < 0:
-                    return rows
-                return list(sorted(
-                    rows,
-                    key=lambda x: x[index].lower(),
-                    reverse=reverse,
-                ))
-
-            sort_functions = {
-                'default': _default_sort,
-            }
-
-            if sort_:
-                for _fields, reverse in reversed(sort_):
-                    for _field in reversed(_fields.split(',')):
-                        if _field not in fields:
-                            self.logger.fatal(
-                                f'Invalid field <{_field}> when sort!',
-                            )
-                            return
-                        index = fields.index(_field)
-                        function = sort_functions['default']
-                        if _field in sort_functions.keys():
-                            function = sort_functions[_field]
-                        rows = function(rows, index, reverse)
-
-            total_rows, start = len(rows), 0
-            table_title = f'Total Audios: {total_rows}'
-
-            if total_rows > 0:
-                if page_size is None or page_size < 1:
-                    page_size = total_rows
-                total_pages = math.ceil(total_rows / page_size)
-                page_number = min(max(page_number, 1), total_pages)
-                start = (min(page_number, total_pages) - 1) * page_size + 1
-                end = min(page_number * page_size, total_rows)
-                for row in rows[start-1:end]:
-                    table.add_row(row)
-
-                table_title += f', Page Size: {page_size}'
-                table_title += f', Page Number: {page_number} / {total_pages}'
-
-            table_string = table.get_string(
-                title=table_title,
-                fields=rl_fields_to_show,
-            )
-
-            def _wrap_table(table_string, start=1, numbered=True,
-                            style=self.DisplayStyle.TABLED):
-
-                def _xlen_(s):
-                    length = len(s)
-                    utf8_length = len(s.encode('utf-8'))
-                    length = (utf8_length - length) / 2 + length
-                    return int(length)
-
-                rl_number = '--'
-
-                _total = table_string.count('\n') - 6
-                offset = 0
-                if numbered:
-                    offset = max(len(str(start+_total-1)), _xlen_(rl_number)) + 3
-                result = re.sub(r'\n\+[\+-]+\+$', r'\n', table_string)
-
-                beg = result.find('\n|', 0)
-                end = result.find('\n+', beg)
-
-                surplus = end - 2 * beg - 1
-
-                pos = result.find('+\n|', 0)
-                result = '{}{}+\n|{}{}'.format(
-                    result[:pos],
-                    '-' * (offset + surplus),
-                    ' ' * int(offset / 2),
-                    result[pos+3:],
-                )
-                pos = result.find('|\n', pos)
-                result = '{}{}|\n{}'.format(
-                    result[:pos],
-                    ' ' * (offset - int(offset / 2)),
-                    result[pos+2:],
-                )
-                pos = result.find('|\n', pos)
-                beg = pos + 2
-                pos = result.find('+\n', pos)
-                end = pos + 1
-                split_line = '{}{}{}{}+'.format(
-                    '+' if numbered else '',
-                    '-' * (offset - 1) if numbered else '',
-                    result[beg:end-1],
-                    '-' * surplus,
-                )
-                result= '{}{}{}'.format(
-                    result[:beg],
-                    split_line,
-                    result[end:],
-                )
-                pos = result.find('+\n', pos)
-
-                _offset = offset-2
-                _offset -= len(re.compile(r'[\u4E00-\u9FA5]').findall(rl_number))
-
-                result= '{}{}{}'.format(
-                    result[:pos+2],
-                    # 这里 offset-2-2
-                    ('|{0:>%s} ' % (_offset)).format(rl_number) \
-                    if numbered else '',
-                    result[pos+2:],
-                )
-                pos = result.find('|\n', pos)
-                result= '{}{}{}'.format(
-                    result[:pos],
-                    ' ' * surplus,
-                    result[pos:],
-                )
-                pos = result.find('\n+', pos)
-                beg = pos + 1
-                pos = result.find('+\n', pos)
-                end = pos + 1
-                result= '{}{}{}'.format(
-                    result[:beg],
-                    split_line,
-                    result[end:],
-                )
-                if start > 0:
-                    index = start
-                    while pos > 0:
-                        pos = result.find('\n|', pos)
-                        if pos < 0:
-                            break
-                        result= '{}{}{}'.format(
-                            result[:pos+1],
-                            ('|{0:>%s} ' % (offset-2)).format(index) \
-                            if numbered else '',
-                            result[pos+1:],
-                        )
-                        pos = result.find('|\n', pos)
-                        if pos < 0:
-                            break
-                        result= '{}{}{}'.format(
-                            result[:pos],
-                            ' ' * surplus,
-                            result[pos:],
-                        )
-                        pos = result.find('|\n', pos)
-                        result= '{}{}\n{}'.format(
-                            result[:pos+2],
-                            split_line,
-                            result[pos+2:],
-                        )
-                        index += 1
-
-                if self.DisplayStyle.TABLED.ne(style):
-                    beg = result.find('|\n+', 0)
-                    end = result.find('|\n+', beg+3)
-                    result = result[:beg+2] + result[end+2:]
-                    result = re.sub(r'\+[\+-]*\n', r'', result)
-                    result = re.sub(r'[^\S\n\r]*\|[^\S\n\r]*', r'|', result)
-                    result = re.sub(r'^[^\S\n\r]*\|', r'', result)
-                    result = re.sub(r'\|[^\S\n\r]*$', r'\n', result)
-                    result = re.sub(r'\|\n\|', r'\n', result)
-
-                if self.DisplayStyle.VERTICAL.eq(style):
-                    _result= result
-                    result = '\n'
-                    result += '#' * 78
-                    result += '\n\n'
-                    beg = _result.find('\n', 0)
-                    result += '\n'.join([
-                        '{0:<14}{1}'.format(
-                            item.split(': ')[0] + ':',
-                            item.split(': ')[1],
-                        )
-                        for item in _result[:beg].split(', ')
-                    ])
-                    result += '\n\n'
-                    result += '#' * 78
-                    result += '\n\n'
-                    field_width = 2 + max(*([_xlen_(rl_number) if numbered else 0]+[
-                        _xlen_(field) for field in rl_fields_to_show
-                    ]))
-
-                    while True:
-                        end = _result.find('\n', beg+1)
-                        if end < 0:
-                            break
-                        row = _result[beg+1:end]
-                        if not row.strip():
-                            break
-
-                        fields = ([rl_number] if numbered else []) + rl_fields_to_show
-                        is_cn_field_name = False
-                        if len(rl_fields_to_show) > 0:
-                            matched = re.search(
-                                r'[\u4e00-\u9fff]', rl_fields_to_show[0], re.IGNORECASE,
-                            )
-                            if matched is not None:
-                                is_cn_field_name = True
-                        
-                        for i, value in enumerate(row.split('|')):
-                            if is_cn_field_name:
-                                result += '{}{}{}\n'.format(
-                                    f'{fields[i]}:',
-                                    '\u3000' * int((field_width-_xlen_(fields[i]))/2),
-                                    value,
-                                )
-                            else:
-                                result += '{}{}\n'.format(
-                                    ('{0:<%s}' % (field_width,)).format(
-                                        fields[i]+':',
-                                    ),
-                                    value,
-                                )
-                        result += '\n'
-                        result += '-' * 78
-                        result += '\n\n'
-                        beg = end
-                    result = re.sub(r'\s+$', r'\n', result)
-                return result
-
-            return _wrap_table(
-                table_string, start=start, numbered=numbered, style=style,
-            )
-
         self.handle_output(
-            _charting(
+            self.charting(
                 results,
                 all_fields,
                 [
