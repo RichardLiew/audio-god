@@ -1879,7 +1879,9 @@ class AudioGod(object):
     def repack_audio_properties(self, properties):
         ret = {}
         for field, value in properties.items():
-            field_name = self.transform_field_name(field, self.parameters['field_type'])
+            field_name = self.transform_field_name(
+                field, self.parameters.get('field_type', self.FieldType.ORIGINAL),
+            )
             type_ = self.AUDIO_PROPERTY_TYPES[field]
             ret[field] = (field_name, type_, value)
         return ret
@@ -3723,7 +3725,7 @@ class GenerateScriptAction(AudioGod):
                 content += '\n'
         content += '\n'
         self.handle_output(content)
-        self.chmod(self.parameters['output'], 0o755)
+        self.chmod(self.parameters['output'], mode=0o755)
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -4738,6 +4740,23 @@ class ConvertBaseAction(AudioGod):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def rewrite_parameters(self):
+        super().rewrite_parameters()
+
+        if 'executer' in self.parameters:
+            self.parameters['executer'] = self.abspath(
+                self.parameters['executer'],
+            )
+            if not self.parameters['executer']:
+                self.logger.fatal(f'Invalid executer!')
+                return
+            if not os.path.exists(self.parameters['executer']):
+                self.logger.fatal(f'Executer <{self.parameters["executer"]}> not exists!')
+                return
+            self.chmod(self.parameters['executer'], mode=0o755)
 
 #===============================================================================
 
