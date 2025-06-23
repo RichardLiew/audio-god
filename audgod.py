@@ -2945,6 +2945,18 @@ class DisplayAction(AudioGod):
         'output': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
+        'data_format': {
+            'use_public': AudioGod.ReplaceType.NONE,
+            'args': ['-x'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'choices': DataFormat.members(),
+                'required': False,
+                'default': DataFormat.OUTPUTTED,
+                'help': 'data format for display',
+            },
+        },
         'page_number': {
             'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-m'],
@@ -3045,18 +3057,6 @@ class DisplayAction(AudioGod):
                 'help': 'if show number when display',
             },
         },
-        'data_format': {
-            'use_public': AudioGod.ReplaceType.NONE,
-            'args': ['-x'],
-            'kwargs': {
-                'action': 'store',
-                'type': str,
-                'choices': DataFormat.members(),
-                'required': False,
-                'default': DataFormat.OUTPUTTED,
-                'help': 'data format for display',
-            },
-        },
     }
 
     #---------------------------------------------------------------------------
@@ -3064,51 +3064,49 @@ class DisplayAction(AudioGod):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.__display_options = self.__resolve_display_options(
-            kwargs['page_number'],
-            kwargs['page_size'],
-            kwargs['sort'],
-            kwargs['filter'],
-            kwargs['align'],
-            kwargs['numbered'],
-            kwargs['style'],
-        )
-
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
         super().rewrite_parameters()
+
+        if 'page_number' in self.parameters:
+            pass
+
+        if 'page_size' in self.parameters:
+            pass
+
+        if 'numbered' in self.parameters:
+            pass
+
+        if 'style' in self.parameters:
+            self.parameters['style'] = self.DisplayStyle(
+                self.parameters['style'],
+            )
 
         if 'data_format' in self.parameters:
             self.parameters['data_format'] = self.DataFormat(
                 self.parameters['data_format'],
             )
 
-    #---------------------------------------------------------------------------
-    
-    @property
-    def display_options(self):
-        return self.__display_options
-    
+        if 'sort' in self.parameters:
+            self.parameters['sort'] = self.__resolve_sort(
+                self.parameters['sort'],
+            )
+
+        if 'filter' in self.parameters:
+            self.parameters['filter'] = self.__resolve_filter(
+                self.parameters['filter'],
+            )
+
+        if 'align' in self.parameters:
+            self.parameters['align'] = self.__resolve_align(
+                self.parameters['align'],
+            )
+
     #---------------------------------------------------------------------------
 
-    def __resolve_display_options(
-            self,
-            page_number,
-            page_size,
-            sort_,
-            filter_,
-            align_,
-            numbered,
-            style,
-        ):
-        fields_to_show = self.parameters['fields']
+    def __resolve_sort(self, sort_):
         sort_ = self.load_json(sort_, [])
-        filter_ = self.load_json(filter_, {})
-        align_ = self.load_json(align_, {})
-        style = self.DisplayStyle(style)
-
-        # sort
         if type(sort_) is not list:
             self.logger.fatal(f'Sort <{sort_}> is not a list!')
             return
@@ -3125,8 +3123,11 @@ class DisplayAction(AudioGod):
             sort_[i][0] = self.resolve_fields( # type: ignore
                 sort_[i][0], sortify=False, reversify=False, stringify=True, # type: ignore
             )
+        return sort_
 
-        # filter
+
+    def __resolve_filter(self, filter_):
+        filter_ = self.load_json(filter_, {})
         if type(filter_) is not dict:
             self.logger.fatal(f'Filter <{filter_}> is not a dict!')
             return
@@ -3175,8 +3176,11 @@ class DisplayAction(AudioGod):
                     if type(value['parameters']) is not list:
                         self.logger.fatal(f'Invalid parameters in <{value}>!')
                         return
+        return filter_
 
-        # align
+
+    def __resolve_align(self, align_):
+        align_ = self.load_json(align_, {})
         if type(align_) is not dict:
             self.logger.fatal(f'Align <{align_}> is not a dict!')
             return
@@ -3195,17 +3199,7 @@ class DisplayAction(AudioGod):
             if re.match(r'^[lcr]:[tmb]$', value) is None:
                 self.logger.fatal(f'Invalid format of <{value}>!')
                 return
-
-        return (
-            page_number,
-            page_size,
-            sort_,
-            filter_,
-            fields_to_show,
-            align_,
-            numbered,
-            style,
-        )
+        return align_
 
     #---------------------------------------------------------------------------
 
@@ -3280,7 +3274,7 @@ class DisplayAction(AudioGod):
 
         self.load_sources(matched=False)
 
-        results, audios = [], self.concerned_sources
+        results = []
         all_fields = [
             (field, self.transform_field_name(field, self.parameters['field_type']))
             for field in self.ALL_FIELDS
@@ -3293,7 +3287,7 @@ class DisplayAction(AudioGod):
                 formatted, output_format = True, self.FileFormat.NONE
             case self.DataFormat.OUTPUTTED:
                 formatted, output_format = True, self.FileFormat.NOTE
-        for audio in audios:
+        for audio in self.concerned_sources:
             audio_object = self.prime_audio(audio)
             results.append([
                 self.fetchx(
@@ -3303,7 +3297,7 @@ class DisplayAction(AudioGod):
             ])
 
         def _charting(rows, pair_fields, options):
-            page_number, page_size, sort_, filter_, fields_to_show, align_, numbered, style = options
+            page_number, page_size, sort_, filter_, align_, fields_to_show, numbered, style = options
 
             rl_fields_to_show = [dict(pair_fields)[x] for x in fields_to_show]
             fields = [x[0] for x in pair_fields]
@@ -3642,18 +3636,26 @@ class DisplayAction(AudioGod):
                     result = re.sub(r'\s+$', r'\n', result)
                 return result
 
-            content = _wrap_table(
+            return _wrap_table(
                 table_string, start=start, numbered=numbered, style=style,
             )
-            self.handle_output(content)
-            return content
 
-        _ = _charting(
-            results,
-            all_fields,
-            self.display_options,
+        self.handle_output(
+            _charting(
+                results,
+                all_fields,
+                [
+                    self.parameters['page_number'],
+                    self.parameters['page_size'],
+                    self.parameters['sort'],
+                    self.parameters['filter'],
+                    self.parameters['align'],
+                    self.parameters['fields'],
+                    self.parameters['numbered'],
+                    self.parameters['style'],
+                ],
+            ),
         )
-
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
