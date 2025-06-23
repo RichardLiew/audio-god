@@ -687,10 +687,12 @@ class AudioGod(object):
 
         # init logger
         self.__logger = self.FatalLogger(
-            self.parameters.get('log_level', None),
-            self.parameters.get('log_file', None),
+            self.parameters['log_level'],
+            self.parameters['log_file'],
         )
+        eyed3.log.setLevel(logging.ERROR)
 
+    #---------------------------------------------------------------------------
 
     @property
     def parameters(self):
@@ -701,6 +703,7 @@ class AudioGod(object):
     def logger(self):
         return self.__logger
 
+    #---------------------------------------------------------------------------
 
     @classmethod
     def ARGUMENTS_DEFAULTS(cls):
@@ -710,6 +713,82 @@ class AudioGod(object):
         for argment, params in cls.ARGUMENTS.items(): # type: ignore
             ret[argment] = params['kwargs']['default']
         return ret
+
+    #---------------------------------------------------------------------------
+
+    @staticmethod
+    def load_json(content, default=None) -> list | dict | None:
+        def _remove_comments(data):
+            comment_tag = '_comment'
+            if isinstance(data, dict):
+                if comment_tag in data:
+                    del data[comment_tag]
+                for key in data:
+                    data[key] = _remove_comments(data[key])
+            elif isinstance(data, list):
+                comment_indexes = []
+                for i in range(len(data)):
+                    if isinstance(data[i], dict):
+                        old_len = len(data[i])
+                        data[i] = _remove_comments(data[i])
+                        new_len = len(data[i])
+                        if  old_len > 0 and new_len == 0:
+                            comment_indexes.append(i)
+                    else:
+                        data[i] = _remove_comments(data[i])
+                for i in comment_indexes:
+                    del data[i]
+            return data
+
+        ret = None
+        if content:
+            ret = _remove_comments(json.loads(content.strip().strip("'")))
+        if ret is None:
+            ret = default
+        return ret
+
+
+    @staticmethod
+    def split(
+        s, pattern=None, escaped=False,
+        del_blank=True, filt_empty=True, filt_repeated=True,
+        sortify=False, reversify=False,
+        *args, **kwargs,
+    ) -> list:
+        if not s:
+            return []
+        if not pattern:
+            return [s]
+        if escaped:
+            pattern = re.escape(pattern)
+        ret = re.split(pattern, s, *args, **kwargs)
+        if del_blank:
+            ret = [item.strip() for item in ret]
+        if filt_empty:
+            ret = list(filter(lambda x: x, ret))
+        if filt_repeated:
+            ret = list(dict.fromkeys(ret))
+        if sortify:
+            ret.sort()
+        if reversify:
+            ret = list(reversed(ret))
+        return ret
+
+
+    @staticmethod
+    def transform_utc(timestamp) -> str:
+        #return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%SZ')
+        return datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
+    @classmethod
+    def current_time(cls) -> str:
+        return cls.transform_utc(time.time())
+
+
+    @staticmethod
+    def timestamp():
+        return datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
 
 
     @staticmethod
@@ -725,31 +804,124 @@ class AudioGod(object):
         return os.path.normpath(os.path.abspath(os.path.expanduser(ret)))
 
 
-    @staticmethod
-    def glorify_indents(content, indent=None):
-        if indent is None:
-            return content
-        def _calculate_min_indent(text):
-            min_indent, lines = None, text.split('\n')
-            for line in lines:
-                stripped_line = line.lstrip(' ')
-                if not stripped_line:
-                    continue
-                current_indent = len(line) - len(stripped_line)
-                if min_indent is None or current_indent < min_indent:
-                    min_indent = current_indent
-            return min_indent if min_indent is not None else 0
-        filler, min_indent = ' ', _calculate_min_indent(content)
-        if min_indent > 0:
-            content = re.sub(
-                r'\n%s{%s}' % (filler, min_indent), '\n', content,
-            )
-        if indent > 0:
-            content = re.sub(
-                r'\n', f'\n{filler * indent}', content,
-            )
-        return content
+    def rename(self, old, new):
+        if not os.path.exists(old):
+            self.logger.fatal(f'File {old} not exists!')
+            return
+        if os.path.exists(new):
+            self.remove(new)
+        os.rename(old, new)
 
+    def duplicate(self, src, dst):
+        if not os.path.exists(src):
+            self.logger.fatal(f'File {src} not exists!')
+            return
+        if os.path.exists(dst):
+            self.remove(dst)
+        shutil.copy2(src, dst)
+    
+
+    @classmethod
+    def init_cache(cls):
+        os.makedirs(cls.CACHE_DIR, exist_ok=True)
+        os.makedirs(cls.TRASH_DIR, exist_ok=True)
+        os.makedirs(cls.BACKUPS_DIR, exist_ok=True)
+
+
+    @classmethod
+    def expand_globbing(cls, *paths, recursive=True):
+        ret = []
+        for path in paths:
+            if not path:
+                continue
+            if not isinstance(path, (list, tuple)):
+                path = [path]
+            for item in path:
+                item = cls.abspath(item)
+                if not item:
+                    continue
+                targets = glob.glob(item, recursive=recursive)
+                if not targets:
+                    targets = [item]
+                for target in targets:
+                    target = cls.abspath(target)
+                    if target and target not in ret:
+                        ret.append(target)
+        return list(dict.fromkeys(ret))
+
+
+    @classmethod
+    def treat_basename(cls, src, tag=''):
+        ret = f'{cls.timestamp()}.{os.path.basename(src)}'
+        if tag:
+            ret = f'{tag}.{ret}'
+        return ret
+
+
+    def remove(self, *paths):
+        self.init_cache()
+        for item in self.expand_globbing(*paths):
+            if os.path.exists(item):
+                os.rename(
+                    item, os.path.join(
+                        self.TRASH_DIR, self.treat_basename(item, 'trash'),
+                    ),
+                )
+            else:
+                self.logger.error(f'Remove warning: File {item} not exists!')
+
+
+    def backup(self, src):
+        self.init_cache()
+        if os.path.exists(src):
+            self.duplicate(
+                src, os.path.join(
+                    self.BACKUPS_DIR, self.treat_basename(src, 'backup'),
+                ),
+            )
+        else:
+            self.logger.error(f'Backup warning: File {src} not exists!')
+
+
+    @staticmethod
+    def chmod(path, mode=0o755):
+        if path and os.path.exists(path):
+            os.chmod(path, mode)
+
+
+    @staticmethod
+    def replace_underline(s):
+        return s.lower().replace('_', '-')
+
+
+    @staticmethod
+    def replace_hyphen(s):
+        return s.lower().replace('-', '_')
+
+
+    @classmethod
+    def rewrite_key(cls, key):
+        units = key.lower().split('.')
+        units[-1] = cls.replace_hyphen(units[-1])
+        for i in range(len(units[:-1])):
+            units[i] = cls.replace_underline(units[i])
+        return '.'.join(units)
+
+
+    @classmethod
+    def repack_dict(cls, dict_, rewrite_key=None):
+        if not rewrite_key:
+            rewrite_key = cls.rewrite_key
+        for key in dict_:
+            new_key = rewrite_key(key)
+            if new_key == key:
+                continue
+            value = dict_.pop(key)
+            dict_[new_key] = value
+        return dict_
+
+
+    #---------------------------------------------------------------------------
 
     # Successful for zsh, failed for bash.
     # You should set 'PROMPT_COMMAND="history -a"' in "~/.bashrc" or "~/.bash_profile".
@@ -783,45 +955,39 @@ class AudioGod(object):
         return interpreter 
 
 
+    @staticmethod
+    def glorify_indents(content, indent=None):
+        if indent is None:
+            return content
+        def _calculate_min_indent(text):
+            min_indent, lines = None, text.split('\n')
+            for line in lines:
+                stripped_line = line.lstrip(' ')
+                if not stripped_line:
+                    continue
+                current_indent = len(line) - len(stripped_line)
+                if min_indent is None or current_indent < min_indent:
+                    min_indent = current_indent
+            return min_indent if min_indent is not None else 0
+        filler, min_indent = ' ', _calculate_min_indent(content)
+        if min_indent > 0:
+            content = re.sub(
+                r'\n%s{%s}' % (filler, min_indent), '\n', content,
+            )
+        if indent > 0:
+            content = re.sub(
+                r'\n', f'\n{filler * indent}', content,
+            )
+        return content
+
+
     @classmethod
-    def render_usage(cls, usage, /, indent=0, kwargs={}) -> str:
+    def render_usage(cls, usage, /, indent=None, kwargs={}) -> str:
         return '\n' + cls.PerfectTemplate(
             cls.glorify_indents(usage, indent=indent),
         ).perfect_substitute(dict(
             cmd=cls.get_command(),
-         ) | copy.deepcopy(kwargs))
-
-
-    @staticmethod
-    def replace_underline(s):
-        return s.lower().replace('_', '-')
-
-
-    @staticmethod
-    def replace_hyphen(s):
-        return s.lower().replace('-', '_')
-
-
-    @classmethod
-    def rewrite_key(cls, key):
-        units = key.lower().split('.')
-        units[-1] = cls.replace_hyphen(units[-1])
-        for i in range(len(units[:-1])):
-            units[i] = cls.replace_underline(units[i])
-        return '.'.join(units)
-
-
-    @classmethod
-    def repack_dict(cls, dict_, rewrite_key=None):
-        if not rewrite_key:
-            rewrite_key = cls.rewrite_key
-        for key in dict_:
-            new_key = rewrite_key(key)
-            if new_key == key:
-                continue
-            value = dict_.pop(key)
-            dict_[new_key] = value
-        return dict_
+         ) | copy.deepcopy(ACTIONS_DEFAULTS) | copy.deepcopy(kwargs))
 
 
     @classmethod
@@ -921,6 +1087,354 @@ class AudioGod(object):
                 )
             cls.KWARGS['usage'] = cls.KWARGS['usage'].rstrip().rstrip('\\').rstrip()
 
+    #---------------------------------------------------------------------------
+
+    @classmethod
+    def generate_key(cls, artist, title):
+        return '{artist}{div}{title}'.format(
+            artist=cls.format_artist(artist.strip()),
+            div=cls.DIV_CHAR,
+            title=cls.format_title(title.strip()),
+        ).upper()
+
+
+    @classmethod
+    def transform_field_name(cls, field, field_type=FieldType.ORIGINAL):
+        match field_type:
+            case cls.FieldType.CHINESE:
+                return cls.AUDIO_CN_PROPERTIES[field]
+            case cls.FieldType.ENGLISH:
+                return cls.AUDIO_EN_PROPERTIES[field]
+        return field
+
+
+    @classmethod
+    def transform_field_name_synonyms(cls, field):
+        field = field.lower()
+        if field in cls.AUDIO_CN_PROPERTY_SYNONYMS:
+            return cls.AUDIO_CN_PROPERTY_SYNONYMS[field]
+        if field in cls.AUDIO_EN_PROPERTY_SYNONYMS:
+            return cls.AUDIO_EN_PROPERTY_SYNONYMS[field]
+        if field in cls.ALL_FIELDS:
+            return field
+        return None
+    
+    #---------------------------------------------------------------------------
+
+    # Use AudioProperty type field here, you won't check field parameter.
+    def save(self, audio_object, field, value, formatted=False):
+        if value is None:
+            return
+        if formatted:
+            value = self.format_funcs[field](value)
+        match field:
+            case self.AudioProperty.COMMENTS:
+                audio_object.tag.comments.set(value)
+            case _ if field in self.ZIP_FIELDS:
+                comments = audio_object.tag.comments
+                if comments is not None:
+                    comments = ''.join([comment.text for comment in comments])
+                comments = self.load_json(comments, {})
+                comments[field] = value # type: ignore
+                audio_object.tag.comments.set(json.dumps(comments))
+                if self.AudioProperty.ARTWORK.eq(field):
+                    _, value = value
+                    if self.validate_url(value):
+                        audio_object.tag.images.set(
+                            type_=3,
+                            img_data=None,
+                            mime_type=None,
+                            img_url=value,
+                        )
+                    else:
+                        valid = self.validate_image(value) and (
+                                    os.path.isfile(value) or (
+                                        (not self.artwork_path) and \
+                                        os.path.isfile(self.abspath(
+                                            self.artwork_path, value,
+                                        ))
+                                    )
+                                )
+                        if valid:
+                            _, ext = os.path.splitext(os.path.basename(value))
+                            audio_object.tag.images.set(
+                                type_=3,
+                                img_data=open(value, 'rb').read(),
+                                mime_type=f'image/{ext[1:].lower()}',
+                            )
+                        else:
+                            self.logger.fatal(
+                                'Audio <{name}> has invalid artwork "{value}"'.format(
+                                    name=audio_object.tag.file_info.name,
+                                    value=value,
+                                ),
+                            )
+                            return
+            case _:
+                setattr(audio_object.tag, field, value)
+        audio_object.tag.save(version=eyed3.id3.ID3_V2_4, encoding='utf-8') # type: ignore
+
+    # Use AudioProperty type field here, you won't check field parameter.
+    def fetch(self, audio_object, field):
+        ret, filename = None, audio_object.tag.file_info.name
+        match field:
+            case AudioGod.AudioProperty.GENRE:
+                if audio_object.tag.genre is not None:
+                    ret = audio_object.tag.genre.name
+            case AudioGod.AudioProperty.TRACK_NUM:
+                ret = audio_object.tag.track_num
+            case AudioGod.AudioProperty.DURATION:
+                ret = audio_object.info.time_secs
+            case AudioGod.AudioProperty.MTIME:
+                ret = audio_object.tag.file_info.mtime
+            case AudioGod.AudioProperty.SIZE:
+                ret = audio_object.info.size_bytes
+            case AudioGod.AudioProperty.NAME:
+                ret = os.path.basename(filename)
+            case AudioGod.AudioProperty.PATH:
+                ret = os.path.dirname(filename)
+            case AudioGod.AudioProperty.COMMENTS:
+                ret = audio_object.tag.comments
+            case _ if field in self.ZIP_FIELDS:
+                comments = audio_object.tag.comments
+                if comments:
+                    comments = ''.join([comment.text for comment in comments])
+                ret = self.load_json(comments, {}).get(field, None) # type: ignore
+                match field:
+                    case AudioGod.AudioProperty.ARTWORK:
+                        if len(audio_object.tag.images) == 0 and not ret:
+                            ret = None
+                        else:
+                            ret = (len(audio_object.tag.images), ret if ret else '')
+            case _:
+                if hasattr(audio_object.tag, field):
+                    ret = getattr(audio_object.tag, field)
+                elif hasattr(audio_object.info, field):
+                    ret = getattr(audio_object.info, field)
+                elif hasattr(audio_object.tag.file_info, field):
+                    ret = getattr(audio_object.tag.file_info, field)
+        return ret
+
+    def fetchx(self, audio_object, field,
+               formatted=False, output_format=FileFormat.NONE, default=None):
+        ret = self.fetch(audio_object, field)
+        if ret is not None:
+            if formatted:
+                ret = self.format_funcs[field](ret)
+            if self.FileFormat.NONE.ne(output_format):
+                ret = self.output_funcs[field](ret, output_format)
+        if default is not None and not ret:
+            ret = default
+        return ret
+
+
+    def prime_audio(self, audio):
+        audio_object = eyed3.load(audio)
+        if audio_object is None:
+            self.logger.fatal(f'Invalid audio <{audio}>!')
+            return None
+        if audio_object.tag is None:
+            audio_object.initTag()
+            audio_object.tag.save() # type: ignore
+        return audio_object
+
+
+    def handle_output(self, content):
+        if not self.output:
+            print(content)
+        else:
+            self.backup(self.output)
+            with open(self.output, 'w', encoding='utf-8') as f:
+                f.write(content)
+
+
+    def glorify_exportation(self, outputs):
+        ret = f'{"#"*78}\n\n'
+        ret += '# Summary: Collects {collects_count}, Items {items_count}\n'.format(
+            collects_count=len(outputs),
+            items_count=sum([len(x) for _, x in outputs.items()]),
+        )
+        ret += f'# Created Time: {self.current_time()}\n\n'
+
+        collect_number = 0
+        for collect, items in outputs.items():
+            collect_number += 1
+            ret += f'\n({collect_number}) {collect}:\n'
+            item_number = 0
+            for item in items:
+                item_number += 1
+                ret += '\t{number} {content}\n'.format(
+                    number=f'{f"{item_number}.":<{len(str(len(items)))+1}}',
+                    content=item,
+                )
+        return ret
+
+    #---------------------------------------------------------------------------
+
+    def __load_ignored(self):
+        if not self.ignored_file:
+            return
+        if not os.path.exists(self.ignored_file):
+            return
+        with open(self.ignored_file, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                for item in self.expand_globbing(line, recursive=True):
+                    self.ignored_set.add(item)
+
+
+    @staticmethod
+    def __check_name(source):
+        name, _ = os.path.splitext(os.path.basename(source))
+        name = name.strip()
+        if not name:
+            return False
+        if name.count(AudioGod.DIV_CHAR) > 1:
+            return False
+        if name.count(AudioGod.DIV_CHAR) == 1 and (name[0] == AudioGod.DIV_CHAR or name[-1] == AudioGod.DIV_CHAR):
+            return False
+        if name.count(AudioGod.DIV_CHAR) == 0:
+            if name.count(AudioGod.ORI_DIV_CHAR) != 1:
+                return False
+            if name[0] == AudioGod.ORI_DIV_CHAR or name[-1] == AudioGod.ORI_DIV_CHAR:
+                return False
+        return True
+
+
+    def __check_extension(self, source):
+        _, ext = os.path.splitext(os.path.basename(source))
+        return ext[1:].lower() in self.extensions
+
+
+    def __check_source(self, source):
+        _source = source
+        while True:
+            if re.match(r'^/*$', _audio) is not None:
+                break
+            if _audio in self.ignored_set or _source+'/' in self.ignored_set:
+                return self.SourceType.IGNORED
+            _audio = os.path.dirname(_audio)
+
+        if os.path.basename(source) == '.DS_Store':
+            return self.SourceType.OMITTED
+        if os.path.islink(source):
+            return self.SourceType.OMITTED
+        if not os.path.isfile(source):
+            return self.SourceType.OMITTED
+
+        if not self.__check_extension(source):
+            return self.SourceType.INVALID_EXT
+        if not self.__check_name(source):
+            return self.SourceType.INVALID_NAME
+
+        return self.SourceType.VALID
+
+
+    def __generate_key_by_filename(self, source):
+        if not self.__check_name(source):
+            self.logger.fatal(f'Invalid name of audio <{source}>!')
+            return
+        name, _ = os.path.splitext(os.path.basename(source))
+        if name.count(self.DIV_CHAR) == 1:
+            return self.generate_key(
+                *self.split(
+                    name, self.DIV_CHAR, escaped=True,
+                    del_blank=False, filt_empty=False, filt_repeated=False,
+                    sortify=False, reversify=False,
+                ),
+            )
+        return self.generate_key(
+            *self.split(
+                name, self.ORI_DIV_CHAR, escaped=True,
+                del_blank=False, filt_empty=False, filt_repeated=False,
+                sortify=False, reversify=False,
+            ),
+        )
+
+
+    def __load_sources(self, matched=False):
+        self.__load_ignored()
+
+        for source in self.plain_sources:
+            self.logger.debug(f'Loading <{source}> ...')
+            _type = self.__check_source(source)
+            match _type:
+                case self.SourceType.INVALID_EXT:
+                    self.invalid_ext_sources.append(source)
+                    self.logger.debug(self.SourceType.INVALID_EXT)
+                    continue
+                case self.SourceType.INVALID_NAME:
+                    self.invalid_name_sources.append(source)
+                    self.logger.debug(self.SourceType.INVALID_NAME)
+                    continue
+                case self.SourceType.OMITTED:
+                    self.omitted_sources.append(source)
+                    self.logger.debug(self.SourceType.OMITTED)
+                    continue
+                case self.SourceType.IGNORED:
+                    self.ignored_sources.append(source)
+                    self.logger.debug(self.SourceType.IGNORED)
+                    continue
+            key = self.__generate_key_by_filename(source)
+            if key in self.valid_clauses:
+                self.matched_sources.append(source)
+                self.logger.debug(self.SourceType.MATCHED)
+            else:
+                self.notmatched_sources.append(source)
+                self.logger.debug(self.SourceType.NOTMATCHED)
+
+        self.logger.warning(f'\n{"#"*78}\n')
+
+        self.logger.warning(
+            'Total Sources:   {total}\n\n'
+            'Invalid Sources: {invalid} '
+            '(Invalid Extension: {inv_ext}, Invalid Name: {inv_name})\n'
+            'Omitted Sources: {omitted}\n'
+            'Ignored Sources: {ignored}\n'
+            'Valid Sources:   {valid}{match_detail}'.format(
+                total=len(self.invalid_ext_sources) \
+                    + len(self.invalid_name_sources) \
+                    + len(self.omitted_sources) \
+                    + len(self.ignored_sources) \
+                    + len(self.matched_sources) \
+                    + len(self.notmatched_sources),
+                invalid=len(self.invalid_ext_sources) + len(self.invalid_name_sources),
+                inv_ext=len(self.invalid_ext_sources),
+                inv_name=len(self.invalid_name_sources),
+                omitted=len(self.omitted_sources),
+                ignored=len(self.ignored_sources),
+                valid=len(self.matched_sources) + len(self.notmatched_sources),
+                match_detail='\n' if not matched else ' (Matched: {matched}, NotMatched: {notmatched})\n'.format(
+                    matched=len(self.matched_sources),
+                    notmatched=len(self.notmatched_sources),
+                ),
+            )
+        )
+
+        if False and len(self.omitted_sources) > 0:
+            self.logger.warning('\nOmitted Sources:')
+            for source in self.omitted_sources:
+                self.logger.warning(f'\t{source}')
+        if False and len(self.ignored_sources) > 0:
+            self.logger.warning('\nIgnored Sources:')
+            for source in self.ignored_sources:
+                self.logger.warning(f'\t{source}')
+        if len(self.invalid_ext_sources) > 0:
+            self.logger.warning('\nInvalid Extension Sources:')
+            for source in self.invalid_ext_sources:
+                self.logger.warning(f'\t{source}')
+        if len(self.invalid_name_sources) > 0:
+            self.logger.warning('\nInvalid Name Sources:')
+            for source in self.invalid_name_sources:
+                self.logger.warning(f'\t{source}')
+        if matched and len(self.notmatched_sources) > 0:
+            self.logger.warning('\nNot Matched Sources:')
+            for source in self.notmatched_sources:
+                self.logger.warning(f'\t{source}')
+
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
@@ -937,29 +1451,73 @@ class AudioGod(object):
 #                                                                              #
 ################################################################################
 
-class PreprocessNoteAction(AudioGod):
+class NoteRelatedBaseAction(AudioGod):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
-
-    KWARGS = {
-        'description': '✋ Preprocess the note file',
-        'help': 'preprocess the note file',
-    }
-
-    ARGUMENTS = {
-        'document': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
-        },
-        'field_type': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
-        },
-    }
-
+    
+    KWARGS = None
+    ARGUMENTS = None
+    
     #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def __generate_key_by_properties(self, properties):
+        if self.AudioProperty.ARTIST not in properties:
+            self.logger.fatal(f'"Artist" not in <{properties}>!')
+            return
+        if self.AudioProperty.TITLE not in properties:
+            self.logger.fatal(f'"Title" not in <{properties}>!')
+            return
+        return self.generate_key(
+            properties[self.AudioProperty.ARTIST],
+            properties[self.AudioProperty.TITLE],
+        )
+
+
+    def __transform_summaries_to_clauses(self):
+        for grouping in self.summaries:
+            genre, items = self.summaries[grouping]
+            for item in items:
+                properties = {
+                    self.AudioProperty.GENRE: genre,
+                    self.AudioProperty.GROUPING: grouping,
+                }
+                properties.update({
+                    field: item[field][2]
+                    for field in item
+                })
+                key = self.__generate_key_by_properties(properties)
+                if key not in self.valid_clauses:
+                    self.valid_clauses[key] = properties
+                else:
+                    ori_grouping = self.valid_clauses[key][self.AudioProperty.GROUPING]
+                    self.valid_clauses[key].update(properties)
+                    self.valid_clauses[key][self.AudioProperty.GROUPING] = '{ori}{sep}{new}'.format(
+                        ori=ori_grouping,
+                        sep=self.GROUPING_SEPARATOR,
+                        new=grouping,
+                    )
+
+
+    def _pack_properties_for_note(self, properties):
+        ret = ''
+        for field in properties:
+            field_name, _, value = properties[field]
+            ret += f'{field_name}: {value}; '
+        return ret.strip().rstrip(';')
+
+
+    def __summarize_for_note(self):
+        return self.glorify_exportation({
+            f'@[{genre}] {grouping}': [
+                self._pack_properties_for_note(item) for item in items
+            ] for grouping, (genre, items) in self.summaries.items()
+        })
 
 
     def __analysis_note(self):
@@ -1100,6 +1658,33 @@ class PreprocessNoteAction(AudioGod):
                     repeated='｜'.join(self.repeated_clauses[key]),
                 ))
 
+#===============================================================================
+
+class PreprocessNoteAction(NoteRelatedBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Preprocess the note file',
+        'help': 'preprocess the note file',
+    }
+
+    ARGUMENTS = {
+        'document': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'field_type': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
@@ -1112,9 +1697,9 @@ class PreprocessNoteAction(AudioGod):
         self.backup(self.document)
         self.rename(tmp_file, self.document)
 
-#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+#===============================================================================
 
-class FillPropertiesAction(AudioGod):
+class FillPropertiesAction(NoteRelatedBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -1182,10 +1767,146 @@ class FillPropertiesAction(AudioGod):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
+
+    def import_(self):
+        file_format = self.recognize_file_format(self.document)
+        if self.FileFormat.NONE.eq(file_format):
+            self.logger.fatal(f'Invalid source file <{self.document}>.')
+            return
+        getattr(self, f'_import_{file_format}')()
+
+    def _import_note(self):
+        self.__analysis_note()
+
+    def _import_plist(self):
+        pass
+
+    def _import_markdown(self):
+        pass
+
+    def _import_xml(self):
+        pass
+
+    def _import_json(self):
+        pass
+
+
+    def __load_properties_from_file(self):
+        if not os.path.exists(self.document):
+            self.logger.fatal(f'Source file <{self.document}> not exists!')
+            return
+        self.import_()
+
+
+    def __resolve_properties(self, properties):
+        ret = self.load_json(properties, {})
+        if type(ret) is not dict:
+            self.logger.fatal(f'Properties <{ret}> is not a dict type!')
+            return ret
+        keys = [
+            key for key in list(ret.keys()) # type: ignore
+            if key != 'default'
+        ]
+        for key in keys:
+            value = ret.pop(key) # type: ignore
+            new_keys = self.__resolve_fields(
+                key, sortify=True, reversify=False, stringify=False,
+            )
+            for new_key in new_keys:
+                ret[new_key] = value # type: ignore
+        for key in ret.keys(): # type: ignore
+            value = ret[key] # type: ignore
+            if type(value) is not dict:
+                self.logger.fatal(f'Value <{value}> is not a dict type!')
+                return ret
+            if 'sources' not in value:
+                self.logger.fatal(f'Lack sources in <{value}>!')
+                return ret
+            sources = value['sources']
+            if type(sources) is not list:
+                self.logger.fatal(f'Sources in <{value}> is not a list!')
+                return ret
+            for i in range(len(sources)):
+                sources[i] = self.PropertySource(sources[i])
+        return ret
+
+
+    def __fetch_from_outside(self, audio, field):
+        format_ = self.format_funcs[field]
+        parse_ = self.parse_funcs[field]
+        default = self.__resolve_properties(
+            self.default_arguments['properties'],
+        )['default'] # type: ignore
+        sources = self.properties.get('default', {}).get( # type: ignore
+            'sources', default['sources'],
+        )
+        if field in self.properties.keys(): # type: ignore
+            sources = self.properties[field].get('sources', sources) # type: ignore
+        ret = self.properties.get('default', {}).get( # type: ignore
+            'value', default['value'],
+        )
+        for source in sources:
+            match source:
+                case self.PropertySource.COMMAND:
+                    if field in self.properties.keys(): # type: ignore
+                        _value = self.properties[field].get('value', None) # type: ignore
+                        if _value is not None:
+                            ret = _value
+                            break
+                case self.PropertySource.FILE:
+                    key = self.__generate_key_by_filename(audio)
+                    _value = self.valid_clauses.get(key, {}).get(field, None)
+                    if _value is not None:
+                        ret = _value
+                        break
+                case self.PropertySource.DIRECTORY:
+                    _value = dirname = os.path.dirname(audio)
+                    match field:
+                        case self.AudioProperty.GENRE:
+                            _value = os.path.basename(dirname)
+                        case self.AudioProperty.GROUPING:
+                            _value = re.sub(
+                                r'^%s/+' % (
+                                    re.escape(re.sub(r'/+$', r'', self.root)),
+                                ),
+                                r'',
+                                _value,
+                            )
+                    ret = _value
+                    break
+        return None if ret is None else format_(parse_(ret))
+
+
+    def __fill_audio_properties(self):
+        audios = self.concerned_sources
+        filled_count = 0
+        self.logger.warning(f'\n{"#"*78}\n')
+        for audio in audios:
+            self.logger.debug(f'Filling <{audio}> ...')
+            filled, audio_object = False, self.prime_audio(audio)
+            for field in self.fields:
+                property_ = self.__fetch_from_outside(audio, field)
+                if property_ is not None:
+                    filled = True
+                    self.save(audio_object, field, property_, True)
+                    self.logger.debug(f'Field <{field}> assigned!')
+            if filled:
+                filled_count += 1
+                self.logger.debug(f'Audio <{audio}> filled!\n')
+        self.logger.warning(
+            'Audios To Fill: {total}, Filled Audios: {filled}\n'.format(
+                total=len(audios),
+                filled=filled_count,
+            )
+        )
+
 
     @log_decorator
     def execute(self):
-        pass
+        self.__load_properties_from_file()
+        self.__load_sources(matched=True)
+        self.__fill_audio_properties()
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -1219,10 +1940,21 @@ class FormatPropertiesAction(AudioGod):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
-        pass
+        self.__load_sources(matched=False)
+        audios = self.concerned_sources
+        self.logger.warning(f'\n{"#"*78}\n')
+        for audio in audios:
+            self.logger.debug(f'Formatting <{audio}> ...')
+            audio_object = self.prime_audio(audio)
+            for field in self.fields:
+                property_ = self.fetchx(audio_object, field, formatted=True)
+                if property_ is not None:
+                    self.save(audio_object, field, property_, True)
+        self.logger.warning(f'Formatted Audios: {len(audios)}\n')
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -1275,10 +2007,25 @@ class RenameAudiosAction(AudioGod):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
-        pass
+        self.__load_sources(matched=False)
+        audios = self.concerned_sources
+        for audio in audios:
+            audio_object = self.prime_audio(audio)
+            _old = os.path.basename(audio)
+            _, ext = os.path.splitext(_old)
+            _new = FilenamePatternTemplate(self.filename_pattern).safe_substitute({
+                field: self.fetchx(
+                    audio_object, field, formatted=True,
+                ) for field in self.ALL_FIELDS
+            }) + ext.lower()
+            if _old == _new:
+                continue
+            _path = os.path.dirname(audio)
+            self.rename(self.abspath(_path, _old), self.abspath(_path, _new))
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -1321,10 +2068,33 @@ class ListRepeatedAction(AudioGod):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
-        pass
+        self.__load_sources(matched=False)
+        
+        audios, results = self.concerned_sources, {}
+        for audio in audios:
+            audio_object = self.prime_audio(audio)
+            artist = self.fetchx(audio_object, self.AudioProperty.ARTIST, formatted=True)
+            if not artist:
+                self.logger.fatal(f'Invalid artist of <{audio}>')
+                return
+            title = self.fetchx(audio_object, self.AudioProperty.TITLE, formatted=True)
+            if not title:
+                self.logger.fatal(f'Invalid title of <{audio}>')
+                return
+            key = self.generate_key(artist, title)
+            if key in results:
+                results[key].append(audio)
+            else:
+                results[key] = [audio]
+        
+        results = { key: items for key, items in results.items() if len(items) > 1 }
+        content = f'{self.glorify_exportation(results)}'
+
+        self.handle_output(content)
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -1369,10 +2139,32 @@ class DeriveArtworksAction(AudioGod):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
-        pass
+        self.__load_sources(matched=False)
+        audios = self.concerned_sources
+        for audio in audios:
+            _name, _ = os.path.splitext(os.path.basename(audio))
+            _path = os.path.dirname(audio)
+            if self.artwork_path:
+                _path = self.artwork_path
+            audio_object = self.prime_audio(audio)
+            if not audio_object:
+                continue
+            if not audio_object.tag:
+                continue
+            if not audio_object.tag.images:
+                continue
+            for i, image in enumerate(audio_object.tag.images):
+                image_file = self.abspath(_path, _name)
+                if len(audio_object.tag.images) > 1:
+                    image_file += f'@{i}'
+                image_file += '.jpg'
+                self.backup(image_file)
+                with open(image_file, 'wb') as f:
+                    f.write(image.image_data)
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -1542,10 +2334,454 @@ class DisplayAction(AudioGod):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
-        pass
+        #print("# {}".format('=' * 78))
+        #print("Track Name:     {}".format(tag.title))
+        #print("Track Artist:   {}".format(tag.artist))
+        #print("Track Album:    {}".format(tag.album))
+        #print("Track Duration: {}".format(_format_duration(a.info.time_secs)))
+        #print("Track Number:   {}".format(tag.track_num))
+        #print("Track BitRate:  {}".format(a.info.bit_rate))
+        #print("Track BitRate:  {}".format(a.info.bit_rate_str))
+        #print("Sample Rate:    {}".format(a.info.sample_freq))
+        #print("Mode:           {}".format(a.info.mode))
+        #print("# {}".format('=' * 78))
+        #print("Album Artist:         {}".format(tag.album_artist))
+        #print("Album Year:           {}".format(tag.getBestDate()))
+        #print("Album Recording Date: {}".format(tag.recording_date))
+        #print("Album Type:           {}".format(tag.album_type))
+        #print("Disc Num:             {}".format(tag.disc_num))
+        #print("Artist Origin:        {}".format(tag.artist_origin))
+        #print("# {}".format('=' * 78))
+        #print("Artist URL:         {}".format(tag.artist_url))
+        #print("Audio File URL:     {}".format(tag.audio_file_url))
+        #print("Audio Source URL:   {}".format(tag.audio_source_url))
+        #print("Commercial URL:     {}".format(tag.commercial_url))
+        #print("Copyright URL:      {}".format(tag.copyright_url))
+        #print("Internet Radio URL: {}".format(tag.internet_radio_url))
+        #print("Publisher URL:      {}".format(tag.publisher_url))
+        #print("Payment URL:        {}".format(tag.payment_url))
+        #print("# {}".format('=' * 78))
+        #print("Publisher: {}".format(tag.publisher))
+        #print("Original Release Date: {}".format(tag.original_release_date))
+        #print("Play Count: {}".format(tag.play_count))
+        #print("Tagging Date: {}".format(tag.tagging_date))
+        #print("Release Date: {}".format(tag.release_date))
+        #print("Terms Of Use: {}".format(tag.terms_of_use))
+        #print("isV1: {}".format(tag.isV1()))
+        #print("isV2: {}".format(tag.isV2()))
+        #print("BPM: {}".format(tag.bpm))
+        #print("Cd Id: {}".format(tag.cd_id))
+        #print("Composer: {}".format(tag.composer))
+        #print("Encoding date: {}".format(tag.encoding_date))
+        #print("# {}".format('=' * 78))
+        #print("Genre: {}".format(tag.genre.name))
+        #print("Non Std Genre Name: {}".format(tag.non_std_genre.name))
+        #print("Genre ID: {}".format(tag.genre.id))
+        #print("Non Std Genre ID: {}".format(tag.non_std_genre.id))
+        #print("LAME Tag:       {}".format(a.info.lame_tag))
+        #print("# {}".format('=' * 78))
+        #print("Header Version: {}".format(tag.header.version))
+        #print("Header Major Version: {}".format(tag.header.major_version))
+        #print("Header Minor Version: {}".format(tag.header.minor_version))
+        #print("Header Rev Version: {}".format(tag.header.rev_version))
+        #print("Header Extended: {}".format(tag.header.extended))
+        #print("Header Footer: {}".format(tag.header.footer))
+        #print("Header Experimental: {}".format(tag.header.experimental))
+        #print("Header SIZE: {}".format(tag.header.SIZE))
+        #print("Header Tag Size: {}".format(tag.header.tag_size))
+        #print("Extended Header Size: {}".format(tag.extended_header.size))
+        #print("# {}".format('=' * 78))
+        #print("File Name: {}".format(tag.file_info.name))
+        #print("File Tag Size: {}".format(tag.file_info.tag_size))
+        #print("File Tag Padding Size: {}".format(tag.file_info.tag_padding_size))
+        #print("File Read Only: {}".format(tag.read_only))
+        #print("File Size: {}".format(a.info.size_bytes))
+        #print("Last Modified: {}".format(time.strftime('%Y-%m-%d %H:%M:%S',
+        #                                 time.localtime(tag.file_info.mtime))))
+        #print("Last Accessed: {}".format(time.strftime('%Y-%m-%d %H:%M:%S',
+        #                                 time.localtime(tag.file_info.atime))))
+        #print("# {}".format('=' * 78))
+
+        self.__load_sources(matched=False)
+
+        results, audios = [], self.concerned_sources
+        all_fields = [
+            (field, self.transform_field_name(field, self.field_type))
+            for field in self.ALL_FIELDS
+        ]
+        formatted, output_format = True, self.FileFormat.NOTE
+        match self.data_format:
+            case self.DataFormat.ORIGINAL:
+                formatted, output_format = False, self.FileFormat.NONE
+            case self.DataFormat.FORMATTED:
+                formatted, output_format = True, self.FileFormat.NONE
+            case self.DataFormat.OUTPUTTED:
+                formatted, output_format = True, self.FileFormat.NOTE
+        for audio in audios:
+            audio_object = self.prime_audio(audio)
+            results.append([
+                self.fetchx(
+                    audio_object, self.AudioProperty(x[0]), formatted, output_format,
+                )
+                for x in all_fields
+            ])
+
+        def _charting(rows, pair_fields, options):
+            page_number, page_size, sort_, filter_, fields_to_show, align_, numbered, style = options
+
+            rl_fields_to_show = [dict(pair_fields)[x] for x in fields_to_show]
+            fields = [x[0] for x in pair_fields]
+
+            if align_:
+                keys = list(align_.keys())
+                for _fields in keys:
+                    h, v = align_[_fields].split(':')
+                    h, v = h.strip(), v.strip()
+                    for _field in _fields.split(','):
+                        if _field:
+                            align_[_field] = (h if h else 'l', v if v else 'm')
+
+            swaps = []
+            for i, field in enumerate(fields_to_show):
+                if field not in fields:
+                    self.logger.fatal(f'Invalid field <{field}>!')
+                    return
+                index = fields.index(field)
+                if index != i:
+                    fields[i], fields[index] = \
+                            fields[index], fields[i]
+                    swaps.append((i, index))
+
+            for row in rows:
+                for l, r in swaps:
+                    row[l], row[r] = row[r], row[l]
+
+            rl_fields = [dict(pair_fields)[x] for x in fields]
+
+            table = PrettyTable()
+            table.field_names = rl_fields
+
+            for field in table.field_names:
+                table.align[field] = 'l'
+                table.valign[field] = 'm'
+                if align_:
+                    if field in align_.keys():
+                        table.align[field], table.valign[field] = align_[field]
+
+            def _equal(rows, index, value, ignorecase=True, reverse=False):
+                if index < 0:
+                    return rows
+                return list(filter(
+                    lambda x: (( \
+                        ignorecase and (True if x[index] is None else x[index].lower() != value.lower()) \
+                    ) or ( \
+                        (not ignorecase) and x[index] != value \
+                    )) if reverse else (( \
+                        ignorecase and (False if x[index] is None else x[index].lower() == value.lower()) \
+                    ) or ( \
+                        (not ignorecase) and x[index] == value \
+                    )),
+                    rows,
+                ))
+
+            def _search(rows, index, value, ignorecase=True, reverse=False):
+                if index < 0:
+                    return rows
+                return list(filter(
+                    lambda x: (( \
+                        ignorecase and (True if x[index] is None else x[index].lower().find(value.lower()) == -1) \
+                    ) or ( \
+                        (not ignorecase) and (True if x[index] is None else x[index].find(value) == -1) \
+                    )) if reverse else (( \
+                        ignorecase and (False if x[index] is None else x[index].lower().find(value.lower()) > -1) \
+                    ) or ( \
+                        (not ignorecase) and (False if x[index] is None else x[index].find(value) > -1) \
+                    )),
+                    rows,
+                ))
+
+            def _empty(rows, index, reverse=False):
+                if index < 0:
+                    return rows
+                return list(filter(
+                    lambda x: x[index] if reverse else not x[index], rows,
+                ))
+
+            filter_functions = {
+                'equal': _equal,
+                'search': _search,
+                'empty': _empty,
+            }
+
+            if filter_:
+                _options = filter_.pop('_options', {})
+                relation = _options.get('relation', 'and')
+                if filter_:
+                    rows = [tuple(row) for row in rows]
+                    rows_set = set() if relation == 'or' else set(rows)
+                    for _fields in filter_:
+                        function = filter_[_fields].get('function', 'search')
+                        parameters = filter_[_fields].get('parameters', [])
+                        if function in filter_functions.keys():
+                            for _field in _fields.split(','):
+                                if _field not in fields:
+                                    self.logger.fatal(
+                                        f'Invalid field <{_field}> when filter!',
+                                    )
+                                    return
+                                index = fields.index(_field)
+                                if relation == 'or':
+                                    rows_set.update(filter_functions[function](
+                                        rows, index, *parameters,
+                                    ))
+                                else:
+                                    rows_set = set(filter_functions[function](
+                                        list(rows_set), index, *parameters,
+                                    ))
+                        else:
+                            self.logger.fatal(
+                                f'Invalid function <{function}>!',
+                            )
+                            return
+                    rows = [list(row) for row in list(rows_set)]
+
+            def _default_sort(rows, index, reverse):
+                if index < 0:
+                    return rows
+                return list(sorted(
+                    rows,
+                    key=lambda x: x[index].lower(),
+                    reverse=reverse,
+                ))
+
+            sort_functions = {
+                'default': _default_sort,
+            }
+
+            if sort_:
+                for _fields, reverse in reversed(sort_):
+                    for _field in reversed(_fields.split(',')):
+                        if _field not in fields:
+                            self.logger.fatal(
+                                f'Invalid field <{_field}> when sort!',
+                            )
+                            return
+                        index = fields.index(_field)
+                        function = sort_functions['default']
+                        if _field in sort_functions.keys():
+                            function = sort_functions[_field]
+                        rows = function(rows, index, reverse)
+
+            total_rows, start = len(rows), 0
+            table_title = f'Total Audios: {total_rows}'
+
+            if total_rows > 0:
+                if page_size is None or page_size < 1:
+                    page_size = total_rows
+                total_pages = math.ceil(total_rows / page_size)
+                page_number = min(max(page_number, 1), total_pages)
+                start = (min(page_number, total_pages) - 1) * page_size + 1
+                end = min(page_number * page_size, total_rows)
+                for row in rows[start-1:end]:
+                    table.add_row(row)
+
+                table_title += f', Page Size: {page_size}'
+                table_title += f', Page Number: {page_number} / {total_pages}'
+
+            table_string = table.get_string(
+                title=table_title,
+                fields=rl_fields_to_show,
+            )
+
+            def _wrap_table(table_string, start=1, numbered=True,
+                            style=self.DisplayStyle.TABLED):
+
+                def _xlen_(s):
+                    length = len(s)
+                    utf8_length = len(s.encode('utf-8'))
+                    length = (utf8_length - length) / 2 + length
+                    return int(length)
+
+                rl_number = '--'
+
+                _total = table_string.count('\n') - 6
+                offset = 0
+                if numbered:
+                    offset = max(len(str(start+_total-1)), _xlen_(rl_number)) + 3
+                result = re.sub(r'\n\+[\+-]+\+$', r'\n', table_string)
+
+                beg = result.find('\n|', 0)
+                end = result.find('\n+', beg)
+
+                surplus = end - 2 * beg - 1
+
+                pos = result.find('+\n|', 0)
+                result = '{}{}+\n|{}{}'.format(
+                    result[:pos],
+                    '-' * (offset + surplus),
+                    ' ' * int(offset / 2),
+                    result[pos+3:],
+                )
+                pos = result.find('|\n', pos)
+                result = '{}{}|\n{}'.format(
+                    result[:pos],
+                    ' ' * (offset - int(offset / 2)),
+                    result[pos+2:],
+                )
+                pos = result.find('|\n', pos)
+                beg = pos + 2
+                pos = result.find('+\n', pos)
+                end = pos + 1
+                split_line = '{}{}{}{}+'.format(
+                    '+' if numbered else '',
+                    '-' * (offset - 1) if numbered else '',
+                    result[beg:end-1],
+                    '-' * surplus,
+                )
+                result= '{}{}{}'.format(
+                    result[:beg],
+                    split_line,
+                    result[end:],
+                )
+                pos = result.find('+\n', pos)
+
+                _offset = offset-2
+                _offset -= len(re.compile(r'[\u4E00-\u9FA5]').findall(rl_number))
+
+                result= '{}{}{}'.format(
+                    result[:pos+2],
+                    # 这里 offset-2-2
+                    ('|{0:>%s} ' % (_offset)).format(rl_number) \
+                    if numbered else '',
+                    result[pos+2:],
+                )
+                pos = result.find('|\n', pos)
+                result= '{}{}{}'.format(
+                    result[:pos],
+                    ' ' * surplus,
+                    result[pos:],
+                )
+                pos = result.find('\n+', pos)
+                beg = pos + 1
+                pos = result.find('+\n', pos)
+                end = pos + 1
+                result= '{}{}{}'.format(
+                    result[:beg],
+                    split_line,
+                    result[end:],
+                )
+                if start > 0:
+                    index = start
+                    while pos > 0:
+                        pos = result.find('\n|', pos)
+                        if pos < 0:
+                            break
+                        result= '{}{}{}'.format(
+                            result[:pos+1],
+                            ('|{0:>%s} ' % (offset-2)).format(index) \
+                            if numbered else '',
+                            result[pos+1:],
+                        )
+                        pos = result.find('|\n', pos)
+                        if pos < 0:
+                            break
+                        result= '{}{}{}'.format(
+                            result[:pos],
+                            ' ' * surplus,
+                            result[pos:],
+                        )
+                        pos = result.find('|\n', pos)
+                        result= '{}{}\n{}'.format(
+                            result[:pos+2],
+                            split_line,
+                            result[pos+2:],
+                        )
+                        index += 1
+
+                if self.DisplayStyle.TABLED.ne(style):
+                    beg = result.find('|\n+', 0)
+                    end = result.find('|\n+', beg+3)
+                    result = result[:beg+2] + result[end+2:]
+                    result = re.sub(r'\+[\+-]*\n', r'', result)
+                    result = re.sub(r'[^\S\n\r]*\|[^\S\n\r]*', r'|', result)
+                    result = re.sub(r'^[^\S\n\r]*\|', r'', result)
+                    result = re.sub(r'\|[^\S\n\r]*$', r'\n', result)
+                    result = re.sub(r'\|\n\|', r'\n', result)
+
+                if self.DisplayStyle.VERTICAL.eq(style):
+                    _result= result
+                    result = '\n'
+                    result += '#' * 78
+                    result += '\n\n'
+                    beg = _result.find('\n', 0)
+                    result += '\n'.join([
+                        '{0:<14}{1}'.format(
+                            item.split(': ')[0] + ':',
+                            item.split(': ')[1],
+                        )
+                        for item in _result[:beg].split(', ')
+                    ])
+                    result += '\n\n'
+                    result += '#' * 78
+                    result += '\n\n'
+                    field_width = 2 + max(*([_xlen_(rl_number) if numbered else 0]+[
+                        _xlen_(field) for field in rl_fields_to_show
+                    ]))
+
+                    while True:
+                        end = _result.find('\n', beg+1)
+                        if end < 0:
+                            break
+                        row = _result[beg+1:end]
+                        if not row.strip():
+                            break
+
+                        fields = ([rl_number] if numbered else []) + rl_fields_to_show
+                        is_cn_field_name = False
+                        if len(rl_fields_to_show) > 0:
+                            matched = re.search(
+                                r'[\u4e00-\u9fff]', rl_fields_to_show[0], re.IGNORECASE,
+                            )
+                            if matched is not None:
+                                is_cn_field_name = True
+                        
+                        for i, value in enumerate(row.split('|')):
+                            if is_cn_field_name:
+                                result += '{}{}{}\n'.format(
+                                    f'{fields[i]}:',
+                                    '\u3000' * int((field_width-_xlen_(fields[i]))/2),
+                                    value,
+                                )
+                            else:
+                                result += '{}{}\n'.format(
+                                    ('{0:<%s}' % (field_width,)).format(
+                                        fields[i]+':',
+                                    ),
+                                    value,
+                                )
+                        result += '\n'
+                        result += '-' * 78
+                        result += '\n\n'
+                        beg = end
+                    result = re.sub(r'\s+$', r'\n', result)
+                return result
+
+            content = _wrap_table(
+                table_string, start=start, numbered=numbered, style=style,
+            )
+            self.handle_output(content)
+            return content
+
+        _ = _charting(
+            results,
+            all_fields,
+            self.display_options,
+        )
+
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -1573,10 +2809,36 @@ class GenerateScriptAction(AudioGod):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
-        pass
+        content = '#!/usr/bin/env zsh\n\n'
+        content += '#' * 78 + '\n\n'
+        content += f'# Created Time: {self.current_time()}\n\n'
+        content += '#' * 78 + '\n\n'
+        content += 'set -e\n\n'
+        content += '#' * 78 + '\n'
+        steps = [
+            'preprocess-note',
+            'fill-properties',
+            'format-properties',
+            'rename-audios',
+            ('organize', 'grouped'),
+            ('export', 'note'),
+            'list-repeated',
+            ('organize', 'ituned'),
+            ('export', 'plist'),
+        ]
+        for i, step in enumerate(steps):
+            if isinstance(step, tuple):
+                content += '\n' + ACTIONS[step[0]]['branches'][step[1]]['carrier'].KWARGS['usage'].strip()
+            else:
+                content += '\n' + ACTIONS[step]['carrier'].KWARGS['usage'].strip()
+            if i < len(steps) - 1:
+                content += '\n'
+        self.handle_output(content)
+        self.chmod(self.output, 0o755)
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -1592,11 +2854,6 @@ class OrganizeBaseAction(AudioGod):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-
-    @log_decorator
-    def execute(self):
-        pass
 
 #===============================================================================
 
@@ -1617,6 +2874,7 @@ class OrganizeAction(OrganizeBaseAction):
     def __init__(self, *args, **kwargs):
         pass
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
@@ -1660,10 +2918,52 @@ class Organize__GroupedAction(OrganizeBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
-        pass
+        if not self.root:
+            self.logger.fatal('Invalid root!')
+            return
+        self.__load_sources(matched=False)
+        audios = self.concerned_sources
+        for audio in audios:
+            audio_object = self.prime_audio(audio)
+            grouping = self.fetchx(
+                audio_object, self.AudioProperty.GROUPING, formatted=True,
+            )
+            groups = self.split(
+                grouping, self.GROUPING_SEPARATOR, escaped=True,
+                del_blank=True, filt_empty=True, filt_repeated=True,
+                sortify=False, reversify=False,
+            )
+            if not groups:
+                self.logger.fatal(f'Invalid grouping of <{audio}>')
+                return
+            target = self.abspath(
+                self.root, groups[0], os.path.basename(audio),
+            )
+            if target != audio:
+                os.makedirs(os.path.dirname(target), exist_ok=True)
+                self.duplicate(audio, target)
+                ao = self.prime_audio(target)
+                self.save(
+                    ao, self.AudioProperty.GROUPING, groups[0], True,
+                )
+            if len(groups) < 2:
+                continue
+            for group in groups[1:]:
+                link = self.abspath(self.root, group, os.path.basename(audio))
+                if link == target:
+                    continue
+                os.makedirs(os.path.dirname(link), exist_ok=True)
+                if os.path.exists(link):
+                    self.remove(link)
+                self.duplicate(target, link)
+                ao = self.prime_audio(link)
+                self.save(
+                    ao, self.AudioProperty.GROUPING, group, True,
+                )
 
 #===============================================================================
 
@@ -1703,10 +3003,70 @@ class Organize__ItunedAction(OrganizeBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
-        pass
+        if not self.root:
+            self.logger.fatal('Invalid root!')
+            return
+        self.__load_sources(matched=False)
+        audios = self.concerned_sources
+        for audio in audios:
+            audio_object = self.prime_audio(audio)
+            artist = self.fetchx(audio_object, self.AudioProperty.ARTIST, formatted=True)
+            if not artist:
+                self.logger.fatal(f'Invalid artist of <{audio}>')
+                return
+            album = self.fetchx(audio_object, self.AudioProperty.ALBUM, formatted=True)
+            if not album:
+                self.logger.fatal(f'Invalid album of <{audio}>')
+                return
+            newname = self.abspath(self.root, artist, album, os.path.basename(audio))
+            if newname != audio:
+                if not os.path.exists(newname):
+                    os.makedirs(os.path.dirname(newname), exist_ok=True)
+                    self.duplicate(audio, newname)
+                else:
+                    current_grouping = self.fetchx(
+                        audio_object, self.AudioProperty.GROUPING, formatted=True,
+                    )
+                    current_groups = self.split(
+                        current_grouping,
+                        self.GROUPING_SEPARATOR,
+                        escaped=True,
+                        del_blank=True,
+                        filt_empty=True,
+                        filt_repeated=True,
+                        sortify=False,
+                        reversify=False,
+                    )
+                    existed_object = self.prime_audio(newname)
+                    existed_grouping = self.fetchx(
+                        existed_object, self.AudioProperty.GROUPING, formatted=True,
+                    )
+                    existed_groups = self.split(
+                        existed_grouping,
+                        self.GROUPING_SEPARATOR,
+                        escaped=True,
+                        del_blank=True,
+                        filt_empty=True,
+                        filt_repeated=True,
+                        sortify=False,
+                        reversify=False,
+                    )
+                    if not bool(set(current_groups) & set(existed_groups)):
+                        self.save(
+                            existed_object,
+                            self.AudioProperty.GROUPING,
+                            self.GROUPING_SEPARATOR.join(existed_groups+current_groups),
+                            formatted=True,
+                        )
+                    else:
+                        self.logger.fatal(
+                            f'Duplicate groupings between current <{audio}> and existed <{newname}>!',
+                        )
+                        return
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -1794,10 +3154,175 @@ class ExportBaseAction(AudioGod):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
-    @log_decorator
-    def execute(self):
-        pass
+    @staticmethod
+    def generate_persistent_id() -> str:
+        return str(uuid.uuid4()).replace('-', '')[:16].upper()
+
+    #---------------------------------------------------------------------------
+
+    def _pack_properties(self, properties):
+        return ''
+
+
+    def __repack_audio_properties(self, properties):
+        ret = {}
+        for field, value in properties.items():
+            field_name = self.transform_field_name(field, self.field_type)
+            type_ = self.AUDIO_PROPERTY_TYPES[field]
+            ret[field] = (field_name, type_, value)
+        return ret
+
+
+    def __gain_audio_properties(self, audio_object):
+        ret = {}
+        for field in self.fields:
+            value = self.fetchx(
+                audio_object,
+                field,
+                formatted=True,
+                output_format=self.output_format,
+            )
+            if value is None:
+                continue
+            ret[field] = value
+        return self.__repack_audio_properties(ret)
+
+
+    def __fill_audios_tree(self) -> None:
+        self.__load_sources(matched=False)
+
+        _, _, track_initial_id, playlist_initial_id = self.itunes_options
+        track_id, audios = track_initial_id, self.concerned_sources
+
+        for audio in audios:
+            track_persistent_id = self.generate_persistent_id()
+            audio_object = self.prime_audio(audio)
+            genre = self.fetchx(
+                audio_object,
+                self.AudioProperty.GENRE,
+                formatted=True,
+                default=self.DEFAULT_GENRE,
+            )
+            grouping = self.fetchx(
+                audio_object,
+                self.AudioProperty.GROUPING,
+                formatted=True,
+                default=self.DEFAULT_GROUPING,
+            )
+            for group in self.split(
+                grouping, self.GROUPING_SEPARATOR, escaped=True,
+                del_blank=True, filt_empty=True, filt_repeated=True,
+                sortify=False, reversify=False,
+            ):
+                tags = self.split(
+                    group, r'/', escaped=True,
+                    del_blank=True, filt_empty=True, filt_repeated=False,
+                    sortify=False, reversify=False,
+                )
+                if not tags:
+                    continue
+                tags = [self.AUDIOS_TREE_ROOT_TAG] + tags
+                subtree = TreeX(logger=self.logger)
+                last_nid = self.AUDIOS_TREE_ROOT_NID
+                last_tag = parent_tag = ''
+                for i, tag in enumerate(tags):
+                    nid = self.generate_persistent_id()
+                    parent, node_type = last_nid, self.AudiosTreeNodeType.FOLDER
+                    if i == 0:
+                        nid = self.AUDIOS_TREE_ROOT_NID
+                        parent, node_type = None, self.AudiosTreeNodeType.ROOT
+                    else:
+                        if last_tag:
+                            parent_tag += f'{last_tag}'
+                        if i == len(tags) - 1:
+                            node_type = self.AudiosTreeNodeType.PLAYLIST
+                        else:
+                            if last_tag:
+                                parent_tag += '/'
+                        last_tag = tag
+                    subtree.create_node(
+                        tag, nid, parent=parent,
+                        data=[
+                            node_type,
+                            -1,
+                            nid,
+                            genre if i == len(tags)-1 else '',
+                            re.sub(r'[^/]+/$', r'', parent_tag).rstrip('/'),
+                            '',
+                        ],
+                    )
+                    last_nid = nid
+                subtree.create_node(
+                    audio,
+                    self.generate_persistent_id(),
+                    parent=last_nid,
+                    data=[
+                        self.AudiosTreeNodeType.TRACK,
+                        track_id,
+                        track_persistent_id,
+                        genre,
+                        group,
+                        self.__gain_audio_properties(audio_object),
+                    ],
+                )
+                self.audios_tree.perfect_merge(self.AUDIOS_TREE_ROOT_NID, subtree, deep=False)
+            track_id += 1
+
+        playlist_id = playlist_initial_id
+        for node in self.audios_tree.all_nodes():
+            if node.is_root():
+                continue
+            node_type = node.data[0]
+            if self.AudiosTreeNodeType.TRACK.eq(node_type):
+                continue
+            node.data[1] = playlist_id
+            playlist_id += 1
+
+        for node in self.audios_tree.all_nodes():
+            parent = self.audios_tree.parent(node.identifier)
+            if parent is None:
+                continue
+            if parent.is_root():
+                continue
+            node_type = node.data[0]
+            if node_type in [self.AudiosTreeNodeType.TRACK, self.AudiosTreeNodeType.ROOT]:
+                continue
+            node.data[5] = parent.identifier
+
+
+    def __sort_summaries(self):
+        for grouping in self.summaries:
+            _, items = self.summaries[grouping]
+            items.sort(
+                key=lambda x: self._pack_properties(x),
+            )
+        self.summaries = {
+            key: self.summaries[key] for key in sorted(self.summaries)
+        }
+
+
+    def __summarize(self):
+        self.__fill_audios_tree()
+
+        group_nodes = []
+        for node in self.audios_tree.all_nodes():
+            if node.is_root():
+                continue
+            node_type = node.data[0]
+            if self.AudiosTreeNodeType.PLAYLIST.eq(node_type):
+                group_nodes.append(node)
+
+        group_nodes.sort(key=lambda x: (x.data[4], x.tag))
+
+        for group_node in group_nodes:
+            genre, parent_group = group_node.data[3], group_node.data[4]
+            group = f'{parent_group}/{group_node.tag}'
+            items = self.audios_tree.leaves(group_node.identifier)
+            self.summaries[group] = (genre, list(map(lambda x: x.data[5], items)))
+
+        self.__sort_summaries()
 
 #===============================================================================
 
@@ -1818,6 +3343,7 @@ class ExportAction(ExportBaseAction):
     def __init__(self, *args, **kwargs):
         pass
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
@@ -1825,7 +3351,7 @@ class ExportAction(ExportBaseAction):
 
 #===============================================================================
 
-class Export__NoteAction(ExportBaseAction):
+class Export__NoteAction(ExportBaseAction, NoteRelatedBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -1873,10 +3399,17 @@ class Export__NoteAction(ExportBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
+
+    _pack_properties = NoteRelatedBaseAction._pack_properties_for_note
+
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
-        pass
+        self.output_format = self.FileFormat.NOTE
+        self.__summarize()
+        self.handle_output(self.__summarize_for_note())
 
 #===============================================================================
 
@@ -1972,10 +3505,257 @@ class Export__PlistAction(ExportBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
+
+    @staticmethod
+    def encode(src) -> str:
+        return urllib.parse.quote(src, safe='/', encoding='utf-8', errors=None) # type: ignore
+
+    @classmethod
+    def encode_location(cls, location) -> str:
+        ret = f'file://{cls.encode(location)}'
+        if os.path.isfile(location):
+            return ret
+        return f'{ret}/'
+
+    #---------------------------------------------------------------------------
+
+    @staticmethod
+    def __get_itunes_version(itunes_version_plist) -> str:
+        with open(itunes_version_plist, 'rb') as f:
+            plist = plistlib.load(f)
+            origin_version = plist.get('SourceVersion', '')
+            if origin_version:
+                pos = len(origin_version) % 3
+                if pos == 0:
+                    pos = 3
+                formatted_version = str(int(origin_version[0:pos]))
+                while pos < len(origin_version):
+                    formatted_version += f'.{str(int(origin_version[pos:pos+3]))}'
+                    pos += 3
+                return formatted_version.rstrip('.0')
+        return '1.0'
+
+
+    @staticmethod
+    def __format_template(template) -> str:
+        return template.strip().replace(' '*4, '\t') + '\n'
+
+
+    @staticmethod
+    def __repack_plist(content) -> str:
+        result = f'\n{content}'.replace('\n', '\n\t\t')
+        return result[:-1]
+
+    
+    @staticmethod
+    def _pack_properties_for_plist(properties):
+        ret = ''
+        for field in properties:
+            field_name, type_, value = properties[field]
+            ret += '\t'
+            ret += f'<key>{field_name}</key>'
+            if type_ != 'boolean':
+                ret += f'<{type_}>{value}</{type_}>'
+            else:
+                ret += f'<{value}/>'
+            ret += '\n'
+        return ret.strip()
+
+
+    _pack_properties = _pack_properties_for_plist
+
+
+    @classmethod
+    def __pack_track(cls, track) -> str:
+        _, track_id, persistent_id, _, _, properties = track.data
+        return Template(cls.__format_template('''
+<key>${track_id}</key>
+<dict>
+	<key>Track ID</key><integer>${track_id}</integer>
+	${properties}
+	<key>Date Added</key><date>${date_added}</date>
+	<key>Kind</key><string>${kind}</string>
+	<key>Persistent ID</key><string>${persistent_id}</string>
+	<key>Track Type</key><string>${track_type}</string>
+	<key>Location</key><string>${location}</string>
+	<key>File Folder Count</key><integer>${file_folder_count}</integer>
+	<key>Library Folder Count</key><integer>${library_folder_count}</integer>
+</dict>
+        ''')).safe_substitute(dict(
+            track_id=track_id,
+            properties=cls._pack_properties_for_plist(properties),
+            date_added=self.current_time(),
+            kind='MPEG audio file',
+            persistent_id=persistent_id,
+            track_type='File',
+            location=self.encode_location(track.tag),
+            file_folder_count='-1',
+            library_folder_count='-1',
+        ))
+
+
+    @staticmethod
+    def __unique_tracks(tracks) -> list:
+        results, track_set = [], set()
+        for track in tracks:
+            if track.tag in track_set:
+                continue
+            results.append(track)
+            track_set.add(track.tag)
+        return results
+
+
+    @staticmethod
+    def __pack_tracks() -> str:
+        result = ''
+        tracks = _unique_tracks(self.audios_tree.leaves())
+        for track in tracks:
+            if track.identifier == self.AUDIOS_TREE_ROOT_NID:
+                continue
+            if not isinstance(track.data, list):
+                continue
+            node_type = track.data[0]
+            if self.AudiosTreeNodeType.TRACK.ne(node_type):
+                continue
+            result += _pack_track(track)
+        return _repack_plist(result)
+
+
+    @classmethod
+    def __pack_simple_tracks(cls, node) -> str:
+        result, tracks = '', _unique_tracks(self.audios_tree.leaves(node.identifier))
+        for track in tracks:
+            if track.identifier == self.AUDIOS_TREE_ROOT_NID:
+                continue
+            if not isinstance(track.data, list):
+                continue
+            node_type = track.data[0]
+            if self.AudiosTreeNodeType.TRACK.ne(node_type):
+                continue
+            track_id = track.data[1]
+            result += Template(cls.__format_template('''
+<dict>
+	<key>Track ID</key><integer>${track_id}</integer>
+</dict>
+        ''')).safe_substitute(dict(
+            track_id=track_id,
+        ))
+        return _repack_plist(result)
+
+
+    @classmethod
+    def __pack_library(cls) -> str:
+        return Template(cls.__format_template('''
+<dict>
+	<key>Name</key><string>${name}</string>
+	<key>Description</key><string>${description}</string>
+	<key>Master</key><${master}/>
+	<key>Playlist ID</key><integer>${playlist_id}</integer>
+	<key>Playlist Persistent ID</key><string>${playlist_persistent_id}</string>
+	<key>Visible</key><${visible}/>
+	<key>All Items</key><${show_all_items}/>
+	<key>Playlist Items</key>
+	<array>${tracks}</array>
+</dict>
+        ''')).safe_substitute(dict(
+            name='Library',
+            description=self.escape_characters(''),
+            master='true',
+            playlist_id=-1,
+            playlist_persistent_id=self.generate_persistent_id(),
+            visible='false',
+            show_all_items='true',
+            tracks=_pack_simple_tracks(self.audios_tree[self.audios_tree.root]),
+        ))
+
+
+    @classmethod
+    def __pack_playlist(cls, node) -> str:
+        node_type, id, pid, _, _, ppid = node.data
+        return Template(cls.__format_template('''
+<dict>
+	<key>Name</key><string>${name}</string>
+	<key>Description</key><string>${description}</string>
+	<key>Playlist ID</key><integer>${playlist_id}</integer>
+	<key>Playlist Persistent ID</key><string>${playlist_persistent_id}</string>
+''' + ('' if (not ppid) or (ppid == self.AUDIOS_TREE_ROOT_NID) else \
+'''\t<key>Parent Persistent ID</key><string>${parent_persistent_id}</string>
+''') + '''\t<key>All Items</key><${show_all_items}/>
+    <key>Folder</key><${is_folder}/>
+    <key>Playlist Items</key>
+    <array>${tracks}</array>
+</dict>
+        ''')).safe_substitute(dict(
+            name=self.escape_characters(node.tag),
+            description=self.escape_characters(''),
+            playlist_id=id,
+            playlist_persistent_id=pid,
+            parent_persistent_id=ppid,
+            show_all_items='true',
+            is_folder=str(self.AudiosTreeNodeType.FOLDER.eq(node_type)).lower(),
+            tracks=_pack_simple_tracks(node),
+        ))
+
+
+    @staticmethod
+    def __pack_playlists() -> str:
+        result = _pack_library()
+        for node in self.audios_tree.all_nodes():
+            if node.is_root():
+                continue
+            node_type = node.data[0]
+            if self.AudiosTreeNodeType.TRACK.eq(node_type):
+                continue
+            result += _pack_playlist(node)
+        return _repack_plist(result)
+
+
+    @classmethod
+    def __pack_plist(cls) -> str:
+        return Template(cls.__format_template('''
+<?xml version="${xml_version}" encoding="${xml_encoding}"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="${plist_version}">
+<dict>
+	<key>Major Version</key><integer>${major_version}</integer>
+	<key>Minor Version</key><integer>${minor_version}</integer>
+	<key>Date</key><date>${created_date}</date>
+	<key>Application Version</key><string>${itunes_version}</string>
+	<key>Features</key><integer>${features}</integer>
+	<key>Show Content Ratings</key><${show_content_ratings}/>
+	<key>Music Folder</key><string>${itunes_media_folder}</string>
+	<key>Library Persistent ID</key><string>${library_persistent_id}</string>
+	<key>Tracks</key>
+	<dict>${tracks}</dict>
+	<key>Playlists</key>
+	<array>${playlists}</array>
+</dict>
+</plist>
+        ''')).safe_substitute(dict(
+            xml_version = '1.0',
+            xml_encoding = 'UTF-8',
+            plist_version = '1.0',
+            major_version = '1',
+            minor_version = '1',
+            created_date = self.current_time(),
+            itunes_version = cls.__get_itunes_version(itunes_version_plist),
+            features = '5',
+            show_content_ratings = 'true',
+            itunes_media_folder = self.encode_location(itunes_media_folder),
+            library_persistent_id = self.generate_persistent_id(),
+            tracks = _pack_tracks(),
+            playlists = _pack_playlists(),
+        ))
+
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
-        pass
+        self.output_format = self.FileFormat.PLIST
+        self.__summarize()
+        itunes_version_plist, itunes_media_folder, _, _ = self.itunes_options
+        self.handle_output(_pack_plist())
 
 #===============================================================================
 
@@ -1995,10 +3775,13 @@ class Export__MarkdownAction(ExportBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
-        pass
+        self.output_format = self.FileFormat.MARKDOWN
+        self.__summarize()
+        self.__handle_output('')
 
 #===============================================================================
 
@@ -2018,10 +3801,13 @@ class Export__XmlAction(ExportBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
-        pass
+        self.output_format = self.FileFormat.XML
+        self.__summarize()
+        self.handle_output('')
 
 #===============================================================================
 
@@ -2041,10 +3827,13 @@ class Export__JsonAction(ExportBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
-        pass
+        self.output_format = self.FileFormat.JSON
+        self.__summarize()
+        self.handle_output('')
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -2074,11 +3863,6 @@ class ConvertBaseAction(AudioGod):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-
-    @log_decorator
-    def execute(self):
-        pass
-
 #===============================================================================
 
 class ConvertAction(ConvertBaseAction):
@@ -2098,6 +3882,7 @@ class ConvertAction(ConvertBaseAction):
     def __init__(self, *args, **kwargs):
         pass
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
@@ -2141,6 +3926,7 @@ class Convert__QmcToMp3Action(ConvertBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
@@ -2164,6 +3950,7 @@ class Convert__KmxToMp4Action(ConvertBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
@@ -2187,6 +3974,7 @@ class Convert__Mp4ToMp3Action(ConvertBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
@@ -2210,6 +3998,7 @@ class Convert__NoteToMarkdownAction(ConvertBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
@@ -2233,6 +4022,7 @@ class Convert__MarkdownToNoteAction(ConvertBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
@@ -2253,11 +4043,6 @@ class OperateBaseAction(AudioGod):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-
-    @log_decorator
-    def execute(self):
-        pass
-
 #===============================================================================
 
 class OperateAction(OperateBaseAction):
@@ -2277,6 +4062,7 @@ class OperateAction(OperateBaseAction):
     def __init__(self, *args, **kwargs):
         pass
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
@@ -2312,6 +4098,7 @@ class Operate__BackupAction(OperateBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
@@ -2347,6 +4134,7 @@ class Operate__RemoveAction(OperateBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
@@ -2371,10 +4159,19 @@ class Operate__CleanupAction(OperateBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
 
     @log_decorator
     def execute(self):
-        pass
+        items = [
+            './*.tmp',
+            '${list-repeated.output}*',
+            '${organize.grouped.root}',
+            '${export.plist.itunes_media_folder}/*',
+            '${export.plist.output}',
+        ]
+        for item in items:
+            self.remove(self.render_usage(item))
 
 ####################################################V###########################
 
@@ -2442,13 +4239,11 @@ def _render_actions():
             continue
         if cls.KWARGS.get('prog', None):
             cls.KWARGS['prog'] = AudioGod.render_usage(
-                cls.KWARGS['prog'],
-                indent=0,
+                cls.KWARGS['prog'], indent=0,
             )
         if cls.KWARGS.get('usage', None):
             cls.KWARGS['usage'] = AudioGod.render_usage(
-                cls.KWARGS['usage'],
-                indent=0,
+                cls.KWARGS['usage'], indent=0,
             )
 
 #-------------------------------------------------------------------------------
@@ -2665,7 +4460,7 @@ def main():
                 cache_dir=f'~/{os.path.basename(AudioGod.CACHE_DIR)}',
                 trash_dir=os.path.basename(AudioGod.TRASH_DIR),
                 backups_dir=os.path.basename(AudioGod.BACKUPS_DIR),
-            ) | ACTIONS_DEFAULTS,
+            ),
         ),
         description='🎻 God of audios 🎸',
         epilog='🤔 Thinking ...',
