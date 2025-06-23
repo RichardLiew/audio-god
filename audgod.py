@@ -273,13 +273,15 @@ Process Method 2:
 def log_decorator(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        print_func = print
+        print_func, func_name = print, func.__name__.replace('_', '-')
         instance = args[0] if args else None
         if instance:
             logger = getattr(instance, 'logger', None)
             if logger:
                 print_func = logger.warning
-        func_name, start_time = func.__name__.replace('_', '-'), time.time()
+            if instance.__class__.NAME:
+                func_name = f'{instance.__class__.NAME}.{func_name}'
+        start_time = time.time()
         print_func('*' * 78 + '\n')
         print_func(f'Starting <{func_name}> ...')
         try:
@@ -3719,6 +3721,7 @@ class GenerateScriptAction(AudioGod):
                 content += '\n' + ACTIONS[step]['carrier'].KWARGS['usage'].strip()
             if i < len(steps) - 1:
                 content += '\n'
+        content += '\n'
         self.handle_output(content)
         self.chmod(self.parameters['output'], 0o755)
 

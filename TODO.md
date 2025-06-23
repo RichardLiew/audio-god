@@ -1,10 +1,6 @@
 Processing:
 type: ignore
 抓包 Mac 酷我下载音乐的链接，然后集成到脚本中自动下载
-display好好梳理yixia
-
-Action 继承自多个父类时，ARGUMENTS and KWARGS and rewrite_parameters 怎么合并
-
 All done.
 
 
@@ -15,6 +11,7 @@ Useful Paths:
 
 
 Relax:
+Action 继承自多个父类时，ARGUMENTS and KWARGS and rewrite_parameters 怎么合并
 pydoc 字体各版式控制, 研究 pydoc 样式如何渲染
 自己搭建云播放平台？网站？App？
 VScode VS Cursor
