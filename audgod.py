@@ -686,11 +686,10 @@ class AudioGod(object):
         self.__parameters = copy.deepcopy(kwargs)
 
         # init logger
-        self.__logger_options = self.__resolve_logger_options(
-            self.parameters.get('log_level', self.DEFAULT_LOG_LEVEL),
-            self.parameters.get('log_file', self.DEFAULT_LOG_FILE),
+        self.__logger = self.FatalLogger(
+            self.parameters.get('log_level', None),
+            self.parameters.get('log_file', None),
         )
-        self.__logger = self.FatalLogger(*self.logger_options)
 
 
     @property
@@ -699,17 +698,18 @@ class AudioGod(object):
 
 
     @property
-    def logger_options(self):
-        return self.__logger_options
-
-
-    @property
     def logger(self):
         return self.__logger
 
 
-    def __resolve_logger_options(self, log_level, log_file):
-        return (log_level, log_file)
+    @classmethod
+    def ARGUMENTS_DEFAULTS(cls):
+        ret = {}
+        if cls.ARGUMENTS is None:
+            return ret
+        for argment, params in cls.ARGUMENTS.items(): # type: ignore
+            ret[argment] = params['kwargs']['default']
+        return ret
 
 
     @staticmethod
@@ -920,16 +920,6 @@ class AudioGod(object):
                     ' ' * indent, argument_pair,
                 )
             cls.KWARGS['usage'] = cls.KWARGS['usage'].rstrip().rstrip('\\').rstrip()
-
-
-    @classmethod
-    def ARGUMENTS_DEFAULTS(cls):
-        ret = {}
-        if cls.ARGUMENTS is None:
-            return ret
-        for argment, params in cls.ARGUMENTS.items(): # type: ignore
-            ret[argment] = params['kwargs']['default']
-        return ret
 
 
     @log_decorator
@@ -1273,7 +1263,7 @@ class RenameAudiosAction(AudioGod):
                 'required': False,
                 'default': '{delimiter}{{artist}} {div_char} {delimiter}{{title}}'.format(
                     delimiter=FilenamePatternTemplate.delimiter,
-                    div_char=DIV_CHAR,
+                    div_char=AudioGod.DIV_CHAR,
                 ),
                 'help': 'filename pattern to rename sources',
             },
@@ -2641,9 +2631,9 @@ def _special_characters() -> str:
     for field in table.field_names:
         table.align[field] = 'l'
     characters = [
-        (ORI_DIV_CHAR, 'Separator for origin audio file name.'),
-        (DIV_CHAR, 'Separator for formatted audio file name.'),
-        (GROUPING_SEPARATOR, 'Separator for several grouping property of audio file.'),
+        (AudioGod.ORI_DIV_CHAR, 'Separator for origin audio file name.'),
+        (AudioGod.DIV_CHAR, 'Separator for formatted audio file name.'),
+        (AudioGod.GROUPING_SEPARATOR, 'Separator for several grouping property of audio file.'),
         (RenameAudiosAction.FilenamePatternTemplate.delimiter, 'Delimiter of template for filename pattern.'),
     ]
     for number, char in enumerate(characters):
@@ -2668,9 +2658,9 @@ def main():
                 audio_properties=_audio_properties(),
                 special_fields=_special_fields(),
                 special_characters=_special_characters(),
-                ori_div_char=ORI_DIV_CHAR,
-                div_char=DIV_CHAR,
-                grouping_sep=GROUPING_SEPARATOR,
+                ori_div_char=AudioGod.ORI_DIV_CHAR,
+                div_char=AudioGod.DIV_CHAR,
+                grouping_sep=AudioGod.GROUPING_SEPARATOR,
                 fnp_delimiter=RenameAudiosAction.FilenamePatternTemplate.delimiter,
                 cache_dir=f'~/{os.path.basename(AudioGod.CACHE_DIR)}',
                 trash_dir=os.path.basename(AudioGod.TRASH_DIR),
