@@ -4699,21 +4699,22 @@ class Export__MarkdownAction(ExportBaseAction):
     #---------------------------------------------------------------------------
 
     def glorify_exportation(self, outputs):
-        ret = f'{"#"*78}\n\n'
-        ret += '# Summary: Collects {collects_count}, Items {items_count}\n'.format(
+        ret = f'{"-" * 66}\n\n'
+        ret += '# Summary: Collects {collects_count}, Items {items_count}\n\n'.format(
             collects_count=len(outputs),
             items_count=sum([len(x) for _, x in outputs.items()]),
         )
-        ret += f'# Created Time: {self.current_time()}\n\n'
+        ret += f'## Created Time: {self.current_time()}\n\n'
+        ret += f'{"-" * 66}\n'
 
         collect_number = 0
         for collect, items in outputs.items():
             collect_number += 1
-            ret += f'\n({collect_number}) {collect}:\n'
+            ret += f'\n### ({collect_number}) {collect}:\n'
             item_number = 0
             for item in items:
                 item_number += 1
-                ret += '\t{number} {content}\n'.format(
+                ret += '  {number} {content}\n'.format(
                     number=f'{f"{item_number}.":<{len(str(len(items)))+1}}',
                     content=item,
                 )
@@ -4724,14 +4725,14 @@ class Export__MarkdownAction(ExportBaseAction):
         ret = ''
         for field in properties:
             field_name, _, value = properties[field]
-            ret += f'{field_name}: {value}; '
-        return ret.strip().rstrip(';')
+            ret += f'{field_name}: *{value}*; '
+        return ret.strip().rstrip('; ')
 
     #---------------------------------------------------------------------------
 
     def generalize(self):
         return self.glorify_exportation({
-            f'@[{genre}] {grouping}': [
+            f'**[{genre}]** {grouping}': [
                 self.pack_properties(item) for item in items
             ] for grouping, (genre, items) in self.summaries.items()
         })
