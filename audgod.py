@@ -764,7 +764,11 @@ class AudioGod(object):
         self.rewrite_parameters()
 
     #---------------------------------------------------------------------------
-    
+
+    def reset_parameters(self, kwargs):
+        self.parameters.update(kwargs)
+
+
     def rewrite_parameters(self):
         if 'fields' in self.parameters:
             self.parameters['fields'] = [
@@ -1386,6 +1390,7 @@ class AudioGod(object):
             self.remove(new)
         os.rename(old, new)
 
+
     def duplicate(self, src, dst):
         if not os.path.exists(src):
             self.logger.fatal(f'File {src} not exists!')
@@ -1393,7 +1398,22 @@ class AudioGod(object):
         if os.path.exists(dst):
             self.remove(dst)
         shutil.copy2(src, dst)
-    
+
+
+    @classmethod
+    def recognize_file_format(cls, file):
+        if not file:
+            return cls.FileFormat.NONE
+        _, ext = os.path.splitext(os.path.basename(file))
+        ext = ext.lower()
+        if ext in ['.json']:
+            return cls.FileFormat.JSON
+        if ext in ['.md', '.markdown']:
+            return cls.FileFormat.MARKDOWN
+        if ext in ['.xml', '.plist']:
+            return cls.FileFormat.PLIST
+        return cls.FileFormat.NOTE
+
 
     @classmethod
     def init_cache(cls):
@@ -1493,7 +1513,6 @@ class AudioGod(object):
             value = dict_.pop(key)
             dict_[new_key] = value
         return dict_
-
 
     #---------------------------------------------------------------------------
 
@@ -1864,30 +1883,48 @@ class AudioGod(object):
 
 
     def glorify_exportation(self, outputs):
-        ret = f'{"#"*60}\n\n'
-        ret += '# Summary: Collects {collects_count}, Items {items_count}\n'.format(
+        output_format = getattr(self, 'output_format', self.FileFormat.NONE)
+
+        symbols = (
+            ('#', '-'),
+            ('#', '####'),
+            ('#', '#####'),
+            ('#', '-'),
+            ('', '###### '),
+            ('\t', '  '),
+        )
+
+        i = 1 if self.FileFormat.MARKDOWN.eq(output_format) else 0
+
+        ret = f'{symbols[0][i] * 60}\n\n'
+        ret += '{symbol} Summary: Collects {collects_count}, Items {items_count}\n'.format(
+            symbol=symbols[1][i],
             collects_count=len(outputs),
             items_count=sum([len(x) for _, x in outputs.items()]),
         )
-        ret += f'# Created Time: {self.current_time()}\n\n'
-        ret += f'{"#" * 60}\n'
+        ret += f'{symbols[2][i]} Created Time: {self.current_time()}\n\n'
+        ret += f'{symbols[3][i] * 60}\n'
 
         collect_number = 0
         for collect, items in outputs.items():
             collect_number += 1
-            ret += f'\n({collect_number}) {collect}:\n'
+            ret += f'\n{symbols[4][i]}({collect_number}) {collect}:\n'
             item_number = 0
             for item in items:
                 item_number += 1
-                ret += '\t{number} {content}\n'.format(
+                ret += '{symbol}{number} {content}\n'.format(
+                    symbol=symbols[5][i],
                     number=f'{f"{item_number}.":<{len(str(len(items)))+1}}',
                     content=item,
                 )
         return ret
 
 
-    def repack_audio_properties(self, properties, field_type=FieldType.ORIGINAL):
+    def repack_audio_properties(self, properties):
         ret = {}
+        field_type = self.parameters.get('field_type', self.FieldType.ORIGINAL)
+        if self.FieldType.AUTO.eq(field_type):
+            field_type = self.FieldType.ORIGINAL
         for field, value in properties.items():
             field_name = self.transform_field_name(field, field_type)
             type_ = self.AUDIO_PROPERTY_TYPES[field]
@@ -2237,13 +2274,13 @@ class NoteRelatedBaseAction(AudioGod):
                 self.invalid_clauses_counter += 1
 
         if 'field_type' in self.parameters:
-            if self.FieldType.AUTO.ne(self.parameters['field_type']):
-                field_type = self.parameters['field_type']
+            if self.FieldType.AUTO.eq(self.parameters['field_type']):
+                self.reset_parameters({ 'field_type': field_type })
 
         for grouping in self.summaries:
             genre, items = self.summaries[grouping]
             for i, properties in enumerate(items):
-                items[i] = self.repack_audio_properties(properties, field_type)
+                items[i] = self.repack_audio_properties(properties)
 
         self.__transform_summaries_to_clauses()
         
@@ -2339,7 +2376,9 @@ class ExportRelatedBaseAction(AudioGod):
     def output_format(self):
         classname = self.__class__.__name__
         if not classname.startswith('Export__'):
-            return self.FileFormat.NOTE
+            return self.recognize_file_format(
+                self.parameters.get('output', ''),
+            )
         if classname.endswith('BaseAction'):
             return self.FileFormat.NOTE
         if not classname.endswith('Action'):
@@ -2351,18 +2390,30 @@ class ExportRelatedBaseAction(AudioGod):
     
     #---------------------------------------------------------------------------
 
-    @staticmethod
-    def pack_properties(properties):
+    def pack_properties(self, properties):
+        output_format = getattr(self, 'output_format', self.FileFormat.NONE)
+        symbols = (
+            ('', '*'),
+        )
+        i = 1 if self.FileFormat.MARKDOWN.eq(output_format) else 0
+
         ret = ''
         for field in properties:
             field_name, _, value = properties[field]
+            value = f'{symbols[0][i]}{value}{symbols[0][i]}'
             ret += f'{field_name}: {value}; '
-        return ret.strip().rstrip(';')
+        return ret.strip().rstrip('; ')
 
 
     def plain_generalize(self):
+        output_format = getattr(self, 'output_format', self.FileFormat.NONE)
+        symbols = (
+            ('@', '**'),
+            ('', '**'),
+        )
+        i = 1 if self.FileFormat.MARKDOWN.eq(output_format) else 0
         return self.glorify_exportation({
-            f'@[{genre}] {grouping}': [
+            f'{symbols[0][i]}[{genre}]{symbols[1][i]} {grouping}': [
                 self.pack_properties(item) for item in items
             ] for grouping, (genre, items) in self.summaries.items()
         })
@@ -2498,22 +2549,6 @@ class FillPropertiesAction(NoteRelatedBaseAction):
                 self.parameters['properties'],
             )
     
-    #---------------------------------------------------------------------------
-
-    @classmethod
-    def recognize_file_format(cls, file):
-        if not file:
-            return cls.FileFormat.NONE
-        _, ext = os.path.splitext(os.path.basename(file))
-        ext = ext.lower()
-        if ext in ['.json']:
-            return cls.FileFormat.JSON
-        if ext in ['.md', '.markdown']:
-            return cls.FileFormat.MARKDOWN
-        if ext in ['.xml', '.plist']:
-            return cls.FileFormat.PLIST
-        return cls.FileFormat.NOTE
-
     #---------------------------------------------------------------------------
 
     def import_(self):
@@ -4142,7 +4177,7 @@ class ExportBaseAction(ExportRelatedBaseAction):
             if value is None:
                 continue
             ret[field] = value
-        return self.repack_audio_properties(ret, self.parameters['field_type'])
+        return self.repack_audio_properties(ret)
 
 
     def __fill_audios_tree(self) -> None:
@@ -4720,44 +4755,8 @@ class Export__MarkdownAction(ExportBaseAction):
 
     #---------------------------------------------------------------------------
 
-    def glorify_exportation(self, outputs):
-        ret = f'{"-" * 60}\n\n'
-        ret += '#### Summary: Collects {collects_count}, Items {items_count}\n'.format(
-            collects_count=len(outputs),
-            items_count=sum([len(x) for _, x in outputs.items()]),
-        )
-        ret += f'##### Created Time: {self.current_time()}\n\n'
-        ret += f'{"-" * 60}\n'
-
-        collect_number = 0
-        for collect, items in outputs.items():
-            collect_number += 1
-            ret += f'\n###### ({collect_number}) {collect}:\n'
-            item_number = 0
-            for item in items:
-                item_number += 1
-                ret += '  {number} {content}\n'.format(
-                    number=f'{f"{item_number}.":<{len(str(len(items)))+1}}',
-                    content=item,
-                )
-        return ret
-
-
-    def pack_properties(self, properties):
-        ret = ''
-        for field in properties:
-            field_name, _, value = properties[field]
-            ret += f'{field_name}: *{value}*; '
-        return ret.strip().rstrip('; ')
-
-    #---------------------------------------------------------------------------
-
     def generalize(self):
-        return self.glorify_exportation({
-            f'**[{genre}]** {grouping}': [
-                self.pack_properties(item) for item in items
-            ] for grouping, (genre, items) in self.summaries.items()
-        })
+        return self.plain_generalize()
 
 #===============================================================================
 
@@ -5021,7 +5020,7 @@ class Convert__Mp4ToMp3Action(ConvertBaseAction):
 
 #===============================================================================
 
-class Convert__NoteToMarkdownAction(ConvertBaseAction):
+class Convert__NoteToMarkdownAction(ConvertBaseAction, NoteRelatedBaseAction, ExportRelatedBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -5036,6 +5035,12 @@ class Convert__NoteToMarkdownAction(ConvertBaseAction):
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
                 'default': './songs.note',
+            },
+        },
+        'field_type': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': AudioGod.FieldType.AUTO,
             },
         },
         'output': {
@@ -5067,7 +5072,9 @@ class Convert__NoteToMarkdownAction(ConvertBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        pass
+        self.analysis_note()
+        self.sort_summaries()
+        self.handle_output(self.plain_generalize())
 
 #===============================================================================
 

@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-24T10:12:26Z
+# Created Time: 2025-06-25T05:36:25Z
 
 ##############################################################################
 
@@ -10,9 +10,9 @@ set -e
 
 ##############################################################################
 
-./audio-god preprocess-note \
+./audio-god redecorate-note \
     --document=./songs.note \
-    --field-type=cn \
+    --field-type=auto \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -65,7 +65,7 @@ set -e
 
 ./audio-god export note \
     --source='~/Music/Output/Grouped' \
-    --fields=note \
+    --fields=basic \
     --field-type=cn \
     --output=./songs.note \
     --extensions=mp3,aac \
