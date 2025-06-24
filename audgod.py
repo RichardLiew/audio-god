@@ -455,7 +455,7 @@ class AudioGod(object):
     
     #---------------------------------------------------------------------------
     
-    DEFAULTS_FIELDS = [
+    DEFAULT_FIELDS = [
         AudioProperty.TITLE,
         AudioProperty.ARTIST,
         AudioProperty.ALBUM,
@@ -463,7 +463,7 @@ class AudioGod(object):
         AudioProperty.ALBUM_ARTIST,
     ]
     
-    NOTE_FIELDS = [
+    BASIC_FIELDS = [
         AudioProperty.TITLE,
         AudioProperty.ARTIST,
         AudioProperty.ALBUM,
@@ -514,11 +514,12 @@ class AudioGod(object):
     
     FIELDS = {
         'all': ALL_FIELDS,
-        'defaults': DEFAULTS_FIELDS,
-        'note': NOTE_FIELDS,
+        'basic': BASIC_FIELDS,
+        'default': DEFAULT_FIELDS,
         'simple': SIMPLE_FIELDS,
-        'zip': ZIP_FIELDS,
         'core': CORE_FIELDS,
+        'zip': ZIP_FIELDS,
+        'note': BASIC_FIELDS,
         'ituned': ITUNED_FIELDS,
     }
 
@@ -706,7 +707,7 @@ class AudioGod(object):
             field: getattr(
                 self, f'parse_{field}', lambda x: x,
             )
-            for field in self.ALL_FIELDS
+            for field in self.FIELDS['all']
         }
         def __parse_func(parse_func):
             def __func(*args):
@@ -715,14 +716,14 @@ class AudioGod(object):
             return __func
         self.__parse_funcs = {
             field: __parse_func(self.__parse_funcs[field])
-            for field in self.ALL_FIELDS
+            for field in self.FIELDS['all']
         }
 
         self.__format_funcs = {
             field: getattr(
                 self, f'format_{field}', lambda x: x,
             )
-            for field in self.ALL_FIELDS
+            for field in self.FIELDS['all']
         }
         def __format_func(format_func):
             def __func(*args):
@@ -731,7 +732,7 @@ class AudioGod(object):
             return __func
         self.__format_funcs = {
             field: __format_func(self.__format_funcs[field])
-            for field in self.ALL_FIELDS
+            for field in self.FIELDS['all']
         }
 
         self.__output_funcs = {
@@ -740,7 +741,7 @@ class AudioGod(object):
                 f'output_{field}',
                 lambda x, output_format=self.FileFormat.NONE: x,
             )
-            for field in self.ALL_FIELDS
+            for field in self.FIELDS['all']
         }
         def __output_func(output_func):
             def __func(*args):
@@ -751,7 +752,7 @@ class AudioGod(object):
             return __func
         self.__output_funcs = {
             field: __output_func(self.__output_funcs[field])
-            for field in self.ALL_FIELDS
+            for field in self.FIELDS['all']
         }
 
 
@@ -1685,7 +1686,7 @@ class AudioGod(object):
             if field in self.FIELDS.keys():
                 ret.extend(self.FIELDS[field])
             else:
-                if field not in self.ALL_FIELDS:
+                if field not in self.FIELDS['all']:
                     self.logger.fatal(f'Invalid field <{field}>!')
                     return ret
                 ret.append(field)
@@ -1724,7 +1725,7 @@ class AudioGod(object):
             return cls.AUDIO_CN_PROPERTY_SYNONYMS[field]
         if field in cls.AUDIO_EN_PROPERTY_SYNONYMS:
             return cls.AUDIO_EN_PROPERTY_SYNONYMS[field]
-        if field in cls.ALL_FIELDS:
+        if field in cls.FIELDS['all']:
             return field
         return None
     
@@ -1739,7 +1740,7 @@ class AudioGod(object):
         match field:
             case self.AudioProperty.COMMENTS:
                 audio_object.tag.comments.set(value)
-            case _ if field in self.ZIP_FIELDS:
+            case _ if field in self.FIELDS['zip']:
                 comments = audio_object.tag.comments
                 if comments is not None:
                     comments = ''.join([comment.text for comment in comments])
@@ -1804,7 +1805,7 @@ class AudioGod(object):
                 ret = os.path.dirname(filename)
             case AudioGod.AudioProperty.COMMENTS:
                 ret = audio_object.tag.comments
-            case _ if field in self.ZIP_FIELDS:
+            case _ if field in self.FIELDS['zip']:
                 comments = audio_object.tag.comments
                 if comments:
                     comments = ''.join([comment.text for comment in comments])
@@ -2121,22 +2122,6 @@ class NoteRelatedBaseAction(AudioGod):
 
     #---------------------------------------------------------------------------
 
-    def pack_properties_for_note(self, properties):
-        ret = ''
-        for field in properties:
-            field_name, _, value = properties[field]
-            ret += f'{field_name}: {value}; '
-        return ret.strip().rstrip(';')
-
-
-    def summarize_for_note(self):
-        return self.glorify_exportation({
-            f'@[{genre}] {grouping}': [
-                self.pack_properties_for_note(item) for item in items
-            ] for grouping, (genre, items) in self.summaries.items()
-        })
-
-
     def analysis_note(self):
         grouping_pattern = r'^\s*(?:\s*\(\s*(?:\s*[0-9]\s*)+\s*\)\s*)?\s*@\s*\[\s*((?:\s*\S\s*)+)\s*\]\s*((?:\s*[^:：\s]\s*)+)[:：]?\s*$'
         fields_pattern = '|'.join(
@@ -2202,7 +2187,7 @@ class NoteRelatedBaseAction(AudioGod):
                             break
                         properties[field] = self.format_funcs[field](value)
                     if valid:
-                        for field in self.NOTE_FIELDS:
+                        for field in self.FIELDS['note']:
                             if field not in properties:
                                 valid, invalid_info = False, 'lack note fields'
                                 break
@@ -2347,11 +2332,28 @@ class ExportRelatedBaseAction(AudioGod):
     
     #---------------------------------------------------------------------------
 
+    @staticmethod
+    def pack_properties(properties):
+        ret = ''
+        for field in properties:
+            field_name, _, value = properties[field]
+            ret += f'{field_name}: {value}; '
+        return ret.strip().rstrip(';')
+
+
+    def plain_generalize(self):
+        return self.glorify_exportation({
+            f'@[{genre}] {grouping}': [
+                self.pack_properties(item) for item in items
+            ] for grouping, (genre, items) in self.summaries.items()
+        })
+
+
     def sort_summaries(self):
         for grouping in self.summaries:
             _, items = self.summaries[grouping]
             items.sort(
-                key=lambda x: getattr(self, f'pack_properties_for_{self.output_format}')(x),
+                key=lambda x: self.pack_properties(x),
             )
         self.summaries = {
             key: self.summaries[key] for key in sorted(self.summaries)
@@ -2390,7 +2392,7 @@ class PreprocessNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
         self.sort_summaries()
         tmp_file = self.parameters['document'] + '.tmp'
         with open(tmp_file, 'w', encoding='utf-8') as f:
-            f.write(self.summarize_for_note())
+            f.write(self.plain_generalize())
         self.backup(self.parameters['document'])
         self.rename(tmp_file, self.parameters['document'])
 
@@ -2607,7 +2609,7 @@ class FillPropertiesAction(NoteRelatedBaseAction):
         for audio in audios:
             self.logger.debug(f'Filling <{audio}> ...')
             filled, audio_object = False, self.prime_audio(audio)
-            for field in self.ALL_FIELDS:
+            for field in self.FIELDS['all']:
                 property_ = self.__fetch_from_outside(audio, field)
                 if property_ is not None:
                     filled = True
@@ -2671,7 +2673,7 @@ class FormatPropertiesAction(AudioGod):
         for audio in audios:
             self.logger.debug(f'Formatting <{audio}> ...')
             filled, audio_object = False, self.prime_audio(audio)
-            for field in self.ALL_FIELDS:
+            for field in self.FIELDS['all']:
                 property_ = self.fetchx(
                     audio_object,
                     field,
@@ -2760,7 +2762,7 @@ class RenameAudiosAction(AudioGod):
             _new = self.FilenamePatternTemplate(self.parameters['filename_pattern']).safe_substitute({
                 field: self.fetchx(
                     audio_object, field, formatted=True,
-                ) for field in self.ALL_FIELDS
+                ) for field in self.FIELDS['all']
             }) + ext.lower()
             if _old == _new:
                 continue
@@ -3647,7 +3649,7 @@ class DisplayAction(AudioGod):
         results = []
         all_fields = [
             (field, self.transform_field_name(field, self.parameters['field_type']))
-            for field in self.ALL_FIELDS
+            for field in self.FIELDS['all']
         ]
         formatted, output_format = True, self.FileFormat.NOTE
         match self.parameters['data_format']:
@@ -4221,6 +4223,17 @@ class ExportBaseAction(ExportRelatedBaseAction):
                 continue
             node.data[5] = parent.identifier
 
+    #---------------------------------------------------------------------------
+
+    def generalize(self):
+        pass
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        self.summarize()
+        self.handle_output(self.generalize())
+
 #===============================================================================
 
 class ExportAction(ExportBaseAction):
@@ -4267,7 +4280,7 @@ class Export__NoteAction(ExportBaseAction, NoteRelatedBaseAction):
         'fields': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': 'note',
+                'default': 'basic',
             },
         },
         'field_type': {
@@ -4287,11 +4300,10 @@ class Export__NoteAction(ExportBaseAction, NoteRelatedBaseAction):
         super().__init__(*args, **kwargs)
 
     #---------------------------------------------------------------------------
-
-    def execute(self):
-        self.summarize()
-        self.handle_output(self.summarize_for_note())
-
+    
+    def generalize(self):
+        return self.plain_generalize()
+    
 #===============================================================================
 
 class Export__PlistAction(ExportBaseAction):
@@ -4443,7 +4455,7 @@ class Export__PlistAction(ExportBaseAction):
 
     
     @staticmethod
-    def pack_properties_for_plist(properties):
+    def pack_properties(properties):
         ret = ''
         for field in properties:
             field_name, type_, value = properties[field]
@@ -4475,7 +4487,7 @@ class Export__PlistAction(ExportBaseAction):
 </dict>
         ''')).safe_substitute(dict(
             track_id=track_id,
-            properties=cls.pack_properties_for_plist(properties),
+            properties=cls.pack_properties(properties),
             date_added=cls.current_time(),
             kind='MPEG audio file',
             persistent_id=persistent_id,
@@ -4640,9 +4652,8 @@ class Export__PlistAction(ExportBaseAction):
 
     #---------------------------------------------------------------------------
 
-    def execute(self):
-        self.summarize()
-        self.handle_output(self.__pack_plist())
+    def generalize(self):
+        return self.__pack_plist()
 
 #===============================================================================
 
@@ -4652,9 +4663,32 @@ class Export__MarkdownAction(ExportBaseAction):
     #---------------------------------------------------------------------------
 
     KWARGS = {
+        'description': '⭐ Export audio details to markdown file',
+        'help': 'export audio details to markdown file',
     }
 
     ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Output/Grouped',
+            },
+        },
+        'fields': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': 'basic',
+            },
+        },
+        'field_type': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './songs.md',
+            },
+        },
     }
 
     #---------------------------------------------------------------------------
@@ -4664,8 +4698,43 @@ class Export__MarkdownAction(ExportBaseAction):
 
     #---------------------------------------------------------------------------
 
-    def execute(self):
-        pass
+    def glorify_exportation(self, outputs):
+        ret = f'{"#"*78}\n\n'
+        ret += '# Summary: Collects {collects_count}, Items {items_count}\n'.format(
+            collects_count=len(outputs),
+            items_count=sum([len(x) for _, x in outputs.items()]),
+        )
+        ret += f'# Created Time: {self.current_time()}\n\n'
+
+        collect_number = 0
+        for collect, items in outputs.items():
+            collect_number += 1
+            ret += f'\n({collect_number}) {collect}:\n'
+            item_number = 0
+            for item in items:
+                item_number += 1
+                ret += '\t{number} {content}\n'.format(
+                    number=f'{f"{item_number}.":<{len(str(len(items)))+1}}',
+                    content=item,
+                )
+        return ret
+
+
+    def pack_properties(self, properties):
+        ret = ''
+        for field in properties:
+            field_name, _, value = properties[field]
+            ret += f'{field_name}: {value}; '
+        return ret.strip().rstrip(';')
+
+    #---------------------------------------------------------------------------
+
+    def generalize(self):
+        return self.glorify_exportation({
+            f'@[{genre}] {grouping}': [
+                self.pack_properties(item) for item in items
+            ] for grouping, (genre, items) in self.summaries.items()
+        })
 
 #===============================================================================
 
@@ -4675,9 +4744,32 @@ class Export__XmlAction(ExportBaseAction):
     #---------------------------------------------------------------------------
 
     KWARGS = {
+        'description': '⭐ Export audio details to xml file',
+        'help': 'export audio details to xml file',
     }
 
     ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Output/Grouped',
+            },
+        },
+        'fields': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': 'ituned',
+            },
+        },
+        'field_type': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './songs.xml',
+            },
+        },
     }
 
     #---------------------------------------------------------------------------
@@ -4687,7 +4779,7 @@ class Export__XmlAction(ExportBaseAction):
 
     #---------------------------------------------------------------------------
 
-    def execute(self):
+    def generalize(self):
         pass
 
 #===============================================================================
@@ -4698,9 +4790,32 @@ class Export__JsonAction(ExportBaseAction):
     #---------------------------------------------------------------------------
 
     KWARGS = {
+        'description': '⭐ Export audio details to json file',
+        'help': 'export audio details to json file',
     }
 
     ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Output/Grouped',
+            },
+        },
+        'fields': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': 'basic',
+            },
+        },
+        'field_type': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './songs.json',
+            },
+        },
     }
 
     #---------------------------------------------------------------------------
@@ -4710,7 +4825,7 @@ class Export__JsonAction(ExportBaseAction):
 
     #---------------------------------------------------------------------------
 
-    def execute(self):
+    def generalize(self):
         pass
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -4842,6 +4957,8 @@ class Convert__KmxToMp4Action(ConvertBaseAction):
     #---------------------------------------------------------------------------
 
     KWARGS = {
+        'description': '⭐ Convert kmx to mp4',
+        'help': 'convert kmx to mp4',
     }
 
     ARGUMENTS = {
@@ -4865,6 +4982,8 @@ class Convert__Mp4ToMp3Action(ConvertBaseAction):
     #---------------------------------------------------------------------------
 
     KWARGS = {
+        'description': '⭐ Convert mp4 to mp3',
+        'help': 'convert mp4 to mp3',
     }
 
     ARGUMENTS = {
@@ -4888,6 +5007,8 @@ class Convert__NoteToMarkdownAction(ConvertBaseAction):
     #---------------------------------------------------------------------------
 
     KWARGS = {
+        'description': '⭐ Convert note to markdown',
+        'help': 'convert note to markdown',
     }
 
     ARGUMENTS = {
@@ -4911,6 +5032,8 @@ class Convert__MarkdownToNoteAction(ConvertBaseAction):
     #---------------------------------------------------------------------------
 
     KWARGS = {
+        'description': '⭐ Convert markdown to note',
+        'help': 'convert markdown to note',
     }
 
     ARGUMENTS = {
@@ -4982,7 +5105,6 @@ class Operate__BackupAction(OperateBaseAction):
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
                 'required': True,
-                'default': '',
             },
         },
         'ignored_file': {
@@ -5017,7 +5139,6 @@ class Operate__RemoveAction(OperateBaseAction):
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
                 'required': True,
-                'default': '',
             },
         },
         'ignored_file': {
@@ -5275,7 +5396,7 @@ def _audio_properties() -> str:
     ]
     for field in table.field_names:
         table.align[field] = 'l'
-    for number, field in enumerate(AudioGod.ALL_FIELDS):
+    for number, field in enumerate(AudioGod.FIELDS['all']):
         chinese_name = AudioGod.AUDIO_PROPERTIES[field][0][0]
         english_name = AudioGod.AUDIO_PROPERTIES[field][0][1]
         field_type = AudioGod.AUDIO_PROPERTIES[field][1]
@@ -5297,7 +5418,7 @@ def _special_fields() -> str:
     for field in table.field_names:
         table.align[field] = 'l'
     rows = list(AudioGod.FIELDS.values())
-    for j in range(len(AudioGod.ALL_FIELDS)):
+    for j in range(len(AudioGod.FIELDS['all'])):
         row = []
         for i in range(len(rows)):
             if j < len(rows[i]):
