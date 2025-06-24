@@ -763,7 +763,7 @@ class AudioGod(object):
         if 'fields' in self.parameters:
             self.parameters['fields'] = [
                 self.AudioProperty(x) for x in self.resolve_fields(
-                    self.parameters['fields']['fields'],
+                    self.parameters['fields'],
                     sortify=False,
                     reversify=False,
                     stringify=False,
@@ -1429,6 +1429,10 @@ class AudioGod(object):
     def remove(self, *paths):
         self.init_cache()
         for item in self.expand_globbing(*paths):
+            print('0   AAAAAAAAAAAAA', f'<{item}>')
+            print('q   AAAAAAAAAAAAA', f'<{paths}>')
+
+
             if os.path.exists(item):
                 os.rename(
                     item, os.path.join(
@@ -1551,7 +1555,7 @@ class AudioGod(object):
 
     @classmethod
     def render_usage(cls, usage, /, indent=None, kwargs={}) -> str:
-        return '\n' + cls.PerfectTemplate(
+        return cls.PerfectTemplate(
             cls.glorify_indents(usage, indent=indent),
         ).perfect_substitute(dict(
             cmd=cls.get_command(),
@@ -5117,11 +5121,11 @@ def _render_actions():
         if not cls.KWARGS:
             continue
         if cls.KWARGS.get('prog', None):
-            cls.KWARGS['prog'] = AudioGod.render_usage(
+            cls.KWARGS['prog'] = '\n' + AudioGod.render_usage(
                 cls.KWARGS['prog'], indent=0,
             )
         if cls.KWARGS.get('usage', None):
-            cls.KWARGS['usage'] = AudioGod.render_usage(
+            cls.KWARGS['usage'] = '\n' + AudioGod.render_usage(
                 cls.KWARGS['usage'], indent=0,
             )
 
@@ -5325,7 +5329,7 @@ def _special_characters() -> str:
 def main():
     main_parser = PerfectArgumentParser(
         prog=sys.argv[0],
-        usage=AudioGod.render_usage(
+        usage='\n' + AudioGod.render_usage(
             __USAGE__,
             indent=0,
             kwargs=dict(
