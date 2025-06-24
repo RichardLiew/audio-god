@@ -3885,7 +3885,10 @@ class Organize__ItunedAction(OrganizeBaseAction):
             },
         },
         'root': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/iTunes/iTunes\ Media/Music', # type: ignore
+            },
         },
     }
 

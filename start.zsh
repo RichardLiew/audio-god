@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-24T09:47:16Z
+# Created Time: 2025-06-24T10:08:40Z
 
 ##############################################################################
 
@@ -50,7 +50,7 @@ set -e
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./ignored.txt \
-    --filename-pattern='@{artist} * @{title}' \
+    --filename-pattern='@{artist} + @{title}' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -85,7 +85,7 @@ set -e
 
 ./audio-god organize ituned \
     --source='~/Music/Output/Grouped' \
-    --root='~/Music/Source/MP3' \
+    --root='~/Music/iTunes/iTunes\ Media/Music' \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./ignored.txt \
