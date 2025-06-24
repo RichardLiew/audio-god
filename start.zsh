@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-24T10:08:40Z
+# Created Time: 2025-06-24T10:12:26Z
 
 ##############################################################################
 
@@ -85,7 +85,7 @@ set -e
 
 ./audio-god organize ituned \
     --source='~/Music/Output/Grouped' \
-    --root='~/Music/iTunes/iTunes\ Media/Music' \
+    --root='~/Music/iTunes/iTunes Media/Music' \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./ignored.txt \
@@ -98,7 +98,7 @@ set -e
     --field-type=en \
     --output='~/Music/iTunes/Library.xml' \
     --itunes-version-plist=/System/Applications/Music.app/Contents/version.plist \
-    --itunes-media-folder='~/Music/iTunes/iTunes\ Media/Music' \
+    --itunes-media-folder='~/Music/iTunes/iTunes Media/Music' \
     --track-initial-id=601 \
     --playlist-initial-id=3001 \
     --extensions=mp3,aac \
