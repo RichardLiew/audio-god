@@ -3887,7 +3887,7 @@ class Organize__ItunedAction(OrganizeBaseAction):
         'root': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/iTunes/iTunes\ Media/Music', # type: ignore
+                'default': '~/Music/iTunes/iTunes Media/Music', # type: ignore
             },
         },
     }
@@ -4344,7 +4344,7 @@ class Export__PlistAction(ExportBaseAction):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': '~/Music/iTunes/iTunes\ Media/Music', # type: ignore
+                'default': '~/Music/iTunes/iTunes Media/Music', # type: ignore
                 'help': 'the media folder of itunes or apple music',
             },
         },
