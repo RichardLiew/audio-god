@@ -3,6 +3,9 @@ type: ignore
 抓包 Mac 酷我下载音乐的链接，然后集成到脚本中自动下载
 多个父类导致action顺序被改变，那些参数，在不断的子类继承时被update，顺序也变了
 检查所有的 Action 里对应的 Argument，所有的参数校验和rewrite都要在 rewrite_parameters函数里完成
+
+preprocess-note, note-to-markdown 里的fields要自动识别，不能直接用 all
+
 All done.
 
 

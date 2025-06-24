@@ -1859,12 +1859,13 @@ class AudioGod(object):
 
 
     def glorify_exportation(self, outputs):
-        ret = f'{"#"*78}\n\n'
+        ret = f'{"#"*60}\n\n'
         ret += '# Summary: Collects {collects_count}, Items {items_count}\n'.format(
             collects_count=len(outputs),
             items_count=sum([len(x) for _, x in outputs.items()]),
         )
         ret += f'# Created Time: {self.current_time()}\n\n'
+        ret += f'{"#" * 60}\n'
 
         collect_number = 0
         for collect, items in outputs.items():
@@ -4699,13 +4700,13 @@ class Export__MarkdownAction(ExportBaseAction):
     #---------------------------------------------------------------------------
 
     def glorify_exportation(self, outputs):
-        ret = f'{"-" * 66}\n\n'
-        ret += '#### Summary: Collects {collects_count}, Items {items_count}\n\n'.format(
+        ret = f'{"-" * 60}\n\n'
+        ret += '#### Summary: Collects {collects_count}, Items {items_count}\n'.format(
             collects_count=len(outputs),
             items_count=sum([len(x) for _, x in outputs.items()]),
         )
         ret += f'##### Created Time: {self.current_time()}\n\n'
-        ret += f'{"-" * 66}\n'
+        ret += f'{"-" * 60}\n'
 
         collect_number = 0
         for collect, items in outputs.items():
@@ -4852,15 +4853,6 @@ class ConvertBaseAction(AudioGod):
         },
     }
 
-    REQUISITE_ARGUMENTS = {
-        'recursive': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
-        },
-        'ignored_file': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
-        },
-    } | copy.deepcopy(AudioGod.REQUISITE_ARGUMENTS)
-
     #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
@@ -4932,6 +4924,12 @@ class Convert__QmcToMp3Action(ConvertBaseAction):
                 'default': 'qmc,qmc0,qmc3',
             },
         },
+        'recursive': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
         'executer': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
@@ -4941,7 +4939,7 @@ class Convert__QmcToMp3Action(ConvertBaseAction):
     }
 
     #---------------------------------------------------------------------------
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -5013,12 +5011,37 @@ class Convert__NoteToMarkdownAction(ConvertBaseAction):
     }
 
     ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './songs.note',
+            },
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './songs.md',
+            },
+        },
     }
 
     #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def rewrite_parameters(self):
+        super().rewrite_parameters()
+
+        if 'source' in self.parameters:
+            if not os.path.exists(self.parameters['source']):
+                self.logger.fatal(f'<{self.parameters["source"]}> not exists!')
+                return
+            if not os.path.isfile(self.parameters['source']):
+                self.logger.fatal(f'<{self.parameters["source"]}> is not file!')
+                return
 
     #---------------------------------------------------------------------------
 
@@ -5038,6 +5061,18 @@ class Convert__MarkdownToNoteAction(ConvertBaseAction):
     }
 
     ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './songs.md',
+            },
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './songs.note',
+            },
+        },
     }
 
     #---------------------------------------------------------------------------
@@ -5047,8 +5082,38 @@ class Convert__MarkdownToNoteAction(ConvertBaseAction):
 
     #---------------------------------------------------------------------------
 
+    def rewrite_parameters(self):
+        super().rewrite_parameters()
+
+        if 'source' in self.parameters:
+            if not os.path.exists(self.parameters['source']):
+                self.logger.fatal(f'<{self.parameters["source"]}> not exists!')
+                return
+            if not os.path.isfile(self.parameters['source']):
+                self.logger.fatal(f'<{self.parameters["source"]}> is not file!')
+                return
+
+    #---------------------------------------------------------------------------
+
     def execute(self):
-        pass
+        with open(self.parameters['source'], 'r', encoding='utf-8') as f:
+            content = ''
+            for line in f:
+                line = re.sub(r'##+', r'#', line)
+                if re.match(r'^-{3,}', line) is not None:
+                    line = re.sub(r'-', r'#', line)
+                ct_pattern = r'^(\s*#+\s*Created Time:\s*)([0-9-: TtZz]+).*$'
+                if re.match(ct_pattern, line) is not None:
+                    line = re.sub(ct_pattern, r'\1', line).rstrip('\n')
+                    line += f'{self.current_time()}\n'
+                blank_pattern = r'^[ \t]+'
+                if re.match(blank_pattern, line) is not None:
+                    line = re.sub(blank_pattern, r'\t', line)
+                line = re.sub(r'#+\s*(\([0-9]+\)\s*.*)$', r'\1', line)
+                line = line.replace('**[', '@[')
+                line = line.replace('*', '')
+                content += line
+            self.handle_output(content)
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
