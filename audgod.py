@@ -237,7 +237,7 @@ Ready:
     Step.3: Add detail of songs to notes, then grouped.
 
 Process Method 1:
-    Step.1: Preprocess note, until note file not changed, with subcommand <preprocess-note>;
+    Step.1: Redecorate note, until note file not changed, with subcommand <redecorate-note>;
     Step.2: Fill properties, with subcommand <fill-properties>;
     Step.3: Format properties, with subcommand <format-properties>;
     Step.4: Rename audios, with subcommand <rename-audios>;
@@ -248,13 +248,13 @@ Process Method 1:
     Step.9: Export plist file, with subcommand <export plist>.
 
 Process Method 2:
-    Step.1: Put note file to local folder (e.g. "${preprocess-note.document}");
+    Step.1: Put note file to local folder (e.g. "${redecorate-note.document}");
     Step.2: Put audios to source folder (e.g. "${fill-properties.source}");
     Step.3: Put ignored file to local folder (e.g. "${fill-properties.ignored_file}");
     Step.4: Run <generate-script> subcommand to generate a shell script (e.g. "${generate-script.output}");
     Step.5: Execute the shell script above.
     Results under folders below:
-        "${preprocess-note.document}"
+        "${redecorate-note.document}"
         "${list-repeated.output}"
         "${derive-artworks.artwork_path}"
         "${organize.ituned.source}"
@@ -301,7 +301,11 @@ def log_decorator(func):
 
 class AudioGod(object):
     ORI_DIV_CHAR = '-'
+
+    # don't assign '*', '%' or '|'
     DIV_CHAR = '+'
+
+    # don't assign '*', '%' or '|'
     GROUPING_SEPARATOR = '&'
 
     #---------------------------------------------------------------------------
@@ -392,6 +396,7 @@ class AudioGod(object):
         ORIGINAL = 'ori'
         CHINESE = 'cn'
         ENGLISH = 'en'
+        AUTO = 'auto'
 
 
     @StringEnum.unique
@@ -1881,12 +1886,10 @@ class AudioGod(object):
         return ret
 
 
-    def repack_audio_properties(self, properties):
+    def repack_audio_properties(self, properties, field_type=FieldType.ORIGINAL):
         ret = {}
         for field, value in properties.items():
-            field_name = self.transform_field_name(
-                field, self.parameters.get('field_type', self.FieldType.ORIGINAL),
-            )
+            field_name = self.transform_field_name(field, field_type)
             type_ = self.AUDIO_PROPERTY_TYPES[field]
             ret[field] = (field_name, type_, value)
         return ret
@@ -2124,18 +2127,25 @@ class NoteRelatedBaseAction(AudioGod):
     #---------------------------------------------------------------------------
 
     def analysis_note(self):
+        def _generate_detail_pattern(fields):
+            return r'^(?:(?:(?:\s*[0-9]\s*)+\.\s*)?(?:\s*\[\s*[a-zA-Z]?\s*\]\s*)?)?(?:\s*[,，;；]+\s*)?\s*({0})\s*[:：]+((?:\s*\S\s*)+?)((?:\s*[,，;；]+\s*(?:{0})\s*[:：]+(?:\s*\S\s*)+)*)$'.format(
+                '|'.join(list(fields)),
+            )
+        detail_patterns = {
+            self.FieldType.CHINESE: self.AUDIO_CN_PROPERTY_SYNONYMS.keys(),
+            self.FieldType.ENGLISH: self.AUDIO_EN_PROPERTY_SYNONYMS.keys(),
+            self.FieldType.ORIGINAL: self.AUDIO_CN_PROPERTIES.keys(),
+        }
+        detail_pattern = _generate_detail_pattern([
+            item for unit in detail_patterns.values() for item in unit
+        ])
+        for pattern, fields in detail_patterns.items():
+            detail_patterns[pattern] = _generate_detail_pattern(fields) # type: ignore
+
         grouping_pattern = r'^\s*(?:\s*\(\s*(?:\s*[0-9]\s*)+\s*\)\s*)?\s*@\s*\[\s*((?:\s*\S\s*)+)\s*\]\s*((?:\s*[^:：\s]\s*)+)[:：]?\s*$'
-        fields_pattern = '|'.join(
-            list(self.AUDIO_CN_PROPERTIES.keys()) + \
-            list(self.AUDIO_EN_PROPERTY_SYNONYMS.keys()) + \
-            list(self.AUDIO_CN_PROPERTY_SYNONYMS.keys()),
-        )
-        detail_pattern = \
-                r'^(?:(?:(?:\s*[0-9]\s*)+\.\s*)?(?:\s*\[\s*[a-zA-Z]?\s*\]\s*)?)?(?:\s*[,，;；]+\s*)?\s*({0})\s*[:：]+((?:\s*\S\s*)+?)((?:\s*[,，;；]+\s*(?:{0})\s*[:：]+(?:\s*\S\s*)+)*)$'.format(
-            fields_pattern,
-        )
         warn_pattern = r'(?:\s*[,，;；]+\s*)+(?:(?:\s*\S\s*)+)\s*[:：]+(?:\s*\S\s*)+'
 
+        field_type = self.FieldType.ORIGINAL
         with open(self.parameters['document'], 'r', encoding='utf-8') as f:
             keys, (genre, grouping) = {}, ('', '')
             for line_number, line in enumerate(f, start=1):
@@ -2163,6 +2173,10 @@ class NoteRelatedBaseAction(AudioGod):
                 # detail line
                 detail_match = re.match(detail_pattern, line, re.IGNORECASE)
                 if grouping and detail_match is not None:
+                    for _type, _pattern in detail_patterns.items():
+                        if re.match(_pattern, line, re.IGNORECASE) is None: # type: ignore
+                            continue
+                        field_type = _type
                     valid, repeated = True, False
                     curr_key, properties = '', {}
                     temp_line = line
@@ -2222,10 +2236,14 @@ class NoteRelatedBaseAction(AudioGod):
                 self.invalid_clauses.append((line_with_no, invalid_info))
                 self.invalid_clauses_counter += 1
 
+        if 'field_type' in self.parameters:
+            if self.FieldType.AUTO.ne(self.parameters['field_type']):
+                field_type = self.parameters['field_type']
+
         for grouping in self.summaries:
             genre, items = self.summaries[grouping]
             for i, properties in enumerate(items):
-                items[i] = self.repack_audio_properties(properties)
+                items[i] = self.repack_audio_properties(properties, field_type)
 
         self.__transform_summaries_to_clauses()
         
@@ -2362,14 +2380,14 @@ class ExportRelatedBaseAction(AudioGod):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-class PreprocessNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
+class RedecorateNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
 
     KWARGS = {
-        'description': '✋ Preprocess the note file',
-        'help': 'preprocess the note file',
+        'description': '✋ Redecorate the note file',
+        'help': 'redecorate the note file',
     }
 
     ARGUMENTS = {
@@ -2377,7 +2395,10 @@ class PreprocessNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'field_type': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': AudioGod.FieldType.AUTO,
+            },
         },
     }
 
@@ -3722,7 +3743,7 @@ class GenerateScriptAction(AudioGod):
         content += 'set -e\n\n'
         content += '#' * 78 + '\n'
         steps = [
-            'preprocess-note',
+            'redecorate-note',
             'fill-properties',
             'format-properties',
             'rename-audios',
@@ -4121,7 +4142,7 @@ class ExportBaseAction(ExportRelatedBaseAction):
             if value is None:
                 continue
             ret[field] = value
-        return self.repack_audio_properties(ret)
+        return self.repack_audio_properties(ret, self.parameters['field_type'])
 
 
     def __fill_audios_tree(self) -> None:
@@ -5011,7 +5032,7 @@ class Convert__NoteToMarkdownAction(ConvertBaseAction):
     }
 
     ARGUMENTS = {
-        'source': {
+        'document': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
                 'default': './songs.note',
@@ -5035,12 +5056,12 @@ class Convert__NoteToMarkdownAction(ConvertBaseAction):
     def rewrite_parameters(self):
         super().rewrite_parameters()
 
-        if 'source' in self.parameters:
-            if not os.path.exists(self.parameters['source']):
-                self.logger.fatal(f'<{self.parameters["source"]}> not exists!')
+        if 'document' in self.parameters:
+            if not os.path.exists(self.parameters['document']):
+                self.logger.fatal(f'<{self.parameters["document"]}> not exists!')
                 return
-            if not os.path.isfile(self.parameters['source']):
-                self.logger.fatal(f'<{self.parameters["source"]}> is not file!')
+            if not os.path.isfile(self.parameters['document']):
+                self.logger.fatal(f'<{self.parameters["document"]}> is not file!')
                 return
 
     #---------------------------------------------------------------------------
@@ -5061,7 +5082,7 @@ class Convert__MarkdownToNoteAction(ConvertBaseAction):
     }
 
     ARGUMENTS = {
-        'source': {
+        'document': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
                 'default': './songs.md',
@@ -5085,18 +5106,18 @@ class Convert__MarkdownToNoteAction(ConvertBaseAction):
     def rewrite_parameters(self):
         super().rewrite_parameters()
 
-        if 'source' in self.parameters:
-            if not os.path.exists(self.parameters['source']):
-                self.logger.fatal(f'<{self.parameters["source"]}> not exists!')
+        if 'document' in self.parameters:
+            if not os.path.exists(self.parameters['document']):
+                self.logger.fatal(f'<{self.parameters["document"]}> not exists!')
                 return
-            if not os.path.isfile(self.parameters['source']):
-                self.logger.fatal(f'<{self.parameters["source"]}> is not file!')
+            if not os.path.isfile(self.parameters['document']):
+                self.logger.fatal(f'<{self.parameters["document"]}> is not file!')
                 return
 
     #---------------------------------------------------------------------------
 
     def execute(self):
-        with open(self.parameters['source'], 'r', encoding='utf-8') as f:
+        with open(self.parameters['document'], 'r', encoding='utf-8') as f:
             content = ''
             for line in f:
                 line = re.sub(r'##+', r'#', line)
