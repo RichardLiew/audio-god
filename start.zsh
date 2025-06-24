@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-24T09:44:10Z
+# Created Time: 2025-06-24T09:47:16Z
 
 ##############################################################################
 
@@ -98,7 +98,7 @@ set -e
     --field-type=en \
     --output='~/Music/iTunes/Library.xml' \
     --itunes-version-plist=/System/Applications/Music.app/Contents/version.plist \
-    --itunes-media-folder='~/Music/iTunes/iTunes Media/Music' \
+    --itunes-media-folder='~/Music/iTunes/iTunes\ Media/Music' \
     --track-initial-id=601 \
     --playlist-initial-id=3001 \
     --extensions=mp3,aac \

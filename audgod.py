@@ -301,7 +301,7 @@ def log_decorator(func):
 
 class AudioGod(object):
     ORI_DIV_CHAR = '-'
-    DIV_CHAR = '*'
+    DIV_CHAR = '+'
     GROUPING_SEPARATOR = '&'
 
     #---------------------------------------------------------------------------
@@ -4341,7 +4341,7 @@ class Export__PlistAction(ExportBaseAction):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': '~/Music/iTunes/iTunes Media/Music',
+                'default': '~/Music/iTunes/iTunes\ Media/Music', # type: ignore
                 'help': 'the media folder of itunes or apple music',
             },
         },
