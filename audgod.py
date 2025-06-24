@@ -1429,10 +1429,6 @@ class AudioGod(object):
     def remove(self, *paths):
         self.init_cache()
         for item in self.expand_globbing(*paths):
-            print('0   AAAAAAAAAAAAA', f'<{item}>')
-            print('q   AAAAAAAAAAAAA', f'<{paths}>')
-
-
             if os.path.exists(item):
                 os.rename(
                     item, os.path.join(
@@ -2038,11 +2034,11 @@ class AudioGod(object):
     def __check_source(self, source):
         _source = source
         while True:
-            if re.match(r'^/*$', _audio) is not None:
+            if re.match(r'^/*$', _source) is not None:
                 break
-            if _audio in self.ignored_set or _source+'/' in self.ignored_set:
+            if _source in self.ignored_set or _source+'/' in self.ignored_set:
                 return self.SourceType.IGNORED
-            _audio = os.path.dirname(_audio)
+            _source = os.path.dirname(_source)
 
         if os.path.basename(source) == '.DS_Store':
             return self.SourceType.OMITTED
@@ -2606,13 +2602,12 @@ class FillPropertiesAction(NoteRelatedBaseAction):
 
 
     def __fill_audio_properties(self):
-        audios = self.concerned_sources
-        filled_count = 0
+        filled_count, audios = 0, self.concerned_sources
         self.logger.warning(f'\n{"#"*78}\n')
         for audio in audios:
             self.logger.debug(f'Filling <{audio}> ...')
             filled, audio_object = False, self.prime_audio(audio)
-            for field in self.parameters['fields']:
+            for field in self.ALL_FIELDS:
                 property_ = self.__fetch_from_outside(audio, field)
                 if property_ is not None:
                     filled = True
@@ -2671,16 +2666,29 @@ class FormatPropertiesAction(AudioGod):
 
     def execute(self):
         self.load_sources(matched=False)
-        audios = self.concerned_sources
+        count, audios = 0, self.concerned_sources
         self.logger.warning(f'\n{"#"*78}\n')
         for audio in audios:
             self.logger.debug(f'Formatting <{audio}> ...')
-            audio_object = self.prime_audio(audio)
-            for field in self.parameters['fields']:
-                property_ = self.fetchx(audio_object, field, formatted=True)
-                if property_ is not None:
-                    self.save(audio_object, field, property_, True)
-        self.logger.warning(f'Formatted Sources: {len(audios)}\n')
+            filled, audio_object = False, self.prime_audio(audio)
+            for field in self.ALL_FIELDS:
+                property_ = self.fetchx(
+                    audio_object,
+                    field,
+                    formatted=False,
+                    output_format=self.FileFormat.NONE,
+                    default=None,
+                )
+                if property_ is None:
+                    continue
+                formatted_property = self.format_funcs[field](property_)
+                if formatted_property == property_:
+                    continue
+                filled = True
+                self.save(audio_object, field, formatted_property, True)
+            if filled:
+                count += 1
+        self.logger.warning(f'Total Sources: {len(audios)}, Formatted Sources: {count}\n')
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
