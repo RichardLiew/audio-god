@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-24T07:59:16Z
+# Created Time: 2025-06-24T08:49:07Z
 
 ##############################################################################
 
@@ -23,7 +23,7 @@ set -e
     --ignored-file=./ignored.txt \
     --document=./songs.note \
     --root='~/Music/Source/MP3' \
-    --properties=''"'"'{
+    --properties='{
         "_comment": "sources choose from command/file/directory/filename",
         "default": {
             "sources": ["command", "file"],
@@ -33,7 +33,7 @@ set -e
             "sources": ["command", "file"],
             "value": null
         }
-    }'"'"'' \
+    }' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -71,8 +71,6 @@ set -e
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./ignored.txt \
-    --track-initial-id=601 \
-    --playlist-initial-id=3001 \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -100,11 +98,11 @@ set -e
     --field-type=en \
     --output='~/Music/iTunes/Library.xml' \
     --itunes-version-plist=/System/Applications/Music.app/Contents/version.plist \
-    --itunes-media-folder='~/Music/iTunes/iTunes\ Media/Music' \
+    --itunes-media-folder='~/Music/iTunes/iTunes Media/Music' \
+    --track-initial-id=601 \
+    --playlist-initial-id=3001 \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./ignored.txt \
-    --track-initial-id=601 \
-    --playlist-initial-id=3001 \
     --log-level=WARNING \
     --log-file=stderr

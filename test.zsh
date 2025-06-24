@@ -1,7 +1,4 @@
-import shlex
-
-s = '''
-    \'{
+properties=''"'"'{
         "_comment": "sources choose from command/file/directory/filename",
         "default": {
             "sources": ["command", "file"],
@@ -11,7 +8,6 @@ s = '''
             "sources": ["command", "file"],
             "value": null
         }
-    }\'
-'''
+}'"'"''
 
-print(f'<{shlex.quote(s)}>')
+echo "<${properties}>"

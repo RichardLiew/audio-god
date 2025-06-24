@@ -1627,7 +1627,7 @@ class AudioGod(object):
                             cls.ARGUMENTS[argument]['kwargs']['default'], indent=0,
                         ).strip()
 
-        # decorate $KWARGS
+        # decorate $KWARGS and $KWARGS['prog']
         if cls.KWARGS is not None:
             cls.KWARGS = copy.deepcopy(cls.BASIC_KWARGS) | cls.KWARGS
             if not cls.KWARGS.get('prog', None):
@@ -1650,7 +1650,7 @@ class AudioGod(object):
                     argument_pair = label if default else label.replace('--', '--no-')
                 else:
                     if isinstance(default, str):
-                        default = shlex.quote(default)
+                        default = re.sub(r'[\"\']{5}', r'', shlex.quote(default))
                     argument_pair = f'{label}={default}'
                 cls.KWARGS['usage'] += '{}{} \\\n'.format(
                     ' ' * indent, argument_pair,
@@ -2618,7 +2618,7 @@ class FillPropertiesAction(NoteRelatedBaseAction):
                 filled_count += 1
                 self.logger.debug(f'Audio <{audio}> filled!\n')
         self.logger.warning(
-            'Audios To Fill: {total}, Filled Audios: {filled}\n'.format(
+            'Sources To Fill: {total}, Filled Sources: {filled}\n'.format(
                 total=len(audios),
                 filled=filled_count,
             )
@@ -2676,7 +2676,7 @@ class FormatPropertiesAction(AudioGod):
                 property_ = self.fetchx(audio_object, field, formatted=True)
                 if property_ is not None:
                     self.save(audio_object, field, property_, True)
-        self.logger.warning(f'Formatted Audios: {len(audios)}\n')
+        self.logger.warning(f'Formatted Sources: {len(audios)}\n')
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -2741,8 +2741,7 @@ class RenameAudiosAction(AudioGod):
 
     def execute(self):
         self.load_sources(matched=False)
-        audios = self.concerned_sources
-        for audio in audios:
+        for audio in self.concerned_sources:
             audio_object = self.prime_audio(audio)
             _old = os.path.basename(audio)
             _, ext = os.path.splitext(_old)
@@ -2802,8 +2801,8 @@ class ListRepeatedAction(AudioGod):
     def execute(self):
         self.load_sources(matched=False)
         
-        audios, results = self.concerned_sources, {}
-        for audio in audios:
+        results = {}
+        for audio in self.concerned_sources:
             audio_object = self.prime_audio(audio)
             artist = self.fetchx(audio_object, self.AudioProperty.ARTIST, formatted=True)
             if not artist:
@@ -2881,8 +2880,7 @@ class DeriveArtworksAction(AudioGod):
 
     def execute(self):
         self.load_sources(matched=False)
-        audios = self.concerned_sources
-        for audio in audios:
+        for audio in self.concerned_sources:
             _name, _ = os.path.splitext(os.path.basename(audio))
             _path = os.path.dirname(audio)
             if self.parameters['artwork_path']:
@@ -3533,7 +3531,7 @@ class DisplayAction(AudioGod):
                     rows = function(rows, index, reverse)
 
         total_rows, start = len(rows), 0
-        table_title = f'Total Audios: {total_rows}'
+        table_title = f'Total Sources: {total_rows}'
 
         if total_rows > 0:
             if page_size is None or page_size < 1:
@@ -3817,8 +3815,7 @@ class Organize__GroupedAction(OrganizeBaseAction):
             self.logger.fatal('Invalid root!')
             return
         self.load_sources(matched=False)
-        audios = self.concerned_sources
-        for audio in audios:
+        for audio in self.concerned_sources:
             audio_object = self.prime_audio(audio)
             grouping = self.fetchx(
                 audio_object, self.AudioProperty.GROUPING, formatted=True,
@@ -3892,8 +3889,7 @@ class Organize__ItunedAction(OrganizeBaseAction):
             self.logger.fatal('Invalid root!')
             return
         self.load_sources(matched=False)
-        audios = self.concerned_sources
-        for audio in audios:
+        for audio in self.concerned_sources:
             audio_object = self.prime_audio(audio)
             artist = self.fetchx(audio_object, self.AudioProperty.ARTIST, formatted=True)
             if not artist:
@@ -4040,28 +4036,6 @@ class ExportBaseAction(ExportRelatedBaseAction):
         'ignored_file': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
-        'track_initial_id': {
-            'use_public': AudioGod.ReplaceType.NONE,
-            'args': ['-3'],
-            'kwargs': {
-                'action': 'store',
-                'type': int,
-                'required': False,
-                'default': 601,
-                'help': 'initial id of tracks for itunes or apple music plist file',
-            },
-        },
-        'playlist_initial_id': {
-            'use_public': AudioGod.ReplaceType.NONE,
-            'args': ['-4'],
-            'kwargs': {
-                'action': 'store',
-                'type': int,
-                'required': False,
-                'default': 3001,
-                'help': 'initial id of playlists for itunes or apple music plist file',
-            },
-        },
     } | copy.deepcopy(ExportRelatedBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
@@ -4079,17 +4053,6 @@ class ExportBaseAction(ExportRelatedBaseAction):
         self.audios_tree.create_node(
             self.AUDIOS_TREE_ROOT_TAG, self.AUDIOS_TREE_ROOT_NID,
         )
-
-    #---------------------------------------------------------------------------
-
-    def rewrite_parameters(self):
-        super().rewrite_parameters()
-
-        if 'track_initial_id' in self.parameters:
-            pass
-
-        if 'playlist_initial_id' in self.parameters:
-            pass
 
     #---------------------------------------------------------------------------
 
@@ -4146,7 +4109,7 @@ class ExportBaseAction(ExportRelatedBaseAction):
     def __fill_audios_tree(self) -> None:
         self.load_sources(matched=False)
 
-        track_id = self.parameters['track_initial_id']
+        track_id = self.parameters.get('track_initial_id', 601)
 
         for audio in self.concerned_sources:
             track_persistent_id = self.generate_persistent_id()
@@ -4222,7 +4185,7 @@ class ExportBaseAction(ExportRelatedBaseAction):
                 self.audios_tree.perfect_merge(self.AUDIOS_TREE_ROOT_NID, subtree, deep=False)
             track_id += 1
 
-        playlist_id = self.parameters['playlist_initial_id']
+        playlist_id = self.parameters.get('playlist_initial_id', 3001)
         for node in self.audios_tree.all_nodes():
             if node.is_root():
                 continue
@@ -4366,8 +4329,30 @@ class Export__PlistAction(ExportBaseAction):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': '~/Music/iTunes/iTunes\ Media/Music', # type: ignore
+                'default': '~/Music/iTunes/iTunes Media/Music',
                 'help': 'the media folder of itunes or apple music',
+            },
+        },
+        'track_initial_id': {
+            'use_public': AudioGod.ReplaceType.NONE,
+            'args': ['-3'],
+            'kwargs': {
+                'action': 'store',
+                'type': int,
+                'required': False,
+                'default': 601,
+                'help': 'initial id of tracks for itunes or apple music plist file',
+            },
+        },
+        'playlist_initial_id': {
+            'use_public': AudioGod.ReplaceType.NONE,
+            'args': ['-4'],
+            'kwargs': {
+                'action': 'store',
+                'type': int,
+                'required': False,
+                'default': 3001,
+                'help': 'initial id of playlists for itunes or apple music plist file',
             },
         },
     }
@@ -4391,6 +4376,12 @@ class Export__PlistAction(ExportBaseAction):
             self.parameters['itunes_media_folder'] = self.abspath(
                 self.parameters['itunes_media_folder'],
             )
+
+        if 'track_initial_id' in self.parameters:
+            pass
+
+        if 'playlist_initial_id' in self.parameters:
+            pass
 
     #---------------------------------------------------------------------------
 
