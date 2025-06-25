@@ -1,5 +1,5 @@
 Processing:
-steps in usage需要和generate script以及cleanup, 以及所有的actions和branches都要覆盖到里 同步更新
+steps in usage需要和generate script以及cleanup, 以及所有的actions和branches都要覆盖到里 同步更新, start和test都要同步, test的cleanup怎么个性化?
 
 
 

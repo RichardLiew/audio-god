@@ -221,6 +221,7 @@ Precautions:
 
 Attention:
     Here is the cache folder, which contains backups and trash under it.
+    You can reset by shell environment variable "AUDGOD_CACHE_PATH".
     You should clear the cache when the size is too big.
         ${cache_dir}
             ├── ${trash_dir}
@@ -260,7 +261,7 @@ Process Method 2:
     Step.1: Put note file to local folder (e.g. "${redecorate-note.document}");
     Step.2: Put audios to source folder (e.g. "${fill-properties.source}");
     Step.3: Put ignored file to local folder (e.g. "${fill-properties.ignored_file}");
-    Step.4: Run <generate-script> subcommand to generate a shell script (e.g. "${generate-script.output}");
+    Step.4: Run <generate-script start> subcommand to generate a shell script (e.g. "${generate-script.output}");
     Step.5: Execute the shell script above.
     Results under folders below:
         "${redecorate-note.document}"
@@ -269,6 +270,20 @@ Process Method 2:
         "${organize.ituned.source}"
         "${export.plist.itunes_media_folder}"
         "${export.plist.output}"
+
+--------------------------------------------------------------------------------
+
+Test steps:
+
+Ready:
+    Step.1: Make sure test folder './test' is ready.
+
+Process Method:
+    Step.1: Put test note file to test folder;
+    Step.2: Put test audios to test source folder;
+    Step.3: Put test ignored file to test folder;
+    Step.4: Run <generate-script test> subcommand to generate a shell script for testing;
+    Step.5: Execute the shell script above.
 
 --------------------------------------------------------------------------------
 
@@ -319,7 +334,10 @@ class AudioGod(object):
 
     #---------------------------------------------------------------------------
 
-    CACHE_DIR = os.path.expanduser('~/.audgod-cache')
+    CACHE_DIR = os.environ['AUDGOD_CACHE_PATH'] \
+                    if os.environ.get('AUDGOD_CACHE_PATH', '') \
+                    else os.path.expanduser('~/.audgod-cache')
+
     TRASH_DIR = os.path.join(CACHE_DIR, 'trash')
     BACKUPS_DIR = os.path.join(CACHE_DIR, 'backups')
 
@@ -594,7 +612,7 @@ class AudioGod(object):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': '~/Music/Source/MP3',
+                'default': '~/Music/Source/Mp3',
                 'help': 'files or directories you want to process',
             },
         },
@@ -604,7 +622,7 @@ class AudioGod(object):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': '~/Music/Source/MP3',
+                'default': '~/Music/Source/Mp3',
                 'help': 'root directory',
             },
         },
@@ -775,10 +793,6 @@ class AudioGod(object):
 
     #---------------------------------------------------------------------------
 
-    def reset_parameters(self, kwargs={}):
-        self.parameters.update(kwargs)
-
-
     def rewrite_parameters(self):
         if 'fields' in self.parameters:
             self.parameters['fields'] = [
@@ -829,6 +843,11 @@ class AudioGod(object):
             self.parameters['field_type'] = self.FieldType(
                 self.parameters['field_type'],
             )
+
+    #---------------------------------------------------------------------------
+
+    def reset_parameters(self, kwargs={}):
+        self.parameters.update(kwargs)
 
     #---------------------------------------------------------------------------
 
@@ -3008,15 +3027,10 @@ class DeriveArtworksAction(AudioGod):
         'ignored_file': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
-        'artwork_path': {
-            'use_public': AudioGod.ReplaceType.NONE,
-            'args': ['-k'],
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'action': 'store',
-                'type': str,
-                'required': False,
                 'default': '~/Music/Output/Artworks',
-                'help': 'the path for export artworks',
             },
         },
     }
@@ -3031,35 +3045,31 @@ class DeriveArtworksAction(AudioGod):
     def rewrite_parameters(self):
         super().rewrite_parameters()
 
-        if 'artwork_path' in self.parameters:
-            self.parameters['artwork_path'] = self.abspath(
-                self.parameters['artwork_path'],
-            )
-
     #---------------------------------------------------------------------------
 
     def execute(self):
-        self.load_sources(matched=False)
-        for audio in self.concerned_sources:
-            _name, _ = os.path.splitext(os.path.basename(audio))
-            _path = os.path.dirname(audio)
-            if self.parameters['artwork_path']:
-                _path = self.parameters['artwork_path']
-            audio_object = self.prime_audio(audio)
-            if not audio_object:
-                continue
-            if not audio_object.tag:
-                continue
-            if not audio_object.tag.images:
-                continue
-            for i, image in enumerate(audio_object.tag.images):
-                image_file = self.abspath(_path, _name)
-                if len(audio_object.tag.images) > 1:
-                    image_file += f'@{i}'
-                image_file += '.jpg'
-                self.backup(image_file)
-                with open(image_file, 'wb') as f:
-                    f.write(image.image_data)
+        pass
+        #self.load_sources(matched=False)
+        #for audio in self.concerned_sources:
+        #    _name, _ = os.path.splitext(os.path.basename(audio))
+        #    _path = os.path.dirname(audio)
+        #    if self.parameters['output']:
+        #        _path = self.parameters['output']
+        #    audio_object = self.prime_audio(audio)
+        #    if not audio_object:
+        #        continue
+        #    if not audio_object.tag:
+        #        continue
+        #    if not audio_object.tag.images:
+        #        continue
+        #    for i, image in enumerate(audio_object.tag.images):
+        #        image_file = self.abspath(_path, _name)
+        #        if len(audio_object.tag.images) > 1:
+        #            image_file += f'@{i}'
+        #        image_file += '.jpg'
+        #        self.backup(image_file)
+        #        with open(image_file, 'wb') as f:
+        #            f.write(image.image_data)
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -3844,6 +3854,7 @@ class GenerateScriptBaseAction(AudioGod):
     #---------------------------------------------------------------------------
 
     STEPS = []
+    PERSONALIZATIONS = []
 
     #---------------------------------------------------------------------------
 
@@ -3858,6 +3869,11 @@ class GenerateScriptBaseAction(AudioGod):
         content += f'# Created Time: {self.current_time()}\n\n'
         content += '#' * 78 + '\n\n'
         content += 'set -e\n\n'
+        content += '#' * 78 + '\n\n'
+        content += f'AUDGOD_CACHE_PATH={self.CACHE_DIR}\n'
+        if self.PERSONALIZATIONS:
+            content += '#' * 78 + '\n\n'
+            content += '\n'.join(self.PERSONALIZATIONS)
         content += '#' * 78 + '\n'
         for i, step in enumerate(self.STEPS):
             if len(step) == 2:
@@ -3933,21 +3949,26 @@ class GenerateScript__StartAction(GenerateScriptBaseAction):
         ('format-properties', {}),
         ('rename-audios', {}),
         ('organize', 'grouped', {}),
-        ('export', 'note', {}),
-        ('export', 'markdown', {}),
         ('list-repeated', {}),
+        ('export', 'note', {}),
+        ('convert', 'note-to-markdown', {}),
         ('organize', 'ituned', {}),
         ('export', 'plist', {}),
         #('derive-artworks', {}),
-        ('convert', 'note-to-markdown', {}),
-        ('convert', 'markdown-to-note', {}),
-        #('operate', 'tree', {}),
     ]
 
 #===============================================================================
 
 class GenerateScript__TestAction(GenerateScriptBaseAction):
     ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    CACHE_DIR = './test/.audgod-cache'
+
+    PERSONALIZATIONS = [
+        'cp -rf ./test/Source/Origins/* ./test/Source/Mp3/',
+    ]
 
     #---------------------------------------------------------------------------
 
@@ -3968,32 +3989,106 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
     #---------------------------------------------------------------------------
 
     STEPS = [
-        ('operate', 'cleanup', {}),
-        #('convert', 'kmx-to-mp4', {}),
-        #('convert', 'mp4-to-mp3', {}),
-        ('convert', 'qmc-to-mp3', {}),
-        ('redecorate-note', {}),
-        ('fill-properties', {}),
-        ('format-properties', {}),
-        ('rename-audios', {}),
-        ('display', dict(
-            output='./test.display.table',
+        #('operate', 'cleanup', {}),
+        ('convert', 'kmx-to-mp4', dict(
+            source='./test/Source/Kmx',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/Output/Kmx-To-Mp4',
         )),
-        ('organize', 'grouped', {}),
-        ('export', 'note', {}),
-        ('export', 'markdown', {}),
-        #('export', 'xml', {}),
-        #('export', 'json', {}),
-        ('list-repeated', {}),
-        ('organize', 'ituned', {}),
-        ('export', 'plist', {}),
-        #('derive-artworks', {}),
-        ('convert', 'note-to-markdown', {}),
-        ('convert', 'markdown-to-note', {}),
+        ('convert', 'mp4-to-mp3', dict(
+            source='./test/Source/Mp4',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/Output/Mp4-To-Mp3',
+        )),
+        ('convert', 'qmc-to-mp3', dict(
+            source='./test/Source/Qmc',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/Output/Qmc-To-Mp3',
+        )),
+        ('redecorate-note', dict(
+            document='./test/test.songs.note',
+        )),
+        ('fill-properties', dict(
+            source='./test/Source/Mp3',
+            ignored_file='./test/test.ignores.txt',
+            document='./test/test.songs.note',
+            root='./test//Source/Mp3',
+        )),
+        ('format-properties', dict(
+            source='./test/Source/Mp3',
+            ignored_file='./test/test.ignores.txt',
+        )),
+        ('rename-audios', dict(
+            source='./test/Source/Mp3',
+            ignored_file='./test/test.ignores.txt',
+        )),
+        ('display', dict(
+            source='./test/Source/Mp3',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/test.display.table',
+        )),
+        ('organize', 'grouped', dict(
+            source='./test/Source/Mp3',
+            ignored_file='./test/test.ignores.txt',
+            root='./test/Output/Grouped',
+        )),
+        ('export', 'note', dict(
+            source='./test/Output/Grouped',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/test.songs.note',
+        )),
+        ('export', 'markdown', dict(
+            source='./test/Output/Grouped',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/test.songs.md',
+        )),
+        ('export', 'xml', dict(
+            source='./test/Output/Grouped',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/test.songs.xml',
+         )),
+        ('export', 'json', dict(
+            source='./test/Output/Grouped',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/test.songs.json',
+         )),
+        ('list-repeated', dict(
+            source='./test/Output/Grouped',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/test.repeated.txt',
+        )),
+        ('organize', 'ituned', dict(
+            source='./test/Output/Grouped',
+            ignored_file='./test/test.ignores.txt',
+            root='./test/Output/iTunes/iTunes Media/Music',
+        )),
+        ('export', 'plist', dict(
+            source='./test/Source/Mp3',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/Output/iTunes/Library.xml',
+        )),
+        ('derive-artworks', dict(
+            source='./test/Source/Mp3',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/Output/Artworks',
+        )),
+        ('convert', 'note-to-markdown', {
+            'document': './test/test.songs.note',
+            'output': './test/test.songs.note.md',
+        }),
+        ('convert', 'markdown-to-note', {
+            'document': './test/test.songs.md',
+            'output': './test/test.songs.md.note',
+        }),
         #('operate', 'backup', {}),
         #('operate', 'remove', {}),
         #('operate', 'tree', {}),
     ]
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        super().execute()
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -4998,7 +5093,7 @@ class Export__XmlAction(ExportBaseAction):
     #---------------------------------------------------------------------------
 
     def generalize(self):
-        pass
+        return 'None'
 
 #===============================================================================
 
@@ -5044,7 +5139,7 @@ class Export__JsonAction(ExportBaseAction):
     #---------------------------------------------------------------------------
 
     def generalize(self):
-        pass
+        return 'None'
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -5131,7 +5226,7 @@ class Convert__QmcToMp3Action(ConvertBaseAction):
         'source': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Source/QMC',
+                'default': '~/Music/Source/Qmc',
             },
         },
         'extensions': {
@@ -5145,6 +5240,12 @@ class Convert__QmcToMp3Action(ConvertBaseAction):
         },
         'ignored_file': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Output/Qmc-To-Mp3',
+            },
         },
         'executer': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
@@ -5177,6 +5278,30 @@ class Convert__KmxToMp4Action(ConvertBaseAction):
     }
 
     ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Source/Kmx',
+            },
+        },
+        'extensions': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': 'kmx',
+            },
+        },
+        'recursive': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Output/Kmx-To-Mp4',
+            },
+        },
     }
 
     #---------------------------------------------------------------------------
@@ -5187,6 +5312,7 @@ class Convert__KmxToMp4Action(ConvertBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
+        pass
         #import os.path as path
         #import getopt
         #import sys
@@ -5236,7 +5362,6 @@ class Convert__KmxToMp4Action(ConvertBaseAction):
         #        elif opt in ('-i', '--infile'):
         #            file_path = arg
         #    return file_path
-        pass
 
 #===============================================================================
 
@@ -5251,6 +5376,30 @@ class Convert__Mp4ToMp3Action(ConvertBaseAction):
     }
 
     ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Source/Mp4',
+            },
+        },
+        'extensions': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': 'mp4',
+            },
+        },
+        'recursive': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Output/Mp4-To-Mp3',
+            },
+        },
     }
 
     #---------------------------------------------------------------------------
@@ -5261,6 +5410,7 @@ class Convert__Mp4ToMp3Action(ConvertBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
+        pass
         ##pip install moviepy
         #from moviepy.editor import VideoFileClip
  
@@ -5273,7 +5423,6 @@ class Convert__Mp4ToMp3Action(ConvertBaseAction):
         #audio_path = '2.mp3'  # 输出音频文件路径
         # 
         #video_to_audio(video_path, audio_path)
-        pass
 
 #===============================================================================
 
