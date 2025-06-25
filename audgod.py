@@ -141,6 +141,7 @@ import functools
 
 #-------------------------------------------------------------------------------
 
+from pathlib import Path
 from string import Template
 from collections import ChainMap
 
@@ -4200,7 +4201,10 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
             source='./test/test.operate.remove.txt',
             ignored_file='./test/test.ignores.txt',
         )),
-        #('operate', 'tree', {}),
+        ('operate', 'tree', dict(
+            source='./test/Output',
+            output='./test/test.output.tree',
+        )),
     ]
 
     #---------------------------------------------------------------------------
@@ -5849,7 +5853,18 @@ class Operate__TreeAction(OperateBaseAction):
         'help': 'tree directories, and show the number',
     }
 
-    ARGUMENTS = {}
+    ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'required': True,
+                'default': '~/Music/Output',
+            },
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+    }
 
     #---------------------------------------------------------------------------
 
@@ -5858,8 +5873,53 @@ class Operate__TreeAction(OperateBaseAction):
 
     #---------------------------------------------------------------------------
 
+    def rewrite_parameters(self):
+        super().rewrite_parameters()
+
+        if 'source' in self.parameters:
+            if not os.path.exists(self.parameters['source']):
+                self.logger.fatal(f'<{self.parameters["source"]}> not exists!')
+                return
+            if not os.path.isdir(self.parameters['source']):
+                self.logger.fatal(f'<{self.parameters["source"]}> not directory!')
+                return
+
+    #---------------------------------------------------------------------------
+
+    @staticmethod
+    def count_files(path):
+        return sum(
+            1 for file in path.rglob('*') 
+            if file.is_file() and not file.name.startswith('.')
+        )
+
+
+    @classmethod
+    def tree(cls, dir, lines=[], prefix='', is_last=True, is_root=True):
+        path = Path(dir)
+        count = cls.count_files(path)
+
+        front, content = '', f'{path.name}/ ({count})'
+        connector = '└── ' if is_last else '├── '
+        if not is_root:
+            front = f'{prefix}{connector}'
+        lines.append(f'{front}{content}')
+        
+        items = [
+            item for item in path.iterdir() 
+            if item.is_dir() and not item.name.startswith('.')
+        ]
+
+        new_prefix = prefix + ('    ' if is_last else '│   ')
+        for i, child in enumerate(sorted(items)):
+            cls.tree(child, lines, new_prefix, i == len(items)-1, False)
+
+    #---------------------------------------------------------------------------
+
     def execute(self):
-        pass
+        lines = []
+        self.tree(self.parameters['source'], lines)
+        self.handle_output('\n'.join(lines))
 
 ####################################################V###########################
 
