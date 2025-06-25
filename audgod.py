@@ -3887,6 +3887,8 @@ class GenerateScriptBaseAction(AudioGod):
             content += '\n' + carrier.KWARGS['usage'].strip()
             if i < len(self.STEPS) - 1:
                 content += '\n'
+        content += '#' * 78 + '\n\n'
+        content += 'unset AUDGOD_CACHE_PATH\n'
         content += '\n'
 
         self.handle_output(content)
@@ -3967,7 +3969,10 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
     CACHE_DIR = './test/.audgod-cache'
 
     PERSONALIZATIONS = [
-        'cp -rf ./test/Source/Origins/* ./test/Source/Mp3/',
+        'cp -rf ./test/Origin/Source ./test/Source',
+        'cp -rf ./test/Origin/test.songs.note ./test/',
+        'touch ./test/test.operate.backup.txt',
+        'touch ./test/test.operate.remove.txt',
     ]
 
     #---------------------------------------------------------------------------
@@ -4072,16 +4077,22 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/Artworks',
         )),
-        ('convert', 'note-to-markdown', {
-            'document': './test/test.songs.note',
-            'output': './test/test.songs.note.md',
-        }),
-        ('convert', 'markdown-to-note', {
-            'document': './test/test.songs.md',
-            'output': './test/test.songs.md.note',
-        }),
-        #('operate', 'backup', {}),
-        #('operate', 'remove', {}),
+        ('convert', 'note-to-markdown', dict(
+            document='./test/test.songs.note',
+            output='./test/test.songs.note.md',
+        )),
+        ('convert', 'markdown-to-note', dict(
+            document='./test/test.songs.md',
+            output='./test/test.songs.md.note',
+        )),
+        ('operate', 'backup', dict(
+            source='./test/test.operate.backup.txt',
+            ignored_file='./test/test.ignores.txt',
+        )),
+        ('operate', 'remove', dict(
+            source='./test/test.operate.remove.txt',
+            ignored_file='./test/test.ignores.txt',
+        )),
         #('operate', 'tree', {}),
     ]
 
