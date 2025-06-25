@@ -59,6 +59,7 @@
 #       prettytable = "==3.2.0"
 #       eyed3 = "==0.9.7"
 #       mdutils = "==1.6.0"
+#       pyfiglet = "==1.0.3"
 #
 #       [dev-packages]
 #       pylint = "==3.3.6"
@@ -75,14 +76,20 @@
 #
 # ---
 # Tools:
-#   1. Apple Music Help Online: https://support.apple.com/en-hk/HT210403;
-#   2. QQMusic QMC->MP3: https://openyyy.com/;
-#   3. Youku KMX->MP4: https://gitee.com/RichardLiew/kmx-MP4;
-#   4. MP4->MP3: https: https://github.com/SiD-93/BatchMP3;
-#   5. Online Small Tools: https://tool.lu/;
-#   6. Format Convert: https://www.aconvert.com/;
-#   7. Videos Download: https://github.com/iawia002/annie;
-#   8. Mac Audio Processor: https://amvidia.com/;
+#   1.  Apple Music Help Online: https://support.apple.com/en-hk/HT210403;
+#   2.  Mac Audio Processor: https://amvidia.com/;
+#   3.  Online Small Tools: https://tool.lu/;
+#   4.  Format Convert: https://www.aconvert.com/;
+#   5.  Videos Download: https://github.com/iawia002/annie;
+#   6.  QMC->MP3: https://openyyy.com/;
+#   7.  QMC->MP3: https://github.com/Presburger/qmc-decoder;
+#   8.  QMC->MP3: https://gitcode.com/gh_mirrors/qm/qmc-decoder;
+#   9.  KMX->MP4: https://gitee.com/aprl/kmx-MP4;
+#   10. MP4->MP3: https://pypi.org/project/ffmpy3/;
+#   11. MP4->MP3: https://github.com/wchill/ffmpy3;
+#   12. MP4->MP3: https://pypi.org/project/moviepy/;
+#   13. MP4->MP3: https://github.com/Zulko/moviepy;
+#   14. MP4->MP3: https://github.com/SiD-93/BatchMP3;
 #
 # ---
 # Commands:
@@ -123,6 +130,7 @@ import copy
 import glob
 import pydoc
 import shlex
+import random
 import urllib
 import shutil
 import logging
@@ -139,6 +147,7 @@ from collections import ChainMap
 #-------------------------------------------------------------------------------
 
 import psutil
+import pyfiglet
 
 from treelib import Tree
 from enumx import StringEnum
@@ -1463,6 +1472,8 @@ class AudioGod(object):
     def remove(self, *paths):
         self.init_cache()
         for path in paths:
+            if not path:
+                continue
             unit = path if isinstance(path, (tuple, list)) else [path]
             for item in self.expand_globbing(*unit):
                 if os.path.exists(item):
@@ -1478,6 +1489,8 @@ class AudioGod(object):
     def backup(self, *srcs):
         self.init_cache()
         for src in srcs:
+            if not src:
+                continue
             unit = src if isinstance(src, (tuple, list)) else [src]
             for item in self.expand_globbing(*unit):
                 if os.path.exists(item):
@@ -1666,15 +1679,14 @@ class AudioGod(object):
                         ).strip()
 
         # decorate $KWARGS and $KWARGS['prog']
+        prog = '\n${cmd}' + ' {}'.format(' '.join(cls.NAME.split('.'))) if cls.NAME else ''
         if cls.KWARGS is not None:
             cls.KWARGS = copy.deepcopy(cls.BASIC_KWARGS) | cls.KWARGS
             if not cls.KWARGS.get('prog', None):
-                cls.KWARGS['prog'] = '\n${cmd}'
+                cls.KWARGS['prog'] = prog
         # decorate $KWARGS['usage']
         if cls.NAME and cls.ARGUMENTS is not None and cls.KWARGS is not None:
-            cls.KWARGS['usage'] = '\n{} {} \\\n'.format(
-                '${cmd}', ' '.join(cls.NAME.split('.')),
-            )
+            cls.KWARGS['usage'] = f'{prog} \\\n'
             indent = 4
             for argument in cls.ARGUMENTS: # type: ignore
                 label = cls.ARGUMENTS[argument]['args'][0]
@@ -2050,7 +2062,7 @@ class AudioGod(object):
         if not extensions:
             return True
         _, ext = os.path.splitext(os.path.basename(source))
-        return ext[1:].lower() in self.parameters['extensions']
+        return ext[1:].lower() in extensions
 
 
     def __check_source(self, source):
@@ -3045,7 +3057,10 @@ class DisplayAction(AudioGod):
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'output': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './display.table',
+            },
         },
         'data_format': {
             'use_public': AudioGod.ReplaceType.NONE,
@@ -3804,6 +3819,7 @@ class GenerateScriptAction(AudioGod):
         content += 'set -e\n\n'
         content += '#' * 78 + '\n'
         steps = [
+            ('operate', 'cleanup'),
             #('convert', 'kmx-to-mp4'),
             #('convert', 'mp4-to-mp3'),
             ('convert', 'qmc-to-mp3'),
@@ -3811,14 +3827,20 @@ class GenerateScriptAction(AudioGod):
             'fill-properties',
             'format-properties',
             'rename-audios',
+            'display',
             ('organize', 'grouped'),
             ('export', 'note'),
             ('export', 'markdown'),
+            #('export', 'xml'),
+            #('export', 'json'),
             'list-repeated',
             ('organize', 'ituned'),
             ('export', 'plist'),
+            #'derive-artworks',
             ('convert', 'note-to-markdown'),
             ('convert', 'markdown-to-note'),
+            #('operate', 'backup'),
+            #('operate', 'remove'),
         ]
         for i, step in enumerate(steps):
             if isinstance(step, tuple):
@@ -4973,7 +4995,7 @@ class Convert__QmcToMp3Action(ConvertBaseAction):
         'extensions': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': 'qmc,qmc0,qmc3',
+                'default': 'qmc,qmc0,qmc3,qmcflac',
             },
         },
         'recursive': {
@@ -5023,6 +5045,55 @@ class Convert__KmxToMp4Action(ConvertBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
+        #import os.path as path
+        #import getopt
+        #import sys
+        
+        #BUFFER_SIZE = 200
+        #SEEK = 34
+        
+        #def kmx_to_mp4(file_path):
+        #    if not path.exists(file_path):
+        #        print('文件不存在！！！')
+        #        sys.exit(2)
+        #    file_name, file_type = path.splitext(path.basename(file_path))
+        #    file_dir = path.dirname(file_path)
+        #    file_size = path.getsize(file_path)
+        #    if file_type != '.kmx':
+        #        print('似乎不是一个kmx文件！')
+        #        sys.exit(2)
+        #    out_path = path.join(file_dir, file_name + '.mp4')
+        #    print(file_name)
+        #    with open(file_path, 'rb') as f:
+        #        f.seek(SEEK)
+        #        out_file = open(out_path, 'wb')
+        #        while True:
+        #            buffer = f.read(BUFFER_SIZE)
+        #            if (len(buffer) > 0):
+        #                out_file.write(buffer)
+        #                out_file_size = path.getsize(out_path)
+        #                print('已完成{0}%'.format(round(out_file_size/file_size * 100, 2)), end='\r')
+        #            else:
+        #                print("转换完成！！！")
+        #                f.close()
+        #                out_file.close()
+        #                break
+        
+        #def get_path(argv):
+        #    file_path = ''
+        #    try:
+        #        opts,args = getopt.getopt(argv, "hi:", ["infile="])
+        #        if len(opts) == 0:
+        #            raise getopt.GetoptError('没有参数')
+        #    except getopt.GetoptError:
+        #        print('kmx_to_mp4 -i <filename>')
+        #        sys.exit(2)
+        #    for opt, arg in opts:
+        #        if opt == '-h':
+        #            print('kmx_to_mp4 -i <filename>')
+        #        elif opt in ('-i', '--infile'):
+        #            file_path = arg
+        #    return file_path
         pass
 
 #===============================================================================
@@ -5048,6 +5119,18 @@ class Convert__Mp4ToMp3Action(ConvertBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
+        ##pip install moviepy
+        #from moviepy.editor import VideoFileClip
+ 
+        #def video_to_audio(video_path, audio_path):
+        #    video_clip = VideoFileClip(video_path)
+        #    audio = video_clip.audio
+        #    audio.write_audiofile(audio_path)
+        # 
+        #video_path = '1.mp4'  # 视频文件路径
+        #audio_path = '2.mp3'  # 输出音频文件路径
+        # 
+        #video_to_audio(video_path, audio_path)
         pass
 
 #===============================================================================
@@ -5308,6 +5391,8 @@ class Operate__CleanupAction(OperateBaseAction):
     def execute(self):
         items = [
             './*.tmp',
+            './*.bak',
+            './*.backup',
             '${list-repeated.output}*',
             '${organize.grouped.root}',
             '${export.plist.itunes_media_folder}/*',
@@ -5443,6 +5528,8 @@ def _get_carrier_kwargs(action, branch):
 ################################################################################
 
 class PerfectArgumentParser(argparse.ArgumentParser):
+    FIGLETED = True
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__subparsers = []
@@ -5456,13 +5543,45 @@ class PerfectArgumentParser(argparse.ArgumentParser):
             self.print_help()
         return ret
 
+    @classmethod
+    def __figleted(cls):
+        return cls.FIGLETED
+
+    @classmethod
+    def __inactive_figleted(cls):
+        cls.FIGLETED = False
+
     def format_help(self):
-        help_text = super().format_help()
+        help_text = ''
+        if self.__figleted():
+            prog = re.sub(
+                fr'^{AudioGod.get_command()}',
+                r'',
+                self.prog.strip(),
+            ).strip()
+            help_text += pyfiglet.Figlet(
+                # list fonts: "pipenv run python -m pyfiglet -l"
+                font=random.choice([
+                    'slant',
+                    #'standard',
+                    #'banner3-D',
+                    #'starwars',
+                    #'script',
+                    #'block',
+                    #'small',
+                    #'big',
+                ]),
+            ).renderText(prog or 'Audio God')
+            self.__inactive_figleted()
+        help_text += super().format_help()
         for (action, branch), subparser in self.__subparsers:
             symbol = '-' if branch else '@'
             label = 'Branch' if branch else 'Action'
             command = f'{action} {branch}' if branch else action
             help_text += '\n' + symbol * 78 + '\n'
+            help_text += pyfiglet.Figlet(
+                font='mini' if len(command)>16 else 'small',
+            ).renderText(command)
             help_text += f'\n🔥 {label} command <{command}> help info:\n\n'
             help_text += subparser.format_help()
         return help_text
@@ -5587,8 +5706,9 @@ def _special_characters() -> str:
 #-------------------------------------------------------------------------------
 
 def main():
+    prog = AudioGod.get_command()
     main_parser = PerfectArgumentParser(
-        prog=sys.argv[0],
+        prog=prog,
         usage='\n' + AudioGod.render_template(
             __USAGE__,
             indent=0,
@@ -5624,7 +5744,7 @@ def main():
     )
 
     action_parsers = main_parser.add_subparsers(
-        prog=sys.argv[0],
+        prog=prog,
         title='🎉 Actions',
         description='🫡 the available actions show below:',
         dest='action',
@@ -5643,7 +5763,7 @@ def main():
         )
         if 'branches' in ACTIONS[action]:
             branch_parsers = action_parser.add_subparsers(
-                prog=sys.argv[0],
+                prog=prog,
                 title='🤝 Branches',
                 description='🦁 the available branches show below:',
                 dest='branch',

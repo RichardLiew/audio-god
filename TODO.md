@@ -4,7 +4,48 @@ type: ignore
 多个父类导致action顺序被改变，那些参数，在不断的子类继承时被update，顺序也变了
 检查所有的 Action 里对应的 Argument，所有的参数校验和rewrite都要在 rewrite_parameters函数里完成
 
+steps in usage需要和generate script以及cleanup里 同步更新
+增加 tree 输出目录树状图功能并显示目录下文件数量
+增加 generate script 里支持传参数
+
 preprocess-note, note-to-markdown 里的fields要自动识别，不能直接用 all
+
+
+import os
+
+
+def get_tree_directory(path: str, prefix=""):
+
+    # 获取当前目录下所有的文件和文件夹
+    file_list = os.listdir(path)
+
+    for index, file in enumerate(file_list):
+
+            # 判断当前目录下的最后一个节点（无论是文件还是目录对象）
+        is_last = index == len(file_list) - 1
+
+        label = "└──" if is_last else "├──"
+        print(f'{prefix}{label}{file}')
+
+        # 尝试组合新的路径目录
+        new_path = os.path.join(path, file)
+
+        if os.path.isdir(new_path):
+            # 设置层级递进规则，递归调用
+            new_prefix = prefix + "    " if is_last else  prefix +"|    "
+            get_tree_directory(new_path, new_prefix)
+
+
+if __name__ == '__main__':
+
+    path_input = r'E:\LMovie' # 手动填写需要打印成 Tree 结构的路径 ,使用原始字符串(推荐)
+    get_tree_directory(path_input)
+
+
+
+
+
+
 
 All done.
 
