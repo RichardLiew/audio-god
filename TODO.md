@@ -1,5 +1,5 @@
 Processing:
-steps in usage需要和generate script以及cleanup, 以及所有的actions和branches都要覆盖到里 同步更新, start和test都要同步, test的cleanup怎么个性化?
+steps in usage需要和generate script以及cleanup, 以及所有的actions和branches都要覆盖到里 同步更新, start和test都要同步
 
 
 
@@ -103,6 +103,7 @@ Useful Paths:
 
 
 Relax:
+记得同时实现导出音频的封面和上传封面给音频这两个功能
 Action 继承自多个父类时，ARGUMENTS and KWARGS and rewrite_parameters 怎么合并
 多个父类导致action顺序被改变，那些参数，在不断的子类继承时被update，顺序也变了
 检查所有的 Action 里对应的 Argument，所有的参数校验和rewrite都要在 rewrite_parameters函数里完成

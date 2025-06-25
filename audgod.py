@@ -3009,20 +3009,15 @@ class ListRepeatedAction(AudioGod):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-class DeriveArtworksAction(AudioGod):
+class ManageArtworksBaseAction(AudioGod):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
 
-    KWARGS = {
-        'description': '✋ Derive artworks',
-        'help': 'derive artworks',
-    }
+    KWARGS = None
+    ARGUMENTS = None
 
-    ARGUMENTS = {
-        'source': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
-        },
+    REQUISITE_ARGUMENTS = {
         'extensions': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
@@ -3032,10 +3027,62 @@ class DeriveArtworksAction(AudioGod):
         'ignored_file': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
-        'output': {
-            'use_public': AudioGod.ReplaceType.PARTIAL,
+    } | copy.deepcopy(AudioGod.REQUISITE_ARGUMENTS)
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+#===============================================================================
+
+class ManageArtworksAction(ManageArtworksBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Manage artworks',
+        'help': 'manage artworks',
+    }
+
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        pass
+
+#===============================================================================
+
+class ManageArtworks__BindAction(ManageArtworksBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Bind artworks',
+        'help': 'bind artworks',
+    }
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'artworks': {
+            'use_public': AudioGod.ReplaceType.NONE,
+            'args': ['-3'],
             'kwargs': {
-                'default': '~/Music/Output/Artworks',
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '~/Source/Artworks',
+                'help': 'source artworks to bind',
             },
         },
     }
@@ -3049,6 +3096,48 @@ class DeriveArtworksAction(AudioGod):
 
     def rewrite_parameters(self):
         super().rewrite_parameters()
+
+        if 'artworks' in self.parameters:
+            self.parameters['artworks'] = self.abspath(
+                self.parameters['artworks'],
+            )
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        pass
+
+#===============================================================================
+
+class ManageArtworks__DeriveAction(ManageArtworksBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Derive artworks',
+        'help': 'derive artworks',
+    }
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/iTunes/iTunes Media/Music',
+            },
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Output/Artworks',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     #---------------------------------------------------------------------------
 
@@ -3955,13 +4044,14 @@ class GenerateScript__StartAction(GenerateScriptBaseAction):
         ('fill-properties', {}),
         ('format-properties', {}),
         ('rename-audios', {}),
+        #('manage-artworks', 'bind', {}),
         ('organize', 'grouped', {}),
         ('list-repeated', {}),
         ('export', 'note', {}),
         ('convert', 'note-to-markdown', {}),
         ('organize', 'ituned', {}),
         ('export', 'plist', {}),
-        #('derive-artworks', {}),
+        #('manage-artworks', 'derive', {}),
     ]
 
 #===============================================================================
@@ -3991,6 +4081,7 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
 
     PERSONALIZATIONS = [
         'cp -rf ./test/Origin/Source ./test/Source',
+        'cp -rf ./test/Origin/test.ignores.txt ./test/',
         'cp -rf ./test/Origin/test.songs.note ./test/',
         'touch ./test/test.operate.backup.txt',
         'touch ./test/test.operate.remove.txt',
@@ -3999,7 +4090,7 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
     #---------------------------------------------------------------------------
 
     STEPS = [
-        #('operate', 'cleanup', {}),
+        ('operate', 'cleanup', {}),
         ('convert', 'kmx-to-mp4', dict(
             source='./test/Source/Kmx',
             ignored_file='./test/test.ignores.txt',
@@ -4031,6 +4122,11 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
         ('rename-audios', dict(
             source='./test/Source/Mp3',
             ignored_file='./test/test.ignores.txt',
+        )),
+        ('manage-artworks', 'bind', dict(
+            source='./test/Source/Mp3',
+            ignored_file='./test/test.ignores.txt',
+            artworks='./test/Source/Artworks',
         )),
         ('display', dict(
             source='./test/Source/Mp3',
@@ -4077,8 +4173,8 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/iTunes/Library.xml',
         )),
-        ('derive-artworks', dict(
-            source='./test/Source/Mp3',
+        ('manage-artworks', 'derive', dict(
+            source='./test/Output/iTunes/iTunes Media/Music',
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/Artworks',
         )),
