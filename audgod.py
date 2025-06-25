@@ -262,12 +262,12 @@ Process Method 2:
     Step.1: Put note file to local folder (e.g. "${redecorate-note.document}");
     Step.2: Put audios to source folder (e.g. "${fill-properties.source}");
     Step.3: Put ignored file to local folder (e.g. "${fill-properties.ignored_file}");
-    Step.4: Run <generate-script start> subcommand to generate a shell script (e.g. "${generate-script.output}");
+    Step.4: Run <generate-script start> subcommand to generate a shell script (e.g. "${generate-script.start.output}");
     Step.5: Execute the shell script above.
     Results under folders below:
         "${redecorate-note.document}"
         "${list-repeated.output}"
-        "${derive-artworks.artwork_path}"
+        "${manage-artworks.derive.output}"
         "${organize.ituned.source}"
         "${export.plist.itunes_media_folder}"
         "${export.plist.output}"
@@ -277,14 +277,21 @@ Process Method 2:
 Test steps:
 
 Ready:
-    Step.1: Make sure test folder './test' is ready.
+    Step.1: Make sure folder "${test_dir}" is ready;
+    Step.2: Make sure folder "${test_origin_dir}" is ready;
+    Step.3: Make sure folder "${test_orisrc_dir}" is ready;
+    Step.4: Put test note file to "${test_origin_dir}";
+    Step.5: Put test ignored file to "${test_origin_dir}";
+    Step.6: Put test audios to "${test_orisrc_dir}".
 
 Process Method:
-    Step.1: Put test note file to test folder;
-    Step.2: Put test audios to test source folder;
-    Step.3: Put test ignored file to test folder;
-    Step.4: Run <generate-script test> subcommand to generate a shell script for testing;
-    Step.5: Execute the shell script above.
+    Step.1: Run <generate-script test> subcommand to generate a shell script for testing;
+    Step.2: Execute the shell script above.
+
+Attention:
+    1. Cache folder for testing is "${test_cache_dir}";
+    2. Folders named with different extentions under "${test_source_dir}";
+    3. Outputs are under local folder or "${test_output_dir}".
 
 --------------------------------------------------------------------------------
 
@@ -341,8 +348,11 @@ class AudioGod(object):
                     else os.path.expanduser(f'~/{CACHE_NAME}')
     
     TEST_DIR = './test'
-    TEST_ORIGIN_DIR = os.path.join(TEST_DIR, 'Origin')
     TEST_CACHE_DIR = os.path.join(TEST_DIR, CACHE_NAME)
+    TEST_ORIGIN_DIR = os.path.join(TEST_DIR, 'Origin')
+    TEST_ORISRC_DIR = os.path.join(TEST_ORIGIN_DIR, 'Source')
+    TEST_SOURCE_DIR = os.path.join(TEST_DIR, 'Source')
+    TEST_OUTPUT_DIR = os.path.join(TEST_DIR, 'Output')
 
     TRASH_DIR = os.path.join(CACHE_DIR, 'trash')
     BACKUPS_DIR = os.path.join(CACHE_DIR, 'backups')
@@ -1688,26 +1698,28 @@ class AudioGod(object):
     def render_prog(cls):
         if cls.PROG:
             cls.PROG = AudioGod.render_template(
-                cls.PROG, indent=0,
+                cls.PROG, indent=None,
             )
         if cls.KWARGS is not None:
             if 'prog' in cls.KWARGS:
-                cls.KWARGS['prog'] = '\n\n' + AudioGod.render_template(
-                    cls.KWARGS['prog'], indent=0,
-                )
+                if cls.KWARGS['prog'] is not None:
+                    cls.KWARGS['prog'] = '\n\n' + AudioGod.render_template(
+                        cls.KWARGS['prog'], indent=None,
+                    )
 
 
     @classmethod
     def render_usage(cls):
         if cls.KWARGS is not None:
             if 'usage' in cls.KWARGS:
-                cls.KWARGS['usage'] = '\n\n' + AudioGod.render_template(
-                    cls.KWARGS['usage'],
-                    indent=0,
-                    kwargs=dict(
-                        prog=cls.PROG,
-                    ),
-                )
+                if cls.KWARGS['usage'] is not None:
+                    cls.KWARGS['usage'] = '\n\n' + AudioGod.render_template(
+                        cls.KWARGS['usage'],
+                        indent=0,
+                        kwargs=dict(
+                            prog=cls.PROG,
+                        ),
+                    )
 
 
     @classmethod
@@ -5839,7 +5851,7 @@ class Operate__CleanupAction(OperateBaseAction):
                 '${export.plist.output}',
             ]
             for item in items:
-                self.remove(self.render_template(item))
+                self.remove(self.render_template(item, indent=None))
 
 #===============================================================================
 
@@ -6235,6 +6247,12 @@ def main():
                 cache_dir=f'~/{os.path.basename(AudioGod.CACHE_DIR)}',
                 trash_dir=os.path.basename(AudioGod.TRASH_DIR),
                 backups_dir=os.path.basename(AudioGod.BACKUPS_DIR),
+                test_dir=AudioGod.TEST_DIR,
+                test_cache_dir=AudioGod.TEST_CACHE_DIR,
+                test_origin_dir=AudioGod.TEST_ORIGIN_DIR,
+                test_orisrc_dir=AudioGod.TEST_ORISRC_DIR,
+                test_source_dir=AudioGod.TEST_SOURCE_DIR,
+                test_output_dir=AudioGod.TEST_OUTPUT_DIR,
             ),
         ),
         description='🎻 God of audios 🎸',
