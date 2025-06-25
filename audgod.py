@@ -334,9 +334,14 @@ class AudioGod(object):
 
     #---------------------------------------------------------------------------
 
+    CACHE_NAME = '.audgod-cache'
     CACHE_DIR = os.environ['AUDGOD_CACHE_PATH'] \
                     if os.environ.get('AUDGOD_CACHE_PATH', '') \
-                    else os.path.expanduser('~/.audgod-cache')
+                    else os.path.expanduser(f'~/{CACHE_NAME}')
+    
+    TEST_DIR = './test'
+    TEST_ORIGIN_DIR = os.path.join(TEST_DIR, 'Origin')
+    TEST_CACHE_DIR = os.path.join(TEST_DIR, CACHE_NAME)
 
     TRASH_DIR = os.path.join(CACHE_DIR, 'trash')
     BACKUPS_DIR = os.path.join(CACHE_DIR, 'backups')
@@ -3966,17 +3971,6 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
 
     #---------------------------------------------------------------------------
 
-    CACHE_DIR = './test/.audgod-cache'
-
-    PERSONALIZATIONS = [
-        'cp -rf ./test/Origin/Source ./test/Source',
-        'cp -rf ./test/Origin/test.songs.note ./test/',
-        'touch ./test/test.operate.backup.txt',
-        'touch ./test/test.operate.remove.txt',
-    ]
-
-    #---------------------------------------------------------------------------
-
     KWARGS = {
         'description': '✋ Generate shell script to test',
         'help': 'generate shell script to test',
@@ -3990,6 +3984,17 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
             },
         },
     }
+
+    #---------------------------------------------------------------------------
+
+    CACHE_DIR = GenerateScriptBaseAction.TEST_CACHE_DIR
+
+    PERSONALIZATIONS = [
+        'cp -rf ./test/Origin/Source ./test/Source',
+        'cp -rf ./test/Origin/test.songs.note ./test/',
+        'touch ./test/test.operate.backup.txt',
+        'touch ./test/test.operate.remove.txt',
+    ]
 
     #---------------------------------------------------------------------------
 
@@ -5691,17 +5696,44 @@ class Operate__CleanupAction(OperateBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        items = [
-            './*.tmp',
-            './*.bak',
-            './*.backup',
-            '${list-repeated.output}*',
-            '${organize.grouped.root}',
-            '${export.plist.itunes_media_folder}/*',
-            '${export.plist.output}',
-        ]
-        for item in items:
-            self.remove(self.render_template(item))
+        # for testing
+        if self.CACHE_DIR == self.TEST_CACHE_DIR:
+            if os.path.exists(self.TEST_DIR):
+                temp_dir = f'{self.TEST_DIR}.temp'
+                if os.path.exists(temp_dir):
+                    self.remove(temp_dir)
+                    os.makedirs(temp_dir, exist_ok=True)
+                if os.path.exists(self.TEST_ORIGIN_DIR):
+                    self.rename(
+                        self.TEST_ORIGIN_DIR,
+                        os.path.join(
+                            temp_dir,
+                            os.path.basename(self.TEST_ORIGIN_DIR),
+                        ),
+                    )
+                if os.path.exists(self.TEST_CACHE_DIR):
+                    self.rename(
+                        self.TEST_CACHE_DIR,
+                        os.path.join(
+                            temp_dir,
+                            os.path.basename(self.TEST_CACHE_DIR),
+                        ),
+                    )
+                self.remove(self.TEST_DIR)
+                self.rename(temp_dir, self.TEST_DIR)
+        # normal processing
+        else:
+            items = [
+                './*.tmp',
+                './*.bak',
+                './*.backup',
+                '${list-repeated.output}*',
+                '${organize.grouped.root}',
+                '${export.plist.itunes_media_folder}/*',
+                '${export.plist.output}',
+            ]
+            for item in items:
+                self.remove(self.render_template(item))
 
 #===============================================================================
 
