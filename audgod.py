@@ -149,7 +149,7 @@ from collections import ChainMap
 import psutil
 import pyfiglet
 
-from treelib import Tree
+from treelib import Tree # type: ignore
 from enumx import StringEnum
 from prettytable import PrettyTable
 
@@ -540,6 +540,7 @@ class AudioGod(object):
     #---------------------------------------------------------------------------
 
     NAME = ''
+    PROG = ''
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -774,7 +775,7 @@ class AudioGod(object):
 
     #---------------------------------------------------------------------------
 
-    def reset_parameters(self, kwargs):
+    def reset_parameters(self, kwargs={}):
         self.parameters.update(kwargs)
 
 
@@ -1610,6 +1611,81 @@ class AudioGod(object):
 
 
     @classmethod
+    def reset_defaults(cls, defaults={}):
+        if cls.ARGUMENTS:
+            for argument, default in defaults.items():
+                if argument not in cls.ARGUMENTS:
+                    continue
+                if 'kwargs' not in cls.ARGUMENTS[argument]:
+                    continue
+                if 'default' not in cls.ARGUMENTS[argument]['kwargs']:
+                    continue
+                cls.ARGUMENTS[argument]['kwargs']['default'] = default
+
+
+    @classmethod
+    def set_prog(cls):
+        cls.PROG = '${cmd}' + ' {}'.format(' '.join(cls.NAME.split('.'))) if cls.NAME else ''
+        if cls.KWARGS is not None:
+            cls.KWARGS = copy.deepcopy(cls.BASIC_KWARGS) | cls.KWARGS
+            if cls.KWARGS.get('prog', None) is None:
+                cls.KWARGS['prog'] = cls.PROG
+
+
+    @classmethod
+    def set_usage(cls):
+        if cls.NAME and cls.ARGUMENTS is not None and cls.KWARGS is not None:
+            cls.KWARGS['usage'] = '${prog} \\\n'
+            indent = 4
+            for argument in cls.ARGUMENTS: # type: ignore
+                label = cls.ARGUMENTS[argument]['args'][0]
+                action_ = cls.ARGUMENTS[argument]['kwargs'].get('action', 'store')
+                required = cls.ARGUMENTS[argument]['kwargs'].get('required', False)
+                default = cls.ARGUMENTS[argument]['kwargs']['default']
+                if required:
+                    #default = '<INPUT>'
+                    pass
+                if isinstance(default, str):
+                    if '\n' in default:
+                        default = cls.glorify_indents(default, indent=indent).strip()
+                if action_ == argparse.BooleanOptionalAction:
+                    argument_pair = label if default else label.replace('--', '--no-')
+                else:
+                    if isinstance(default, str):
+                        default = re.sub(r'[\"\']{5}', r'', shlex.quote(default))
+                    argument_pair = f'{label}={default}'
+                cls.KWARGS['usage'] += '{}{} \\\n'.format(
+                    ' ' * indent, argument_pair,
+                )
+            cls.KWARGS['usage'] = cls.KWARGS['usage'].rstrip().rstrip('\\').rstrip()
+
+    @classmethod
+    def render_prog(cls):
+        if cls.PROG:
+            cls.PROG = AudioGod.render_template(
+                cls.PROG, indent=0,
+            )
+        if cls.KWARGS is not None:
+            if 'prog' in cls.KWARGS:
+                cls.KWARGS['prog'] = '\n\n' + AudioGod.render_template(
+                    cls.KWARGS['prog'], indent=0,
+                )
+
+
+    @classmethod
+    def render_usage(cls):
+        if cls.KWARGS is not None:
+            if 'usage' in cls.KWARGS:
+                cls.KWARGS['usage'] = '\n\n' + AudioGod.render_template(
+                    cls.KWARGS['usage'],
+                    indent=0,
+                    kwargs=dict(
+                        prog=cls.PROG,
+                    ),
+                )
+
+
+    @classmethod
     def decorate(cls):
         # decorate $NAME
         if not cls.__name__.endswith('BaseAction'):
@@ -1678,34 +1754,9 @@ class AudioGod(object):
                             cls.ARGUMENTS[argument]['kwargs']['default'], indent=0,
                         ).strip()
 
-        # decorate $KWARGS and $KWARGS['prog']
-        prog = '\n${cmd}' + ' {}'.format(' '.join(cls.NAME.split('.'))) if cls.NAME else ''
-        if cls.KWARGS is not None:
-            cls.KWARGS = copy.deepcopy(cls.BASIC_KWARGS) | cls.KWARGS
-            if not cls.KWARGS.get('prog', None):
-                cls.KWARGS['prog'] = prog
-        # decorate $KWARGS['usage']
-        if cls.NAME and cls.ARGUMENTS is not None and cls.KWARGS is not None:
-            cls.KWARGS['usage'] = f'{prog} \\\n'
-            indent = 4
-            for argument in cls.ARGUMENTS: # type: ignore
-                label = cls.ARGUMENTS[argument]['args'][0]
-                action_ = cls.ARGUMENTS[argument]['kwargs'].get('action', 'store')
-                required = cls.ARGUMENTS[argument]['kwargs'].get('required', False)
-                default = '<INPUT>' if required else cls.ARGUMENTS[argument]['kwargs']['default']
-                if isinstance(default, str):
-                    if '\n' in default:
-                        default = cls.glorify_indents(default, indent=indent).strip()
-                if action_ == argparse.BooleanOptionalAction:
-                    argument_pair = label if default else label.replace('--', '--no-')
-                else:
-                    if isinstance(default, str):
-                        default = re.sub(r'[\"\']{5}', r'', shlex.quote(default))
-                    argument_pair = f'{label}={default}'
-                cls.KWARGS['usage'] += '{}{} \\\n'.format(
-                    ' ' * indent, argument_pair,
-                )
-            cls.KWARGS['usage'] = cls.KWARGS['usage'].rstrip().rstrip('\\').rstrip()
+        # decorate $KWARGS
+        cls.set_prog()
+        cls.set_usage()
 
     #---------------------------------------------------------------------------
 
@@ -4192,24 +4243,24 @@ class ExportBaseAction(ExportRelatedBaseAction):
                 self.logger.fatal(f'Node <{nid}> is not in the tree!')
                 return
     
-            current_node = self[nid]
+            current_node = self[nid] # type: ignore
     
             if current_node.tag != new_tree[new_tree.root].tag:
                 self.logger.fatal('Current node not same with root of new tree.')
                 return
     
-            childs = self.children(nid)
+            childs = self.children(nid) # type: ignore
             child_tags = [child.tag for child in childs]
             new_childs = new_tree.children(new_tree.root)
             new_subtrees = [new_tree.subtree(child.identifier) for child in new_childs]
     
             if not childs:
                 for new_subtree in new_subtrees:
-                    self.paste(nid=nid, new_tree=new_subtree, deep=deep)
+                    self.paste(nid=nid, new_tree=new_subtree, deep=deep) # type: ignore
             else:
                 for new_child in new_childs:
                     if new_child.tag not in child_tags:
-                        self.paste(nid=nid, new_tree=new_tree.subtree(new_child.identifier), deep=deep)
+                        self.paste(nid=nid, new_tree=new_tree.subtree(new_child.identifier), deep=deep) # type: ignore
                         continue
                     self.perfect_merge(
                         childs[child_tags.index(new_child.tag)].identifier,
@@ -4746,7 +4797,7 @@ class Export__PlistAction(ExportBaseAction):
             playlist_persistent_id=self.generate_persistent_id(),
             visible='false',
             show_all_items='true',
-            tracks=self.__pack_simple_tracks(self.audios_tree[self.audios_tree.root]),
+            tracks=self.__pack_simple_tracks(self.audios_tree[self.audios_tree.root]), # type: ignore
         ))
 
 
@@ -5555,16 +5606,8 @@ def _summarize_actions_defaults():
 
 def _render_actions():
     for cls in _get_active_subclasses(AudioGod):
-        if not cls.KWARGS:
-            continue
-        if cls.KWARGS.get('prog', None):
-            cls.KWARGS['prog'] = '\n' + AudioGod.render_template(
-                cls.KWARGS['prog'], indent=0,
-            )
-        if cls.KWARGS.get('usage', None):
-            cls.KWARGS['usage'] = '\n' + AudioGod.render_template(
-                cls.KWARGS['usage'], indent=0,
-            )
+        cls.render_prog()
+        cls.render_usage()
 
 #-------------------------------------------------------------------------------
 
