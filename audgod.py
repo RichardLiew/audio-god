@@ -345,7 +345,7 @@ class AudioGod(object):
     CACHE_NAME = '.audgod-cache'
     CACHE_DIR = os.environ['AUDGOD_CACHE_PATH'] \
                     if os.environ.get('AUDGOD_CACHE_PATH', '') \
-                    else os.path.expanduser(f'~/{CACHE_NAME}')
+                    else f'~/{CACHE_NAME}'
     
     TEST_DIR = './test'
     TEST_CACHE_DIR = os.path.join(TEST_DIR, CACHE_NAME)
@@ -3961,7 +3961,6 @@ class GenerateScriptBaseAction(AudioGod):
     #---------------------------------------------------------------------------
 
     STEPS = []
-    PERSONALIZATIONS = []
 
     #---------------------------------------------------------------------------
 
@@ -3974,29 +3973,31 @@ class GenerateScriptBaseAction(AudioGod):
         content = '#!/usr/bin/env zsh\n\n'
         content += '#' * 78 + '\n\n'
         content += f'# Created Time: {self.current_time()}\n\n'
+        content += f'# Total Steps: {len(self.STEPS)}\n\n'
         content += '#' * 78 + '\n\n'
         content += 'set -e\n\n'
         content += '#' * 78 + '\n\n'
-        content += f'AUDGOD_CACHE_PATH={self.CACHE_DIR}\n'
-        if self.PERSONALIZATIONS:
-            content += '#' * 78 + '\n\n'
-            content += '\n'.join(self.PERSONALIZATIONS)
-        content += '#' * 78 + '\n'
+        content += f'AUDGOD_CACHE_PATH={self.CACHE_DIR}\n\n'
+        content += '#' * 78 + '\n\n'
         for i, step in enumerate(self.STEPS):
-            if len(step) == 2:
-                carrier = ACTIONS[step[0]]['carrier']
+            content += f'# Step ({i+1}):\n'
+            if not isinstance(step, (tuple, list)):
+                content += f'{step}\n\n'
             else:
-                carrier = ACTIONS[step[0]]['branches'][step[1]]['carrier']
-            if step[-1]:
-                carrier.reset_defaults(defaults=step[-1])
-                carrier.set_usage()
-                carrier.render_usage()
-            content += '\n' + carrier.KWARGS['usage'].strip()
-            if i < len(self.STEPS) - 1:
-                content += '\n'
+                if len(step) == 2:
+                    carrier = ACTIONS[step[0]]['carrier']
+                else:
+                    carrier = ACTIONS[step[0]]['branches'][step[1]]['carrier']
+                if step[-1]:
+                    carrier.reset_defaults(defaults=step[-1])
+                    carrier.set_usage()
+                    carrier.render_usage()
+                content += carrier.KWARGS['usage'].strip()
+                if i < len(self.STEPS) - 1:
+                    content += '\n\n'
+        content += '\n\n'
         content += '#' * 78 + '\n\n'
         content += 'unset AUDGOD_CACHE_PATH\n'
-        content += '\n'
 
         self.handle_output(content)
         self.chmod(self.parameters['output'], mode=0o755)
@@ -4092,18 +4093,15 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
 
     CACHE_DIR = GenerateScriptBaseAction.TEST_CACHE_DIR
 
-    PERSONALIZATIONS = [
-        'cp -rf ./test/Origin/Source ./test/Source',
-        'cp -rf ./test/Origin/test.ignores.txt ./test/',
-        'cp -rf ./test/Origin/test.songs.note ./test/',
-        'touch ./test/test.operate.backup.txt',
-        'touch ./test/test.operate.remove.txt',
-    ]
-
     #---------------------------------------------------------------------------
 
     STEPS = [
         ('operate', 'cleanup', {}),
+        'cp -rf ./test/Origin/Source ./test/Source',
+        'cp -rf ./test/Origin/test.songs.note ./test/',
+        'cp -rf ./test/Origin/test.ignores.txt ./test/',
+        'touch ./test/test.operate.backup.txt',
+        'touch ./test/test.operate.remove.txt',
         # to complete
         ('convert', 'kmx-to-mp4', dict(
             source='./test/Source/Kmx',
