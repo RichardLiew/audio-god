@@ -4091,11 +4091,13 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
 
     STEPS = [
         ('operate', 'cleanup', {}),
+        # to complete
         ('convert', 'kmx-to-mp4', dict(
             source='./test/Source/Kmx',
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/Kmx-To-Mp4',
         )),
+        # to complete
         ('convert', 'mp4-to-mp3', dict(
             source='./test/Source/Mp4',
             ignored_file='./test/test.ignores.txt',
@@ -4123,6 +4125,7 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
             source='./test/Source/Mp3',
             ignored_file='./test/test.ignores.txt',
         )),
+        # to complete
         ('manage-artworks', 'bind', dict(
             source='./test/Source/Mp3',
             ignored_file='./test/test.ignores.txt',
@@ -4148,11 +4151,13 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
             ignored_file='./test/test.ignores.txt',
             output='./test/test.songs.md',
         )),
+        # to complete
         ('export', 'xml', dict(
             source='./test/Output/Grouped',
             ignored_file='./test/test.ignores.txt',
             output='./test/test.songs.xml',
          )),
+        # to complete
         ('export', 'json', dict(
             source='./test/Output/Grouped',
             ignored_file='./test/test.ignores.txt',
@@ -4173,6 +4178,7 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/iTunes/Library.xml',
         )),
+        # to complete
         ('manage-artworks', 'derive', dict(
             source='./test/Output/iTunes/iTunes Media/Music',
             ignored_file='./test/test.ignores.txt',
