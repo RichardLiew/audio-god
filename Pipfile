@@ -10,7 +10,7 @@ enumx = "==0.0.2"
 prettytable = "==3.2.0"
 eyed3 = "==0.9.7"
 mdutils = "==1.6.0"
-pyfiglet = "*"
+pyfiglet = "==1.0.3"
 
 [dev-packages]
 pylint = "==3.3.6"
