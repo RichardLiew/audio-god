@@ -1470,9 +1470,9 @@ class AudioGod(object):
 
     @classmethod
     def init_cache(cls):
-        os.makedirs(cls.CACHE_DIR, exist_ok=True)
-        os.makedirs(cls.TRASH_DIR, exist_ok=True)
-        os.makedirs(cls.BACKUPS_DIR, exist_ok=True)
+        os.makedirs(cls.abspath(cls.CACHE_DIR), exist_ok=True)
+        os.makedirs(cls.abspath(cls.TRASH_DIR), exist_ok=True)
+        os.makedirs(cls.abspath(cls.BACKUPS_DIR), exist_ok=True)
 
 
     @classmethod
@@ -1515,7 +1515,8 @@ class AudioGod(object):
                 if os.path.exists(item):
                     os.rename(
                         item, os.path.join(
-                            self.TRASH_DIR, self.treat_basename(item, 'trash'),
+                            self.abspath(self.TRASH_DIR),
+                            self.treat_basename(item, 'trash'),
                         ),
                     )
                 else:
@@ -1532,7 +1533,8 @@ class AudioGod(object):
                 if os.path.exists(item):
                     self.duplicate(
                         item, os.path.join(
-                            self.BACKUPS_DIR, self.treat_basename(item, 'backup'),
+                            self.abspath(self.BACKUPS_DIR),
+                            self.treat_basename(item, 'backup'),
                         ),
                     )
                 else:
@@ -6242,7 +6244,7 @@ def main():
                 div_char=AudioGod.DIV_CHAR,
                 grouping_sep=AudioGod.GROUPING_SEPARATOR,
                 fnp_delimiter=RenameAudiosAction.FilenamePatternTemplate.delimiter,
-                cache_dir=f'~/{os.path.basename(AudioGod.CACHE_DIR)}',
+                cache_dir=AudioGod.CACHE_DIR,
                 trash_dir=os.path.basename(AudioGod.TRASH_DIR),
                 backups_dir=os.path.basename(AudioGod.BACKUPS_DIR),
                 test_dir=AudioGod.TEST_DIR,
