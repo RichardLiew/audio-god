@@ -2090,7 +2090,7 @@ class AudioGod(object):
         self.logger.warning(f'\n{"#"*78}\n')
 
         self.logger.warning(
-            'Inv Name Sources: {inv_name})\n'
+            'Inv Name Sources: {inv_name}\n'
             'Valid Sources:    {valid}{detail}'.format(
                 inv_name=len(self.invalid_name_sources),
                 valid=sum(map(len, [
