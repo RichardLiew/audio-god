@@ -1,9 +1,5 @@
 Processing:
-type: ignore
-抓包 Mac 酷我下载音乐的链接，然后集成到脚本中自动下载
 steps in usage需要和generate script以及cleanup, 以及所有的actions和branches都要覆盖到里 同步更新
-是否有必要在generate script里同时生成test专用的steps吗
-增加 generate script 里支持传参数
 
 
 
@@ -95,6 +91,8 @@ if __name__ == '__main__':
 
 
 
+抓包 Mac 酷我下载音乐的链接，然后集成到脚本中自动下载
+type: ignore
 All done.
 
 

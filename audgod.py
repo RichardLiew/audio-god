@@ -3843,8 +3843,38 @@ class GenerateScriptBaseAction(AudioGod):
 
     #---------------------------------------------------------------------------
 
+    STEPS = []
+
+    #---------------------------------------------------------------------------
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        content = '#!/usr/bin/env zsh\n\n'
+        content += '#' * 78 + '\n\n'
+        content += f'# Created Time: {self.current_time()}\n\n'
+        content += '#' * 78 + '\n\n'
+        content += 'set -e\n\n'
+        content += '#' * 78 + '\n'
+        for i, step in enumerate(self.STEPS):
+            if len(step) == 2:
+                carrier = ACTIONS[step[0]]['carrier']
+            else:
+                carrier = ACTIONS[step[0]]['branches'][step[1]]['carrier']
+            if step[-1]:
+                carrier.reset_defaults(defaults=step[-1])
+                carrier.set_usage()
+                carrier.render_usage()
+            content += '\n' + carrier.KWARGS['usage'].strip()
+            if i < len(self.STEPS) - 1:
+                content += '\n'
+        content += '\n'
+
+        self.handle_output(content)
+        self.chmod(self.parameters['output'], mode=0o755)
 
 #===============================================================================
 
@@ -3893,53 +3923,26 @@ class GenerateScript__StartAction(GenerateScriptBaseAction):
 
     #---------------------------------------------------------------------------
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    #---------------------------------------------------------------------------
-
-    def execute(self):
-        content = '#!/usr/bin/env zsh\n\n'
-        content += '#' * 78 + '\n\n'
-        content += f'# Created Time: {self.current_time()}\n\n'
-        content += '#' * 78 + '\n\n'
-        content += 'set -e\n\n'
-        content += '#' * 78 + '\n'
-        steps = [
-            ('operate', 'cleanup'),
-            #('convert', 'kmx-to-mp4'),
-            #('convert', 'mp4-to-mp3'),
-            ('convert', 'qmc-to-mp3'),
-            'redecorate-note',
-            'fill-properties',
-            'format-properties',
-            'rename-audios',
-            'display',
-            ('organize', 'grouped'),
-            ('export', 'note'),
-            ('export', 'markdown'),
-            #('export', 'xml'),
-            #('export', 'json'),
-            'list-repeated',
-            ('organize', 'ituned'),
-            ('export', 'plist'),
-            #'derive-artworks',
-            ('convert', 'note-to-markdown'),
-            ('convert', 'markdown-to-note'),
-            #('operate', 'backup'),
-            #('operate', 'remove'),
-            #('operate', 'tree'),
-        ]
-        for i, step in enumerate(steps):
-            if isinstance(step, tuple):
-                content += '\n' + ACTIONS[step[0]]['branches'][step[1]]['carrier'].KWARGS['usage'].strip()
-            else:
-                content += '\n' + ACTIONS[step]['carrier'].KWARGS['usage'].strip()
-            if i < len(steps) - 1:
-                content += '\n'
-        content += '\n'
-        self.handle_output(content)
-        self.chmod(self.parameters['output'], mode=0o755)
+    STEPS = [
+        #('operate', 'cleanup', {}),
+        #('convert', 'kmx-to-mp4', {}),
+        #('convert', 'mp4-to-mp3', {}),
+        ('convert', 'qmc-to-mp3', {}),
+        ('redecorate-note', {}),
+        ('fill-properties', {}),
+        ('format-properties', {}),
+        ('rename-audios', {}),
+        ('organize', 'grouped', {}),
+        ('export', 'note', {}),
+        ('export', 'markdown', {}),
+        ('list-repeated', {}),
+        ('organize', 'ituned', {}),
+        ('export', 'plist', {}),
+        #('derive-artworks', {}),
+        ('convert', 'note-to-markdown', {}),
+        ('convert', 'markdown-to-note', {}),
+        #('operate', 'tree', {}),
+    ]
 
 #===============================================================================
 
@@ -3964,13 +3967,33 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
 
     #---------------------------------------------------------------------------
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    #---------------------------------------------------------------------------
-
-    def execute(self):
-        pass
+    STEPS = [
+        ('operate', 'cleanup', {}),
+        #('convert', 'kmx-to-mp4', {}),
+        #('convert', 'mp4-to-mp3', {}),
+        ('convert', 'qmc-to-mp3', {}),
+        ('redecorate-note', {}),
+        ('fill-properties', {}),
+        ('format-properties', {}),
+        ('rename-audios', {}),
+        ('display', dict(
+            output='./test.display.table',
+        )),
+        ('organize', 'grouped', {}),
+        ('export', 'note', {}),
+        ('export', 'markdown', {}),
+        #('export', 'xml', {}),
+        #('export', 'json', {}),
+        ('list-repeated', {}),
+        ('organize', 'ituned', {}),
+        ('export', 'plist', {}),
+        #('derive-artworks', {}),
+        ('convert', 'note-to-markdown', {}),
+        ('convert', 'markdown-to-note', {}),
+        #('operate', 'backup', {}),
+        #('operate', 'remove', {}),
+        #('operate', 'tree', {}),
+    ]
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
