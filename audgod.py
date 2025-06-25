@@ -703,7 +703,7 @@ class AudioGod(object):
 
         self.__clauses = ([], {}, {}, [], [])
         self.__clauses_counter = [0, 0, 0, 0, 0, 0]
-        self.__sources = ([], [], [], [], [], [])
+        self.__sources = ([], [], [], [], [], [], [], [])
         self.__ignored_set = set()
         self.__summaries = {}
         
@@ -903,28 +903,36 @@ class AudioGod(object):
 
 
     @property
-    def invalid_ext_sources(self):
+    def original_sources(self):
         return self.__sources[0]
 
     @property
-    def invalid_name_sources(self):
+    def primed_sources(self):
         return self.__sources[1]
 
     @property
-    def omitted_sources(self):
+    def invalid_ext_sources(self):
         return self.__sources[2]
 
     @property
-    def ignored_sources(self):
+    def invalid_name_sources(self):
         return self.__sources[3]
 
     @property
-    def matched_sources(self):
+    def omitted_sources(self):
         return self.__sources[4]
 
     @property
-    def notmatched_sources(self):
+    def ignored_sources(self):
         return self.__sources[5]
+
+    @property
+    def matched_sources(self):
+        return self.__sources[6]
+
+    @property
+    def notmatched_sources(self):
+        return self.__sources[7]
 
     @property
     def concerned_sources(self):
@@ -1454,27 +1462,32 @@ class AudioGod(object):
 
     def remove(self, *paths):
         self.init_cache()
-        for item in self.expand_globbing(*paths):
-            if os.path.exists(item):
-                os.rename(
-                    item, os.path.join(
-                        self.TRASH_DIR, self.treat_basename(item, 'trash'),
-                    ),
-                )
-            else:
-                self.logger.error(f'Remove warning: File {item} not exists!')
+        for path in paths:
+            unit = path if isinstance(path, (tuple, list)) else [path]
+            for item in self.expand_globbing(*unit):
+                if os.path.exists(item):
+                    os.rename(
+                        item, os.path.join(
+                            self.TRASH_DIR, self.treat_basename(item, 'trash'),
+                        ),
+                    )
+                else:
+                    self.logger.error(f'Remove warning: File {item} not exists!')
 
 
-    def backup(self, src):
+    def backup(self, *srcs):
         self.init_cache()
-        if os.path.exists(src):
-            self.duplicate(
-                src, os.path.join(
-                    self.BACKUPS_DIR, self.treat_basename(src, 'backup'),
-                ),
-            )
-        else:
-            self.logger.error(f'Backup warning: File {src} not exists!')
+        for src in srcs:
+            unit = src if isinstance(src, (tuple, list)) else [src]
+            for item in self.expand_globbing(*unit):
+                if os.path.exists(item):
+                    self.duplicate(
+                        item, os.path.join(
+                            self.BACKUPS_DIR, self.treat_basename(item, 'backup'),
+                        ),
+                    )
+                else:
+                    self.logger.error(f'Backup warning: File {item} not exists!')
 
 
     @staticmethod
@@ -1575,7 +1588,7 @@ class AudioGod(object):
 
 
     @classmethod
-    def render_usage(cls, usage, /, indent=None, kwargs={}) -> str:
+    def render_template(cls, usage, /, indent=None, kwargs={}) -> str:
         return cls.PerfectTemplate(
             cls.glorify_indents(usage, indent=indent),
         ).perfect_substitute(dict(
@@ -1955,9 +1968,8 @@ class AudioGod(object):
 
 
     def load_sources(self, matched=False):
-        self.__load_ignored()
-
-        for source in self.__get_plain_sources():
+        self.prime_sources()
+        for source in self.primed_sources:
             self.logger.debug(f'Loading <{source}> ...')
             _type = self.__check_source(source)
             match _type:
@@ -1968,14 +1980,6 @@ class AudioGod(object):
                 case self.SourceType.INVALID_NAME:
                     self.invalid_name_sources.append(source)
                     self.logger.debug(self.SourceType.INVALID_NAME)
-                    continue
-                case self.SourceType.OMITTED:
-                    self.omitted_sources.append(source)
-                    self.logger.debug(self.SourceType.OMITTED)
-                    continue
-                case self.SourceType.IGNORED:
-                    self.ignored_sources.append(source)
-                    self.logger.debug(self.SourceType.IGNORED)
                     continue
             key = self.generate_key_by_filename(source)
             if key in self.valid_clauses:
@@ -1988,39 +1992,26 @@ class AudioGod(object):
         self.logger.warning(f'\n{"#"*78}\n')
 
         self.logger.warning(
-            'Total Sources:   {total}\n\n'
             'Invalid Sources: {invalid} '
             '(Invalid Extension: {inv_ext}, Invalid Name: {inv_name})\n'
-            'Omitted Sources: {omitted}\n'
-            'Ignored Sources: {ignored}\n'
-            'Valid Sources:   {valid}{match_detail}'.format(
-                total=len(self.invalid_ext_sources) \
-                    + len(self.invalid_name_sources) \
-                    + len(self.omitted_sources) \
-                    + len(self.ignored_sources) \
-                    + len(self.matched_sources) \
-                    + len(self.notmatched_sources),
-                invalid=len(self.invalid_ext_sources) + len(self.invalid_name_sources),
+            'Valid Sources:   {valid}{detail}'.format(
+                invalid=sum(map(len, [
+                    self.invalid_ext_sources,
+                    self.invalid_name_sources,
+                ])),
                 inv_ext=len(self.invalid_ext_sources),
                 inv_name=len(self.invalid_name_sources),
-                omitted=len(self.omitted_sources),
-                ignored=len(self.ignored_sources),
-                valid=len(self.matched_sources) + len(self.notmatched_sources),
-                match_detail='\n' if not matched else ' (Matched: {matched}, NotMatched: {notmatched})\n'.format(
+                valid=sum(map(len, [
+                    self.matched_sources,
+                    self.notmatched_sources,
+                ])),
+                detail='\n' if not matched else ' (Matched: {matched}, NotMatched: {notmatched})\n'.format(
                     matched=len(self.matched_sources),
                     notmatched=len(self.notmatched_sources),
                 ),
             )
         )
 
-        if False and len(self.omitted_sources) > 0:
-            self.logger.warning('\nOmitted Sources:')
-            for source in self.omitted_sources:
-                self.logger.warning(f'\t{source}')
-        if False and len(self.ignored_sources) > 0:
-            self.logger.warning('\nIgnored Sources:')
-            for source in self.ignored_sources:
-                self.logger.warning(f'\t{source}')
         if len(self.invalid_ext_sources) > 0:
             self.logger.warning('\nInvalid Extension Sources:')
             for source in self.invalid_ext_sources:
@@ -2036,7 +2027,7 @@ class AudioGod(object):
 
     #---------------------------------------------------------------------------
 
-    def __load_ignored(self):
+    def stow_ignored(self):
         if not self.parameters['ignored_file']:
             return
         if not os.path.exists(self.parameters['ignored_file']):
@@ -2074,21 +2065,6 @@ class AudioGod(object):
 
 
     def __check_source(self, source):
-        _source = source
-        while True:
-            if re.match(r'^/*$', _source) is not None:
-                break
-            if _source in self.ignored_set or _source+'/' in self.ignored_set:
-                return self.SourceType.IGNORED
-            _source = os.path.dirname(_source)
-
-        if os.path.basename(source) == '.DS_Store':
-            return self.SourceType.OMITTED
-        if os.path.islink(source):
-            return self.SourceType.OMITTED
-        if not os.path.isfile(source):
-            return self.SourceType.OMITTED
-
         if not self.__check_extension(source):
             return self.SourceType.INVALID_EXT
         if not self.__check_name(source):
@@ -2097,7 +2073,7 @@ class AudioGod(object):
         return self.SourceType.VALID
 
 
-    def __get_plain_sources(self):
+    def stow_sources(self):
         ret = []
         for item in self.expand_globbing(self.parameters['source'], recursive=True):
             if not os.path.exists(item):
@@ -2120,7 +2096,60 @@ class AudioGod(object):
                     self.abspath(item, target)
                     for target in os.listdir(item)
                 ])
-        return list(dict.fromkeys(ret))
+        self.original_sources.extend(list(dict.fromkeys(ret)))
+
+
+    def prime_sources(self):
+        self.stow_sources()
+        self.stow_ignored()
+
+        for source in self.original_sources:
+            self.logger.debug(f'Priming <{source}> ...')
+
+            _source, ignored = source, False
+            while True:
+                if re.match(r'^/*$', _source) is not None:
+                    break
+                if _source in self.ignored_set or _source+'/' in self.ignored_set:
+                    ignored = True
+                    break
+                _source = os.path.dirname(_source)
+            if ignored:
+                self.ignored_sources.append(source)
+                self.logger.debug(self.SourceType.IGNORED)
+                continue
+
+            if os.path.basename(source) == '.DS_Store' \
+                    or os.path.islink(source) \
+                    or not os.path.isfile(source):
+                self.omitted_sources.append(source)
+                self.logger.debug(self.SourceType.OMITTED)
+                continue
+
+            self.primed_sources.append(source)
+
+        self.logger.warning(f'\n{"#"*78}\n')
+
+        self.logger.warning(
+            'Total Sources:   {total}\n\n'
+            'Ignored Sources: {ignored}\n'
+            'Omitted Sources: {omitted}\n'
+            'Primed Sources:  {primed}\n'.format(
+                total=len(self.original_sources),
+                ignored=len(self.ignored_sources),
+                omitted=len(self.omitted_sources),
+                primed=len(self.primed_sources)
+            )
+        )
+
+        if False and len(self.ignored_sources) > 0:
+            self.logger.warning('\nIgnored Sources:')
+            for source in self.ignored_sources:
+                self.logger.warning(f'\t{source}')
+        if False and len(self.omitted_sources) > 0:
+            self.logger.warning('\nOmitted Sources:')
+            for source in self.omitted_sources:
+                self.logger.warning(f'\t{source}')
 
     #---------------------------------------------------------------------------
 
@@ -5214,7 +5243,8 @@ class Operate__BackupAction(OperateBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        pass
+        self.prime_sources()
+        self.backup(self.primed_sources)
 
 #===============================================================================
 
@@ -5248,7 +5278,8 @@ class Operate__RemoveAction(OperateBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        pass
+        self.prime_sources()
+        self.remove(self.primed_sources)
 
 #===============================================================================
 
@@ -5280,7 +5311,7 @@ class Operate__CleanupAction(OperateBaseAction):
             '${export.plist.output}',
         ]
         for item in items:
-            self.remove(self.render_usage(item))
+            self.remove(self.render_template(item))
 
 ####################################################V###########################
 
@@ -5347,11 +5378,11 @@ def _render_actions():
         if not cls.KWARGS:
             continue
         if cls.KWARGS.get('prog', None):
-            cls.KWARGS['prog'] = '\n' + AudioGod.render_usage(
+            cls.KWARGS['prog'] = '\n' + AudioGod.render_template(
                 cls.KWARGS['prog'], indent=0,
             )
         if cls.KWARGS.get('usage', None):
-            cls.KWARGS['usage'] = '\n' + AudioGod.render_usage(
+            cls.KWARGS['usage'] = '\n' + AudioGod.render_template(
                 cls.KWARGS['usage'], indent=0,
             )
 
@@ -5555,7 +5586,7 @@ def _special_characters() -> str:
 def main():
     main_parser = PerfectArgumentParser(
         prog=sys.argv[0],
-        usage='\n' + AudioGod.render_usage(
+        usage='\n' + AudioGod.render_template(
             __USAGE__,
             indent=0,
             kwargs=dict(
