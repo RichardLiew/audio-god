@@ -1,21 +1,24 @@
 Processing:
 type: ignore
 抓包 Mac 酷我下载音乐的链接，然后集成到脚本中自动下载
-多个父类导致action顺序被改变，那些参数，在不断的子类继承时被update，顺序也变了
-检查所有的 Action 里对应的 Argument，所有的参数校验和rewrite都要在 rewrite_parameters函数里完成
-
-steps in usage需要和generate script以及cleanup里 同步更新
-增加 tree 输出目录树状图功能并显示目录下文件数量
+steps in usage需要和generate script以及cleanup, 以及所有的actions和branches都要覆盖到里 同步更新
+是否有必要在generate script里同时生成test专用的steps吗
 增加 generate script 里支持传参数
 
-preprocess-note, note-to-markdown 里的fields要自动识别，不能直接用 all
+
+
+
+
+增加 tree 输出目录树状图功能并显示目录下文件数量, 并控制是否显示到目录级别，不显示文jian,
+添加--depth参数控制递归深度6
+支持统计子目录累计文件数（修改count_files()逻辑）1
+使用颜色区分文件和目录（需安装colorama库）
+
+
 
 
 import os
-
-
 def get_tree_directory(path: str, prefix=""):
-
     # 获取当前目录下所有的文件和文件夹
     file_list = os.listdir(path)
 
@@ -34,12 +37,57 @@ def get_tree_directory(path: str, prefix=""):
             # 设置层级递进规则，递归调用
             new_prefix = prefix + "    " if is_last else  prefix +"|    "
             get_tree_directory(new_path, new_prefix)
-
-
 if __name__ == '__main__':
-
     path_input = r'E:\LMovie' # 手动填写需要打印成 Tree 结构的路径 ,使用原始字符串(推荐)
     get_tree_directory(path_input)
+
+
+
+
+
+
+
+import os
+
+def count_files(directory):
+    """统计目录下文件数量（不含子目录）"""
+    return len([f for f in os.listdir(directory) 
+               if os.path.isfile(os.path.join(directory, f))])
+
+def print_tree(directory, indent='', is_last=True):
+    """
+    递归打印目录树并显示文件数量
+    :param directory: 当前目录路径
+    :param indent: 缩进前缀
+    :param is_last: 是否为父目录的最后一个子项
+    """
+    # 获取当前目录文件数
+    file_count = count_files(directory)
+    
+    # 获取排序后的目录内容（目录优先）
+    entries = sorted(os.listdir(directory))
+    entries.sort(key=lambda x: os.path.isdir(os.path.join(directory, x)), reverse=True)
+    
+    # 打印当前目录节点（带文件数）
+    connector = '└── ' if is_last else '├── '
+    print(f"{indent}{connector}{os.path.basename(directory)} [files: {file_count}]")
+    
+    # 更新缩进规则
+    new_indent = indent + ('    ' if is_last else '│   ')
+    
+    # 遍历子项
+    for i, entry in enumerate(entries):
+        path = os.path.join(directory, entry)
+        if os.path.isdir(path):
+            print_tree(path, new_indent, i == len(entries) - 1)
+
+if __name__ == '__main__':
+    target_dir = input("输入目录路径: ").strip()
+    if os.path.exists(target_dir):
+        print_tree(target_dir)
+    else:
+        print("路径不存在")
+
 
 
 
@@ -58,6 +106,8 @@ Useful Paths:
 
 Relax:
 Action 继承自多个父类时，ARGUMENTS and KWARGS and rewrite_parameters 怎么合并
+多个父类导致action顺序被改变，那些参数，在不断的子类继承时被update，顺序也变了
+检查所有的 Action 里对应的 Argument，所有的参数校验和rewrite都要在 rewrite_parameters函数里完成
 pydoc 字体各版式控制, 研究 pydoc 样式如何渲染
 自己搭建云播放平台？网站？App？
 VScode VS Cursor

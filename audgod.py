@@ -3057,10 +3057,7 @@ class DisplayAction(AudioGod):
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'output': {
-            'use_public': AudioGod.ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': './display.table',
-            },
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'data_format': {
             'use_public': AudioGod.ReplaceType.NONE,
@@ -3785,14 +3782,53 @@ class DisplayAction(AudioGod):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-class GenerateScriptAction(AudioGod):
+class GenerateScriptBaseAction(AudioGod):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = None
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+#===============================================================================
+
+class GenerateScriptAction(GenerateScriptBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
 
     KWARGS = {
-        'description': '✋ Generate a grouped bash/zsh script',
-        'help': 'generate a grouped bash/zsh script',
+        'description': '✋ Generate a shell script',
+        'help': 'generate a shell script',
+    }
+
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        pass
+
+#===============================================================================
+
+class GenerateScript__StartAction(GenerateScriptBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Generate shell script to start',
+        'help': 'generate shell script to start',
     }
 
     ARGUMENTS = {
@@ -3841,6 +3877,7 @@ class GenerateScriptAction(AudioGod):
             ('convert', 'markdown-to-note'),
             #('operate', 'backup'),
             #('operate', 'remove'),
+            #('operate', 'tree'),
         ]
         for i, step in enumerate(steps):
             if isinstance(step, tuple):
@@ -3852,6 +3889,37 @@ class GenerateScriptAction(AudioGod):
         content += '\n'
         self.handle_output(content)
         self.chmod(self.parameters['output'], mode=0o755)
+
+#===============================================================================
+
+class GenerateScript__TestAction(GenerateScriptBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Generate shell script to test',
+        'help': 'generate shell script to test',
+    }
+
+    ARGUMENTS = {
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './test.zsh',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        pass
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -5400,6 +5468,30 @@ class Operate__CleanupAction(OperateBaseAction):
         ]
         for item in items:
             self.remove(self.render_template(item))
+
+#===============================================================================
+
+class Operate__TreeAction(OperateBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '⭐ Tree directories, and show the number',
+        'help': 'tree directories, and show the number',
+    }
+
+    ARGUMENTS = {}
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        pass
 
 ####################################################V###########################
 
