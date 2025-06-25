@@ -1973,10 +1973,6 @@ class AudioGod(object):
             self.logger.debug(f'Loading <{source}> ...')
             _type = self.__check_source(source)
             match _type:
-                case self.SourceType.INVALID_EXT:
-                    self.invalid_ext_sources.append(source)
-                    self.logger.debug(self.SourceType.INVALID_EXT)
-                    continue
                 case self.SourceType.INVALID_NAME:
                     self.invalid_name_sources.append(source)
                     self.logger.debug(self.SourceType.INVALID_NAME)
@@ -1992,14 +1988,8 @@ class AudioGod(object):
         self.logger.warning(f'\n{"#"*78}\n')
 
         self.logger.warning(
-            'Invalid Sources: {invalid} '
-            '(Invalid Extension: {inv_ext}, Invalid Name: {inv_name})\n'
-            'Valid Sources:   {valid}{detail}'.format(
-                invalid=sum(map(len, [
-                    self.invalid_ext_sources,
-                    self.invalid_name_sources,
-                ])),
-                inv_ext=len(self.invalid_ext_sources),
+            'Inv Name Sources: {inv_name})\n'
+            'Valid Sources:    {valid}{detail}'.format(
                 inv_name=len(self.invalid_name_sources),
                 valid=sum(map(len, [
                     self.matched_sources,
@@ -2012,10 +2002,6 @@ class AudioGod(object):
             )
         )
 
-        if len(self.invalid_ext_sources) > 0:
-            self.logger.warning('\nInvalid Extension Sources:')
-            for source in self.invalid_ext_sources:
-                self.logger.warning(f'\t{source}')
         if len(self.invalid_name_sources) > 0:
             self.logger.warning('\nInvalid Name Sources:')
             for source in self.invalid_name_sources:
@@ -2060,16 +2046,16 @@ class AudioGod(object):
 
 
     def __check_extension(self, source):
+        extensions = self.parameters.get('extensions', [])
+        if not extensions:
+            return True
         _, ext = os.path.splitext(os.path.basename(source))
         return ext[1:].lower() in self.parameters['extensions']
 
 
     def __check_source(self, source):
-        if not self.__check_extension(source):
-            return self.SourceType.INVALID_EXT
         if not self.__check_name(source):
             return self.SourceType.INVALID_NAME
-
         return self.SourceType.VALID
 
 
@@ -2126,6 +2112,11 @@ class AudioGod(object):
                 self.logger.debug(self.SourceType.OMITTED)
                 continue
 
+            if self.__check_extension(source):
+                self.invalid_ext_sources.append(source)
+                self.logger.debug(self.SourceType.INVALID_EXT)
+                continue
+
             self.primed_sources.append(source)
 
         self.logger.warning(f'\n{"#"*78}\n')
@@ -2134,10 +2125,12 @@ class AudioGod(object):
             'Total Sources:   {total}\n\n'
             'Ignored Sources: {ignored}\n'
             'Omitted Sources: {omitted}\n'
+            'Inv ext sources: {inv_ext}\n'
             'Primed Sources:  {primed}\n'.format(
                 total=len(self.original_sources),
                 ignored=len(self.ignored_sources),
                 omitted=len(self.omitted_sources),
+                inv_ext=len(self.invalid_ext_sources),
                 primed=len(self.primed_sources)
             )
         )
@@ -2149,6 +2142,10 @@ class AudioGod(object):
         if False and len(self.omitted_sources) > 0:
             self.logger.warning('\nOmitted Sources:')
             for source in self.omitted_sources:
+                self.logger.warning(f'\t{source}')
+        if len(self.invalid_ext_sources) > 0:
+            self.logger.warning('\nInvalid Extension Sources:')
+            for source in self.invalid_ext_sources:
                 self.logger.warning(f'\t{source}')
 
     #---------------------------------------------------------------------------
@@ -3807,15 +3804,21 @@ class GenerateScriptAction(AudioGod):
         content += 'set -e\n\n'
         content += '#' * 78 + '\n'
         steps = [
+            #('convert', 'kmx-to-mp4'),
+            #('convert', 'mp4-to-mp3'),
+            ('convert', 'qmc-to-mp3'),
             'redecorate-note',
             'fill-properties',
             'format-properties',
             'rename-audios',
             ('organize', 'grouped'),
             ('export', 'note'),
+            ('export', 'markdown'),
             'list-repeated',
             ('organize', 'ituned'),
             ('export', 'plist'),
+            ('convert', 'note-to-markdown'),
+            ('convert', 'markdown-to-note'),
         ]
         for i, step in enumerate(steps):
             if isinstance(step, tuple):
@@ -5075,7 +5078,7 @@ class Convert__NoteToMarkdownAction(ConvertBaseAction, NoteRelatedBaseAction, Ex
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': './songs.md',
+                'default': './songs.note.md',
             },
         },
     }
@@ -5127,7 +5130,7 @@ class Convert__MarkdownToNoteAction(ConvertBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': './songs.note',
+                'default': './songs.md.note',
             },
         },
     }
