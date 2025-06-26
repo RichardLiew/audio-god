@@ -6142,7 +6142,7 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
             output='./test/Output/Mp4-To-Mp3',
         )),
         # to complete
-        ('convert', 'qmc', dict(
+        ('convert', 'qmc-to-audio', dict(
             source='./test/Source/Qmc',
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/Qmc-To-Audio',
