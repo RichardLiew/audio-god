@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-26T13:36:59Z
+# Created Time: 2025-06-26T13:42:21Z
 
 # Total Steps: 25
 
@@ -258,7 +258,7 @@ export AUDGOD_CACHE_PATH=./test/.audgod-cache
 
 # Step (21):
 ./audio-god convert note-to-markdown \
-    --document=./test/test.songs.note \
+    --document=./test/Output/test.songs.note \
     --field-type=auto \
     --output=./test/Output/test.songs.note.md \
     --log-level=WARNING \
@@ -266,7 +266,7 @@ export AUDGOD_CACHE_PATH=./test/.audgod-cache
 
 # Step (22):
 ./audio-god convert markdown-to-note \
-    --document=./test/test.songs.md \
+    --document=./test/Output/test.songs.md \
     --output=./test/Output/test.songs.md.note \
     --log-level=WARNING \
     --log-file=stderr

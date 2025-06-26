@@ -6098,11 +6098,11 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
             output='./test/Output/Artworks',
         )),
         ('convert', 'note-to-markdown', dict(
-            document='./test/test.songs.note',
+            document='./test/Output/test.songs.note',
             output='./test/Output/test.songs.note.md',
         )),
         ('convert', 'markdown-to-note', dict(
-            document='./test/test.songs.md',
+            document='./test/Output/test.songs.md',
             output='./test/Output/test.songs.md.note',
         )),
         ('operate', 'backup', dict(
