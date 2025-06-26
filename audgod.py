@@ -5879,6 +5879,7 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/Mp4-To-Mp3',
         )),
+        # to complete
         ('convert', 'qmc-to-mp3', dict(
             source='./test/Source/Qmc',
             ignored_file='./test/test.ignores.txt',
@@ -6001,6 +6002,8 @@ def _get_active_subclasses(cls):
     ret = []
     for subclass in _get_all_subclasses(cls):
         if not subclass.ACTIVE:
+            continue
+        if not subclass.NAME:
             continue
         ret.append(subclass)
     return ret
