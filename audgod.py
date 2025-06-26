@@ -5592,44 +5592,17 @@ class Operate__CleanupAction(OperateBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        # for testing
-        if self.CACHE_DIR == self.TEST_CACHE_DIR:
-            if os.path.exists(self.TEST_DIR):
-                temp_dir = f'{self.TEST_DIR}.temp'
-                if os.path.exists(temp_dir):
-                    self.remove(temp_dir)
-                    os.makedirs(temp_dir, exist_ok=True)
-                if os.path.exists(self.TEST_ORIGIN_DIR):
-                    self.rename(
-                        self.TEST_ORIGIN_DIR,
-                        os.path.join(
-                            temp_dir,
-                            os.path.basename(self.TEST_ORIGIN_DIR),
-                        ),
-                    )
-                if os.path.exists(self.TEST_CACHE_DIR):
-                    self.rename(
-                        self.TEST_CACHE_DIR,
-                        os.path.join(
-                            temp_dir,
-                            os.path.basename(self.TEST_CACHE_DIR),
-                        ),
-                    )
-                self.remove(self.TEST_DIR)
-                self.rename(temp_dir, self.TEST_DIR)
-        # normal processing
-        else:
-            items = [
-                './*.tmp',
-                './*.bak',
-                './*.backup',
-                '${list-repeated.output}*',
-                '${organize.grouped.root}',
-                '${export.plist.itunes_media_folder}/*',
-                '${export.plist.output}',
-            ]
-            for item in items:
-                self.remove(self.render_template(item, indent=None))
+        items = [
+            './*.tmp',
+            './*.bak',
+            './*.backup',
+            '${list-repeated.output}*',
+            '${organize.grouped.root}',
+            '${export.plist.itunes_media_folder}/*',
+            '${export.plist.output}',
+        ]
+        for item in items:
+            self.remove(self.render_template(item, indent=None))
 
 #===============================================================================
 
@@ -5710,6 +5683,122 @@ class Operate__TreeAction(OperateBaseAction):
         lines = []
         self.tree(self.parameters['source'], lines)
         self.handle_output('\n'.join(lines))
+
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+class TestingBaseAction(AudioGod):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = None
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+#===============================================================================
+
+class TestingAction(TestingBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Testing module',
+        'help': 'Testing module',
+    }
+
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        pass
+
+#===============================================================================
+
+class Testing__InitAction(TestingBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '⭐ Testing init',
+        'help': 'testing init',
+    }
+
+    ARGUMENTS = {}
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        pass
+
+#===============================================================================
+
+class Testing__CleanupAction(TestingBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '⭐ Testing cleanup',
+        'help': 'testing cleanup',
+    }
+
+    ARGUMENTS = {}
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        if not os.path.exists(self.TEST_DIR):
+            self.logger.fatal(f'Testing folder <{self.TEST_DIR}> not exists!')
+            return
+        if not os.path.isdir(self.TEST_DIR):
+            self.logger.fatal(f'Testing folder <{self.TEST_DIR}> not a directory!')
+            return
+        temp_dir = f'{self.TEST_DIR}.temp'
+        if os.path.exists(temp_dir):
+            self.remove(temp_dir)
+        os.makedirs(temp_dir, exist_ok=True)
+        if os.path.exists(self.TEST_ORIGIN_DIR):
+            if os.path.isdir(self.TEST_ORIGIN_DIR):
+                self.rename(
+                    self.TEST_ORIGIN_DIR,
+                    os.path.join(
+                        temp_dir,
+                        os.path.basename(self.TEST_ORIGIN_DIR),
+                    ),
+                )
+        if os.path.exists(self.TEST_CACHE_DIR):
+            if os.path.isdir(self.TEST_CACHE_DIR):
+                self.rename(
+                    self.TEST_CACHE_DIR,
+                    os.path.join(
+                        temp_dir,
+                        os.path.basename(self.TEST_CACHE_DIR),
+                    ),
+                )
+        self.remove(self.TEST_DIR)
+        self.rename(temp_dir, self.TEST_DIR)
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
