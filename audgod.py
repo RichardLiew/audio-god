@@ -5055,6 +5055,10 @@ class ConvertMediaBaseAction(ConvertBaseAction):
 
     #---------------------------------------------------------------------------
 
+    SUPPORTED_FORMATS = []
+
+    #---------------------------------------------------------------------------
+
     KWARGS = None
     ARGUMENTS = None
 
@@ -5170,6 +5174,18 @@ class ConvertAction(ConvertBaseAction):
 
 class Convert__QmcToAudioAction(ConvertMediaBaseAction):
     ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    FORMATS_MAP = {
+        'qmc': 'mp3',
+        'qmc0': 'mp3',
+        'qmc1': 'mp3',
+        'qmc2': 'mp3',
+        'qmc3': 'mp3',
+        'qmcogg': 'ogg',
+        'qmcflac': 'flac',
+    }
 
     #---------------------------------------------------------------------------
 

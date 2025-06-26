@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-27T04:26:22Z
+# Created Time: 2025-06-27T04:33:53Z
 
 # Total Steps: 26
 
@@ -52,10 +52,10 @@ echo "\n\n[***] Starting ...\n"
     --log-file=stderr
 
 # Step (5):
-./audio-god convert qmc \
+./audio-god convert qmc-to-audio \
     --source=./test/Source/Qmc \
     --extensions=qmc,qmc0,qmc3,qmcogg,qmcflac \
-    --output=./test/Output/Audios \
+    --output=./test/Output/Qmc-To-Audio \
     --recursive \
     --ignored-file=./test/test.ignores.txt \
     --log-level=WARNING \
