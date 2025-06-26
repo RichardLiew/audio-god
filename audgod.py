@@ -1748,19 +1748,20 @@ class AudioGod(object):
     def decorate(cls):
         # decorate $NAME
         if not cls.__name__.endswith('BaseAction'):
-            cls.NAME = cls.replace_underline(
-                re.sub(
-                    r'([A-Z])([A-Z][a-z])',
-                    r'\1_\2',
+            if not cls.NAME:
+                cls.NAME = cls.replace_underline(
                     re.sub(
-                        r'([a-z0-9])([A-Z])',
+                        r'([A-Z])([A-Z][a-z])',
                         r'\1_\2',
                         re.sub(
-                            r'Action$', r'', cls.__name__.replace('__', '.'),
+                            r'([a-z0-9])([A-Z])',
+                            r'\1_\2',
+                            re.sub(
+                                r'Action$', r'', cls.__name__.replace('__', '.'),
+                            ),
                         ),
                     ),
-                ),
-            )
+                )
 
         # decorate $ARGUMENTS
         if cls.ARGUMENTS is not None:
@@ -6138,7 +6139,7 @@ def _get_all_subclasses(cls):
     return all_subclasses
 
 
-def _get_active_subclasses(cls):
+def _get_valid_subclasses(cls):
     ret = []
     for subclass in _get_all_subclasses(cls):
         if not subclass.ACTIVE:
@@ -6150,13 +6151,13 @@ def _get_active_subclasses(cls):
 
 
 def _decorate_actions():
-    for cls in _get_active_subclasses(AudioGod):
+    for cls in _get_valid_subclasses(AudioGod):
         cls.decorate()
 
 
 def _summarize_actions():
     ret = {}
-    for cls in _get_active_subclasses(AudioGod):
+    for cls in _get_valid_subclasses(AudioGod):
         if not cls.NAME:
             continue
         units = cls.NAME.split('.')
