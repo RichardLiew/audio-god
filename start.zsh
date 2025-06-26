@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-26T06:49:35Z
+# Created Time: 2025-06-26T12:58:42Z
 
 # Total Steps: 11
 
@@ -20,10 +20,10 @@ AUDGOD_CACHE_PATH=~/.audgod-cache
 ./audio-god convert qmc-to-mp3 \
     --source='~/Music/Source/Qmc' \
     --extensions=qmc,qmc0,qmc3,qmcflac \
-    --recursive \
-    --ignored-file=./ignored.txt \
     --output='~/Music/Output/Qmc-To-Mp3' \
     --executer=./executers/qmc-to-mp3/decoder \
+    --recursive \
+    --ignored-file=./ignored.txt \
     --log-level=WARNING \
     --log-file=stderr
 

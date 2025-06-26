@@ -5997,8 +5997,8 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
 
     STEPS = [
         #('operate', 'cleanup', {}), # same as <test cleanup>
-        ('test', 'cleanup', {}),
-        ('test', 'init', {}),
+        ('testing', 'cleanup', {}),
+        ('testing', 'init', {}),
         # to complete
         ('convert', 'kmx-to-mp4', dict(
             source='./test/Source/Kmx',
@@ -6085,6 +6085,7 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
         ('export', 'plist', dict(
             source='./test/Source/Mp3',
             ignored_file='./test/test.ignores.txt',
+            itunes_media_folder='./test/Output/iTunes/iTunes Media/Music',
             output='./test/Output/iTunes/Library.xml',
         )),
         # to complete
@@ -6135,7 +6136,7 @@ def _get_active_subclasses(cls):
     for subclass in _get_all_subclasses(cls):
         if not subclass.ACTIVE:
             continue
-        if not subclass.NAME:
+        if subclass.__name__.endswith('BaseAction'):
             continue
         ret.append(subclass)
     return ret
