@@ -1537,7 +1537,7 @@ class AudioGod(object):
                         ),
                     )
                 else:
-                    self.logger.error(f'Remove warning: File {item} not exists!')
+                    self.logger.debug(f'Remove warning: File {item} not exists!')
 
 
     def backup(self, *srcs):
@@ -1555,7 +1555,7 @@ class AudioGod(object):
                         ),
                     )
                 else:
-                    self.logger.error(f'Backup warning: File {item} not exists!')
+                    self.logger.debug(f'Backup warning: File {item} not exists!')
 
 
     @staticmethod
@@ -5745,7 +5745,72 @@ class Testing__InitAction(TestingBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        pass
+        if self.CACHE_DIR != self.TEST_CACHE_DIR:
+            self.logger.fatal('${AUDGOD_CACHE_PATH} error!')
+            return
+
+        srcs = list(map(
+            lambda x: os.path.join(self.TEST_ORISRC_DIR, x),
+            ['Mp3', 'Kmx', 'Mp4', 'Qmc', 'Artworks'],
+        ))
+
+        dirs = [
+            self.TEST_DIR,
+            self.TEST_ORIGIN_DIR,
+            self.TEST_ORISRC_DIR,
+        ] + srcs
+
+        files = list(map(
+            lambda x: os.path.join(self.TEST_ORIGIN_DIR, x),
+            [
+                'test.songs.note',
+                'test.ignores.txt',
+                'test.operate.backup.txt',
+                'test.operate.remove.txt',
+            ],
+        ))
+
+        for dir_ in dirs:
+            if not os.path.exists(dir_):
+                self.logger.fatal(f'Directory <{dir_}> not exists!')
+                return
+            if not os.path.isdir(dir_):
+                self.logger.fatal(f'<{dir_}> not a directory!')
+                return
+
+        for file_ in files:
+            if not os.path.exists(file_):
+                self.logger.fatal(f'File <{file_}> not exists!')
+                return
+            if not os.path.isfile(file_):
+                self.logger.fatal(f'<{file_}> not a file!')
+                return
+
+        for src in srcs:
+            has_children = False
+            target_ext = f'.{os.path.basename(src).lower()}'
+            for item in os.listdir(src):
+                if item.startswith('.'):
+                    continue
+                fullname = os.path.join(src, item)
+                if not os.path.isfile(fullname):
+                    continue
+                _, ext = os.path.splitext(item)
+                if not ext.lower().startswith(target_ext):
+                    continue
+                has_children = True
+                break
+            if not has_children:
+                self.logger.fatal(f'Directory <{src}> contains no valid files!')
+                return
+            
+        for item in os.listdir(self.TEST_ORIGIN_DIR):
+            if item.startswith('.'):
+                continue
+            self.duplicate(
+                os.path.join(self.TEST_ORIGIN_DIR, item),
+                os.path.join(self.TEST_DIR, item),
+            )
 
 #===============================================================================
 
@@ -5770,35 +5835,16 @@ class Testing__CleanupAction(TestingBaseAction):
 
     def execute(self):
         if not os.path.exists(self.TEST_DIR):
-            self.logger.fatal(f'Testing folder <{self.TEST_DIR}> not exists!')
             return
         if not os.path.isdir(self.TEST_DIR):
-            self.logger.fatal(f'Testing folder <{self.TEST_DIR}> not a directory!')
             return
-        temp_dir = f'{self.TEST_DIR}.temp'
-        if os.path.exists(temp_dir):
-            self.remove(temp_dir)
-        os.makedirs(temp_dir, exist_ok=True)
-        if os.path.exists(self.TEST_ORIGIN_DIR):
-            if os.path.isdir(self.TEST_ORIGIN_DIR):
-                self.rename(
-                    self.TEST_ORIGIN_DIR,
-                    os.path.join(
-                        temp_dir,
-                        os.path.basename(self.TEST_ORIGIN_DIR),
-                    ),
-                )
-        if os.path.exists(self.TEST_CACHE_DIR):
-            if os.path.isdir(self.TEST_CACHE_DIR):
-                self.rename(
-                    self.TEST_CACHE_DIR,
-                    os.path.join(
-                        temp_dir,
-                        os.path.basename(self.TEST_CACHE_DIR),
-                    ),
-                )
-        self.remove(self.TEST_DIR)
-        self.rename(temp_dir, self.TEST_DIR)
+        items = [
+            './test/test.*',
+            './test/Source',
+            './test/Output',
+        ]
+        for item in items:
+            self.remove(item)
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -5950,10 +5996,12 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
     #---------------------------------------------------------------------------
 
     STEPS = [
-        ('operate', 'cleanup', {}),
+        #('operate', 'cleanup', {}), # same as <test cleanup>
+        ('test', 'cleanup', {}),
+        ('test', 'init', {}),
         'cp -rf ./test/Origin/Source ./test/Source',
-        'cp -rf ./test/Origin/test.songs.note ./test/',
-        'cp -rf ./test/Origin/test.ignores.txt ./test/',
+        'cp -rf ./test/Origin/Source/test.songs.note ./test/',
+        'cp -rf ./test/Origin/Source/test.ignores.txt ./test/',
         'touch ./test/test.operate.backup.txt',
         'touch ./test/test.operate.remove.txt',
         # to complete
@@ -5981,7 +6029,7 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
             source='./test/Source/Mp3',
             ignored_file='./test/test.ignores.txt',
             document='./test/test.songs.note',
-            root='./test//Source/Mp3',
+            root='./test/Source/Mp3',
         )),
         ('format-properties', dict(
             source='./test/Source/Mp3',
@@ -6000,7 +6048,7 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
         ('display', dict(
             source='./test/Source/Mp3',
             ignored_file='./test/test.ignores.txt',
-            output='./test/test.display.table',
+            output='./test/Output/test.display.table',
         )),
         ('organize', 'grouped', dict(
             source='./test/Source/Mp3',
@@ -6010,29 +6058,29 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
         ('export', 'note', dict(
             source='./test/Output/Grouped',
             ignored_file='./test/test.ignores.txt',
-            output='./test/test.songs.note',
+            output='./test/Output/test.songs.note',
         )),
         ('export', 'markdown', dict(
             source='./test/Output/Grouped',
             ignored_file='./test/test.ignores.txt',
-            output='./test/test.songs.md',
+            output='./test/Output/test.songs.md',
         )),
         # to complete
         ('export', 'xml', dict(
             source='./test/Output/Grouped',
             ignored_file='./test/test.ignores.txt',
-            output='./test/test.songs.xml',
+            output='./test/Output/test.songs.xml',
          )),
         # to complete
         ('export', 'json', dict(
             source='./test/Output/Grouped',
             ignored_file='./test/test.ignores.txt',
-            output='./test/test.songs.json',
+            output='./test/Output/test.songs.json',
          )),
         ('list-repeated', dict(
             source='./test/Output/Grouped',
             ignored_file='./test/test.ignores.txt',
-            output='./test/test.repeated.txt',
+            output='./test/Output/test.repeated.txt',
         )),
         ('organize', 'ituned', dict(
             source='./test/Output/Grouped',
@@ -6052,11 +6100,11 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
         )),
         ('convert', 'note-to-markdown', dict(
             document='./test/test.songs.note',
-            output='./test/test.songs.note.md',
+            output='./test/Output/test.songs.note.md',
         )),
         ('convert', 'markdown-to-note', dict(
             document='./test/test.songs.md',
-            output='./test/test.songs.md.note',
+            output='./test/Output/test.songs.md.note',
         )),
         ('operate', 'backup', dict(
             source='./test/test.operate.backup.txt',
@@ -6068,7 +6116,7 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
         )),
         ('operate', 'tree', dict(
             source='./test/Output',
-            output='./test/test.output.tree',
+            output='./test/Output/test.output.tree',
         )),
     ]
 
