@@ -5110,16 +5110,16 @@ class ConvertMediaBaseAction(ConvertBaseAction):
         #    self.chmod(self.parameters['executer'], mode=0o755)
 
         if 'output' in self.parameters:
-            if not self.parameters['output']:
-                self.logger.fatal(f'Output <{self.parameters["output"]}> invalid!')
-                return
+            #if not self.parameters['output']:
+            #    self.logger.fatal(f'Output <{self.parameters["output"]}> invalid!')
+            #    return
             if self.parameters['output']:
                 if not os.path.exists(self.parameters['output']):
                     os.makedirs(self.parameters['output'], exist_ok=True)
                 else:
                     if not os.path.isdir(self.parameters['output']):
-                        self.remove(self.parameters['output'])
-                        os.makedirs(self.parameters['output'], exist_ok=True)
+                        self.logger.fatal(f'Output <{self.parameters["output"]}> not a directory!')
+                        return
 
 #===============================================================================
 
