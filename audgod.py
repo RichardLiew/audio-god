@@ -824,6 +824,9 @@ class AudioGod(object):
             self.parameters['source'] = self.abspath(
                 self.parameters['source'],
             )
+            if not self.parameters['source']:
+                self.logger.fatal(f'Source <{self.parameters["source"]}> invalid!')
+                return
 
         if 'recursive' in self.parameters:
             pass
@@ -844,11 +847,25 @@ class AudioGod(object):
             self.parameters['document'] = self.abspath(
                 self.parameters['document'],
             )
+            if self.parameters['document']:
+                if not os.path.exists(self.parameters['document']):
+                    self.logger.fatal(f'File <{self.parameters["document"]}> not exists!')
+                    return
+                if not os.path.isfile(self.parameters['document']):
+                    self.logger.fatal(f'<{self.parameters["document"]}> is not file!')
+                    return
 
         if 'ignored_file' in self.parameters:
             self.parameters['ignored_file'] = self.abspath(
                 self.parameters['ignored_file'],
             )
+            if self.parameters['ignored_file']:
+                if not os.path.exists(self.parameters['ignored_file']):
+                    self.logger.fatal(f'File <{self.parameters["ignored_file"]}> not exists!')
+                    return
+                if not os.path.isfile(self.parameters['ignored_file']):
+                    self.logger.fatal(f'<{self.parameters["ignored_file"]}> is not file!')
+                    return
 
         if 'output' in self.parameters:
             self.parameters['output'] = self.abspath(
@@ -1992,7 +2009,12 @@ class AudioGod(object):
         if not self.parameters['output']:
             print(content)
         else:
-            self.backup(self.parameters['output'])
+            if os.path.exists(self.parameters['output']):
+                self.remove(self.parameters['output'])
+            else:
+                dirname = os.path.dirname(self.parameters['output'])
+                if dirname:
+                    os.makedirs(dirname, exist_ok=True)
             with open(self.parameters['output'], 'w', encoding='utf-8') as f:
                 f.write(content)
 
@@ -2118,8 +2140,6 @@ class AudioGod(object):
     def stow_ignored(self):
         if not self.parameters['ignored_file']:
             return
-        if not os.path.exists(self.parameters['ignored_file']):
-            return
         with open(self.parameters['ignored_file'], 'r', encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
@@ -2214,7 +2234,7 @@ class AudioGod(object):
                 self.logger.debug(self.SourceType.OMITTED)
                 continue
 
-            if self.__check_extension(source):
+            if not self.__check_extension(source):
                 self.invalid_ext_sources.append(source)
                 self.logger.debug(self.SourceType.INVALID_EXT)
                 continue
@@ -2588,6 +2608,16 @@ class RedecorateNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
 
     #---------------------------------------------------------------------------
 
+    def rewrite_parameters(self):
+        super().rewrite_parameters()
+
+        if 'document' in self.parameters:
+            if not self.parameters['document']:
+                self.logger.fatal(f'File <{self.parameters["document"]}> invalid!')
+                return
+
+    #---------------------------------------------------------------------------
+
     def execute(self):
         self.analysis_note()
         self.sort_summaries()
@@ -2679,13 +2709,6 @@ class FillPropertiesAction(NoteRelatedBaseAction):
     
     #---------------------------------------------------------------------------
 
-    def import_(self):
-        file_format = self.recognize_file_format(self.parameters['document'])
-        if self.FileFormat.NONE.eq(file_format):
-            self.logger.fatal(f'Invalid source file <{self.parameters["document"]}>.')
-            return
-        getattr(self, f'_import_{file_format}')()
-
     def _import_note(self):
         self.analysis_note()
 
@@ -2703,10 +2726,9 @@ class FillPropertiesAction(NoteRelatedBaseAction):
 
 
     def __load_properties_from_file(self):
-        if not os.path.exists(self.parameters['document']):
-            self.logger.fatal(f'Source file <{self.parameters["document"]}> not exists!')
-            return
-        self.import_()
+        if self.parameters['document']:
+            file_format = self.recognize_file_format(self.parameters['document'])
+            getattr(self, f'_import_{file_format}')()
 
 
     def __resolve_properties(self, properties):
@@ -3116,6 +3138,12 @@ class ManageArtworks__BindAction(ManageArtworksBaseAction):
             self.parameters['artworks'] = self.abspath(
                 self.parameters['artworks'],
             )
+            # need some other checks
+            # ...
+            # ...
+            # ...
+            # ...
+            # ...
 
     #---------------------------------------------------------------------------
 
@@ -3952,280 +3980,6 @@ class DisplayAction(AudioGod):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-class GenerateScriptBaseAction(AudioGod):
-    ACTIVE = True
-
-    #---------------------------------------------------------------------------
-
-    KWARGS = None
-    ARGUMENTS = None
-
-    #---------------------------------------------------------------------------
-
-    STEPS = []
-
-    #---------------------------------------------------------------------------
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    #---------------------------------------------------------------------------
-
-    def execute(self):
-        content = '#!/usr/bin/env zsh\n\n'
-        content += '#' * 78 + '\n\n'
-        content += f'# Created Time: {self.current_time()}\n\n'
-        content += f'# Total Steps: {len(self.STEPS)}\n\n'
-        content += '#' * 78 + '\n\n'
-        content += 'set -e\n\n'
-        content += '#' * 78 + '\n\n'
-        content += f'AUDGOD_CACHE_PATH={self.CACHE_DIR}\n\n'
-        content += '#' * 78 + '\n\n'
-        for i, step in enumerate(self.STEPS):
-            content += f'# Step ({i+1}):\n'
-            if not isinstance(step, (tuple, list)):
-                content += f'{step}\n\n'
-            else:
-                if len(step) == 2:
-                    carrier = ACTIONS[step[0]]['carrier']
-                else:
-                    carrier = ACTIONS[step[0]]['branches'][step[1]]['carrier']
-                if step[-1]:
-                    carrier.reset_defaults(defaults=step[-1])
-                    carrier.set_usage()
-                    carrier.render_usage()
-                content += carrier.KWARGS['usage'].strip()
-                if i < len(self.STEPS) - 1:
-                    content += '\n\n'
-        content += '\n\n'
-        content += '#' * 78 + '\n\n'
-        content += 'unset AUDGOD_CACHE_PATH\n'
-
-        self.handle_output(content)
-        self.chmod(self.parameters['output'], mode=0o755)
-
-#===============================================================================
-
-class GenerateScriptAction(GenerateScriptBaseAction):
-    ACTIVE = True
-
-    #---------------------------------------------------------------------------
-
-    KWARGS = {
-        'description': '✋ Generate a shell script',
-        'help': 'generate a shell script',
-    }
-
-    ARGUMENTS = None
-
-    #---------------------------------------------------------------------------
-
-    def __init__(self, *args, **kwargs):
-        pass
-
-    #---------------------------------------------------------------------------
-
-    def execute(self):
-        pass
-
-#===============================================================================
-
-class GenerateScript__StartAction(GenerateScriptBaseAction):
-    ACTIVE = True
-
-    #---------------------------------------------------------------------------
-
-    KWARGS = {
-        'description': '✋ Generate shell script to start',
-        'help': 'generate shell script to start',
-    }
-
-    ARGUMENTS = {
-        'output': {
-            'use_public': AudioGod.ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': './start.zsh',
-            },
-        },
-    }
-
-    #---------------------------------------------------------------------------
-
-    STEPS = [
-        #('operate', 'cleanup', {}),
-        #('convert', 'kmx-to-mp4', {}),
-        #('convert', 'mp4-to-mp3', {}),
-        ('convert', 'qmc-to-mp3', {}),
-        ('redecorate-note', {}),
-        ('fill-properties', {}),
-        ('format-properties', {}),
-        ('rename-audios', {}),
-        #('manage-artworks', 'bind', {}),
-        ('organize', 'grouped', {}),
-        ('list-repeated', {}),
-        ('export', 'note', {}),
-        ('convert', 'note-to-markdown', {}),
-        ('organize', 'ituned', {}),
-        ('export', 'plist', {}),
-        #('manage-artworks', 'derive', {}),
-    ]
-
-#===============================================================================
-
-class GenerateScript__TestAction(GenerateScriptBaseAction):
-    ACTIVE = True
-
-    #---------------------------------------------------------------------------
-
-    KWARGS = {
-        'description': '✋ Generate shell script to test',
-        'help': 'generate shell script to test',
-    }
-
-    ARGUMENTS = {
-        'output': {
-            'use_public': AudioGod.ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': './test.zsh',
-            },
-        },
-    }
-
-    #---------------------------------------------------------------------------
-
-    CACHE_DIR = GenerateScriptBaseAction.TEST_CACHE_DIR
-
-    #---------------------------------------------------------------------------
-
-    STEPS = [
-        ('operate', 'cleanup', {}),
-        'cp -rf ./test/Origin/Source ./test/Source',
-        'cp -rf ./test/Origin/test.songs.note ./test/',
-        'cp -rf ./test/Origin/test.ignores.txt ./test/',
-        'touch ./test/test.operate.backup.txt',
-        'touch ./test/test.operate.remove.txt',
-        # to complete
-        ('convert', 'kmx-to-mp4', dict(
-            source='./test/Source/Kmx',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/Output/Kmx-To-Mp4',
-        )),
-        # to complete
-        ('convert', 'mp4-to-mp3', dict(
-            source='./test/Source/Mp4',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/Output/Mp4-To-Mp3',
-        )),
-        ('convert', 'qmc-to-mp3', dict(
-            source='./test/Source/Qmc',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/Output/Qmc-To-Mp3',
-        )),
-        ('redecorate-note', dict(
-            document='./test/test.songs.note',
-        )),
-        ('fill-properties', dict(
-            source='./test/Source/Mp3',
-            ignored_file='./test/test.ignores.txt',
-            document='./test/test.songs.note',
-            root='./test//Source/Mp3',
-        )),
-        ('format-properties', dict(
-            source='./test/Source/Mp3',
-            ignored_file='./test/test.ignores.txt',
-        )),
-        ('rename-audios', dict(
-            source='./test/Source/Mp3',
-            ignored_file='./test/test.ignores.txt',
-        )),
-        # to complete
-        ('manage-artworks', 'bind', dict(
-            source='./test/Source/Mp3',
-            ignored_file='./test/test.ignores.txt',
-            artworks='./test/Source/Artworks',
-        )),
-        ('display', dict(
-            source='./test/Source/Mp3',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/test.display.table',
-        )),
-        ('organize', 'grouped', dict(
-            source='./test/Source/Mp3',
-            ignored_file='./test/test.ignores.txt',
-            root='./test/Output/Grouped',
-        )),
-        ('export', 'note', dict(
-            source='./test/Output/Grouped',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/test.songs.note',
-        )),
-        ('export', 'markdown', dict(
-            source='./test/Output/Grouped',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/test.songs.md',
-        )),
-        # to complete
-        ('export', 'xml', dict(
-            source='./test/Output/Grouped',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/test.songs.xml',
-         )),
-        # to complete
-        ('export', 'json', dict(
-            source='./test/Output/Grouped',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/test.songs.json',
-         )),
-        ('list-repeated', dict(
-            source='./test/Output/Grouped',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/test.repeated.txt',
-        )),
-        ('organize', 'ituned', dict(
-            source='./test/Output/Grouped',
-            ignored_file='./test/test.ignores.txt',
-            root='./test/Output/iTunes/iTunes Media/Music',
-        )),
-        ('export', 'plist', dict(
-            source='./test/Source/Mp3',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/Output/iTunes/Library.xml',
-        )),
-        # to complete
-        ('manage-artworks', 'derive', dict(
-            source='./test/Output/iTunes/iTunes Media/Music',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/Output/Artworks',
-        )),
-        ('convert', 'note-to-markdown', dict(
-            document='./test/test.songs.note',
-            output='./test/test.songs.note.md',
-        )),
-        ('convert', 'markdown-to-note', dict(
-            document='./test/test.songs.md',
-            output='./test/test.songs.md.note',
-        )),
-        ('operate', 'backup', dict(
-            source='./test/test.operate.backup.txt',
-            ignored_file='./test/test.ignores.txt',
-        )),
-        ('operate', 'remove', dict(
-            source='./test/test.operate.remove.txt',
-            ignored_file='./test/test.ignores.txt',
-        )),
-        ('operate', 'tree', dict(
-            source='./test/Output',
-            output='./test/test.output.tree',
-        )),
-    ]
-
-    #---------------------------------------------------------------------------
-
-    def execute(self):
-        super().execute()
-
-#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
 class OrganizeBaseAction(AudioGod):
     ACTIVE = True
 
@@ -4250,6 +4004,16 @@ class OrganizeBaseAction(AudioGod):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def rewrite_parameters(self):
+        super().rewrite_parameters()
+
+        if 'root' in self.parameters:
+           if not self.parameters['root']:
+               self.logger.fatal('Invalid root!')
+               return
 
 #===============================================================================
 
@@ -4307,9 +4071,6 @@ class Organize__GroupedAction(OrganizeBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        if not self.parameters['root']:
-            self.logger.fatal('Invalid root!')
-            return
         self.load_sources(matched=False)
         for audio in self.concerned_sources:
             audio_object = self.prime_audio(audio)
@@ -4384,9 +4145,6 @@ class Organize__ItunedAction(OrganizeBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        if not self.parameters['root']:
-            self.logger.fatal('Invalid root!')
-            return
         self.load_sources(matched=False)
         for audio in self.concerned_sources:
             audio_object = self.prime_audio(audio)
@@ -5285,6 +5043,21 @@ class ConvertBaseAction(AudioGod):
     KWARGS = None
     ARGUMENTS = None
 
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+#===============================================================================
+
+class ConvertMediaBaseAction(ConvertBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = None
+    ARGUMENTS = None
+
     PUBLIC_ARGUMENTS = copy.deepcopy(AudioGod.PUBLIC_ARGUMENTS) | {
         'executer': {
             'args': ['-9'],
@@ -5297,6 +5070,15 @@ class ConvertBaseAction(AudioGod):
             },
         },
     }
+
+    REQUISITE_ARGUMENTS = {
+        'recursive': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+    } | copy.deepcopy(ConvertBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
 
@@ -5318,7 +5100,47 @@ class ConvertBaseAction(AudioGod):
             if not os.path.exists(self.parameters['executer']):
                 self.logger.fatal(f'Executer <{self.parameters["executer"]}> not exists!')
                 return
+            if not os.path.isfile(self.parameters['executer']):
+                self.logger.fatal(f'Executer <{self.parameters["executer"]}> not a file!')
+                return
             self.chmod(self.parameters['executer'], mode=0o755)
+
+        if 'output' in self.parameters:
+            if not self.parameters['output']:
+                self.logger.fatal(f'Output <{self.parameters["output"]}> invalid!')
+                return
+            if self.parameters['output']:
+                if not os.path.exists(self.parameters['output']):
+                    os.makedirs(self.parameters['output'], exist_ok=True)
+                else:
+                    if not os.path.isdir(self.parameters['output']):
+                        self.remove(self.parameters['output'])
+                        os.makedirs(self.parameters['output'], exist_ok=True)
+
+#===============================================================================
+
+class ConvertDocumentBaseAction(ConvertBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = None
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def rewrite_parameters(self):
+        super().rewrite_parameters()
+
+        if 'document' in self.parameters:
+            if not self.parameters['document']:
+                self.logger.fatal(f'File <{self.parameters["document"]}> invalid!')
+                return
 
 #===============================================================================
 
@@ -5346,7 +5168,7 @@ class ConvertAction(ConvertBaseAction):
 
 #===============================================================================
 
-class Convert__QmcToMp3Action(ConvertBaseAction):
+class Convert__QmcToMp3Action(ConvertMediaBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -5368,12 +5190,6 @@ class Convert__QmcToMp3Action(ConvertBaseAction):
             'kwargs': {
                 'default': 'qmc,qmc0,qmc3,qmcflac',
             },
-        },
-        'recursive': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
-        },
-        'ignored_file': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
@@ -5401,7 +5217,7 @@ class Convert__QmcToMp3Action(ConvertBaseAction):
 
 #===============================================================================
 
-class Convert__KmxToMp4Action(ConvertBaseAction):
+class Convert__KmxToMp4Action(ConvertMediaBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -5423,12 +5239,6 @@ class Convert__KmxToMp4Action(ConvertBaseAction):
             'kwargs': {
                 'default': 'kmx',
             },
-        },
-        'recursive': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
-        },
-        'ignored_file': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
@@ -5499,7 +5309,7 @@ class Convert__KmxToMp4Action(ConvertBaseAction):
 
 #===============================================================================
 
-class Convert__Mp4ToMp3Action(ConvertBaseAction):
+class Convert__Mp4ToMp3Action(ConvertMediaBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -5521,12 +5331,6 @@ class Convert__Mp4ToMp3Action(ConvertBaseAction):
             'kwargs': {
                 'default': 'mp4',
             },
-        },
-        'recursive': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
-        },
-        'ignored_file': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
@@ -5560,7 +5364,7 @@ class Convert__Mp4ToMp3Action(ConvertBaseAction):
 
 #===============================================================================
 
-class Convert__NoteToMarkdownAction(ConvertBaseAction, NoteRelatedBaseAction, ExportRelatedBaseAction):
+class Convert__NoteToMarkdownAction(ConvertDocumentBaseAction, NoteRelatedBaseAction, ExportRelatedBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -5598,19 +5402,6 @@ class Convert__NoteToMarkdownAction(ConvertBaseAction, NoteRelatedBaseAction, Ex
 
     #---------------------------------------------------------------------------
 
-    def rewrite_parameters(self):
-        super().rewrite_parameters()
-
-        if 'document' in self.parameters:
-            if not os.path.exists(self.parameters['document']):
-                self.logger.fatal(f'<{self.parameters["document"]}> not exists!')
-                return
-            if not os.path.isfile(self.parameters['document']):
-                self.logger.fatal(f'<{self.parameters["document"]}> is not file!')
-                return
-
-    #---------------------------------------------------------------------------
-
     def execute(self):
         self.analysis_note()
         self.sort_summaries()
@@ -5618,7 +5409,7 @@ class Convert__NoteToMarkdownAction(ConvertBaseAction, NoteRelatedBaseAction, Ex
 
 #===============================================================================
 
-class Convert__MarkdownToNoteAction(ConvertBaseAction):
+class Convert__MarkdownToNoteAction(ConvertDocumentBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -5647,19 +5438,6 @@ class Convert__MarkdownToNoteAction(ConvertBaseAction):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-    #---------------------------------------------------------------------------
-
-    def rewrite_parameters(self):
-        super().rewrite_parameters()
-
-        if 'document' in self.parameters:
-            if not os.path.exists(self.parameters['document']):
-                self.logger.fatal(f'<{self.parameters["document"]}> not exists!')
-                return
-            if not os.path.isfile(self.parameters['document']):
-                self.logger.fatal(f'<{self.parameters["document"]}> is not file!')
-                return
 
     #---------------------------------------------------------------------------
 
@@ -5890,10 +5668,10 @@ class Operate__TreeAction(OperateBaseAction):
 
         if 'source' in self.parameters:
             if not os.path.exists(self.parameters['source']):
-                self.logger.fatal(f'<{self.parameters["source"]}> not exists!')
+                self.logger.fatal(f'Source <{self.parameters["source"]}> not exists!')
                 return
             if not os.path.isdir(self.parameters['source']):
-                self.logger.fatal(f'<{self.parameters["source"]}> not directory!')
+                self.logger.fatal(f'Source <{self.parameters["source"]}> not a directory!')
                 return
 
     #---------------------------------------------------------------------------
@@ -5932,6 +5710,282 @@ class Operate__TreeAction(OperateBaseAction):
         lines = []
         self.tree(self.parameters['source'], lines)
         self.handle_output('\n'.join(lines))
+
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+class GenerateScriptBaseAction(AudioGod):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = None
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
+    STEPS = []
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        content = '#!/usr/bin/env zsh\n\n'
+        content += '#' * 78 + '\n\n'
+        content += f'# Created Time: {self.current_time()}\n\n'
+        content += f'# Total Steps: {len(self.STEPS)}\n\n'
+        content += '#' * 78 + '\n\n'
+        content += 'set -e\n\n'
+        content += '#' * 78 + '\n\n'
+        content += f'AUDGOD_CACHE_PATH={self.CACHE_DIR}\n\n'
+        content += '#' * 78 + '\n\n'
+        for i, step in enumerate(self.STEPS):
+            content += f'# Step ({i+1}):\n'
+            if not isinstance(step, (tuple, list)):
+                content += f'{step}\n\n'
+            else:
+                if len(step) == 2:
+                    carrier = ACTIONS[step[0]]['carrier']
+                else:
+                    carrier = ACTIONS[step[0]]['branches'][step[1]]['carrier']
+                if step[-1]:
+                    carrier.reset_defaults(defaults=step[-1])
+                    carrier.set_usage()
+                    carrier.render_usage()
+                content += carrier.KWARGS['usage'].strip()
+                if i < len(self.STEPS) - 1:
+                    content += '\n\n'
+        content += '\n\n'
+        content += '#' * 78 + '\n\n'
+        content += 'unset AUDGOD_CACHE_PATH\n'
+
+        self.handle_output(content)
+        if self.parameters['output']:
+            if os.path.exists(self.parameters['output']):
+                self.chmod(self.parameters['output'], mode=0o755)
+
+#===============================================================================
+
+class GenerateScriptAction(GenerateScriptBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Generate a shell script',
+        'help': 'generate a shell script',
+    }
+
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        pass
+
+#===============================================================================
+
+class GenerateScript__StartAction(GenerateScriptBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Generate shell script to start',
+        'help': 'generate shell script to start',
+    }
+
+    ARGUMENTS = {
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './start.zsh',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
+    STEPS = [
+        #('operate', 'cleanup', {}),
+        #('convert', 'kmx-to-mp4', {}),
+        #('convert', 'mp4-to-mp3', {}),
+        ('convert', 'qmc-to-mp3', {}),
+        ('redecorate-note', {}),
+        ('fill-properties', {}),
+        ('format-properties', {}),
+        ('rename-audios', {}),
+        #('manage-artworks', 'bind', {}),
+        ('organize', 'grouped', {}),
+        ('list-repeated', {}),
+        ('export', 'note', {}),
+        ('convert', 'note-to-markdown', {}),
+        ('organize', 'ituned', {}),
+        ('export', 'plist', {}),
+        #('manage-artworks', 'derive', {}),
+    ]
+
+#===============================================================================
+
+class GenerateScript__TestAction(GenerateScriptBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Generate shell script to test',
+        'help': 'generate shell script to test',
+    }
+
+    ARGUMENTS = {
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './test.zsh',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
+    CACHE_DIR = GenerateScriptBaseAction.TEST_CACHE_DIR
+
+    #---------------------------------------------------------------------------
+
+    STEPS = [
+        ('operate', 'cleanup', {}),
+        'cp -rf ./test/Origin/Source ./test/Source',
+        'cp -rf ./test/Origin/test.songs.note ./test/',
+        'cp -rf ./test/Origin/test.ignores.txt ./test/',
+        'touch ./test/test.operate.backup.txt',
+        'touch ./test/test.operate.remove.txt',
+        # to complete
+        ('convert', 'kmx-to-mp4', dict(
+            source='./test/Source/Kmx',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/Output/Kmx-To-Mp4',
+        )),
+        # to complete
+        ('convert', 'mp4-to-mp3', dict(
+            source='./test/Source/Mp4',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/Output/Mp4-To-Mp3',
+        )),
+        ('convert', 'qmc-to-mp3', dict(
+            source='./test/Source/Qmc',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/Output/Qmc-To-Mp3',
+        )),
+        ('redecorate-note', dict(
+            document='./test/test.songs.note',
+        )),
+        ('fill-properties', dict(
+            source='./test/Source/Mp3',
+            ignored_file='./test/test.ignores.txt',
+            document='./test/test.songs.note',
+            root='./test//Source/Mp3',
+        )),
+        ('format-properties', dict(
+            source='./test/Source/Mp3',
+            ignored_file='./test/test.ignores.txt',
+        )),
+        ('rename-audios', dict(
+            source='./test/Source/Mp3',
+            ignored_file='./test/test.ignores.txt',
+        )),
+        # to complete
+        ('manage-artworks', 'bind', dict(
+            source='./test/Source/Mp3',
+            ignored_file='./test/test.ignores.txt',
+            artworks='./test/Source/Artworks',
+        )),
+        ('display', dict(
+            source='./test/Source/Mp3',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/test.display.table',
+        )),
+        ('organize', 'grouped', dict(
+            source='./test/Source/Mp3',
+            ignored_file='./test/test.ignores.txt',
+            root='./test/Output/Grouped',
+        )),
+        ('export', 'note', dict(
+            source='./test/Output/Grouped',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/test.songs.note',
+        )),
+        ('export', 'markdown', dict(
+            source='./test/Output/Grouped',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/test.songs.md',
+        )),
+        # to complete
+        ('export', 'xml', dict(
+            source='./test/Output/Grouped',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/test.songs.xml',
+         )),
+        # to complete
+        ('export', 'json', dict(
+            source='./test/Output/Grouped',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/test.songs.json',
+         )),
+        ('list-repeated', dict(
+            source='./test/Output/Grouped',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/test.repeated.txt',
+        )),
+        ('organize', 'ituned', dict(
+            source='./test/Output/Grouped',
+            ignored_file='./test/test.ignores.txt',
+            root='./test/Output/iTunes/iTunes Media/Music',
+        )),
+        ('export', 'plist', dict(
+            source='./test/Source/Mp3',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/Output/iTunes/Library.xml',
+        )),
+        # to complete
+        ('manage-artworks', 'derive', dict(
+            source='./test/Output/iTunes/iTunes Media/Music',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/Output/Artworks',
+        )),
+        ('convert', 'note-to-markdown', dict(
+            document='./test/test.songs.note',
+            output='./test/test.songs.note.md',
+        )),
+        ('convert', 'markdown-to-note', dict(
+            document='./test/test.songs.md',
+            output='./test/test.songs.md.note',
+        )),
+        ('operate', 'backup', dict(
+            source='./test/test.operate.backup.txt',
+            ignored_file='./test/test.ignores.txt',
+        )),
+        ('operate', 'remove', dict(
+            source='./test/test.operate.remove.txt',
+            ignored_file='./test/test.ignores.txt',
+        )),
+        ('operate', 'tree', dict(
+            source='./test/Output',
+            output='./test/test.output.tree',
+        )),
+    ]
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        super().execute()
 
 ####################################################V###########################
 

@@ -1,6 +1,10 @@
 Processing:
 steps in usage需要和generate script以及cleanup, 以及所有的actions和branches都要覆盖到里 同步更新, start和test都要同步
 抓包 Mac 酷我下载音乐的链接，然后集成到脚本中自动下载
+
+创建 子命令：test init, 把cp -rf等抽取来放到这个子命令里，同时，把cleanup里的test部分去除，放到test cleanup子命令里
+
+
 type: ignore
 All done.
 
