@@ -5751,7 +5751,7 @@ class Testing__InitAction(TestingBaseAction):
 
         srcs = list(map(
             lambda x: os.path.join(self.TEST_ORISRC_DIR, x),
-            ['Mp3', 'Kmx', 'Mp4', 'Qmc', 'Artworks'],
+            ['Mp3', 'Kmx', 'Mp4', 'Qmc', 'Png'],
         ))
 
         dirs = [
@@ -6038,7 +6038,7 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
         ('manage-artworks', 'bind', dict(
             source='./test/Source/Mp3',
             ignored_file='./test/test.ignores.txt',
-            artworks='./test/Source/Artworks',
+            artworks='./test/Source/Png',
         )),
         ('display', dict(
             source='./test/Source/Mp3',
