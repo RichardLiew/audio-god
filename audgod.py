@@ -5746,6 +5746,7 @@ class Testing__InitAction(TestingBaseAction):
 
     def execute(self):
         if self.CACHE_DIR != self.TEST_CACHE_DIR:
+            print('AAAAAAAAA', f'<{self.CACHE_DIR}>', f'<{self.TEST_CACHE_DIR}>')
             self.logger.fatal('${AUDGOD_CACHE_PATH} error!')
             return
 

@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-26T13:04:32Z
+# Created Time: 2025-06-26T13:14:08Z
 
 # Total Steps: 25
 
@@ -108,7 +108,7 @@ AUDGOD_CACHE_PATH=./test/.audgod-cache
 # Step (10):
 ./audio-god manage-artworks bind \
     --source=./test/Source/Mp3 \
-    --artworks=./test/Source/Artworks \
+    --artworks=./test/Source/Png \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./test/test.ignores.txt \
