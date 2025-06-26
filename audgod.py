@@ -5671,7 +5671,7 @@ class Operate__TreeAction(OperateBaseAction):
         if not is_root:
             front = f'{prefix}{connector}'
         lines.append(f'{front}{content}')
-        
+
         items = [
             item for item in path.iterdir() 
             if item.is_dir() and not item.name.startswith('.')
@@ -6180,7 +6180,7 @@ def _summarize_actions():
 
 def _summarize_actions_defaults():
     ret = {}
-    for cls in _get_active_subclasses(AudioGod):
+    for cls in _get_valid_subclasses(AudioGod):
         if not cls.NAME or not cls.ARGUMENTS:
             continue
         defaults = copy.deepcopy(cls.ARGUMENTS_DEFAULTS())
@@ -6192,7 +6192,7 @@ def _summarize_actions_defaults():
 
 
 def _render_actions():
-    for cls in _get_active_subclasses(AudioGod):
+    for cls in _get_valid_subclasses(AudioGod):
         cls.render_prog()
         cls.render_usage()
 
