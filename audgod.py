@@ -282,7 +282,7 @@ Ready:
     Step.3: Make sure folder "${test_orisrc_dir}" is ready;
     Step.4: Put test note file to "${test_origin_dir}";
     Step.5: Put test ignored file to "${test_origin_dir}";
-    Step.6: Put test audios to "${test_orisrc_dir}".
+    Step.6: Put test media under folders with different extentions to "${test_orisrc_dir}".
 
 Process Method:
     Step.1: Run <generate-script test> subcommand to generate a shell script for testing;
@@ -5999,11 +5999,6 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
         #('operate', 'cleanup', {}), # same as <test cleanup>
         ('test', 'cleanup', {}),
         ('test', 'init', {}),
-        'cp -rf ./test/Origin/Source ./test/Source',
-        'cp -rf ./test/Origin/Source/test.songs.note ./test/',
-        'cp -rf ./test/Origin/Source/test.ignores.txt ./test/',
-        'touch ./test/test.operate.backup.txt',
-        'touch ./test/test.operate.remove.txt',
         # to complete
         ('convert', 'kmx-to-mp4', dict(
             source='./test/Source/Kmx',
