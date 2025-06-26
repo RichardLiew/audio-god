@@ -5881,7 +5881,8 @@ class GenerateScriptBaseAction(AudioGod):
         content += '#' * 78 + '\n\n'
         content += f'export AUDGOD_CACHE_PATH={self.CACHE_DIR}\n\n'
         content += '#' * 78 + '\n\n'
-        content += 'echo "\\n[***] Starting ...\\n"\n\n'
+        content += 'printf "%.0s@" {1..60}\n'
+        content += 'echo "\\n\\n[***] Starting ...\\n"\n\n'
         content += '#' * 78 + '\n\n'
         for i, step in enumerate(self.STEPS):
             content += f'# Step ({i+1}):\n'
@@ -5903,7 +5904,8 @@ class GenerateScriptBaseAction(AudioGod):
         content += '#' * 78 + '\n\n'
         content += 'unset AUDGOD_CACHE_PATH\n\n'
         content += '#' * 78 + '\n\n'
-        content += 'echo "[***] Finished!\\n"\n'
+        content += 'printf "%.0s@" {1..60}\n'
+        content += 'echo "\\n\\n[***] Finished!\\n"\n'
 
         self.handle_output(content)
         if self.parameters['output']:
