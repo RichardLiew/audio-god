@@ -81,9 +81,12 @@
 #   3.  Online Small Tools: https://tool.lu/;
 #   4.  Format Convert: https://www.aconvert.com/;
 #   5.  Videos Download: https://github.com/iawia002/annie;
+#   6.  Audio Convert: https://github.com/jiaaro/pydub;
 #   6.  QMC->MP3: https://openyyy.com/;
 #   7.  QMC->MP3: https://github.com/Presburger/qmc-decoder;
 #   8.  QMC->MP3: https://gitcode.com/gh_mirrors/qm/qmc-decoder;
+#   9.  QMC->MP3: https://github.com/MegrezZhu/qmcdump;
+#   9.  QMC->MP3: https://github.com/42arch/qmc_file_decrypter;
 #   9.  KMX->MP4: https://gitee.com/aprl/kmx-MP4;
 #   10. MP4->MP3: https://pypi.org/project/ffmpy3/;
 #   11. MP4->MP3: https://github.com/wchill/ffmpy3;
@@ -274,7 +277,7 @@ Process Method 2:
 
 --------------------------------------------------------------------------------
 
-Test steps:
+Testing steps:
 
 Ready:
     Step.1: Make sure folder "${test_dir}" is ready;
@@ -285,7 +288,7 @@ Ready:
     Step.6: Put test media under folders with different extentions to "${test_orisrc_dir}".
 
 Process Method:
-    Step.1: Run <generate-script test> subcommand to generate a shell script for testing;
+    Step.1: Run <testing generate-script> subcommand to generate a shell script for testing;
     Step.2: Execute the shell script above.
 
 Attention:
@@ -347,13 +350,6 @@ class AudioGod(object):
                     if os.environ.get('AUDGOD_CACHE_PATH', '') \
                     else f'~/{CACHE_NAME}'
     
-    TEST_DIR = './test'
-    TEST_CACHE_DIR = os.path.join(TEST_DIR, CACHE_NAME)
-    TEST_ORIGIN_DIR = os.path.join(TEST_DIR, 'Origin')
-    TEST_ORISRC_DIR = os.path.join(TEST_ORIGIN_DIR, 'Source')
-    TEST_SOURCE_DIR = os.path.join(TEST_DIR, 'Source')
-    TEST_OUTPUT_DIR = os.path.join(TEST_DIR, 'Output')
-
     TRASH_DIR = os.path.join(CACHE_DIR, 'trash')
     BACKUPS_DIR = os.path.join(CACHE_DIR, 'backups')
 
@@ -5062,18 +5058,18 @@ class ConvertMediaBaseAction(ConvertBaseAction):
     KWARGS = None
     ARGUMENTS = None
 
-    PUBLIC_ARGUMENTS = copy.deepcopy(AudioGod.PUBLIC_ARGUMENTS) | {
-        'executer': {
-            'args': ['-9'],
-            'kwargs': {
-                'action': 'store',
-                'type': str,
-                'required': False,
-                'default': '',
-                'help': 'the executer for convert sources',
-            },
-        },
-    }
+    #PUBLIC_ARGUMENTS = copy.deepcopy(AudioGod.PUBLIC_ARGUMENTS) | {
+    #    'executer': {
+    #        'args': ['-9'],
+    #        'kwargs': {
+    #            'action': 'store',
+    #            'type': str,
+    #            'required': False,
+    #            'default': '',
+    #            'help': 'the executer for convert sources',
+    #        },
+    #    },
+    #}
 
     REQUISITE_ARGUMENTS = {
         'recursive': {
@@ -5094,20 +5090,20 @@ class ConvertMediaBaseAction(ConvertBaseAction):
     def rewrite_parameters(self):
         super().rewrite_parameters()
 
-        if 'executer' in self.parameters:
-            self.parameters['executer'] = self.abspath(
-                self.parameters['executer'],
-            )
-            if not self.parameters['executer']:
-                self.logger.fatal(f'Invalid executer!')
-                return
-            if not os.path.exists(self.parameters['executer']):
-                self.logger.fatal(f'Executer <{self.parameters["executer"]}> not exists!')
-                return
-            if not os.path.isfile(self.parameters['executer']):
-                self.logger.fatal(f'Executer <{self.parameters["executer"]}> not a file!')
-                return
-            self.chmod(self.parameters['executer'], mode=0o755)
+        #if 'executer' in self.parameters:
+        #    self.parameters['executer'] = self.abspath(
+        #        self.parameters['executer'],
+        #    )
+        #    if not self.parameters['executer']:
+        #        self.logger.fatal(f'Invalid executer!')
+        #        return
+        #    if not os.path.exists(self.parameters['executer']):
+        #        self.logger.fatal(f'Executer <{self.parameters["executer"]}> not exists!')
+        #        return
+        #    if not os.path.isfile(self.parameters['executer']):
+        #        self.logger.fatal(f'Executer <{self.parameters["executer"]}> not a file!')
+        #        return
+        #    self.chmod(self.parameters['executer'], mode=0o755)
 
         if 'output' in self.parameters:
             if not self.parameters['output']:
@@ -5172,14 +5168,14 @@ class ConvertAction(ConvertBaseAction):
 
 #===============================================================================
 
-class Convert__QmcToMp3Action(ConvertMediaBaseAction):
+class Convert__QmcToAudioAction(ConvertMediaBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
 
     KWARGS = {
-        'description': '⭐ Convert qmc to mp3',
-        'help': 'convert qmc to mp3',
+        'description': '⭐ Convert qmc to common format',
+        'help': 'convert qmc to common format',
     }
 
     ARGUMENTS = {
@@ -5192,19 +5188,13 @@ class Convert__QmcToMp3Action(ConvertMediaBaseAction):
         'extensions': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': 'qmc,qmc0,qmc3,qmcflac',
+                'default': 'qmc,qmc0,qmc3,qmcogg,qmcflac',
             },
         },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Output/Qmc-To-Mp3',
-            },
-        },
-        'executer': {
-            'use_public': AudioGod.ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': './executers/qmc-to-mp3/decoder',
+                'default': '~/Music/Output/Qmc-To-Audio',
             },
         },
     }
@@ -5213,6 +5203,53 @@ class Convert__QmcToMp3Action(ConvertMediaBaseAction):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    @staticmethod
+    def get_i(i):
+        return [
+            0x77, 0x48, 0x32, 0x73, 0xDE, 0xF2, 0xC0, 0xC8, 0x95, 0xEC, 0x30, 0xB2, 0x51, 0xC3, 0xE1, 0xA0,
+            0x9E, 0xE6, 0x9D, 0xCF, 0xFA, 0x7F, 0x14, 0xD1, 0xCE, 0xB8, 0xDC, 0xC3, 0x4A, 0x67, 0x93, 0xD6,
+            0x28, 0xC2, 0x91, 0x70, 0xCA, 0x8D, 0xA2, 0xA4, 0xF0, 8, 0x61, 0x90, 0x7E, 0x6F, 0xA2, 0xE0, 0xEB,
+            0xAE, 0x3E, 0xB6, 0x67, 0xC7, 0x92, 0xF4, 0x91, 0xB5, 0xF6, 0x6C, 0x5E, 0x84, 0x40, 0xF7, 0xF3,
+            0x1B, 2, 0x7F, 0xD5, 0xAB, 0x41, 0x89, 0x28, 0xF4, 0x25, 0xCC, 0x52, 0x11, 0xAD, 0x43, 0x68, 0xA6,
+            0x41, 0x8B, 0x84, 0xB5, 0xFF, 0x2C, 0x92, 0x4A, 0x26, 0xD8, 0x47, 0x6A, 0x7C, 0x95, 0x61, 0xCC,
+            0xE6, 0xCB, 0xBB, 0x3F, 0x47, 0x58, 0x89, 0x75, 0xC3, 0x75, 0xA1, 0xD9, 0xAF, 0xCC, 8, 0x73, 0x17,
+            0xDC, 0xAA, 0x9A, 0xA2, 0x16, 0x41, 0xD8, 0xA2, 6, 0xC6, 0x8B, 0xFC, 0x66, 0x34, 0x9F, 0xCF, 0x18,
+            0x23, 0xA0, 0xA, 0x74, 0xE7, 0x2B, 0x27, 0x70, 0x92, 0xE9, 0xAF, 0x37, 0xE6, 0x8C, 0xA7, 0xBC, 0x62,
+            0x65, 0x9C, 0xC2, 8, 0xC9, 0x88, 0xB3, 0xF3, 0x43, 0xAC, 0x74, 0x2C, 0xF, 0xD4, 0xAF, 0xA1, 0xC3, 1,
+            0x64, 0x95, 0x4E, 0x48, 0x9F, 0xF4, 0x35, 0x78, 0x95, 0x7A, 0x39, 0xD6, 0x6A, 0xA0, 0x6D, 0x40,
+            0xE8, 0x4F, 0xA8, 0xEF, 0x11, 0x1D, 0xF3, 0x1B, 0x3F, 0x3F, 7, 0xDD, 0x6F, 0x5B, 0x19, 0x30, 0x19,
+            0xFB, 0xEF, 0xE, 0x37, 0xF0, 0xE, 0xCD, 0x16, 0x49, 0xFE, 0x53, 0x47, 0x13, 0x1A, 0xBD, 0xA4, 0xF1,
+            0x40, 0x19, 0x60, 0xE, 0xED, 0x68, 9, 6, 0x5F, 0x4D, 0xCF, 0x3D, 0x1A, 0xFE, 0x20, 0x77, 0xE4, 0xD9,
+            0xDA, 0xF9, 0xA4, 0x2B, 0x76, 0x1C, 0x71, 0xDB, 0, 0xBC, 0xFD, 0xC, 0x6C, 0xA5, 0x47, 0xF7, 0xF6, 0,
+            0x79, 0x4A, 0x11,
+        ][(i * i + 80923) % 256]
+
+
+    @classmethod
+    def map_l(cls, i):
+        if i >= 0x8000:
+            return cls.get_i(i % 0x7fff)
+        return cls.get_i(i)
+
+
+    def qmc_file_decrypt(file_path, out_dir):
+        file = file_path.split('/')[-1]
+        file_name = file.split('.')[0]
+        file_suffix = file.split('.')[-1]
+        with open(file_path, 'rb') as f:
+            data = bytearray(f.read())
+        for i in range(len(data)):
+            data[i] ^= map_l(i)
+        save_file(data, out_dir, file_name, suffix_map[file_suffix])
+
+
+    def save_file(data, output_dir, file_name, file_suffix):
+        path = output_dir + '/' + file_name + '.' + file_suffix
+        with open(path, 'wb') as f:
+            f.write(data)
 
     #---------------------------------------------------------------------------
 
@@ -5365,6 +5402,75 @@ class Convert__Mp4ToMp3Action(ConvertMediaBaseAction):
         #audio_path = '2.mp3'  # 输出音频文件路径
         # 
         #video_to_audio(video_path, audio_path)
+
+#===============================================================================
+
+class Convert__AudiosAction(ConvertMediaBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    SUPPORTED_FORMATS = ['mp3', 'flac', 'wav', 'ogg', 'ape', 'wma']
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '⭐ Convert audios to different format',
+        'help': 'convert audios to different format',
+    }
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Source/Audios',
+            },
+        },
+        'extensions': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': 'flac,wav,ogg,ape,wma',
+            },
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': '~/Music/Output/Audios',
+            },
+        },
+        'format': {
+            'use_public': AudioGod.ReplaceType.NONE,
+            'args': ['-5'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'choices': SUPPORTED_FORMATS,
+                'required': False,
+                'default': 'mp3',
+                'help': 'the format for output',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def rewrite_parameters(self):
+        super().rewrite_parameters()
+
+        if 'format' in self.parameters:
+            if self.parameters['format'] not in self.SUPPORTED_FORMATS:
+                self.logger.fatal(f'Unsupported format <{self.parameters["format"]}>!')
+                return
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        pass
 
 #===============================================================================
 
@@ -5690,8 +5796,154 @@ class Operate__TreeAction(OperateBaseAction):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+class GenerateScriptBaseAction(AudioGod):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = None
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
+    STEPS = []
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def generate(self):
+        content = '#!/usr/bin/env zsh\n\n'
+        content += '#' * 78 + '\n\n'
+        content += f'# Created Time: {self.current_time()}\n\n'
+        content += f'# Total Steps: {len(self.STEPS)}\n\n'
+        content += '#' * 78 + '\n\n'
+        content += 'set -e\n\n'
+        content += '#' * 78 + '\n\n'
+        content += f'export AUDGOD_CACHE_PATH={self.CACHE_DIR}\n\n'
+        content += '#' * 78 + '\n\n'
+        content += 'printf "%.0s@" {1..60}\n'
+        content += 'echo "\\n\\n[***] Starting ...\\n"\n\n'
+        content += '#' * 78 + '\n\n'
+        for i, step in enumerate(self.STEPS):
+            content += f'# Step ({i+1}):\n'
+            if not isinstance(step, (tuple, list)):
+                content += f'{step}\n\n'
+            else:
+                if len(step) == 2:
+                    carrier = ACTIONS[step[0]]['carrier']
+                else:
+                    carrier = ACTIONS[step[0]]['branches'][step[1]]['carrier']
+                if step[-1]:
+                    carrier.reset_defaults(defaults=step[-1])
+                    carrier.set_usage()
+                    carrier.render_usage()
+                content += carrier.KWARGS['usage'].strip()
+                if i < len(self.STEPS) - 1:
+                    content += '\n\n'
+        content += '\n\n'
+        content += '#' * 78 + '\n\n'
+        content += 'unset AUDGOD_CACHE_PATH\n\n'
+        content += '#' * 78 + '\n\n'
+        content += 'printf "%.0s@" {1..60}\n'
+        content += 'echo "\\n\\n[***] Finished!\\n"\n'
+
+        self.handle_output(content)
+        if self.parameters['output']:
+            if os.path.exists(self.parameters['output']):
+                self.chmod(self.parameters['output'], mode=0o755)
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        self.generate()
+
+#===============================================================================
+
+class GenerateScriptAction(GenerateScriptBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Generate a shell script',
+        'help': 'generate a shell script',
+    }
+
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        pass
+
+#===============================================================================
+
+class GenerateScript__StartAction(GenerateScriptBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Generate shell script to start',
+        'help': 'generate shell script to start',
+    }
+
+    ARGUMENTS = {
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './start.zsh',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
+    STEPS = [
+        #('operate', 'cleanup', {}),
+        #('convert', 'kmx-to-mp4', {}),
+        #('convert', 'mp4-to-mp3', {}),
+        ('convert', 'qmc-to-audio', {}),
+        ('redecorate-note', {}),
+        ('fill-properties', {}),
+        ('format-properties', {}),
+        ('rename-audios', {}),
+        #('manage-artworks', 'bind', {}),
+        ('organize', 'grouped', {}),
+        ('list-repeated', {}),
+        ('export', 'note', {}),
+        ('convert', 'note-to-markdown', {}),
+        ('organize', 'ituned', {}),
+        ('export', 'plist', {}),
+        #('manage-artworks', 'derive', {}),
+    ]
+
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
 class TestingBaseAction(AudioGod):
     ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    TEST_DIR = './test'
+    TEST_CACHE_DIR = os.path.join(TEST_DIR, AudioGod.CACHE_NAME)
+    TEST_ORIGIN_DIR = os.path.join(TEST_DIR, 'Origin')
+    TEST_ORISRC_DIR = os.path.join(TEST_ORIGIN_DIR, 'Source')
+    TEST_SOURCE_DIR = os.path.join(TEST_DIR, 'Source')
+    TEST_OUTPUT_DIR = os.path.join(TEST_DIR, 'Output')
+
+    #---------------------------------------------------------------------------
+
+    CACHE_DIR = TEST_CACHE_DIR
 
     #---------------------------------------------------------------------------
 
@@ -5850,144 +6102,16 @@ class Testing__CleanupAction(TestingBaseAction):
         for item in items:
             self.remove(item)
 
-#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-class GenerateScriptBaseAction(AudioGod):
-    ACTIVE = True
-
-    #---------------------------------------------------------------------------
-
-    KWARGS = None
-    ARGUMENTS = None
-
-    #---------------------------------------------------------------------------
-
-    STEPS = []
-
-    #---------------------------------------------------------------------------
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    #---------------------------------------------------------------------------
-
-    def execute(self):
-        content = '#!/usr/bin/env zsh\n\n'
-        content += '#' * 78 + '\n\n'
-        content += f'# Created Time: {self.current_time()}\n\n'
-        content += f'# Total Steps: {len(self.STEPS)}\n\n'
-        content += '#' * 78 + '\n\n'
-        content += 'set -e\n\n'
-        content += '#' * 78 + '\n\n'
-        content += f'export AUDGOD_CACHE_PATH={self.CACHE_DIR}\n\n'
-        content += '#' * 78 + '\n\n'
-        content += 'printf "%.0s@" {1..60}\n'
-        content += 'echo "\\n\\n[***] Starting ...\\n"\n\n'
-        content += '#' * 78 + '\n\n'
-        for i, step in enumerate(self.STEPS):
-            content += f'# Step ({i+1}):\n'
-            if not isinstance(step, (tuple, list)):
-                content += f'{step}\n\n'
-            else:
-                if len(step) == 2:
-                    carrier = ACTIONS[step[0]]['carrier']
-                else:
-                    carrier = ACTIONS[step[0]]['branches'][step[1]]['carrier']
-                if step[-1]:
-                    carrier.reset_defaults(defaults=step[-1])
-                    carrier.set_usage()
-                    carrier.render_usage()
-                content += carrier.KWARGS['usage'].strip()
-                if i < len(self.STEPS) - 1:
-                    content += '\n\n'
-        content += '\n\n'
-        content += '#' * 78 + '\n\n'
-        content += 'unset AUDGOD_CACHE_PATH\n\n'
-        content += '#' * 78 + '\n\n'
-        content += 'printf "%.0s@" {1..60}\n'
-        content += 'echo "\\n\\n[***] Finished!\\n"\n'
-
-        self.handle_output(content)
-        if self.parameters['output']:
-            if os.path.exists(self.parameters['output']):
-                self.chmod(self.parameters['output'], mode=0o755)
-
 #===============================================================================
 
-class GenerateScriptAction(GenerateScriptBaseAction):
+class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
 
     KWARGS = {
-        'description': '✋ Generate a shell script',
-        'help': 'generate a shell script',
-    }
-
-    ARGUMENTS = None
-
-    #---------------------------------------------------------------------------
-
-    def __init__(self, *args, **kwargs):
-        pass
-
-    #---------------------------------------------------------------------------
-
-    def execute(self):
-        pass
-
-#===============================================================================
-
-class GenerateScript__StartAction(GenerateScriptBaseAction):
-    ACTIVE = True
-
-    #---------------------------------------------------------------------------
-
-    KWARGS = {
-        'description': '✋ Generate shell script to start',
-        'help': 'generate shell script to start',
-    }
-
-    ARGUMENTS = {
-        'output': {
-            'use_public': AudioGod.ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': './start.zsh',
-            },
-        },
-    }
-
-    #---------------------------------------------------------------------------
-
-    STEPS = [
-        #('operate', 'cleanup', {}),
-        #('convert', 'kmx-to-mp4', {}),
-        #('convert', 'mp4-to-mp3', {}),
-        ('convert', 'qmc-to-mp3', {}),
-        ('redecorate-note', {}),
-        ('fill-properties', {}),
-        ('format-properties', {}),
-        ('rename-audios', {}),
-        #('manage-artworks', 'bind', {}),
-        ('organize', 'grouped', {}),
-        ('list-repeated', {}),
-        ('export', 'note', {}),
-        ('convert', 'note-to-markdown', {}),
-        ('organize', 'ituned', {}),
-        ('export', 'plist', {}),
-        #('manage-artworks', 'derive', {}),
-    ]
-
-#===============================================================================
-
-class GenerateScript__TestAction(GenerateScriptBaseAction):
-    ACTIVE = True
-
-    #---------------------------------------------------------------------------
-
-    KWARGS = {
-        'description': '✋ Generate shell script to test',
-        'help': 'generate shell script to test',
+        'description': '✋ Generate shell script for testing',
+        'help': 'generate shell script for testing',
     }
 
     ARGUMENTS = {
@@ -5998,10 +6122,6 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
             },
         },
     }
-
-    #---------------------------------------------------------------------------
-
-    CACHE_DIR = GenerateScriptBaseAction.TEST_CACHE_DIR
 
     #---------------------------------------------------------------------------
 
@@ -6022,10 +6142,17 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
             output='./test/Output/Mp4-To-Mp3',
         )),
         # to complete
-        ('convert', 'qmc-to-mp3', dict(
+        ('convert', 'qmc', dict(
             source='./test/Source/Qmc',
             ignored_file='./test/test.ignores.txt',
-            output='./test/Output/Qmc-To-Mp3',
+            output='./test/Output/Qmc-To-Audio',
+        )),
+        # to complete
+        ('convert', 'audios', dict(
+            source='./test/Source/Audios',
+            ignored_file='./test/test.ignores.txt',
+            output='./test/Output/Audios',
+            format='mp3',
         )),
         ('redecorate-note', dict(
             document='./test/test.songs.note',
@@ -6125,11 +6252,6 @@ class GenerateScript__TestAction(GenerateScriptBaseAction):
             output='./test/Output/test.output.tree',
         )),
     ]
-
-    #---------------------------------------------------------------------------
-
-    def execute(self):
-        super().execute()
 
 ####################################################V###########################
 
@@ -6447,12 +6569,12 @@ def main():
                 cache_dir=AudioGod.CACHE_DIR,
                 trash_dir=os.path.basename(AudioGod.TRASH_DIR),
                 backups_dir=os.path.basename(AudioGod.BACKUPS_DIR),
-                test_dir=AudioGod.TEST_DIR,
-                test_cache_dir=AudioGod.TEST_CACHE_DIR,
-                test_origin_dir=AudioGod.TEST_ORIGIN_DIR,
-                test_orisrc_dir=AudioGod.TEST_ORISRC_DIR,
-                test_source_dir=AudioGod.TEST_SOURCE_DIR,
-                test_output_dir=AudioGod.TEST_OUTPUT_DIR,
+                test_dir=TestingAction.TEST_DIR,
+                test_cache_dir=TestingAction.TEST_CACHE_DIR,
+                test_origin_dir=TestingAction.TEST_ORIGIN_DIR,
+                test_orisrc_dir=TestingAction.TEST_ORISRC_DIR,
+                test_source_dir=TestingAction.TEST_SOURCE_DIR,
+                test_output_dir=TestingAction.TEST_OUTPUT_DIR,
             ),
         ),
         description='🎻 God of audios 🎸',

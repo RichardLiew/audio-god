@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-26T14:21:53Z
+# Created Time: 2025-06-27T04:33:00Z
 
 # Total Steps: 11
 
@@ -22,11 +22,10 @@ echo "\n\n[***] Starting ...\n"
 ##############################################################################
 
 # Step (1):
-./audio-god convert qmc-to-mp3 \
+./audio-god convert qmc-to-audio \
     --source='~/Music/Source/Qmc' \
-    --extensions=qmc,qmc0,qmc3,qmcflac \
-    --output='~/Music/Output/Qmc-To-Mp3' \
-    --executer=./executers/qmc-to-mp3/decoder \
+    --extensions=qmc,qmc0,qmc3,qmcogg,qmcflac \
+    --output='~/Music/Output/Qmc-To-Audio' \
     --recursive \
     --ignored-file=./ignored.txt \
     --log-level=WARNING \
