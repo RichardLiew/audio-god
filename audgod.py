@@ -1467,7 +1467,10 @@ class AudioGod(object):
             return
         if os.path.exists(dst):
             self.remove(dst)
-        shutil.copy2(src, dst)
+        if os.path.isdir(src):
+            shutil.copytree(src, dst)
+        else:
+            shutil.copy2(src, dst)
 
 
     @classmethod
@@ -5746,7 +5749,6 @@ class Testing__InitAction(TestingBaseAction):
 
     def execute(self):
         if self.CACHE_DIR != self.TEST_CACHE_DIR:
-            print('AAAAAAAAA', f'<{self.CACHE_DIR}>', f'<{self.TEST_CACHE_DIR}>')
             self.logger.fatal('${AUDGOD_CACHE_PATH} error!')
             return
 
@@ -5876,7 +5878,7 @@ class GenerateScriptBaseAction(AudioGod):
         content += '#' * 78 + '\n\n'
         content += 'set -e\n\n'
         content += '#' * 78 + '\n\n'
-        content += f'AUDGOD_CACHE_PATH={self.CACHE_DIR}\n\n'
+        content += f'export AUDGOD_CACHE_PATH={self.CACHE_DIR}\n\n'
         content += '#' * 78 + '\n\n'
         for i, step in enumerate(self.STEPS):
             content += f'# Step ({i+1}):\n'
