@@ -61,6 +61,7 @@
 #       mdutils = "==1.6.0"
 #       pyfiglet = "==1.0.3"
 #       pydub = "==0.25.1"
+#       tqdm = "==4.67.1"
 #
 #       [dev-packages]
 #       pylint = "==3.3.6"
@@ -135,6 +136,7 @@ import random
 import urllib
 import shutil
 import logging
+import inspect
 import argparse
 import plistlib
 import datetime
@@ -151,6 +153,7 @@ from collections import ChainMap
 import psutil
 import pyfiglet
 
+from tqdm import tqdm
 from treelib import Tree # type: ignore
 from enumx import StringEnum
 from prettytable import PrettyTable
@@ -302,7 +305,7 @@ Attention:
 
 ################################################################################
 #                                                                              #
-#                            CLASSES AND FUNCTIONS                             #
+#                                  DECORATORS                                  #
 #                                                                              #
 ################################################################################
 
@@ -327,6 +330,46 @@ def log_decorator(func):
             cost_time = time.time() - start_time
             print_func(f'\n<{func_name}> finished, cost {cost_time:.2f} seconds.\n')
     return wrapper
+
+
+def with_progress(iter_arg=None, total=None, **tqdm_kwargs):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            bound_args = inspect.signature(func).bind(*args, **kwargs)
+            bound_args.apply_defaults()
+            
+            if iter_arg is not None:
+                if iter_arg not in bound_args.arguments:
+                    raise ValueError(f"Iteration argument '{iter_arg}' not found")
+                iterable = bound_args.arguments[iter_arg]
+            else:
+                iterable = next(
+                    (v for v in bound_args.arguments.values() 
+                     if hasattr(v, '__iter__') and not isinstance(v, str)),
+                    None
+                )
+                if iterable is None:
+                    raise ValueError("No iterable argument found")
+
+            actual_total = total
+            if actual_total is None:
+                try:
+                    actual_total = len(iterable)
+                except TypeError:
+                    actual_total = None
+
+            with tqdm(iterable, total=actual_total, **tqdm_kwargs) as pbar:
+                if iter_arg is not None:
+                    bound_args.arguments[iter_arg] = pbar
+                else:
+                    for name, val in bound_args.arguments.items():
+                        if val is iterable:
+                            bound_args.arguments[name] = pbar
+                            break
+                return func(*bound_args.args, **bound_args.kwargs)
+        return wrapper
+    return decorator
 
 ################################################################################
 #                                                                              #
@@ -1921,9 +1964,9 @@ class AudioGod(object):
                     else:
                         valid = self.validate_image(value) and (
                                     os.path.isfile(value) or (
-                                        self.parameters['artwork_path'] and \
+                                        self.parameters['root'] and \
                                         os.path.isfile(self.abspath(
-                                            self.parameters['artwork_path'], value,
+                                            self.parameters['root'], value,
                                         ))
                                     )
                                 )
@@ -2279,6 +2322,7 @@ class AudioGod(object):
     #---------------------------------------------------------------------------
 
     @log_decorator
+    @with_progress()
     def run(self):
         self.execute()
 

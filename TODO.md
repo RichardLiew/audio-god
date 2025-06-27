@@ -4,6 +4,7 @@ steps in usage需要和generate script以及cleanup, 以及所有的actions和br
 
 有一个地想不起来了，和cls.NAME有关
 
+
 type: ignore
 All done.
 
@@ -15,6 +16,7 @@ Useful Paths:
 
 
 Relax:
+qmc等文件转化完mp3后，tags会丢失是吧？
 看看能加进度条地方，都加上
 记得同时实现导出音频的封面和上传封面给音频这两个功能
 Action 继承自多个父类时，ARGUMENTS and KWARGS and rewrite_parameters 怎么合并
