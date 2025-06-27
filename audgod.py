@@ -88,9 +88,9 @@
 #   7.  QMC->MP3: https://openyyy.com/;
 #   8.  QMC->MP3: https://github.com/Presburger/qmc-decoder;
 #   9.  QMC->MP3: https://gitcode.com/gh_mirrors/qm/qmc-decoder;
-#   10.  QMC->MP3: https://github.com/MegrezZhu/qmcdump;
-#   11.  QMC->MP3: https://github.com/42arch/qmc_file_decrypter;
-#   12.  KMX->MP4: https://gitee.com/aprl/kmx-MP4;
+#   10. QMC->MP3: https://github.com/MegrezZhu/qmcdump;
+#   11. QMC->MP3: https://github.com/42arch/qmc_file_decrypter;
+#   12. KMX->MP4: https://gitee.com/aprl/kmx-MP4;
 #   13. MP4->MP3: https://pypi.org/project/ffmpy3/;
 #   14. MP4->MP3: https://github.com/wchill/ffmpy3;
 #   15. MP4->MP3: https://pypi.org/project/moviepy/;
@@ -161,7 +161,7 @@ from prettytable import PrettyTable
 import eyed3
 from eyed3.id3 import Genre, frames
 from eyed3.id3.tag import CommentsAccessor
-    
+
 from pydub import AudioSegment
 
 ################################################################################
@@ -338,7 +338,7 @@ def with_progress(iter_arg=None, total=None, **tqdm_kwargs):
         def wrapper(*args, **kwargs):
             bound_args = inspect.signature(func).bind(*args, **kwargs)
             bound_args.apply_defaults()
-            
+
             if iter_arg is not None:
                 if iter_arg not in bound_args.arguments:
                     raise ValueError(f"Iteration argument '{iter_arg}' not found")
@@ -392,7 +392,7 @@ class AudioGod(object):
     CACHE_DIR = os.environ['AUDGOD_CACHE_PATH'] \
                     if os.environ.get('AUDGOD_CACHE_PATH', '') \
                     else f'~/{CACHE_NAME}'
-    
+
     TRASH_DIR = os.path.join(CACHE_DIR, 'trash')
     BACKUPS_DIR = os.path.join(CACHE_DIR, 'backups')
 
@@ -400,7 +400,7 @@ class AudioGod(object):
 
     class PerfectTemplate(Template):
         idpattern = r'(?a:[_a-z-][_a-z0-9-]*(\.[_a-z-][_a-z0-9-]*)*)'
-    
+
         def perfect_substitute(self, mapping, /, **kwargs):
             if kwargs:
                 mapping = ChainMap(kwargs, mapping)
@@ -513,35 +513,35 @@ class AudioGod(object):
         'rating': (('评分', 'Rating'), 'integer'),
         'artwork': (('封面', 'Artwork'), 'string'),
     }
-    
+
     AUDIO_CN_PROPERTIES = {
         key: value[0][0] for key, value in AUDIO_PROPERTIES.items()
     }
-    
+
     AUDIO_CN_PROPERTY_SYNONYMS = {
         value.lower(): key for key, value in AUDIO_CN_PROPERTIES.items()
     }
-    
+
     AUDIO_EN_PROPERTIES = {
         key: value[0][1] for key, value in AUDIO_PROPERTIES.items()
     }
-    
+
     AUDIO_EN_PROPERTY_SYNONYMS = {
         value.lower(): key for key, value in AUDIO_EN_PROPERTIES.items()
     }
-    
+
     AUDIO_PROPERTY_TYPES = {
         key: value[1] for key, value in AUDIO_PROPERTIES.items()
     }
-    
+
     AudioProperty = StringEnum.unique(StringEnum(
         'AudioProperty', {
             prop.upper(): prop for prop in AUDIO_CN_PROPERTIES.keys()
         },
     ))
-    
+
     #---------------------------------------------------------------------------
-    
+
     DEFAULT_FIELDS = [
         AudioProperty.TITLE,
         AudioProperty.ARTIST,
@@ -549,13 +549,13 @@ class AudioGod(object):
         AudioProperty.GENRE,
         AudioProperty.ALBUM_ARTIST,
     ]
-    
+
     BASIC_FIELDS = [
         AudioProperty.TITLE,
         AudioProperty.ARTIST,
         AudioProperty.ALBUM,
     ]
-    
+
     SIMPLE_FIELDS = [
         AudioProperty.TITLE,
         AudioProperty.ARTIST,
@@ -581,7 +581,7 @@ class AudioGod(object):
         AudioProperty.ALBUM_ARTIST,
         AudioProperty.ARTWORK,
     ]
-    
+
     ITUNED_FIELDS = [
         AudioProperty.TITLE,
         AudioProperty.ARTIST,
@@ -594,11 +594,11 @@ class AudioGod(object):
         AudioProperty.SAMPLE_FREQ,
         AudioProperty.MTIME,
     ]
-    
+
     ALL_FIELDS = AudioProperty.members(excepts=[
         AudioProperty.COMMENTS,
     ])
-    
+
     FIELDS = {
         'all': ALL_FIELDS,
         'basic': BASIC_FIELDS,
@@ -1052,7 +1052,7 @@ class AudioGod(object):
     @property
     def summaries(self):
         return self.__summaries
-    
+
     @summaries.setter
     def summaries(self, value):
         self.__summaries = value
@@ -1933,7 +1933,7 @@ class AudioGod(object):
         if field in cls.FIELDS['all']:
             return field
         return None
-    
+
     #---------------------------------------------------------------------------
 
     # Use AudioProperty type field here, you won't check field parameter.
@@ -2350,10 +2350,10 @@ class NoteRelatedBaseAction(AudioGod):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
-    
+
     KWARGS = None
     ARGUMENTS = None
-    
+
     #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
@@ -2559,17 +2559,17 @@ class ExportRelatedBaseAction(AudioGod):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
-    
+
     KWARGS = None
     ARGUMENTS = None
-    
+
     #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     #---------------------------------------------------------------------------
-    
+
     @property
     def output_format(self):
         classname = self.__class__.__name__
@@ -2585,7 +2585,7 @@ class ExportRelatedBaseAction(AudioGod):
         if not self.FileFormat.validate(ret):
             return self.FileFormat.NOTE
         return self.FileFormat(ret)
-    
+
     #---------------------------------------------------------------------------
 
     def pack_properties(self, properties):
@@ -2748,7 +2748,7 @@ class FillPropertiesAction(NoteRelatedBaseAction):
         super().__init__(*args, **kwargs)
 
     #---------------------------------------------------------------------------
-    
+
     def rewrite_parameters(self):
         super().rewrite_parameters()
 
@@ -2756,7 +2756,7 @@ class FillPropertiesAction(NoteRelatedBaseAction):
             self.parameters['properties'] = self.__resolve_properties(
                 self.parameters['properties'],
             )
-    
+
     #---------------------------------------------------------------------------
 
     def _import_note(self):
@@ -3270,8 +3270,8 @@ class DisplayAction(AudioGod):
         TABLED = 'tabled'
         COMPACT = 'compact'
         VERTICAL = 'vertical'
-    
-    
+
+
     @StringEnum.unique
     class DataFormat(StringEnum):
         ORIGINAL = 'original'
@@ -4261,7 +4261,7 @@ class ExportBaseAction(ExportRelatedBaseAction):
 
     DEFAULT_GENRE = 'Default'
     DEFAULT_GROUPING = 'Default'
-    
+
     AUDIOS_TREE_ROOT_TAG = '--root-tag--'
     AUDIOS_TREE_ROOT_NID = '--root-nid--'
 
@@ -4282,38 +4282,38 @@ class ExportBaseAction(ExportRelatedBaseAction):
             if logger is None:
                 logger = logging.getLogger()
             self.logger = logger
-    
+
         def perfect_merge(self, nid, new_tree, deep=False) -> None:
             if not (isinstance(new_tree, Tree) or isinstance(new_tree, self.__class__)):
                 self.logger.fatal('The new tree to merge is not a valid tree.')
                 return
-    
+
             if new_tree is None:
                 return
-    
+
             if new_tree.root is None:
                 return
-    
+
             if nid is None:
                 if self.root is None:
                     self.add_node(new_tree[new_tree.root])
                 nid = self.root
-    
+
             if not self.contains(nid):
                 self.logger.fatal(f'Node <{nid}> is not in the tree!')
                 return
-    
+
             current_node = self[nid] # type: ignore
-    
+
             if current_node.tag != new_tree[new_tree.root].tag:
                 self.logger.fatal('Current node not same with root of new tree.')
                 return
-    
+
             childs = self.children(nid) # type: ignore
             child_tags = [child.tag for child in childs]
             new_childs = new_tree.children(new_tree.root)
             new_subtrees = [new_tree.subtree(child.identifier) for child in new_childs]
-    
+
             if not childs:
                 for new_subtree in new_subtrees:
                     self.paste(nid=nid, new_tree=new_subtree, deep=deep) # type: ignore
@@ -4374,7 +4374,7 @@ class ExportBaseAction(ExportRelatedBaseAction):
         return str(uuid.uuid4()).replace('-', '')[:16].upper()
 
     #---------------------------------------------------------------------------
-    
+
     def summarize(self):
         self.__fill_audios_tree()
 
@@ -4590,10 +4590,10 @@ class Export__NoteAction(ExportBaseAction, NoteRelatedBaseAction):
         super().__init__(*args, **kwargs)
 
     #---------------------------------------------------------------------------
-    
+
     def generalize(self):
         return self.plain_generalize()
-    
+
 #===============================================================================
 
 class Export__PlistAction(ExportBaseAction):
@@ -4743,7 +4743,7 @@ class Export__PlistAction(ExportBaseAction):
         result = f'\n{content}'.replace('\n', '\n\t\t')
         return result[:-1]
 
-    
+
     @staticmethod
     def pack_properties(properties):
         ret = ''
@@ -5137,7 +5137,7 @@ class ConvertMediaBaseAction(ConvertBaseAction):
                         return
 
     #---------------------------------------------------------------------------
-    
+
     @staticmethod
     def transform_ext(ext=''):
         if not ext:
@@ -5158,7 +5158,7 @@ class ConvertMediaBaseAction(ConvertBaseAction):
 
     def convert(self, src):
         pass
-    
+
     #---------------------------------------------------------------------------
 
     def execute(self):
@@ -5438,7 +5438,7 @@ class Convert__MediaAction(ConvertMediaBaseAction):
             self.ensure_output(src),
             format=self.transform_ext(self.parameters['format']),
         )
-    
+
 #===============================================================================
 
 class Convert__NoteToMarkdownAction(
@@ -6560,7 +6560,7 @@ def main():
         #allow_abbrev=True,
         #exit_on_error=True,
     )
-    
+
     main_parser.add_argument(
         '--version', '-v',
         action='version',
