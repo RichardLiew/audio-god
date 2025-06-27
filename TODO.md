@@ -15,6 +15,7 @@ Useful Paths:
 
 
 Relax:
+看看能加进度条地方，都加上
 记得同时实现导出音频的封面和上传封面给音频这两个功能
 Action 继承自多个父类时，ARGUMENTS and KWARGS and rewrite_parameters 怎么合并
 多个父类导致action顺序被改变，那些参数，在不断的子类继承时被update，顺序也变了

@@ -73,6 +73,7 @@
 #   1. iCloud Path: ~/Library/Mobile\ Documents/com~apple~CloudDocs/;
 #   2. Mac Application Cache Path: ~/Library/Containers/;
 #   3. QQMusic Download Path: ~/Library/Containers/com.tencent.QQMusicMac/Data/Library/Application\ Support/QQMusicMac/iQmc/;
+#   4. Youku Download Path: ~/Library/Containers/com.youku.mac/Data/download.
 #
 # ---
 # Tools:
@@ -5068,19 +5069,6 @@ class ConvertMediaBaseAction(ConvertBaseAction):
     KWARGS = None
     ARGUMENTS = None
 
-    #PUBLIC_ARGUMENTS = copy.deepcopy(AudioGod.PUBLIC_ARGUMENTS) | {
-    #    'executer': {
-    #        'args': ['-9'],
-    #        'kwargs': {
-    #            'action': 'store',
-    #            'type': str,
-    #            'required': False,
-    #            'default': '',
-    #            'help': 'the executer for convert sources',
-    #        },
-    #    },
-    #}
-
     REQUISITE_ARGUMENTS = {
         'recursive': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
@@ -5100,21 +5088,6 @@ class ConvertMediaBaseAction(ConvertBaseAction):
     def rewrite_parameters(self):
         super().rewrite_parameters()
 
-        #if 'executer' in self.parameters:
-        #    self.parameters['executer'] = self.abspath(
-        #        self.parameters['executer'],
-        #    )
-        #    if not self.parameters['executer']:
-        #        self.logger.fatal(f'Invalid executer!')
-        #        return
-        #    if not os.path.exists(self.parameters['executer']):
-        #        self.logger.fatal(f'Executer <{self.parameters["executer"]}> not exists!')
-        #        return
-        #    if not os.path.isfile(self.parameters['executer']):
-        #        self.logger.fatal(f'Executer <{self.parameters["executer"]}> not a file!')
-        #        return
-        #    self.chmod(self.parameters['executer'], mode=0o755)
-
         if 'output' in self.parameters:
             #if not self.parameters['output']:
             #    self.logger.fatal(f'Output <{self.parameters["output"]}> invalid!')
@@ -5126,6 +5099,34 @@ class ConvertMediaBaseAction(ConvertBaseAction):
                     if not os.path.isdir(self.parameters['output']):
                         self.logger.fatal(f'Output <{self.parameters["output"]}> not a directory!')
                         return
+
+    #---------------------------------------------------------------------------
+    
+    @staticmethod
+    def transform_ext(ext):
+        if ext.startswith('.'):
+            ext = ext[1:]
+        return ext.lower()
+
+
+    def ensure_output(self, src):
+        output = self.parameters['output']
+        if not output:
+            output = os.path.dirname(src)
+        name, ext = os.path.splitext(os.path.basename(src))
+        return os.path.join(output, f'{name}.{self.transform_ext(ext)}')
+
+    #---------------------------------------------------------------------------
+
+    def convert(self, src):
+        pass
+    
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        self.prime_sources()
+        for src in self.primed_sources:
+            self.convert(src)
 
 #===============================================================================
 
@@ -5245,29 +5246,23 @@ class Convert__QmcToAudioAction(ConvertMediaBaseAction):
         return cls.maps(i)
 
 
+    def transform_ext(self, ext):
+        return re.sub(r'^qmc[0-9]', r'', super().transform_ext(ext)) or 'mp3'
+
+
     def decrypt(self, src):
         with open(src, 'rb') as fin:
             data = bytearray(fin.read())
             for i in range(len(data)):
                 data[i] ^= self.seed(i)
 
-            output = self.parameters['output']
-            if not output:
-                output = os.path.dirname(src)
-            name, ext = os.path.splitext(os.path.basename(src))
-            ext = re.sub(r'^qmc[0-9]', r'', ext[1:].lower())
-            if not ext:
-                ext = 'mp3'
-            output = os.path.join(output, f'{name}.{ext}')
-            with open(output, 'wb') as fout:
+            with open(self.ensure_output(src), 'wb') as fout:
                 fout.write(data)
 
     #---------------------------------------------------------------------------
 
-    def execute(self):
-        self.prime_sources()
-        for src in self.primed_sources:
-            self.decrypt(src)
+    def convert(self, src):
+        self.decrypt(src)
 
 #===============================================================================
 
@@ -5309,57 +5304,28 @@ class Convert__KmxToMp4Action(ConvertMediaBaseAction):
 
     #---------------------------------------------------------------------------
 
-    def execute(self):
-        pass
-        #import os.path as path
-        #import getopt
-        #import sys
-        
-        #BUFFER_SIZE = 200
-        #SEEK = 34
-        
-        #def kmx_to_mp4(file_path):
-        #    if not path.exists(file_path):
-        #        print('文件不存在！！！')
-        #        sys.exit(2)
-        #    file_name, file_type = path.splitext(path.basename(file_path))
-        #    file_dir = path.dirname(file_path)
-        #    file_size = path.getsize(file_path)
-        #    if file_type != '.kmx':
-        #        print('似乎不是一个kmx文件！')
-        #        sys.exit(2)
-        #    out_path = path.join(file_dir, file_name + '.mp4')
-        #    print(file_name)
-        #    with open(file_path, 'rb') as f:
-        #        f.seek(SEEK)
-        #        out_file = open(out_path, 'wb')
-        #        while True:
-        #            buffer = f.read(BUFFER_SIZE)
-        #            if (len(buffer) > 0):
-        #                out_file.write(buffer)
-        #                out_file_size = path.getsize(out_path)
-        #                print('已完成{0}%'.format(round(out_file_size/file_size * 100, 2)), end='\r')
-        #            else:
-        #                print("转换完成！！！")
-        #                f.close()
-        #                out_file.close()
-        #                break
-        
-        #def get_path(argv):
-        #    file_path = ''
-        #    try:
-        #        opts,args = getopt.getopt(argv, "hi:", ["infile="])
-        #        if len(opts) == 0:
-        #            raise getopt.GetoptError('没有参数')
-        #    except getopt.GetoptError:
-        #        print('kmx_to_mp4 -i <filename>')
-        #        sys.exit(2)
-        #    for opt, arg in opts:
-        #        if opt == '-h':
-        #            print('kmx_to_mp4 -i <filename>')
-        #        elif opt in ('-i', '--infile'):
-        #            file_path = arg
-        #    return file_path
+    @staticmethod
+    def transform_ext(ext):
+        return 'mp4'
+
+
+    def decrypt(self, src):
+        seek, buffer_size = 34, 200
+        with open(src, 'rb') as fin:
+            fin.seek(seek)
+            with open(self.ensure_output(src), 'wb') as fout:
+                while True:
+                    buffer = fin.read(buffer_size)
+                    if len(buffer) == 0:
+                        break
+                    fout.write(buffer)
+                    #out_file_size = path.getsize(out_path)
+                    #print('已完成{0}%'.format(round(out_file_size/file_size * 100, 2)), end='\r')
+
+    #---------------------------------------------------------------------------
+
+    def convert(self, src):
+        self.decrypt(src)
 
 #===============================================================================
 
