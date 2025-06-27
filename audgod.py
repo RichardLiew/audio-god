@@ -3124,7 +3124,7 @@ class ManageArtworks__BindAction(ManageArtworksBaseAction):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': '~/Source/Artworks',
+                'default': '~/Source/Artwork',
                 'help': 'source artworks to bind',
             },
         },
@@ -3178,7 +3178,7 @@ class ManageArtworks__DeriveAction(ManageArtworksBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Output/Artworks',
+                'default': '~/Music/Output/Artwork',
             },
         },
     }
@@ -6108,7 +6108,7 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
         ('manage-artworks', 'bind', dict(
             source='./test/Source/Mp3',
             ignored_file='./test/test.ignores.txt',
-            artworks='./test/Source/Png',
+            artworks='./test/Source/Artwork',
         )),
         ('display', dict(
             source='./test/Source/Mp3',
@@ -6162,7 +6162,7 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
         ('manage-artworks', 'derive', dict(
             source='./test/Output/iTunes/iTunes Media/Music',
             ignored_file='./test/test.ignores.txt',
-            output='./test/Output/Artworks',
+            output='./test/Output/Artwork',
         )),
         ('convert', 'note-to-markdown', dict(
             document='./test/Output/test.songs.note',
