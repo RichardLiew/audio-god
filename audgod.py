@@ -2321,8 +2321,8 @@ class AudioGod(object):
 
     #---------------------------------------------------------------------------
 
+    #@with_progress()
     @log_decorator
-    @with_progress()
     def run(self):
         self.execute()
 
