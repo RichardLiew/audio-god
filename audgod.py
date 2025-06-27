@@ -6066,7 +6066,6 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
         #('operate', 'cleanup', {}), # same as <test cleanup>
         ('testing', 'cleanup', {}),
         ('testing', 'init', {}),
-        # to complete
         ('convert', 'kmx-to-mp4', dict(
             source='./test/Source/Kmx',
             ignored_file='./test/test.ignores.txt',
