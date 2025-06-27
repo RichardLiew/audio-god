@@ -614,7 +614,7 @@ class AudioGod(object):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': './ignored.txt',
+                'default': './ignores.txt',
                 'help': 'ignored files when load',
             },
         },
@@ -5223,7 +5223,7 @@ class Convert__QmcToAudioAction(ConvertMediaBaseAction):
     #---------------------------------------------------------------------------
 
     @staticmethod
-    def get_i(i):
+    def maps(i):
         return [
             0x77, 0x48, 0x32, 0x73, 0xDE, 0xF2, 0xC0, 0xC8, 0x95, 0xEC, 0x30, 0xB2, 0x51, 0xC3, 0xE1, 0xA0,
             0x9E, 0xE6, 0x9D, 0xCF, 0xFA, 0x7F, 0x14, 0xD1, 0xCE, 0xB8, 0xDC, 0xC3, 0x4A, 0x67, 0x93, 0xD6,
@@ -5245,32 +5245,35 @@ class Convert__QmcToAudioAction(ConvertMediaBaseAction):
 
 
     @classmethod
-    def map_l(cls, i):
+    def seed(cls, i):
         if i >= 0x8000:
-            return cls.get_i(i % 0x7fff)
-        return cls.get_i(i)
+            return cls.maps(i % 0x7fff)
+        return cls.maps(i)
 
 
-    def qmc_file_decrypt(file_path, out_dir):
-        file = file_path.split('/')[-1]
-        file_name = file.split('.')[0]
-        file_suffix = file.split('.')[-1]
-        with open(file_path, 'rb') as f:
-            data = bytearray(f.read())
-        for i in range(len(data)):
-            data[i] ^= map_l(i)
-        save_file(data, out_dir, file_name, suffix_map[file_suffix])
+    def decrypt(self, src):
+        with open(src, 'rb') as fin:
+            data = bytearray(fin.read())
+            for i in range(len(data)):
+                data[i] ^= self.seed(i)
 
-
-    def save_file(data, output_dir, file_name, file_suffix):
-        path = output_dir + '/' + file_name + '.' + file_suffix
-        with open(path, 'wb') as f:
-            f.write(data)
+            output = self.parameters['output']
+            if not output:
+                output = os.path.dirname(src)
+            name, ext = os.path.splitext(os.path.basename(src))
+            ext = re.sub(r'^qmc[0-9]', r'', ext[1:].lower())
+            if not ext:
+                ext = 'mp3'
+            output = os.path.join(output, f'{name}.{ext}')
+            with open(output, 'wb') as fout:
+                fout.write(data)
 
     #---------------------------------------------------------------------------
 
     def execute(self):
-        pass
+        self.prime_sources()
+        for src in self.primed_sources:
+            self.decrypt(src)
 
 #===============================================================================
 
