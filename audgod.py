@@ -5061,10 +5061,6 @@ class ConvertMediaBaseAction(ConvertBaseAction):
 
     #---------------------------------------------------------------------------
 
-    SUPPORTED_FORMATS = []
-
-    #---------------------------------------------------------------------------
-
     KWARGS = None
     ARGUMENTS = None
 
@@ -5197,7 +5193,7 @@ class Convert__QmcToAudioAction(ConvertMediaBaseAction):
         'extensions': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': 'qmc,qmc0,qmc3,qmcogg,qmcflac',
+                'default': 'qmc,qmc0,qmc1,qmc2,qmc3,qmcogg,qmcflac',
             },
         },
         'output': {
@@ -5332,7 +5328,7 @@ class Convert__MediaAction(ConvertMediaBaseAction):
 
     #---------------------------------------------------------------------------
 
-    SUPPORTED_FORMATS = ['mp3', 'mp4', 'flac', 'wav', 'ogg', 'ape', 'wma']
+    SUPPORTED_FORMATS = ['mp3', 'mp4', 'mov', 'flac', 'wav', 'ogg', 'ape', 'wma']
 
     #---------------------------------------------------------------------------
 
@@ -5351,7 +5347,7 @@ class Convert__MediaAction(ConvertMediaBaseAction):
         'extensions': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': 'mp4,flac,wav,ogg,ape,wma',
+                'default': ','.join(SUPPORTED_FORMATS),
             },
         },
         'output': {
@@ -5368,7 +5364,7 @@ class Convert__MediaAction(ConvertMediaBaseAction):
                 'type': str,
                 'choices': SUPPORTED_FORMATS,
                 'required': False,
-                'default': 'mp3',
+                'default': SUPPORTED_FORMATS[0],
                 'help': 'the format for output',
             },
         },
@@ -5931,24 +5927,22 @@ class Testing__InitAction(TestingBaseAction):
 
     #---------------------------------------------------------------------------
 
-    SOURCE_KINDS = {
-        'Mp3': 'mp3',
-        'Kmx': 'kmx',
-        'Media': 'mp4,wav,wma,ogg,ape,flac',
-        'Qmc': 'qmc,qmc0,qmc1,qmc2,qmc3,qmcogg,qmcflac',
-        'Artwork': 'png,jpg,jpeg',
-    }
-
-    #---------------------------------------------------------------------------
-
     def execute(self):
         if self.CACHE_DIR != self.TEST_CACHE_DIR:
             self.logger.fatal('${AUDGOD_CACHE_PATH} error!')
             return
 
+        SOURCE_KINDS = {
+            'Mp3': RenameAudiosAction.ARGUMENTS_DEFAULTS()['extensions'],
+            'Kmx': Convert__KmxToMp4Action.ARGUMENTS_DEFAULTS()['extensions'],
+            'Media': Convert__MediaAction.ARGUMENTS_DEFAULTS()['extensions'],
+            'Qmc': Convert__QmcToAudioAction.ARGUMENTS_DEFAULTS()['extensions'],
+            'Artwork': 'png,jpg,jpeg',
+        }
+
         srcs = list(map(
             lambda x: os.path.join(self.TEST_ORISRC_DIR, x),
-            self.SOURCE_KINDS.keys(),
+            SOURCE_KINDS.keys(),
         ))
 
         dirs = [
@@ -5985,7 +5979,7 @@ class Testing__InitAction(TestingBaseAction):
 
         for src in srcs:
             has_children = False
-            exts = self.SOURCE_KINDS[os.path.basename(src)].lower().split(',')
+            exts = SOURCE_KINDS[os.path.basename(src)].lower().split(',')
             for item in os.listdir(src):
                 if item.startswith('.'):
                     continue

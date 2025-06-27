@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-27T20:16:02Z
+# Created Time: 2025-06-27T20:57:20Z
 
 # Total Steps: 25
 
@@ -44,7 +44,7 @@ echo "\n\n[***] Starting ...\n"
 # Step (4):
 ./audio-god convert qmc-to-audio \
     --source=./test/Source/Qmc \
-    --extensions=qmc,qmc0,qmc3,qmcogg,qmcflac \
+    --extensions=qmc,qmc0,qmc1,qmc2,qmc3,qmcogg,qmcflac \
     --output=./test/Output/Qmc-To-Audio \
     --recursive \
     --ignored-file=./test/test.ignores.txt \
@@ -54,7 +54,7 @@ echo "\n\n[***] Starting ...\n"
 # Step (5):
 ./audio-god convert media \
     --source=./test/Source/Media \
-    --extensions=mp4,flac,wav,ogg,ape,wma \
+    --extensions=mp3,mp4,mov,flac,wav,ogg,ape,wma \
     --output=./test/Output/Media \
     --format=mp3 \
     --recursive \
