@@ -60,6 +60,7 @@
 #       eyed3 = "==0.9.7"
 #       mdutils = "==1.6.0"
 #       pyfiglet = "==1.0.3"
+#       pydub = "==0.25.1"
 #
 #       [dev-packages]
 #       pylint = "==3.3.6"
@@ -83,25 +84,25 @@
 #   4.  Format Convert: https://www.aconvert.com/;
 #   5.  Videos Download: https://github.com/iawia002/annie;
 #   6.  Audio Convert: https://github.com/jiaaro/pydub;
-#   6.  QMC->MP3: https://openyyy.com/;
-#   7.  QMC->MP3: https://github.com/Presburger/qmc-decoder;
-#   8.  QMC->MP3: https://gitcode.com/gh_mirrors/qm/qmc-decoder;
-#   9.  QMC->MP3: https://github.com/MegrezZhu/qmcdump;
-#   9.  QMC->MP3: https://github.com/42arch/qmc_file_decrypter;
-#   9.  KMX->MP4: https://gitee.com/aprl/kmx-MP4;
-#   10. MP4->MP3: https://pypi.org/project/ffmpy3/;
-#   11. MP4->MP3: https://github.com/wchill/ffmpy3;
-#   12. MP4->MP3: https://pypi.org/project/moviepy/;
-#   13. MP4->MP3: https://github.com/Zulko/moviepy;
-#   14. MP4->MP3: https://github.com/SiD-93/BatchMP3;
+#   7.  QMC->MP3: https://openyyy.com/;
+#   8.  QMC->MP3: https://github.com/Presburger/qmc-decoder;
+#   9.  QMC->MP3: https://gitcode.com/gh_mirrors/qm/qmc-decoder;
+#   10.  QMC->MP3: https://github.com/MegrezZhu/qmcdump;
+#   11.  QMC->MP3: https://github.com/42arch/qmc_file_decrypter;
+#   12.  KMX->MP4: https://gitee.com/aprl/kmx-MP4;
+#   13. MP4->MP3: https://pypi.org/project/ffmpy3/;
+#   14. MP4->MP3: https://github.com/wchill/ffmpy3;
+#   15. MP4->MP3: https://pypi.org/project/moviepy/;
+#   16. MP4->MP3: https://github.com/Zulko/moviepy;
+#   17. MP4->MP3: https://github.com/SiD-93/BatchMP3.
 #
 # ---
 # Commands:
-#   1. View Directory Structure: tree -dN ~/Music;
+#   1. View Directory Structure: "tree -dN ~/Music".
 #
 # ---
 # Notes:
-#   1. None;
+#   1. None.
 #
 # ---
 # FAQs:
@@ -115,11 +116,7 @@
 #
 # ---
 # TODO (@Richard):
-#   1. Convert qmc to mp3;
-#   2. Convert kmx to mp4;
-#   3. Convert mp4 to mp3;
-#   4. Convert note to markdown;
-#   4. Convert markdown to note;
+#   1. None.
 #
 ###############################################################################
 
@@ -161,6 +158,8 @@ from prettytable import PrettyTable
 import eyed3
 from eyed3.id3 import Genre, frames
 from eyed3.id3.tag import CommentsAccessor
+    
+from pydub import AudioSegment
 
 ################################################################################
 #                                                                              #
@@ -5103,7 +5102,9 @@ class ConvertMediaBaseAction(ConvertBaseAction):
     #---------------------------------------------------------------------------
     
     @staticmethod
-    def transform_ext(ext):
+    def transform_ext(ext=''):
+        if not ext:
+            return ext
         if ext.startswith('.'):
             ext = ext[1:]
         return ext.lower()
@@ -5305,7 +5306,7 @@ class Convert__KmxToMp4Action(ConvertMediaBaseAction):
     #---------------------------------------------------------------------------
 
     @staticmethod
-    def transform_ext(ext):
+    def transform_ext(ext=''):
         return 'mp4'
 
 
@@ -5387,28 +5388,27 @@ class Convert__MediaAction(ConvertMediaBaseAction):
         super().rewrite_parameters()
 
         if 'format' in self.parameters:
-            pass
+            self.parameters['format'] = self.parameters['format'].lower()
 
     #---------------------------------------------------------------------------
 
-    from pydub import AudioSegment
+    def transform_ext(self, ext=''):
+        return self.parameters['format']
+
+
+    def convert(self, src):
+        AudioSegment.from_file(src).export(
+            self.ensure_output(src),
+            format=self.transform_ext(self.parameters['format']),
+        )
     
-    def batch_convert(input_dir, output_dir, target_format="mp3"):
-        
-        for f in Path(input_dir).glob("*"):
-            if f.suffix.lower() in (".wav", ".mp4"):
-                output_path = output_dir / f"{f.stem}.{target_format}"
-                AudioSegment.from_file(f).export(output_path, format=target_format)
-                print(f"Converted: {f.name} -> {output_path.name}")
-
-    #---------------------------------------------------------------------------
-
-    def execute(self):
-        pass
-
 #===============================================================================
 
-class Convert__NoteToMarkdownAction(ConvertDocumentBaseAction, NoteRelatedBaseAction, ExportRelatedBaseAction):
+class Convert__NoteToMarkdownAction(
+    ConvertDocumentBaseAction,
+    NoteRelatedBaseAction,
+    ExportRelatedBaseAction,
+):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
