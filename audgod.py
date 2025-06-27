@@ -1484,11 +1484,17 @@ class AudioGod(object):
         return cls.FileFormat.NOTE
 
 
-    @classmethod
-    def init_cache(cls):
-        os.makedirs(cls.abspath(cls.CACHE_DIR), exist_ok=True)
-        os.makedirs(cls.abspath(cls.TRASH_DIR), exist_ok=True)
-        os.makedirs(cls.abspath(cls.BACKUPS_DIR), exist_ok=True)
+    def init_cache(self):
+        def _init_path(path):
+            if not os.path.exists(path):
+                os.makedirs(self.abspath(path), exist_ok=True)
+                return
+            if not os.path.isdir(path):
+                self.logger.fatal(f'Path <{path}> not a directory!')
+                return
+        _init_path(self.CACHE_DIR)
+        _init_path(self.TRASH_DIR)
+        _init_path(self.BACKUPS_DIR)
 
 
     @classmethod
@@ -5177,18 +5183,6 @@ class Convert__QmcToAudioAction(ConvertMediaBaseAction):
 
     #---------------------------------------------------------------------------
 
-    FORMATS_MAP = {
-        'qmc': 'mp3',
-        'qmc0': 'mp3',
-        'qmc1': 'mp3',
-        'qmc2': 'mp3',
-        'qmc3': 'mp3',
-        'qmcogg': 'ogg',
-        'qmcflac': 'flac',
-    }
-
-    #---------------------------------------------------------------------------
-
     KWARGS = {
         'description': '⭐ Convert qmc to common format',
         'help': 'convert qmc to common format',
@@ -6160,7 +6154,6 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/Mp4-To-Mp3',
         )),
-        # to complete
         ('convert', 'qmc-to-audio', dict(
             source='./test/Source/Qmc',
             ignored_file='./test/test.ignores.txt',
