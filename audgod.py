@@ -198,9 +198,9 @@ ${special_characters}
 
 Samples of audio file name:
 
-Original  audio file name: "artist${ori_div_char}title.mp3"
-Formatted audio file name: "artist ${div_char} title.mp3"
-Pattern of filename to rename: "${fnp_delimiter}{artist} ${div_char} ${fnp_delimiter}{title}"
+Original  audio file name: "artist${filename_separator}title.mp3"
+Formatted audio file name: "artist ${filename_separator} title.mp3"
+Pattern of filename to rename: "${fnp_delimiter}{artist} ${filename_separator} ${fnp_delimiter}{title}"
 
 --------------------------------------------------------------------------------
 
@@ -250,7 +250,7 @@ General steps:
 
 Ready:
     Step.1: Run <operate cleanup> subcommand to clear repeats, backups, grouped folder, and iTunes related;
-    Step.2: Download songs, and make sure that file named with "artist${ori_div_char}title";
+    Step.2: Download songs, and make sure that file named with "artist${filename_separator}title";
     Step.3: Add detail of songs to notes, then grouped.
 
 Process Method 1:
@@ -378,13 +378,7 @@ def with_progress(iter_arg=None, total=None, **tqdm_kwargs):
 ################################################################################
 
 class AudioGod(object):
-    ORI_DIV_CHAR = '-'
-
-    # don't assign '*', '%' or '|'
-    DIV_CHAR = '+'
-
-    # don't assign '*', '%' or '|'
-    GROUPING_SEPARATOR = '&'
+    GROUPING_SEPARATOR = '|'
 
     #---------------------------------------------------------------------------
 
@@ -786,7 +780,7 @@ class AudioGod(object):
 
         self.__clauses = ([], {}, {}, [], [])
         self.__clauses_counter = [0, 0, 0, 0, 0, 0]
-        self.__sources = ([], [], [], [], [], [], [], [])
+        self.__sources = ([], [], [], [], [])
         self.__ignored_set = set()
         self.__summaries = {}
         
@@ -1016,33 +1010,12 @@ class AudioGod(object):
         return self.__sources[2]
 
     @property
-    def invalid_name_sources(self):
+    def omitted_sources(self):
         return self.__sources[3]
 
     @property
-    def omitted_sources(self):
-        return self.__sources[4]
-
-    @property
     def ignored_sources(self):
-        return self.__sources[5]
-
-    @property
-    def matched_sources(self):
-        return self.__sources[6]
-
-    @property
-    def notmatched_sources(self):
-        return self.__sources[7]
-
-    @property
-    def concerned_sources(self):
-        return list(dict.fromkeys(
-            self.invalid_name_sources \
-                + self.matched_sources \
-                + self.notmatched_sources,
-        ))
-
+        return self.__sources[4]
 
     @property
     def ignored_set(self):
@@ -1908,7 +1881,7 @@ class AudioGod(object):
     def generate_key(cls, artist, title):
         return '{artist}{div}{title}'.format(
             artist=cls.format_artist(artist.strip()),
-            div=cls.DIV_CHAR,
+            div='#',
             title=cls.format_title(title.strip()),
         ).upper()
 
@@ -2118,74 +2091,6 @@ class AudioGod(object):
         return ret
 
 
-    def generate_key_by_filename(self, source):
-        if not self.__check_name(source):
-            self.logger.fatal(f'Invalid name of audio <{source}>!')
-            return
-        name, _ = os.path.splitext(os.path.basename(source))
-        if name.count(self.DIV_CHAR) == 1:
-            return self.generate_key(
-                *self.split(
-                    name, self.DIV_CHAR, escaped=True,
-                    del_blank=False, filt_empty=False, filt_repeated=False,
-                    sortify=False, reversify=False,
-                ),
-            )
-        return self.generate_key(
-            *self.split(
-                name, self.ORI_DIV_CHAR, escaped=True,
-                del_blank=False, filt_empty=False, filt_repeated=False,
-                sortify=False, reversify=False,
-            ),
-        )
-
-
-    def load_sources(self, matched=False):
-        self.prime_sources()
-        for source in self.primed_sources:
-            self.logger.debug(f'Loading <{source}> ...')
-            _type = self.__check_source(source)
-            match _type:
-                case self.SourceType.INVALID_NAME:
-                    self.invalid_name_sources.append(source)
-                    self.logger.debug(self.SourceType.INVALID_NAME)
-                    continue
-            key = self.generate_key_by_filename(source)
-            if key in self.valid_clauses:
-                self.matched_sources.append(source)
-                self.logger.debug(self.SourceType.MATCHED)
-            else:
-                self.notmatched_sources.append(source)
-                self.logger.debug(self.SourceType.NOTMATCHED)
-
-        self.logger.warning(f'\n{"#"*78}\n')
-
-        self.logger.warning(
-            'Inv Name Sources: {inv_name}\n'
-            'Valid Sources:    {valid}{detail}'.format(
-                inv_name=len(self.invalid_name_sources),
-                valid=sum(map(len, [
-                    self.matched_sources,
-                    self.notmatched_sources,
-                ])),
-                detail='\n' if not matched else ' (Matched: {matched}, NotMatched: {notmatched})\n'.format(
-                    matched=len(self.matched_sources),
-                    notmatched=len(self.notmatched_sources),
-                ),
-            )
-        )
-
-        if len(self.invalid_name_sources) > 0:
-            self.logger.warning('\nInvalid Name Sources:')
-            for source in self.invalid_name_sources:
-                self.logger.warning(f'\t{source}')
-        if matched and len(self.notmatched_sources) > 0:
-            self.logger.warning('\nNot Matched Sources:')
-            for source in self.notmatched_sources:
-                self.logger.warning(f'\t{source}')
-
-    #---------------------------------------------------------------------------
-
     def stow_ignored(self):
         if not self.parameters['ignored_file']:
             return
@@ -2198,36 +2103,12 @@ class AudioGod(object):
                     self.ignored_set.add(item)
 
 
-    @staticmethod
-    def __check_name(source):
-        name, _ = os.path.splitext(os.path.basename(source))
-        name = name.strip()
-        if not name:
-            return False
-        if name.count(AudioGod.DIV_CHAR) > 1:
-            return False
-        if name.count(AudioGod.DIV_CHAR) == 1 and (name[0] == AudioGod.DIV_CHAR or name[-1] == AudioGod.DIV_CHAR):
-            return False
-        if name.count(AudioGod.DIV_CHAR) == 0:
-            if name.count(AudioGod.ORI_DIV_CHAR) != 1:
-                return False
-            if name[0] == AudioGod.ORI_DIV_CHAR or name[-1] == AudioGod.ORI_DIV_CHAR:
-                return False
-        return True
-
-
     def __check_extension(self, source):
         extensions = self.parameters.get('extensions', [])
         if not extensions:
             return True
         _, ext = os.path.splitext(os.path.basename(source))
         return ext[1:].lower() in extensions
-
-
-    def __check_source(self, source):
-        if not self.__check_name(source):
-            return self.SourceType.INVALID_NAME
-        return self.SourceType.VALID
 
 
     def stow_sources(self):
@@ -2642,11 +2523,20 @@ class RedecorateNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
     ARGUMENTS = {
         'document': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
+            'kwargs': {
+                'default': './songs.note.origin',
+            },
         },
         'field_type': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
                 'default': AudioGod.FieldType.AUTO,
+            },
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './songs.note',
             },
         },
     }
@@ -2671,11 +2561,7 @@ class RedecorateNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
     def execute(self):
         self.analysis_note()
         self.sort_summaries()
-        tmp_file = self.parameters['document'] + '.tmp'
-        with open(tmp_file, 'w', encoding='utf-8') as f:
-            f.write(self.plain_generalize())
-        self.backup(self.parameters['document'])
-        self.rename(tmp_file, self.parameters['document'])
+        self.handle_output(self.plain_generalize())
 
 #===============================================================================
 
@@ -2740,12 +2626,25 @@ class FillPropertiesAction(NoteRelatedBaseAction):
                 'help': 'properties for sources',
             },
         },
+        'separators': {
+            'use_public': AudioGod.ReplaceType.NONE,
+            'args': ['-6'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '-,#',
+                'help': 'separators for matched filename',
+            },
+        },
     }
 
     #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.__sifted_sources = [[], [], []]
 
     #---------------------------------------------------------------------------
 
@@ -2756,6 +2655,35 @@ class FillPropertiesAction(NoteRelatedBaseAction):
             self.parameters['properties'] = self.__resolve_properties(
                 self.parameters['properties'],
             )
+
+        if 'separators' in self.parameters:
+            self.parameters['separators'] = self.split(
+                self.parameters['separators'],
+                ',',
+                escaped=True,
+                del_blank=True,
+                filt_empty=True,
+                filt_repeated=True,
+                sortify=False,
+                reversify=False,
+            )
+            if not self.parameters['separators']:
+                self.logger.fatal('Separators empty!')
+                return
+
+    #---------------------------------------------------------------------------
+
+    @property
+    def invalid_name_sources(self):
+        return self.__sifted_sources[0]
+
+    @property
+    def matched_sources(self):
+        return self.__sifted_sources[1]
+
+    @property
+    def notmatched_sources(self):
+        return self.__sifted_sources[2]
 
     #---------------------------------------------------------------------------
 
@@ -2773,6 +2701,89 @@ class FillPropertiesAction(NoteRelatedBaseAction):
 
     def _import_json(self):
         pass
+
+
+    def __load_sources(self):
+        self.prime_sources()
+
+        for source in self.primed_sources:
+            self.logger.debug(f'Loading <{source}> ...')
+            _type = self.__check_source(source)
+            match _type:
+                case self.SourceType.INVALID_NAME:
+                    self.invalid_name_sources.append(source)
+                    self.logger.debug(self.SourceType.INVALID_NAME)
+                    continue
+            key = self.__generate_key_by_filename(source)
+            if key in self.valid_clauses:
+                self.matched_sources.append(source)
+                self.logger.debug(self.SourceType.MATCHED)
+            else:
+                self.notmatched_sources.append(source)
+                self.logger.debug(self.SourceType.NOTMATCHED)
+
+        self.logger.warning(f'\n{"#"*78}\n')
+
+        self.logger.warning(
+            'Inv Name Sources: {inv_name}\n'
+            'Valid Sources:    {valid} {detail}'.format(
+                inv_name=len(self.invalid_name_sources),
+                valid=sum(map(len, [
+                    self.matched_sources,
+                    self.notmatched_sources,
+                ])),
+                detail='(Matched: {matched}, NotMatched: {notmatched})\n'.format(
+                    matched=len(self.matched_sources),
+                    notmatched=len(self.notmatched_sources),
+                ),
+            )
+        )
+
+        if len(self.invalid_name_sources) > 0:
+            self.logger.warning('\nInvalid Name Sources:')
+            for source in self.invalid_name_sources:
+                self.logger.warning(f'\t{source}')
+        if len(self.notmatched_sources) > 0:
+            self.logger.warning('\nNot Matched Sources:')
+            for source in self.notmatched_sources:
+                self.logger.warning(f'\t{source}')
+
+
+    def __resolve_filename(self, source):
+        name, _ = os.path.splitext(os.path.basename(source))
+        name = name.strip()
+        valid, separator = False, ''
+        if not name:
+            return (valid, separator)
+        for item in self.parameters['separators']:
+            if name.count(item) == 0:
+                continue
+            if name.count(item) > 1:
+                continue
+            if name.startswith(item) or name.endswith(item):
+                continue
+            valid, separator = True, item
+            break
+        return (valid, separator)
+
+
+    def __check_source(self, source):
+        valid, _ = self.__resolve_filename(source)
+        if not valid:
+            return self.SourceType.INVALID_NAME
+        return self.SourceType.VALID
+
+
+    def __generate_key_by_filename(self, source):
+        _, separator = self.__resolve_filename(source)
+        filename, _ = os.path.splitext(os.path.basename(source))
+        return self.generate_key(
+            *self.split(
+                filename, separator, escaped=True,
+                del_blank=False, filt_empty=False, filt_repeated=False,
+                sortify=False, reversify=False,
+            ),
+        )
 
 
     def __load_properties_from_file(self):
@@ -2837,7 +2848,9 @@ class FillPropertiesAction(NoteRelatedBaseAction):
                             ret = _value
                             break
                 case self.PropertySource.FILE:
-                    key = self.generate_key_by_filename(audio)
+                    if audio not in self.matched_sources:
+                        continue
+                    key = self.__generate_key_by_filename(audio)
                     _value = self.valid_clauses.get(key, {}).get(field, None)
                     if _value is not None:
                         ret = _value
@@ -2861,7 +2874,7 @@ class FillPropertiesAction(NoteRelatedBaseAction):
 
 
     def __fill_audio_properties(self):
-        filled_count, audios = 0, self.concerned_sources
+        filled_count, audios = 0, self.primed_sources
         self.logger.warning(f'\n{"#"*78}\n')
         for audio in audios:
             self.logger.debug(f'Filling <{audio}> ...')
@@ -2886,7 +2899,7 @@ class FillPropertiesAction(NoteRelatedBaseAction):
 
     def execute(self):
         self.__load_properties_from_file()
-        self.load_sources(matched=True)
+        self.__load_sources()
         self.__fill_audio_properties()
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -2924,8 +2937,8 @@ class FormatPropertiesAction(AudioGod):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        self.load_sources(matched=False)
-        count, audios = 0, self.concerned_sources
+        self.prime_sources()
+        count, audios = 0, self.primed_sources
         self.logger.warning(f'\n{"#"*78}\n')
         for audio in audios:
             self.logger.debug(f'Formatting <{audio}> ...')
@@ -2986,9 +2999,8 @@ class RenameAudiosAction(AudioGod):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': '{delimiter}{{artist}} {div_char} {delimiter}{{title}}'.format(
+                'default': '{delimiter}{{artist}} # {delimiter}{{title}}'.format(
                     delimiter=FilenamePatternTemplate.delimiter,
-                    div_char=AudioGod.DIV_CHAR,
                 ),
                 'help': 'filename pattern to rename sources',
             },
@@ -3011,8 +3023,8 @@ class RenameAudiosAction(AudioGod):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        self.load_sources(matched=False)
-        for audio in self.concerned_sources:
+        self.prime_sources()
+        for audio in self.primed_sources:
             audio_object = self.prime_audio(audio)
             _old = os.path.basename(audio)
             _, ext = os.path.splitext(_old)
@@ -3070,10 +3082,10 @@ class ListRepeatedAction(AudioGod):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        self.load_sources(matched=False)
+        self.prime_sources()
         
         results = {}
-        for audio in self.concerned_sources:
+        for audio in self.primed_sources:
             audio_object = self.prime_audio(audio)
             artist = self.fetchx(audio_object, self.AudioProperty.ARTIST, formatted=True)
             if not artist:
@@ -3236,8 +3248,8 @@ class ManageArtworks__DeriveAction(ManageArtworksBaseAction):
 
     def execute(self):
         pass
-        #self.load_sources(matched=False)
-        #for audio in self.concerned_sources:
+        #self.prime_sources()
+        #for audio in self.primed_sources:
         #    _name, _ = os.path.splitext(os.path.basename(audio))
         #    _path = os.path.dirname(audio)
         #    if self.parameters['output']:
@@ -3987,7 +3999,7 @@ class DisplayAction(AudioGod):
         #                                 time.localtime(tag.file_info.atime))))
         #print("# {}".format('=' * 78))
 
-        self.load_sources(matched=False)
+        self.prime_sources()
 
         results = []
         all_fields = [
@@ -4002,7 +4014,7 @@ class DisplayAction(AudioGod):
                 formatted, output_format = True, self.FileFormat.NONE
             case self.DataFormat.OUTPUTTED:
                 formatted, output_format = True, self.FileFormat.NOTE
-        for audio in self.concerned_sources:
+        for audio in self.primed_sources:
             audio_object = self.prime_audio(audio)
             results.append([
                 self.fetchx(
@@ -4121,8 +4133,8 @@ class Organize__GroupedAction(OrganizeBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        self.load_sources(matched=False)
-        for audio in self.concerned_sources:
+        self.prime_sources()
+        for audio in self.primed_sources:
             audio_object = self.prime_audio(audio)
             grouping = self.fetchx(
                 audio_object, self.AudioProperty.GROUPING, formatted=True,
@@ -4195,8 +4207,8 @@ class Organize__ItunedAction(OrganizeBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        self.load_sources(matched=False)
-        for audio in self.concerned_sources:
+        self.prime_sources()
+        for audio in self.primed_sources:
             audio_object = self.prime_audio(audio)
             artist = self.fetchx(audio_object, self.AudioProperty.ARTIST, formatted=True)
             if not artist:
@@ -4414,11 +4426,11 @@ class ExportBaseAction(ExportRelatedBaseAction):
 
 
     def __fill_audios_tree(self) -> None:
-        self.load_sources(matched=False)
+        self.prime_sources()
 
         track_id = self.parameters.get('track_initial_id', 601)
 
-        for audio in self.concerned_sources:
+        for audio in self.primed_sources:
             track_persistent_id = self.generate_persistent_id()
             audio_object = self.prime_audio(audio)
             genre = self.fetchx(
@@ -5544,6 +5556,55 @@ class Convert__MarkdownToNoteAction(ConvertDocumentBaseAction):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+class ExtractStructureAction(
+    ConvertDocumentBaseAction,
+    NoteRelatedBaseAction,
+    ExportRelatedBaseAction,
+):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Extract the structure by note file',
+        'help': 'extract the structure by note file',
+    }
+
+    ARGUMENTS = {
+        'document': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './songs.note',
+            },
+        },
+        'field_type': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': AudioGod.FieldType.AUTO,
+            },
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': './songs.note.tree',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        self.analysis_note()
+        self.sort_summaries()
+        self.handle_output(self.plain_generalize())
+
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
 class OperateBaseAction(AudioGod):
     ACTIVE = True
 
@@ -5677,6 +5738,7 @@ class Operate__CleanupAction(OperateBaseAction):
             './*.tmp',
             './*.bak',
             './*.backup',
+            '${redecorate-note.output}*',
             '${list-repeated.output}*',
             '${organize.grouped.root}',
             '${export.plist.itunes_media_folder}/*',
@@ -5787,10 +5849,11 @@ class GenerateScriptBaseAction(AudioGod):
     #---------------------------------------------------------------------------
 
     def generate(self):
+        steps = [step for step in self.STEPS if step[0]]
         content = '#!/usr/bin/env zsh\n\n'
         content += '#' * 78 + '\n\n'
         content += f'# Created Time: {self.current_time()}\n\n'
-        content += f'# Total Steps: {len(self.STEPS)}\n\n'
+        content += f'# Total Steps: {len(steps)}\n\n'
         content += '#' * 78 + '\n\n'
         content += 'set -e\n\n'
         content += '#' * 78 + '\n\n'
@@ -5799,21 +5862,21 @@ class GenerateScriptBaseAction(AudioGod):
         content += 'printf "%.0s@" {1..60}\n'
         content += 'echo "\\n\\n[***] Starting ...\\n"\n\n'
         content += '#' * 78 + '\n\n'
-        for i, step in enumerate(self.STEPS):
+        for i, step in enumerate(steps):
             content += f'# Step ({i+1}):\n'
-            if not isinstance(step, (tuple, list)):
-                content += f'{step}\n\n'
+            if len(step) == 2:
+                content += f'{step[1]}\n\n'
             else:
-                if len(step) == 2:
-                    carrier = ACTIONS[step[0]]['carrier']
+                if len(step) == 3:
+                    carrier = ACTIONS[step[1]]['carrier']
                 else:
-                    carrier = ACTIONS[step[0]]['branches'][step[1]]['carrier']
+                    carrier = ACTIONS[step[1]]['branches'][step[2]]['carrier']
                 if step[-1]:
                     carrier.reset_defaults(defaults=step[-1])
                     carrier.set_usage()
                     carrier.render_usage()
                 content += carrier.KWARGS['usage'].strip()
-                if i < len(self.STEPS) - 1:
+                if i < len(steps) - 1:
                     content += '\n\n'
         content += '\n\n'
         content += '#' * 78 + '\n\n'
@@ -5880,22 +5943,22 @@ class GenerateScript__StartAction(GenerateScriptBaseAction):
     #---------------------------------------------------------------------------
 
     STEPS = [
-        #('operate', 'cleanup', {}),
-        #('convert', 'kmx-to-mp4', {}),
-        #('convert', 'media', {}),
-        ('convert', 'qmc-to-audio', {}),
-        ('redecorate-note', {}),
-        ('fill-properties', {}),
-        ('format-properties', {}),
-        ('rename-audios', {}),
-        #('manage-artworks', 'bind', {}),
-        ('organize', 'grouped', {}),
-        ('list-repeated', {}),
-        ('export', 'note', {}),
-        ('convert', 'note-to-markdown', {}),
-        ('organize', 'ituned', {}),
-        ('export', 'plist', {}),
-        #('manage-artworks', 'derive', {}),
+        (False, 'operate', 'cleanup', {}),
+        (False, 'convert', 'kmx-to-mp4', {}),
+        (False, 'convert', 'media', {}),
+        (True,  'convert', 'qmc-to-audio', {}),
+        (True,  'redecorate-note', {}),
+        (True,  'fill-properties', {}),
+        (True,  'format-properties', {}),
+        (True,  'rename-audios', {}),
+        (False, 'manage-artworks', 'bind', {}),
+        (True,  'organize', 'grouped', {}),
+        (True,  'list-repeated', {}),
+        (True,  'export', 'note', {}),
+        (True,  'convert', 'note-to-markdown', {}),
+        (True,  'organize', 'ituned', {}),
+        (True,  'export', 'plist', {}),
+        (True,  'manage-artworks', 'derive', {}),
     ]
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -6107,119 +6170,124 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
     #---------------------------------------------------------------------------
 
     STEPS = [
-        #('operate', 'cleanup', {}), # same as <test cleanup>
-        ('testing', 'cleanup', {}),
-        ('testing', 'init', {}),
-        ('convert', 'kmx-to-mp4', dict(
+        (False, 'operate', 'cleanup', {}), # same as <test cleanup>
+        (True, 'testing', 'cleanup', {}),
+        (True, 'testing', 'init', {}),
+        (True, 'convert', 'kmx-to-mp4', dict(
             source='./test/Source/Kmx',
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/Kmx-To-Mp4',
         )),
-        ('convert', 'qmc-to-audio', dict(
+        (True, 'convert', 'qmc-to-audio', dict(
             source='./test/Source/Qmc',
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/Qmc-To-Audio',
         )),
-        ('convert', 'media', dict(
+        (True, 'convert', 'media', dict(
             source='./test/Source/Media',
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/Media',
             format='mp3',
         )),
-        ('redecorate-note', dict(
-            document='./test/test.songs.note',
+        (True, 'redecorate-note', dict(
+            document='./test/test.songs.note.origin',
+            output='./test/Output/test.songs.note',
         )),
-        ('fill-properties', dict(
+        (True, 'fill-properties', dict(
             source='./test/Source/Mp3',
             ignored_file='./test/test.ignores.txt',
             document='./test/test.songs.note',
             root='./test/Source/Mp3',
         )),
-        ('format-properties', dict(
+        (True, 'format-properties', dict(
             source='./test/Source/Mp3',
             ignored_file='./test/test.ignores.txt',
         )),
-        ('rename-audios', dict(
+        (True, 'rename-audios', dict(
             source='./test/Source/Mp3',
             ignored_file='./test/test.ignores.txt',
         )),
         # to complete
-        ('manage-artworks', 'bind', dict(
+        (True, 'manage-artworks', 'bind', dict(
             source='./test/Source/Mp3',
             ignored_file='./test/test.ignores.txt',
             artworks='./test/Source/Artwork',
         )),
-        ('display', dict(
+        (True, 'display', dict(
             source='./test/Source/Mp3',
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/test.display.table',
         )),
-        ('organize', 'grouped', dict(
+        (True, 'organize', 'grouped', dict(
             source='./test/Source/Mp3',
             ignored_file='./test/test.ignores.txt',
             root='./test/Output/Grouped',
         )),
-        ('export', 'note', dict(
+        (True, 'export', 'note', dict(
             source='./test/Output/Grouped',
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/test.songs.note',
         )),
-        ('export', 'markdown', dict(
+        (True, 'export', 'markdown', dict(
             source='./test/Output/Grouped',
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/test.songs.md',
         )),
         # to complete
-        ('export', 'xml', dict(
+        (True, 'export', 'xml', dict(
             source='./test/Output/Grouped',
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/test.songs.xml',
          )),
         # to complete
-        ('export', 'json', dict(
+        (True, 'export', 'json', dict(
             source='./test/Output/Grouped',
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/test.songs.json',
          )),
-        ('list-repeated', dict(
+        (True, 'list-repeated', dict(
             source='./test/Output/Grouped',
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/test.repeated.txt',
         )),
-        ('organize', 'ituned', dict(
+        (True, 'organize', 'ituned', dict(
             source='./test/Output/Grouped',
             ignored_file='./test/test.ignores.txt',
             root='./test/Output/iTunes/iTunes Media/Music',
         )),
-        ('export', 'plist', dict(
+        (True, 'export', 'plist', dict(
             source='./test/Source/Mp3',
             ignored_file='./test/test.ignores.txt',
             itunes_media_folder='./test/Output/iTunes/iTunes Media/Music',
             output='./test/Output/iTunes/Library.xml',
         )),
         # to complete
-        ('manage-artworks', 'derive', dict(
+        (True, 'manage-artworks', 'derive', dict(
             source='./test/Output/iTunes/iTunes Media/Music',
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/Artwork',
         )),
-        ('convert', 'note-to-markdown', dict(
+        (True, 'convert', 'note-to-markdown', dict(
             document='./test/Output/test.songs.note',
             output='./test/Output/test.songs.note.md',
         )),
-        ('convert', 'markdown-to-note', dict(
+        (True, 'convert', 'markdown-to-note', dict(
             document='./test/Output/test.songs.md',
             output='./test/Output/test.songs.md.note',
         )),
-        ('operate', 'backup', dict(
+        (True, 'extract-structure', dict(
+            document='./test/test.songs.note',
+            output='./test/Output/songs.note.tree',
+        )),
+        (True, 'operate', 'backup', dict(
             source='./test/test.operate.backup.txt',
             ignored_file='./test/test.ignores.txt',
         )),
-        ('operate', 'remove', dict(
+        (True, 'operate', 'remove', dict(
             source='./test/test.operate.remove.txt',
             ignored_file='./test/test.ignores.txt',
         )),
-        ('operate', 'tree', dict(
+        (True, 'operate', 'tree', dict(
             source='./test/Output',
             output='./test/Output/test.output.tree',
         )),
@@ -6252,25 +6320,60 @@ def _decorate_actions():
 
 
 def _summarize_actions():
-    ret = {}
+    actions = {}
     for cls in _get_valid_subclasses(AudioGod):
         if not cls.NAME:
             continue
         units = cls.NAME.split('.')
         match len(units):
             case 1:
-                if units[0] not in ret:
-                    ret[units[0]] = { 'carrier': cls }
+                if units[0] not in actions:
+                    actions[units[0]] = { 'carrier': cls }
                 else:
-                    ret[units[0]]['carrier'] = cls
+                    actions[units[0]]['carrier'] = cls
             case 2:
-                if units[0] not in ret:
-                    ret[units[0]] = { 'branches': { units[1]: { 'carrier': cls } } }
+                if units[0] not in actions:
+                    actions[units[0]] = { 'branches': { units[1]: { 'carrier': cls } } }
                 else:
-                    if 'branches' not in ret[units[0]]:
-                        ret[units[0]]['branches'] = { units[1]: { 'carrier': cls } }
+                    if 'branches' not in actions[units[0]]:
+                        actions[units[0]]['branches'] = { units[1]: { 'carrier': cls } }
                     else:
-                        ret[units[0]]['branches'][units[1]] = { 'carrier': cls }
+                        actions[units[0]]['branches'][units[1]] = { 'carrier': cls }
+    ret, steps = {}, Testing__GenerateScriptAction.STEPS
+    for step in steps:
+        if len(step) <= 2:
+            continue
+        if len(step) == 3:
+            ret[step[1]] = {
+                key: actions[step[1]][key]
+                for key in actions[step[1]].keys()
+                if key != 'branches'
+            }
+            continue
+        if step[1] not in ret:
+            ret[step[1]] = {
+                key: actions[step[1]][key]
+                for key in actions[step[1]].keys()
+                if key != 'branches'
+            }
+            ret[step[1]]['branches'] = {
+                key: actions[step[1]]['branches'][key]
+                for key in actions[step[1]]['branches'].keys()
+                if key == step[2]
+            }
+            continue
+        if 'carrier' not in ret[step[1]]:
+            if 'carrier' in actions[step[1]]:
+                ret[step[1]]['carrier'] = actions[step[1]]['carrier']
+        if 'branches' not in ret[step[1]]:
+            if 'branches' in actions[step[1]]:
+                ret[step[1]]['branches'] = {
+                    key: actions[step[1]]['branches'][key]
+                    for key in actions[step[1]]['branches'].keys()
+                    if key == step[2]
+                }
+            continue
+        ret[step[1]]['branches'][step[2]] = actions[step[1]]['branches'][step[2]]
     return ret
 
 
@@ -6506,8 +6609,6 @@ def _special_characters() -> str:
     for field in table.field_names:
         table.align[field] = 'l'
     characters = [
-        (AudioGod.ORI_DIV_CHAR, 'Separator for origin audio file name.'),
-        (AudioGod.DIV_CHAR, 'Separator for formatted audio file name.'),
         (AudioGod.GROUPING_SEPARATOR, 'Separator for several grouping property of audio file.'),
         (RenameAudiosAction.FilenamePatternTemplate.delimiter, 'Delimiter of template for filename pattern.'),
     ]
@@ -6534,8 +6635,7 @@ def main():
                 audio_properties=_audio_properties(),
                 special_fields=_special_fields(),
                 special_characters=_special_characters(),
-                ori_div_char=AudioGod.ORI_DIV_CHAR,
-                div_char=AudioGod.DIV_CHAR,
+                filename_separator=f'<{" or ".join(FillPropertiesAction.ARGUMENTS_DEFAULTS()["separators"].split(","))}>',
                 grouping_sep=AudioGod.GROUPING_SEPARATOR,
                 fnp_delimiter=RenameAudiosAction.FilenamePatternTemplate.delimiter,
                 cache_dir=AudioGod.CACHE_DIR,

@@ -4,6 +4,7 @@ steps in usage需要和generate script以及cleanup, 以及所有的actions和br
 
 有一个地想不起来了，和 cls.NAME? output? 有关
 
+所有正则部分都调用一下escape
 
 type: ignore
 All done.
@@ -68,6 +69,7 @@ import note & format note & export note 三者统一一下, import和export 所�
 import 时支持fields三种类型识别
 看看 genre 和 grouping 是否在summaries时扣除去
 看看 import 和 export 逻辑里可以做到增量更新吗,新增曲库时，看看各个环节是否可以由全量模式改为增量模式
+oad_sources(matched=True)这里的matched看看能不能去掉，太别扭
 
 
 Giveup:

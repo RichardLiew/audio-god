@@ -1,3 +1,4 @@
 import os
 
-print(os.path.dirname('./aa.txt'))
+s = ''
+print(s[-1])
