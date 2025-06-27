@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-27T04:33:00Z
+# Created Time: 2025-06-27T19:52:41Z
 
 # Total Steps: 11
 
@@ -27,7 +27,7 @@ echo "\n\n[***] Starting ...\n"
     --extensions=qmc,qmc0,qmc3,qmcogg,qmcflac \
     --output='~/Music/Output/Qmc-To-Audio' \
     --recursive \
-    --ignored-file=./ignored.txt \
+    --ignored-file=./ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -43,7 +43,7 @@ echo "\n\n[***] Starting ...\n"
     --source='~/Music/Source/Mp3' \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignored.txt \
+    --ignored-file=./ignores.txt \
     --document=./songs.note \
     --root='~/Music/Source/Mp3' \
     --properties='{
@@ -65,7 +65,7 @@ echo "\n\n[***] Starting ...\n"
     --source='~/Music/Source/Mp3' \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignored.txt \
+    --ignored-file=./ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -74,7 +74,7 @@ echo "\n\n[***] Starting ...\n"
     --source='~/Music/Source/Mp3' \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignored.txt \
+    --ignored-file=./ignores.txt \
     --filename-pattern='@{artist} + @{title}' \
     --log-level=WARNING \
     --log-file=stderr
@@ -85,7 +85,7 @@ echo "\n\n[***] Starting ...\n"
     --root='~/Music/Output/Grouped' \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignored.txt \
+    --ignored-file=./ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -94,7 +94,7 @@ echo "\n\n[***] Starting ...\n"
     --source='~/Music/Output/Grouped' \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignored.txt \
+    --ignored-file=./ignores.txt \
     --output=./repeated.txt \
     --log-level=WARNING \
     --log-file=stderr
@@ -107,7 +107,7 @@ echo "\n\n[***] Starting ...\n"
     --output=./songs.note \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignored.txt \
+    --ignored-file=./ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -125,7 +125,7 @@ echo "\n\n[***] Starting ...\n"
     --root='~/Music/iTunes/iTunes Media/Music' \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignored.txt \
+    --ignored-file=./ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -141,7 +141,7 @@ echo "\n\n[***] Starting ...\n"
     --playlist-initial-id=3001 \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignored.txt \
+    --ignored-file=./ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 

@@ -5088,9 +5088,6 @@ class ConvertMediaBaseAction(ConvertBaseAction):
         super().rewrite_parameters()
 
         if 'output' in self.parameters:
-            #if not self.parameters['output']:
-            #    self.logger.fatal(f'Output <{self.parameters["output"]}> invalid!')
-            #    return
             if self.parameters['output']:
                 if not os.path.exists(self.parameters['output']):
                     os.makedirs(self.parameters['output'], exist_ok=True)
@@ -5934,6 +5931,16 @@ class Testing__InitAction(TestingBaseAction):
 
     #---------------------------------------------------------------------------
 
+    SOURCE_KINDS = {
+        'Mp3': 'mp3',
+        'Kmx': 'kmx',
+        'Media': 'mp4,wav,wma,ogg,ape,flac',
+        'Qmc': 'qmc,qmc0,qmc1,qmc2,qmc3,qmcogg,qmcflac',
+        'Artwork': 'png,jpg,jpeg',
+    }
+
+    #---------------------------------------------------------------------------
+
     def execute(self):
         if self.CACHE_DIR != self.TEST_CACHE_DIR:
             self.logger.fatal('${AUDGOD_CACHE_PATH} error!')
@@ -5941,7 +5948,7 @@ class Testing__InitAction(TestingBaseAction):
 
         srcs = list(map(
             lambda x: os.path.join(self.TEST_ORISRC_DIR, x),
-            ['Mp3', 'Kmx', 'Media', 'Qmc', 'Png'],
+            self.SOURCE_KINDS.keys(),
         ))
 
         dirs = [
@@ -5978,7 +5985,7 @@ class Testing__InitAction(TestingBaseAction):
 
         for src in srcs:
             has_children = False
-            target_ext = f'.{os.path.basename(src).lower()}'
+            exts = self.SOURCE_KINDS[os.path.basename(src)].lower().split(',')
             for item in os.listdir(src):
                 if item.startswith('.'):
                     continue
@@ -5986,7 +5993,7 @@ class Testing__InitAction(TestingBaseAction):
                 if not os.path.isfile(fullname):
                     continue
                 _, ext = os.path.splitext(item)
-                if not ext.lower().startswith(target_ext):
+                if ext.lower() not in exts:
                     continue
                 has_children = True
                 break

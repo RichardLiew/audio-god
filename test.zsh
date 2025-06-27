@@ -2,9 +2,9 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-27T04:33:53Z
+# Created Time: 2025-06-27T19:51:51Z
 
-# Total Steps: 26
+# Total Steps: 25
 
 ##############################################################################
 
@@ -42,16 +42,6 @@ echo "\n\n[***] Starting ...\n"
     --log-file=stderr
 
 # Step (4):
-./audio-god convert mp4-to-mp3 \
-    --source=./test/Source/Mp4 \
-    --extensions=mp4 \
-    --output=./test/Output/Mp4-To-Mp3 \
-    --recursive \
-    --ignored-file=./test/test.ignores.txt \
-    --log-level=WARNING \
-    --log-file=stderr
-
-# Step (5):
 ./audio-god convert qmc-to-audio \
     --source=./test/Source/Qmc \
     --extensions=qmc,qmc0,qmc3,qmcogg,qmcflac \
@@ -61,25 +51,25 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (6):
-./audio-god convert audios \
-    --source=./test/Source/Audios \
-    --extensions=flac,wav,ogg,ape,wma \
-    --output=./test/Output/Audios \
+# Step (5):
+./audio-god convert media \
+    --source=./test/Source/Media \
+    --extensions=mp4,flac,wav,ogg,ape,wma \
+    --output=./test/Output/Media \
     --format=mp3 \
     --recursive \
     --ignored-file=./test/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (7):
+# Step (6):
 ./audio-god redecorate-note \
     --document=./test/test.songs.note \
     --field-type=auto \
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (8):
+# Step (7):
 ./audio-god fill-properties \
     --source=./test/Source/Mp3 \
     --extensions=mp3,aac \
@@ -101,7 +91,7 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (9):
+# Step (8):
 ./audio-god format-properties \
     --source=./test/Source/Mp3 \
     --extensions=mp3,aac \
@@ -110,7 +100,7 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (10):
+# Step (9):
 ./audio-god rename-audios \
     --source=./test/Source/Mp3 \
     --extensions=mp3,aac \
@@ -120,7 +110,7 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (11):
+# Step (10):
 ./audio-god manage-artworks bind \
     --source=./test/Source/Mp3 \
     --artworks=./test/Source/Png \
@@ -130,7 +120,7 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (12):
+# Step (11):
 ./audio-god display \
     --source=./test/Source/Mp3 \
     --extensions=mp3,aac \
@@ -167,7 +157,7 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (13):
+# Step (12):
 ./audio-god organize grouped \
     --source=./test/Source/Mp3 \
     --root=./test/Output/Grouped \
@@ -177,7 +167,7 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (14):
+# Step (13):
 ./audio-god export note \
     --source=./test/Output/Grouped \
     --fields=basic \
@@ -189,7 +179,7 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (15):
+# Step (14):
 ./audio-god export markdown \
     --source=./test/Output/Grouped \
     --fields=basic \
@@ -201,7 +191,7 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (16):
+# Step (15):
 ./audio-god export xml \
     --source=./test/Output/Grouped \
     --fields=ituned \
@@ -213,7 +203,7 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (17):
+# Step (16):
 ./audio-god export json \
     --source=./test/Output/Grouped \
     --fields=basic \
@@ -225,7 +215,7 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (18):
+# Step (17):
 ./audio-god list-repeated \
     --source=./test/Output/Grouped \
     --extensions=mp3,aac \
@@ -235,7 +225,7 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (19):
+# Step (18):
 ./audio-god organize ituned \
     --source=./test/Output/Grouped \
     --root='./test/Output/iTunes/iTunes Media/Music' \
@@ -245,7 +235,7 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (20):
+# Step (19):
 ./audio-god export plist \
     --source=./test/Source/Mp3 \
     --fields=ituned \
@@ -261,7 +251,7 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (21):
+# Step (20):
 ./audio-god manage-artworks derive \
     --source='./test/Output/iTunes/iTunes Media/Music' \
     --output=./test/Output/Artworks \
@@ -271,7 +261,7 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (22):
+# Step (21):
 ./audio-god convert note-to-markdown \
     --document=./test/Output/test.songs.note \
     --field-type=auto \
@@ -279,28 +269,28 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (23):
+# Step (22):
 ./audio-god convert markdown-to-note \
     --document=./test/Output/test.songs.md \
     --output=./test/Output/test.songs.md.note \
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (24):
+# Step (23):
 ./audio-god operate backup \
     --source=./test/test.operate.backup.txt \
     --ignored-file=./test/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (25):
+# Step (24):
 ./audio-god operate remove \
     --source=./test/test.operate.remove.txt \
     --ignored-file=./test/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (26):
+# Step (25):
 ./audio-god operate tree \
     --source=./test/Output \
     --output=./test/Output/test.output.tree \
