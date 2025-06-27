@@ -2,7 +2,7 @@ Processing:
 抓包 Mac 酷我下载音乐的链接，然后集成到脚本中自动下载
 steps in usage需要和generate script以及cleanup, 以及所有的actions和branches都要覆盖到里 同步更新, start和test都要同步
 
-有一个地想不起来了，和cls.NAME有关
+有一个地想不起来了，和 cls.NAME? output? 有关
 
 
 type: ignore
