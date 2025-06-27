@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-27T19:51:51Z
+# Created Time: 2025-06-27T20:16:02Z
 
 # Total Steps: 25
 
@@ -113,7 +113,7 @@ echo "\n\n[***] Starting ...\n"
 # Step (10):
 ./audio-god manage-artworks bind \
     --source=./test/Source/Mp3 \
-    --artworks=./test/Source/Png \
+    --artworks=./test/Source/Artwork \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./test/test.ignores.txt \
@@ -254,7 +254,7 @@ echo "\n\n[***] Starting ...\n"
 # Step (20):
 ./audio-god manage-artworks derive \
     --source='./test/Output/iTunes/iTunes Media/Music' \
-    --output=./test/Output/Artworks \
+    --output=./test/Output/Artwork \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./test/test.ignores.txt \

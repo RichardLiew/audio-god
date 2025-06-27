@@ -5993,7 +5993,9 @@ class Testing__InitAction(TestingBaseAction):
                 if not os.path.isfile(fullname):
                     continue
                 _, ext = os.path.splitext(item)
-                if ext.lower() not in exts:
+                if ext:
+                    ext = ext[1:].lower()
+                if ext not in exts:
                     continue
                 has_children = True
                 break
