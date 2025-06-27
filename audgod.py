@@ -5329,67 +5329,12 @@ class Convert__KmxToMp4Action(ConvertMediaBaseAction):
 
 #===============================================================================
 
-class Convert__Mp4ToMp3Action(ConvertMediaBaseAction):
+class Convert__MediaAction(ConvertMediaBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
 
-    KWARGS = {
-        'description': '⭐ Convert mp4 to mp3',
-        'help': 'convert mp4 to mp3',
-    }
-
-    ARGUMENTS = {
-        'source': {
-            'use_public': AudioGod.ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': '~/Music/Source/Mp4',
-            },
-        },
-        'extensions': {
-            'use_public': AudioGod.ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': 'mp4',
-            },
-        },
-        'output': {
-            'use_public': AudioGod.ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': '~/Music/Output/Mp4-To-Mp3',
-            },
-        },
-    }
-
-    #---------------------------------------------------------------------------
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    #---------------------------------------------------------------------------
-
-    def execute(self):
-        pass
-        ##pip install moviepy
-        #from moviepy.editor import VideoFileClip
- 
-        #def video_to_audio(video_path, audio_path):
-        #    video_clip = VideoFileClip(video_path)
-        #    audio = video_clip.audio
-        #    audio.write_audiofile(audio_path)
-        # 
-        #video_path = '1.mp4'  # 视频文件路径
-        #audio_path = '2.mp3'  # 输出音频文件路径
-        # 
-        #video_to_audio(video_path, audio_path)
-
-#===============================================================================
-
-class Convert__AudiosAction(ConvertMediaBaseAction):
-    ACTIVE = True
-
-    #---------------------------------------------------------------------------
-
-    SUPPORTED_FORMATS = ['mp3', 'flac', 'wav', 'ogg', 'ape', 'wma']
+    SUPPORTED_FORMATS = ['mp3', 'mp4', 'flac', 'wav', 'ogg', 'ape', 'wma']
 
     #---------------------------------------------------------------------------
 
@@ -5402,19 +5347,19 @@ class Convert__AudiosAction(ConvertMediaBaseAction):
         'source': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Source/Audios',
+                'default': '~/Music/Source/Media',
             },
         },
         'extensions': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': 'flac,wav,ogg,ape,wma',
+                'default': 'mp4,flac,wav,ogg,ape,wma',
             },
         },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Output/Audios',
+                'default': '~/Music/Output/Media',
             },
         },
         'format': {
@@ -5442,9 +5387,19 @@ class Convert__AudiosAction(ConvertMediaBaseAction):
         super().rewrite_parameters()
 
         if 'format' in self.parameters:
-            if self.parameters['format'] not in self.SUPPORTED_FORMATS:
-                self.logger.fatal(f'Unsupported format <{self.parameters["format"]}>!')
-                return
+            pass
+
+    #---------------------------------------------------------------------------
+
+    from pydub import AudioSegment
+    
+    def batch_convert(input_dir, output_dir, target_format="mp3"):
+        
+        for f in Path(input_dir).glob("*"):
+            if f.suffix.lower() in (".wav", ".mp4"):
+                output_path = output_dir / f"{f.stem}.{target_format}"
+                AudioSegment.from_file(f).export(output_path, format=target_format)
+                print(f"Converted: {f.name} -> {output_path.name}")
 
     #---------------------------------------------------------------------------
 
@@ -5890,7 +5845,7 @@ class GenerateScript__StartAction(GenerateScriptBaseAction):
     STEPS = [
         #('operate', 'cleanup', {}),
         #('convert', 'kmx-to-mp4', {}),
-        #('convert', 'mp4-to-mp3', {}),
+        #('convert', 'media', {}),
         ('convert', 'qmc-to-audio', {}),
         ('redecorate-note', {}),
         ('fill-properties', {}),
@@ -5986,7 +5941,7 @@ class Testing__InitAction(TestingBaseAction):
 
         srcs = list(map(
             lambda x: os.path.join(self.TEST_ORISRC_DIR, x),
-            ['Mp3', 'Kmx', 'Mp4', 'Qmc', 'Png'],
+            ['Mp3', 'Kmx', 'Media', 'Qmc', 'Png'],
         ))
 
         dirs = [
@@ -6114,22 +6069,15 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/Kmx-To-Mp4',
         )),
-        # to complete
-        ('convert', 'mp4-to-mp3', dict(
-            source='./test/Source/Mp4',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/Output/Mp4-To-Mp3',
-        )),
         ('convert', 'qmc-to-audio', dict(
             source='./test/Source/Qmc',
             ignored_file='./test/test.ignores.txt',
             output='./test/Output/Qmc-To-Audio',
         )),
-        # to complete
-        ('convert', 'audios', dict(
-            source='./test/Source/Audios',
+        ('convert', 'media', dict(
+            source='./test/Source/Media',
             ignored_file='./test/test.ignores.txt',
-            output='./test/Output/Audios',
+            output='./test/Output/Media',
             format='mp3',
         )),
         ('redecorate-note', dict(
