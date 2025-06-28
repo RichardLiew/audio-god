@@ -2263,7 +2263,7 @@ class NoteRelatedBaseAction(AudioGod):
 
         field_type = self.FieldType.ORIGINAL
         with open(self.parameters['document'], 'r', encoding='utf-8') as f:
-            keys, (genre, grouping) = {}, ('', '')
+            keys, (genre, grouping) = {}, ('', [])
             for line_number, line in enumerate(f, start=1):
                 if not line.strip():
                     continue
@@ -2279,9 +2279,6 @@ class NoteRelatedBaseAction(AudioGod):
                     ))
                     genre = self.format_funcs[self.AudioProperty.GENRE](genre)
                     grouping = self.format_funcs[self.AudioProperty.GROUPING](grouping)
-                    if grouping and grouping in self.summaries:
-                        genre, grouping = '', ''
-                        invalid_info = 'grouping already exists'
                     if grouping:
                         self.grouping_clauses.append(line_with_no)
                         self.grouping_clauses_counter += 1
@@ -2332,13 +2329,22 @@ class NoteRelatedBaseAction(AudioGod):
                                 valid, invalid_info = False, 'more than one genres for one detail item'
                             repeated = True
                     if valid:
-                        if grouping not in self.summaries:
-                            self.summaries[grouping] = (genre, [properties])
-                        else:
-                            _, items = self.summaries[grouping]
-                            if curr_key in [self.__generate_key_by_properties(x) for x in items]:
-                                valid, invalid_info = False, 'duplicate detail items under same grouping'
+                        groups = self.split(
+                            grouping, self.GROUPING_SEPARATOR, escaped=True,
+                            del_blank=True, filt_empty=True, filt_repeated=True,
+                            sortify=False, reversify=False,
+                        )
+                        for group in groups:
+                            if group not in self.summaries:
+                                self.summaries[group] = (genre, [properties])
                             else:
+                                old_genre, items = self.summaries[group]
+                                if genre != old_genre:
+                                    self.logger.fatal(f'Grouping <{group}> with different genres!')
+                                    return
+                                if curr_key in [self.__generate_key_by_properties(x) for x in items]:
+                                    valid, invalid_info = False, 'duplicate detail items under same grouping'
+                                    continue
                                 items.append(properties)
                     if valid:
                         if repeated:
@@ -6430,6 +6436,12 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
         (True, 'operate', 'tree', dict(
             source='./test/Output',
             output='./test/Output/test.output.tree',
+        )),
+        (True, 'generate-script', 'start', dict(
+            output='./test/Output/test.start.zsh',
+        )),
+        (True, 'testing', 'generate-script', dict(
+            output='./test/Output/test.test.zsh',
         )),
     ]
 

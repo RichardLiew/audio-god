@@ -2,9 +2,9 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-27T21:25:10Z
+# Created Time: 2025-06-29T00:09:58Z
 
-# Total Steps: 11
+# Total Steps: 12
 
 ##############################################################################
 
@@ -35,6 +35,7 @@ echo "\n\n[***] Starting ...\n"
 ./audio-god redecorate-note \
     --document=./songs.note \
     --field-type=auto \
+    --output=./songs.note \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -57,6 +58,7 @@ echo "\n\n[***] Starting ...\n"
             "value": null
         }
     }' \
+    --separators='-,#' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -75,7 +77,7 @@ echo "\n\n[***] Starting ...\n"
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./ignores.txt \
-    --filename-pattern='@{artist} + @{title}' \
+    --filename-pattern='@{artist} # @{title}' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -139,6 +141,16 @@ echo "\n\n[***] Starting ...\n"
     --itunes-media-folder='~/Music/iTunes/iTunes Media/Music' \
     --track-initial-id=601 \
     --playlist-initial-id=3001 \
+    --extensions=mp3,aac \
+    --recursive \
+    --ignored-file=./ignores.txt \
+    --log-level=WARNING \
+    --log-file=stderr
+
+# Step (12):
+./audio-god manage-artworks derive \
+    --source='~/Music/iTunes/iTunes Media/Music' \
+    --output='~/Music/Output/Artwork' \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./ignores.txt \

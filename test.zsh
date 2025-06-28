@@ -2,9 +2,9 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-27T21:25:01Z
+# Created Time: 2025-06-29T00:10:31Z
 
-# Total Steps: 25
+# Total Steps: 28
 
 ##############################################################################
 
@@ -64,8 +64,9 @@ echo "\n\n[***] Starting ...\n"
 
 # Step (6):
 ./audio-god redecorate-note \
-    --document=./test/test.songs.note \
+    --document=./test/test.songs.note.origin \
     --field-type=auto \
+    --output=./test/Output/test.songs.note \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -88,6 +89,7 @@ echo "\n\n[***] Starting ...\n"
             "value": null
         }
     }' \
+    --separators='-,#' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -106,7 +108,7 @@ echo "\n\n[***] Starting ...\n"
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./test/test.ignores.txt \
-    --filename-pattern='@{artist} + @{title}' \
+    --filename-pattern='@{artist} # @{title}' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -277,23 +279,45 @@ echo "\n\n[***] Starting ...\n"
     --log-file=stderr
 
 # Step (23):
+./audio-god extract-structure \
+    --document=./test/test.songs.note \
+    --field-type=auto \
+    --output=./test/Output/songs.note.tree \
+    --show-count \
+    --log-level=WARNING \
+    --log-file=stderr
+
+# Step (24):
 ./audio-god operate backup \
     --source=./test/test.operate.backup.txt \
     --ignored-file=./test/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (24):
+# Step (25):
 ./audio-god operate remove \
     --source=./test/test.operate.remove.txt \
     --ignored-file=./test/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (25):
+# Step (26):
 ./audio-god operate tree \
     --source=./test/Output \
     --output=./test/Output/test.output.tree \
+    --show-count \
+    --log-level=WARNING \
+    --log-file=stderr
+
+# Step (27):
+./audio-god generate-script start \
+    --output=./test/Output/test.start.zsh \
+    --log-level=WARNING \
+    --log-file=stderr
+
+# Step (28):
+./audio-god testing generate-script \
+    --output=./test/Output/test.test.zsh \
     --log-level=WARNING \
     --log-file=stderr
 
