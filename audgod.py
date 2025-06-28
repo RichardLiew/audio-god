@@ -322,13 +322,13 @@ def log_decorator(func):
                 func_name = f'{instance.__class__.NAME}.{func_name}'
         start_time = time.time()
         #print_func('*' * 78 + '\n')
-        print_func(f'Starting <{func_name}> ...\n\n')
+        print_func(f'(###) Starting <{func_name}> ...\n')
         try:
             result = func(*args, **kwargs)
             return result
         finally:
             cost_time = time.time() - start_time
-            print_func(f'\n<{func_name}> finished, cost {cost_time:.2f} seconds.\n')
+            print_func(f'\n(###) <{func_name}> finished, cost {cost_time:.2f} seconds.\n')
     return wrapper
 
 
