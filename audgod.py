@@ -321,8 +321,8 @@ def log_decorator(func):
             if instance.__class__.NAME:
                 func_name = f'{instance.__class__.NAME}.{func_name}'
         start_time = time.time()
-        print_func('*' * 78 + '\n')
-        print_func(f'Starting <{func_name}> ...')
+        #print_func('*' * 78 + '\n')
+        print_func(f'Starting <{func_name}> ...\n\n')
         try:
             result = func(*args, **kwargs)
             return result
@@ -2171,7 +2171,7 @@ class AudioGod(object):
 
             self.primed_sources.append(source)
 
-        self.logger.warning(f'\n{"#"*78}\n')
+        #self.logger.warning(f'\n{"#"*78}\n')
 
         self.logger.warning(
             'Total Sources:   {total}\n\n'
@@ -2369,7 +2369,7 @@ class NoteRelatedBaseAction(AudioGod):
 
         self.__transform_summaries_to_clauses()
         
-        self.logger.warning(f'\n{"#"*78}\n')
+        #self.logger.warning(f'\n{"#"*78}\n')
         self.logger.warning(
             'Total Clauses:    {total}\n\n'
             'Valid Clauses:    {valid}\n'
@@ -2824,7 +2824,7 @@ class FillPropertiesAction(NoteRelatedBaseAction):
                 self.notmatched_sources.append(source)
                 self.logger.debug(self.SourceType.NOTMATCHED)
 
-        self.logger.warning(f'\n{"#"*78}\n')
+        #self.logger.warning(f'\n{"#"*78}\n')
 
         self.logger.warning(
             'Inv Name Sources: {inv_name}\n'
@@ -2977,7 +2977,7 @@ class FillPropertiesAction(NoteRelatedBaseAction):
 
     def __fill_audio_properties(self):
         filled_count, audios = 0, self.primed_sources
-        self.logger.warning(f'\n{"#"*78}\n')
+        #self.logger.warning(f'\n{"#"*78}\n')
         for audio in audios:
             self.logger.debug(f'Filling <{audio}> ...')
             filled, audio_object = False, self.prime_audio(audio)
@@ -3041,7 +3041,7 @@ class FormatPropertiesAction(AudioGod):
     def execute(self):
         self.prime_sources()
         count, audios = 0, self.primed_sources
-        self.logger.warning(f'\n{"#"*78}\n')
+        #self.logger.warning(f'\n{"#"*78}\n')
         for audio in audios:
             self.logger.debug(f'Formatting <{audio}> ...')
             filled, audio_object = False, self.prime_audio(audio)
@@ -6005,11 +6005,14 @@ class GenerateScriptBaseAction(AudioGod):
         content += '#' * 78 + '\n\n'
         content += f'export AUDGOD_CACHE_PATH={self.CACHE_DIR}\n\n'
         content += '#' * 78 + '\n\n'
-        content += 'printf "%.0s@" {1..60}\n'
-        content += 'echo "\\n\\n[***] Starting ...\\n"\n\n'
+        content += 'echo "\\n[***] Starting ...\\n"\n\n'
         content += '#' * 78 + '\n\n'
         for i, step in enumerate(steps):
-            content += f'# Step ({i+1}):\n'
+            if i == 0:
+                content += 'printf "%.0s@" {1..60}; printf "\\n"\n'
+            else:
+                content += 'printf "%.0s-" {1..60}; printf "\\n"\n'
+            content += f'echo "Step ({i+1}/{len(steps)}):\\n\\n"\n\n'
             if len(step) == 2:
                 content += f'{step[1]}\n\n'
             else:
@@ -6023,13 +6026,13 @@ class GenerateScriptBaseAction(AudioGod):
                     carrier.render_usage()
                 content += carrier.KWARGS['usage'].strip()
                 if i < len(steps) - 1:
-                    content += '\n\n'
+                    content += '\n\n' + '#' + '-' * 77 + '\n\n'
         content += '\n\n'
         content += '#' * 78 + '\n\n'
         content += 'unset AUDGOD_CACHE_PATH\n\n'
         content += '#' * 78 + '\n\n'
-        content += 'printf "%.0s@" {1..60}\n'
-        content += 'echo "\\n\\n[***] Finished!\\n"\n'
+        content += 'printf "%.0s@" {1..60}; printf "\\n"\n'
+        content += 'echo "\\n[***] Finished!\\n"\n'
 
         self.handle_output(content)
         if self.parameters['output']:
@@ -6337,7 +6340,7 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
         )),
         (True, 'redecorate-note', dict(
             document='./test/test.songs.note.origin',
-            output='./test/Output/test.songs.note',
+            output='./test/test.songs.note',
         )),
         (True, 'fill-properties', dict(
             source='./test/Source/Mp3',

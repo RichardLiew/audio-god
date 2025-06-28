@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-29T00:09:58Z
+# Created Time: 2025-06-29T00:48:55Z
 
 # Total Steps: 12
 
@@ -16,12 +16,13 @@ export AUDGOD_CACHE_PATH=~/.audgod-cache
 
 ##############################################################################
 
-printf "%.0s@" {1..60}
-echo "\n\n[***] Starting ...\n"
+echo "\n[***] Starting ...\n"
 
 ##############################################################################
 
-# Step (1):
+printf "%.0s@" {1..60}; printf "\n"
+echo "Step (1/12):\n\n"
+
 ./audio-god convert qmc-to-audio \
     --source='~/Music/Source/Qmc' \
     --extensions=qmc,qmc0,qmc1,qmc2,qmc3,qmcogg,qmcflac \
@@ -31,7 +32,11 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (2):
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (2/12):\n\n"
+
 ./audio-god redecorate-note \
     --document=./songs.note \
     --field-type=auto \
@@ -39,7 +44,11 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (3):
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (3/12):\n\n"
+
 ./audio-god fill-properties \
     --source='~/Music/Source/Mp3' \
     --extensions=mp3,aac \
@@ -62,7 +71,11 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (4):
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (4/12):\n\n"
+
 ./audio-god format-properties \
     --source='~/Music/Source/Mp3' \
     --extensions=mp3,aac \
@@ -71,7 +84,11 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (5):
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (5/12):\n\n"
+
 ./audio-god rename-audios \
     --source='~/Music/Source/Mp3' \
     --extensions=mp3,aac \
@@ -81,7 +98,11 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (6):
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (6/12):\n\n"
+
 ./audio-god organize grouped \
     --source='~/Music/Source/Mp3' \
     --root='~/Music/Output/Grouped' \
@@ -91,7 +112,11 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (7):
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (7/12):\n\n"
+
 ./audio-god list-repeated \
     --source='~/Music/Output/Grouped' \
     --extensions=mp3,aac \
@@ -101,7 +126,11 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (8):
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (8/12):\n\n"
+
 ./audio-god export note \
     --source='~/Music/Output/Grouped' \
     --fields=basic \
@@ -113,7 +142,11 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (9):
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (9/12):\n\n"
+
 ./audio-god convert note-to-markdown \
     --document=./songs.note \
     --field-type=auto \
@@ -121,7 +154,11 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (10):
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (10/12):\n\n"
+
 ./audio-god organize ituned \
     --source='~/Music/Output/Grouped' \
     --root='~/Music/iTunes/iTunes Media/Music' \
@@ -131,7 +168,11 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (11):
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (11/12):\n\n"
+
 ./audio-god export plist \
     --source='~/Music/Source/Mp3' \
     --fields=ituned \
@@ -147,7 +188,11 @@ echo "\n\n[***] Starting ...\n"
     --log-level=WARNING \
     --log-file=stderr
 
-# Step (12):
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (12/12):\n\n"
+
 ./audio-god manage-artworks derive \
     --source='~/Music/iTunes/iTunes Media/Music' \
     --output='~/Music/Output/Artwork' \
@@ -163,5 +208,5 @@ unset AUDGOD_CACHE_PATH
 
 ##############################################################################
 
-printf "%.0s@" {1..60}
-echo "\n\n[***] Finished!\n"
+printf "%.0s@" {1..60}; printf "\n"
+echo "\n[***] Finished!\n"
