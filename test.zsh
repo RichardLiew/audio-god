@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-29T00:48:59Z
+# Created Time: 2025-06-29T01:27:06Z
 
 # Total Steps: 28
 
@@ -87,7 +87,7 @@ echo "Step (6/28):\n\n"
 ./audio-god redecorate-note \
     --document=./test/test.songs.note.origin \
     --field-type=auto \
-    --output=./test/test.songs.note \
+    --output=./test/Output/test.songs.note \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -101,7 +101,7 @@ echo "Step (7/28):\n\n"
     --extensions=mp3,aac \
     --recursive \
     --ignored-file=./test/test.ignores.txt \
-    --document=./test/test.songs.note \
+    --document=./test/Output/test.songs.note \
     --root=./test/Source/Mp3 \
     --properties='{
         "_comment": "sources choose from command/file/directory/filename",
@@ -369,7 +369,7 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (23/28):\n\n"
 
 ./audio-god extract-structure \
-    --document=./test/test.songs.note \
+    --document=./test/Output/test.songs.note \
     --field-type=auto \
     --output=./test/Output/songs.note.tree \
     --show-count \

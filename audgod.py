@@ -6340,12 +6340,13 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
         )),
         (True, 'redecorate-note', dict(
             document='./test/test.songs.note.origin',
-            output='./test/test.songs.note',
+            #output='./test/test.songs.note',
+            output='./test/Output/test.songs.note',
         )),
         (True, 'fill-properties', dict(
             source='./test/Source/Mp3',
             ignored_file='./test/test.ignores.txt',
-            document='./test/test.songs.note',
+            document='./test/Output/test.songs.note',
             root='./test/Source/Mp3',
         )),
         (True, 'format-properties', dict(
@@ -6425,7 +6426,7 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
             output='./test/Output/test.songs.md.note',
         )),
         (True, 'extract-structure', dict(
-            document='./test/test.songs.note',
+            document='./test/Output/test.songs.note',
             output='./test/Output/songs.note.tree',
         )),
         (True, 'operate', 'backup', dict(
