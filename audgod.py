@@ -5589,6 +5589,16 @@ class ExtractStructureAction(
                 'default': './songs.note.tree',
             },
         },
+        'show_count': {
+            'use_public': AudioGod.ReplaceType.NONE,
+            'args': ['-0'],
+            'kwargs': {
+                'action': argparse.BooleanOptionalAction,
+                'required': False,
+                'default': True,
+                'help': 'if show count when extract structure',
+            },
+        },
     }
 
     #---------------------------------------------------------------------------
@@ -5598,10 +5608,75 @@ class ExtractStructureAction(
 
     #---------------------------------------------------------------------------
 
+    def rewrite_parameters(self):
+        super().rewrite_parameters()
+
+        if 'show_count' in self.parameters:
+            pass
+
+    #---------------------------------------------------------------------------
+
+    def stow_tree(self):
+        result = {}
+        for grouping, (genre, items) in self.summaries.items():
+            groups = self.split(
+                grouping,
+                self.GROUPING_SEPARATOR,
+                escaped=True,
+                del_blank=True,
+                filt_empty=True,
+                filt_repeated=False,
+                sortify=False,
+                reversify=False,
+            )
+            if not groups:
+                continue
+            cache = result
+            for i, group in enumerate(groups):
+                if group not in cache:
+                    if i == len(groups) - 1:
+                        cache[group] = [genre, len(items)]
+                        break
+                    cache[group] = {}
+                    cache = cache[group]
+                    continue
+                if isinstance(cache[group], dict):
+                    cache = cache[group]
+                    continue
+                old_genre, _ = cache[group]
+                if old_genre != genre:
+                    self.logger.fatal(f'Grouping <{grouping}> maps to different genres!')
+                    return
+                cache[group][1] += len(items)
+                break
+
+
+    @classmethod
+    def tree(cls, dir, lines=[], prefix='', is_last=True, is_root=True):
+        path = Path(dir)
+        count = cls.count_files(path)
+
+        front, content = '', f'{path.name} ({count})'
+        connector = '└── ' if is_last else '├── '
+        if not is_root:
+            front = f'{prefix}{connector}'
+        lines.append(f'{front}{content}')
+
+        items = [
+            item for item in path.iterdir() 
+            if item.is_dir() and not item.name.startswith('.')
+        ]
+
+        new_prefix = prefix + ('    ' if is_last else '│   ')
+        for i, child in enumerate(sorted(items)):
+            cls.tree(child, lines, new_prefix, i == len(items)-1, False)
+
+    #---------------------------------------------------------------------------
+
     def execute(self):
         self.analysis_note()
         self.sort_summaries()
-        self.handle_output(self.plain_generalize())
+        self.handle_output(self.stow_tree())
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -5805,7 +5880,7 @@ class Operate__TreeAction(OperateBaseAction):
         path = Path(dir)
         count = cls.count_files(path)
 
-        front, content = '', f'{path.name}/ ({count})'
+        front, content = '', f'{path.name} ({count})'
         connector = '└── ' if is_last else '├── '
         if not is_root:
             front = f'{prefix}{connector}'
