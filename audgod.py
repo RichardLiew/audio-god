@@ -2551,7 +2551,8 @@ class TreeRelatedBaseAction(AudioGod):
     #---------------------------------------------------------------------------
 
     def tree(self, data):
-        def _build(_data, lines, indent=0, prefix='', is_last=True, is_root=True, current_key='', show_count=True):
+        def _build(_data, indent=0, prefix='', is_last=True, is_root=True, current_key='', show_count=True):
+            content = ''
             if isinstance(_data, dict):
                 def _count_leaves(node):
                     if isinstance(node, list):
@@ -2572,9 +2573,8 @@ class TreeRelatedBaseAction(AudioGod):
                     key = list(_data.keys())[0] if len(_data) == 1 else 'Root'
                     direct_children = _count_children(next(iter(_data.values())))
                     if key != self.FILES_MARK:
-                        lines.append(
-                            f'{key}' + (f' (items: {total_leaves}, branches: {direct_children})' if show_count else ''),
-                        )
+                        content += f'{key}' + (f' (items: {total_leaves}, branches: {direct_children})' if show_count else '')
+                        content += '\n'
                     new_prefix = prefix + '    '
                     items = _data[key].items() if len(_data) == 1 else _data.items()
                 else:
@@ -2582,32 +2582,27 @@ class TreeRelatedBaseAction(AudioGod):
                     current_prefix = prefix + connector
                     key = current_key or 'Node'
                     if key != self.FILES_MARK:
-                        lines.append(
-                            f'{current_prefix}{key}' + (f' (items: {total_leaves}, branches: {direct_children})' if show_count else ''),
-                        )
+                        content += f'{current_prefix}{key}' + (f' (items: {total_leaves}, branches: {direct_children})' if show_count else '')
+                        content += '\n'
                     new_prefix = prefix + ('    ' if is_last else '│   ')
                     items = _data.items()
 
                 for i, (key, value) in enumerate(items):
                     child_is_last = i == len(items) - 1
                     if isinstance(value, dict):
-                        _build(value, lines, indent+1, new_prefix, child_is_last, False, key, show_count)
+                        content += _build(value, indent+1, new_prefix, child_is_last, False, key, show_count)
                     elif isinstance(value, list):
                         if key != self.FILES_MARK:
-                            lines.append(
-                                f'{new_prefix}{"└── " if child_is_last else "├── "}{key} ' + (f'(items: {len(value)}, branches: 0)' if show_count else ''),
-                            )
+                            content += f'{new_prefix}{"└── " if child_is_last else "├── "}{key} ' + (f'(items: {len(value)}, branches: 0)' if show_count else '')
+                            content += '\n'
             elif isinstance(_data, list):
-                lines.append(
-                    f'{prefix}└── ' + (f'(items: {len(_data)}, branches: 0)' if show_count else ''),
-                )
+                content += f'{prefix}└── ' + (f'(items: {len(_data)}, branches: 0)' if show_count else '')
+                content += '\n'
             else:
                 self.logger.fatal('Data must be a dict!')
-                return
+            return content
 
-        lines = []
-        _build(data, lines, show_count=self.parameters['show_count'])
-        return '\n'.join(lines)
+        return _build(data)
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
