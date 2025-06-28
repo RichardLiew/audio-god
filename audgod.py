@@ -2602,7 +2602,7 @@ class TreeRelatedBaseAction(AudioGod):
                 self.logger.fatal('Data must be a dict!')
             return content
 
-        return _build(data)
+        return _build(data).strip()
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
