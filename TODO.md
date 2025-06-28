@@ -4,8 +4,6 @@ steps in usage需要和generate script以及cleanup, 以及所有的actions和br
 
 有一个地想不起来了，和 cls.NAME? output? 有关
 
-所有正则部分都调用一下escape
-
 type: ignore
 All done.
 

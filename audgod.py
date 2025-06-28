@@ -2508,6 +2508,107 @@ class ExportRelatedBaseAction(AudioGod):
             key: self.summaries[key] for key in sorted(self.summaries)
         }
 
+#===============================================================================
+
+class TreeRelatedBaseAction(AudioGod):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+    
+    FILES_MARK = '__files__'
+    
+    #---------------------------------------------------------------------------
+
+    KWARGS = None
+    ARGUMENTS = None
+
+    REQUISITE_ARGUMENTS = {
+        'show_count': {
+            'use_public': AudioGod.ReplaceType.NONE,
+            'args': ['-0'],
+            'kwargs': {
+                'action': argparse.BooleanOptionalAction,
+                'required': False,
+                'default': True,
+                'help': 'if show count when extract structure',
+            },
+        },
+    } | copy.deepcopy(AudioGod.REQUISITE_ARGUMENTS)
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def rewrite_parameters(self):
+        super().rewrite_parameters()
+
+        if 'show_count' in self.parameters:
+            pass
+
+    #---------------------------------------------------------------------------
+
+    def tree(self, data):
+        def _build(_data, lines, indent=0, prefix='', is_last=True, is_root=True, current_key='', show_count=True):
+            if isinstance(_data, dict):
+                def _count_leaves(node):
+                    if isinstance(node, list):
+                        return len(node)
+                    elif isinstance(node, dict):
+                        return sum(_count_leaves(v) for v in node.values())
+                    return 0
+
+                def _count_children(node):
+                    if isinstance(node, dict):
+                        return len({ key: node[key] for key in node if key != self.FILES_MARK })
+                    return 0
+
+                total_leaves = _count_leaves(_data)
+                direct_children = _count_children(_data)
+
+                if is_root:
+                    key = list(_data.keys())[0] if len(_data) == 1 else 'Root'
+                    direct_children = _count_children(next(iter(_data.values())))
+                    if key != self.FILES_MARK:
+                        lines.append(
+                            f'{key}' + (f' (items: {total_leaves}, branches: {direct_children})' if show_count else ''),
+                        )
+                    new_prefix = prefix + '    '
+                    items = _data[key].items() if len(_data) == 1 else _data.items()
+                else:
+                    connector = '└── ' if is_last else '├── '
+                    current_prefix = prefix + connector
+                    key = current_key or 'Node'
+                    if key != self.FILES_MARK:
+                        lines.append(
+                            f'{current_prefix}{key}' + (f' (items: {total_leaves}, branches: {direct_children})' if show_count else ''),
+                        )
+                    new_prefix = prefix + ('    ' if is_last else '│   ')
+                    items = _data.items()
+
+                for i, (key, value) in enumerate(items):
+                    child_is_last = i == len(items) - 1
+                    if isinstance(value, dict):
+                        _build(value, lines, indent+1, new_prefix, child_is_last, False, key, show_count)
+                    elif isinstance(value, list):
+                        if key != self.FILES_MARK:
+                            lines.append(
+                                f'{new_prefix}{"└── " if child_is_last else "├── "}{key} ' + (f'(items: {len(value)}, branches: 0)' if show_count else ''),
+                            )
+            elif isinstance(_data, list):
+                lines.append(
+                    f'{prefix}└── ' + (f'(items: {len(_data)}, branches: 0)' if show_count else ''),
+                )
+            else:
+                self.logger.fatal('Data must be a dict!')
+                return
+
+        lines = []
+        _build(data, lines, show_count=self.parameters['show_count'])
+        return '\n'.join(lines)
+
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 class RedecorateNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
@@ -4596,6 +4697,8 @@ class Export__NoteAction(ExportBaseAction, NoteRelatedBaseAction):
         },
     }
 
+    REQUISITE_ARGUMENTS = copy.deepcopy(ExportBaseAction.REQUISITE_ARGUMENTS)
+
     #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
@@ -5495,6 +5598,11 @@ class Convert__NoteToMarkdownAction(
 
     #---------------------------------------------------------------------------
 
+    def rewrite_parameters(self):
+        ConvertDocumentBaseAction.rewrite_parameters(self)
+
+    #---------------------------------------------------------------------------
+
     def execute(self):
         self.analysis_note()
         self.sort_summaries()
@@ -5557,6 +5665,7 @@ class Convert__MarkdownToNoteAction(ConvertDocumentBaseAction):
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 class ExtractStructureAction(
+    TreeRelatedBaseAction,
     ConvertDocumentBaseAction,
     NoteRelatedBaseAction,
     ExportRelatedBaseAction,
@@ -5586,20 +5695,12 @@ class ExtractStructureAction(
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': './songs.note.tree',
-            },
-        },
-        'show_count': {
-            'use_public': AudioGod.ReplaceType.NONE,
-            'args': ['-0'],
-            'kwargs': {
-                'action': argparse.BooleanOptionalAction,
-                'required': False,
-                'default': True,
-                'help': 'if show count when extract structure',
+                'default': '',
             },
         },
     }
+
+    REQUISITE_ARGUMENTS = copy.deepcopy(TreeRelatedBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
 
@@ -5609,14 +5710,12 @@ class ExtractStructureAction(
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        super().rewrite_parameters()
-
-        if 'show_count' in self.parameters:
-            pass
+        TreeRelatedBaseAction.rewrite_parameters(self)
+        ConvertDocumentBaseAction.rewrite_parameters(self)
 
     #---------------------------------------------------------------------------
 
-    def stow_tree(self):
+    def __stow_tree(self):
         result = {}
         for grouping, (genre, items) in self.summaries.items():
             groups = self.split(
@@ -5635,7 +5734,7 @@ class ExtractStructureAction(
             for i, group in enumerate(groups):
                 if group not in cache:
                     if i == len(groups) - 1:
-                        cache[group] = [genre, len(items)]
+                        cache[group] = [(genre, item)for item in items]
                         break
                     cache[group] = {}
                     cache = cache[group]
@@ -5647,36 +5746,16 @@ class ExtractStructureAction(
                 if old_genre != genre:
                     self.logger.fatal(f'Grouping <{grouping}> maps to different genres!')
                     return
-                cache[group][1] += len(items)
+                cache[group].extend([(genre, item)for item in items])
                 break
-
-
-    @classmethod
-    def tree(cls, dir, lines=[], prefix='', is_last=True, is_root=True):
-        path = Path(dir)
-        count = cls.count_files(path)
-
-        front, content = '', f'{path.name} ({count})'
-        connector = '└── ' if is_last else '├── '
-        if not is_root:
-            front = f'{prefix}{connector}'
-        lines.append(f'{front}{content}')
-
-        items = [
-            item for item in path.iterdir() 
-            if item.is_dir() and not item.name.startswith('.')
-        ]
-
-        new_prefix = prefix + ('    ' if is_last else '│   ')
-        for i, child in enumerate(sorted(items)):
-            cls.tree(child, lines, new_prefix, i == len(items)-1, False)
+        return result
 
     #---------------------------------------------------------------------------
 
     def execute(self):
         self.analysis_note()
         self.sort_summaries()
-        self.handle_output(self.stow_tree())
+        self.handle_output(self.tree(self.__stow_tree()))
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -5824,7 +5903,7 @@ class Operate__CleanupAction(OperateBaseAction):
 
 #===============================================================================
 
-class Operate__TreeAction(OperateBaseAction):
+class Operate__TreeAction(TreeRelatedBaseAction, OperateBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -5847,6 +5926,8 @@ class Operate__TreeAction(OperateBaseAction):
         },
     }
 
+    REQUISITE_ARGUMENTS = copy.deepcopy(TreeRelatedBaseAction.REQUISITE_ARGUMENTS)
+
     #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
@@ -5855,7 +5936,7 @@ class Operate__TreeAction(OperateBaseAction):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        super().rewrite_parameters()
+        TreeRelatedBaseAction.rewrite_parameters(self)
 
         if 'source' in self.parameters:
             if not os.path.exists(self.parameters['source']):
@@ -5867,40 +5948,29 @@ class Operate__TreeAction(OperateBaseAction):
 
     #---------------------------------------------------------------------------
 
-    @staticmethod
-    def count_files(path):
-        return sum(
-            1 for file in path.rglob('*') 
-            if file.is_file() and not file.name.startswith('.')
-        )
-
-
     @classmethod
-    def tree(cls, dir, lines=[], prefix='', is_last=True, is_root=True):
-        path = Path(dir)
-        count = cls.count_files(path)
-
-        front, content = '', f'{path.name} ({count})'
-        connector = '└── ' if is_last else '├── '
-        if not is_root:
-            front = f'{prefix}{connector}'
-        lines.append(f'{front}{content}')
-
-        items = [
-            item for item in path.iterdir() 
-            if item.is_dir() and not item.name.startswith('.')
-        ]
-
-        new_prefix = prefix + ('    ' if is_last else '│   ')
-        for i, child in enumerate(sorted(items)):
-            cls.tree(child, lines, new_prefix, i == len(items)-1, False)
+    def stow_tree(cls, path):
+        def _tree(dir_):
+            ret = {}
+            if not os.path.isdir(dir_):
+                return ret
+            for item in os.listdir(dir_):
+                if item.startswith('.'):
+                    continue
+                full_path = os.path.join(dir_, item)
+                if os.path.isdir(full_path):
+                    ret[item] = _tree(full_path)
+                    continue
+                if cls.FILES_MARK not in ret:
+                    ret[cls.FILES_MARK] = []
+                ret[cls.FILES_MARK].append(item)
+            return ret
+        return { os.path.basename(path): _tree(path) }
 
     #---------------------------------------------------------------------------
 
     def execute(self):
-        lines = []
-        self.tree(self.parameters['source'], lines)
-        self.handle_output('\n'.join(lines))
+        self.handle_output(self.tree(self.stow_tree(self.parameters['source'])))
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
