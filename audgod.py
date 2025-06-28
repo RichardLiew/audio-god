@@ -6207,7 +6207,7 @@ class Testing__InitAction(TestingBaseAction):
         files = list(map(
             lambda x: os.path.join(self.TEST_ORIGIN_DIR, x),
             [
-                'test.songs.note',
+                'test.songs.note.origin',
                 'test.ignores.txt',
                 'test.operate.backup.txt',
                 'test.operate.remove.txt',
