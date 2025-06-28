@@ -2602,7 +2602,7 @@ class TreeRelatedBaseAction(AudioGod):
                 self.logger.fatal('Data must be a dict!')
             return content
 
-        return _build(data).strip()
+        return _build(data, show_count=self.parameters['show_count']).strip()
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -5715,7 +5715,7 @@ class ExtractStructureAction(
         for grouping, (genre, items) in self.summaries.items():
             groups = self.split(
                 grouping,
-                self.GROUPING_SEPARATOR,
+                '/',
                 escaped=True,
                 del_blank=True,
                 filt_empty=True,
@@ -5743,7 +5743,7 @@ class ExtractStructureAction(
                     return
                 cache[group].extend([(genre, item)for item in items])
                 break
-        return result
+        return { 'Music': result }
 
     #---------------------------------------------------------------------------
 
