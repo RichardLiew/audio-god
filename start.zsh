@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-29T16:33:22Z
+# Created Time: 2025-06-29T16:58:00Z
 
 # Total Steps: 13
 
@@ -49,6 +49,19 @@ echo "Step (2/13):\n\n"
 printf "%.0s-" {1..60}; printf "\n"
 echo "Step (3/13):\n\n"
 
+./audio-god extract-structure \
+    --document='~/Music/Output/songs.note' \
+    --field-type=auto \
+    --output='' \
+    --show-count \
+    --log-level=WARNING \
+    --log-file=stderr
+
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (4/13):\n\n"
+
 ./audio-god fill-properties \
     --source='~/Music/Source/Mp3' \
     --extensions=mp3,aac \
@@ -74,7 +87,7 @@ echo "Step (3/13):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (4/13):\n\n"
+echo "Step (5/13):\n\n"
 
 ./audio-god format-properties \
     --source='~/Music/Source/Mp3' \
@@ -87,7 +100,7 @@ echo "Step (4/13):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (5/13):\n\n"
+echo "Step (6/13):\n\n"
 
 ./audio-god rename-audios \
     --source='~/Music/Source/Mp3' \
@@ -101,27 +114,11 @@ echo "Step (5/13):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (6/13):\n\n"
+echo "Step (7/13):\n\n"
 
 ./audio-god organize grouped \
     --source='~/Music/Source/Mp3' \
     --output='~/Music/Output/Grouped' \
-    --extensions=mp3,aac \
-    --recursive \
-    --ignored-file='~/Music/Source/ignores.txt' \
-    --log-level=WARNING \
-    --log-file=stderr
-
-#-----------------------------------------------------------------------------
-
-printf "%.0s-" {1..60}; printf "\n"
-echo "Step (7/13):\n\n"
-
-./audio-god export note \
-    --source='~/Music/Output/Grouped' \
-    --fields=basic \
-    --field-type=cn \
-    --output='~/Music/Output/songs.note' \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file='~/Music/Source/ignores.txt' \
@@ -147,12 +144,10 @@ echo "Step (8/13):\n\n"
 printf "%.0s-" {1..60}; printf "\n"
 echo "Step (9/13):\n\n"
 
-./audio-god organize ituned \
-    --source='~/Music/Source/Mp3' \
-    --output='~/Music/iTunes/iTunes Media/Music' \
-    --extensions=mp3,aac \
-    --recursive \
-    --ignored-file='~/Music/Source/ignores.txt' \
+./audio-god operate tree \
+    --source='~/Music/Output' \
+    --output='' \
+    --show-count \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -161,15 +156,11 @@ echo "Step (9/13):\n\n"
 printf "%.0s-" {1..60}; printf "\n"
 echo "Step (10/13):\n\n"
 
-./audio-god export plist \
-    --source='~/Music/Source/Mp3' \
-    --fields=ituned \
-    --field-type=en \
-    --output='~/Music/iTunes/Library.xml' \
-    --itunes-version-plist=/System/Applications/Music.app/Contents/version.plist \
-    --itunes-media-folder='~/Music/iTunes/iTunes Media/Music' \
-    --track-initial-id=601 \
-    --playlist-initial-id=3001 \
+./audio-god export note \
+    --source='~/Music/Output/Grouped' \
+    --fields=basic \
+    --field-type=cn \
+    --output='~/Music/Output/songs.note' \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file='~/Music/Source/ignores.txt' \
@@ -193,11 +184,12 @@ echo "Step (11/13):\n\n"
 printf "%.0s-" {1..60}; printf "\n"
 echo "Step (12/13):\n\n"
 
-./audio-god extract-structure \
-    --document='~/Music/Output/songs.note' \
-    --field-type=auto \
-    --output='' \
-    --show-count \
+./audio-god organize ituned \
+    --source='~/Music/Source/Mp3' \
+    --output='~/Music/iTunes/iTunes Media/Music' \
+    --extensions=mp3,aac \
+    --recursive \
+    --ignored-file='~/Music/Source/ignores.txt' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -206,10 +198,18 @@ echo "Step (12/13):\n\n"
 printf "%.0s-" {1..60}; printf "\n"
 echo "Step (13/13):\n\n"
 
-./audio-god operate tree \
-    --source='~/Music/Output' \
-    --output='' \
-    --show-count \
+./audio-god export plist \
+    --source='~/Music/Source/Mp3' \
+    --fields=ituned \
+    --field-type=en \
+    --output='~/Music/iTunes/Library.xml' \
+    --itunes-version-plist=/System/Applications/Music.app/Contents/version.plist \
+    --itunes-media-folder='~/Music/iTunes/iTunes Media/Music' \
+    --track-initial-id=601 \
+    --playlist-initial-id=3001 \
+    --extensions=mp3,aac \
+    --recursive \
+    --ignored-file='~/Music/Source/ignores.txt' \
     --log-level=WARNING \
     --log-file=stderr
 

@@ -4707,7 +4707,7 @@ class Export__NoteAction(ExportBaseAction, NoteRelatedBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/export.songs.note',
             },
         },
     }
@@ -5106,7 +5106,7 @@ class Export__MarkdownAction(ExportBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.md',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/export.songs.md',
             },
         },
     }
@@ -5152,7 +5152,7 @@ class Export__XmlAction(ExportBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.xml',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/export.songs.xml',
             },
         },
     }
@@ -5198,7 +5198,7 @@ class Export__JsonAction(ExportBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.json',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/export.songs.json',
             },
         },
     }
@@ -5589,7 +5589,7 @@ class Convert__NoteToMarkdownAction(
         'document': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/export.songs.note',
             },
         },
         'field_type': {
@@ -5601,7 +5601,7 @@ class Convert__NoteToMarkdownAction(
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note.md',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/convert.songs.note.md',
             },
         },
     }
@@ -5639,13 +5639,13 @@ class Convert__MarkdownToNoteAction(ConvertDocumentBaseAction):
         'document': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.md',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/export.songs.md',
             },
         },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.md.note',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/convert.songs.md.note',
             },
         },
     }
@@ -5710,7 +5710,7 @@ class ExtractStructureAction(
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note.tree',
             },
         },
     }
@@ -5930,7 +5930,10 @@ class Operate__TreeAction(TreeRelatedBaseAction, OperateBaseAction):
             },
         },
         'output': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/output.tree',
+            },
         },
     }
 
@@ -6104,24 +6107,24 @@ class GenerateScript__StartAction(GenerateScriptBaseAction):
         (True,  'convert', 'qmc-to-audio', {}),
         (False, 'convert', 'media', {}),
         (True,  'redecorate-note', {}),
+        (True,  'extract-structure', {}),
         (True,  'fill-properties', {}),
         (True,  'format-properties', {}),
         (True,  'rename-audios', {}),
         (False, 'manage-artworks', 'bind', {}),
         (False, 'display', {}),
         (True,  'organize', 'grouped', {}),
+        (True,  'list-repeated', {}),
+        (True,  'operate', 'tree', {}),
         (True,  'export', 'note', {}),
+        (True,  'convert', 'note-to-markdown', {}),
         (False, 'export', 'markdown', {}),
+        (False, 'convert', 'markdown-to-note', {}),
         (False, 'export', 'xml', {}),
         (False, 'export', 'json', {}),
-        (True,  'list-repeated', {}),
         (True,  'organize', 'ituned', {}),
         (True,  'export', 'plist', {}),
-        (True,  'convert', 'note-to-markdown', {}),
-        (False, 'convert', 'markdown-to-note', {}),
         (False, 'manage-artworks', 'derive', {}),
-        (True,  'extract-structure', {}),
-        (True,  'operate', 'tree', {}),
         (False, 'operate', 'backup', {}),
         (False, 'operate', 'remove', {}),
         (False, 'generate-script', 'start', {}),
@@ -6361,6 +6364,10 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
             document=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.songs.note.origin',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note',
         )),
+        (True, 'extract-structure', dict(
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note.tree',
+        )),
         (True, 'fill-properties', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
@@ -6391,33 +6398,45 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
         )),
-        (True, 'export', 'note', dict(
-            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note',
-        )),
-        (True, 'export', 'markdown', dict(
-            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.md',
-        )),
-        # to complete
-        (False, 'export', 'xml', dict(
-            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.xml',
-         )),
-        # to complete
-        (False, 'export', 'json', dict(
-            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.json',
-         )),
         (True, 'list-repeated', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.repeated.txt',
         )),
+        (True, 'operate', 'tree', dict(
+            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.output.tree',
+        )),
+        (True, 'export', 'note', dict(
+            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.export.songs.note',
+        )),
+        (True, 'convert', 'note-to-markdown', dict(
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.export.songs.note',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.convert.songs.note.md',
+        )),
+        (True, 'export', 'markdown', dict(
+            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.export.songs.md',
+        )),
+        (True, 'convert', 'markdown-to-note', dict(
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.export.songs.md',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.convert.songs.md.note',
+        )),
+        # to complete
+        (False, 'export', 'xml', dict(
+            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.export.songs.xml',
+         )),
+        # to complete
+        (False, 'export', 'json', dict(
+            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.export.songs.json',
+         )),
         (True, 'organize', 'ituned', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
@@ -6435,18 +6454,6 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Artwork',
         )),
-        (True, 'convert', 'note-to-markdown', dict(
-            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note.md',
-        )),
-        (True, 'convert', 'markdown-to-note', dict(
-            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.md',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.md.note',
-        )),
-        (True, 'extract-structure', dict(
-            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/songs.note.tree',
-        )),
         (True, 'operate', 'backup', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.operate.backup.txt',
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
@@ -6454,10 +6461,6 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
         (True, 'operate', 'remove', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.operate.remove.txt',
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
-        )),
-        (True, 'operate', 'tree', dict(
-            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.output.tree',
         )),
         (True, 'generate-script', 'start', dict(
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.start.zsh',

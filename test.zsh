@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-29T16:33:27Z
+# Created Time: 2025-06-29T16:57:53Z
 
 # Total Steps: 25
 
@@ -96,6 +96,19 @@ echo "Step (6/25):\n\n"
 printf "%.0s-" {1..60}; printf "\n"
 echo "Step (7/25):\n\n"
 
+./audio-god extract-structure \
+    --document=./test/Output/test.songs.note \
+    --field-type=auto \
+    --output=./test/Output/songs.extract.tree \
+    --show-count \
+    --log-level=WARNING \
+    --log-file=stderr
+
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (8/25):\n\n"
+
 ./audio-god fill-properties \
     --source=./test/Source/Mp3 \
     --extensions=mp3,aac \
@@ -121,7 +134,7 @@ echo "Step (7/25):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (8/25):\n\n"
+echo "Step (9/25):\n\n"
 
 ./audio-god format-properties \
     --source=./test/Source/Mp3 \
@@ -134,7 +147,7 @@ echo "Step (8/25):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (9/25):\n\n"
+echo "Step (10/25):\n\n"
 
 ./audio-god rename-audios \
     --source=./test/Source/Mp3 \
@@ -148,7 +161,7 @@ echo "Step (9/25):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (10/25):\n\n"
+echo "Step (11/25):\n\n"
 
 ./audio-god manage-artworks bind \
     --source=./test/Source/Mp3 \
@@ -162,7 +175,7 @@ echo "Step (10/25):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (11/25):\n\n"
+echo "Step (12/25):\n\n"
 
 ./audio-god display \
     --source=./test/Source/Mp3 \
@@ -203,7 +216,7 @@ echo "Step (11/25):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (12/25):\n\n"
+echo "Step (13/25):\n\n"
 
 ./audio-god organize grouped \
     --source=./test/Source/Mp3 \
@@ -217,39 +230,7 @@ echo "Step (12/25):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (13/25):\n\n"
-
-./audio-god export note \
-    --source=./test/Output/Grouped \
-    --fields=basic \
-    --field-type=cn \
-    --output=./test/Output/test.songs.note \
-    --extensions=mp3,aac \
-    --recursive \
-    --ignored-file=./test/Source/test.ignores.txt \
-    --log-level=WARNING \
-    --log-file=stderr
-
-#-----------------------------------------------------------------------------
-
-printf "%.0s-" {1..60}; printf "\n"
 echo "Step (14/25):\n\n"
-
-./audio-god export markdown \
-    --source=./test/Output/Grouped \
-    --fields=basic \
-    --field-type=cn \
-    --output=./test/Output/test.songs.md \
-    --extensions=mp3,aac \
-    --recursive \
-    --ignored-file=./test/Source/test.ignores.txt \
-    --log-level=WARNING \
-    --log-file=stderr
-
-#-----------------------------------------------------------------------------
-
-printf "%.0s-" {1..60}; printf "\n"
-echo "Step (15/25):\n\n"
 
 ./audio-god list-repeated \
     --source=./test/Output/Grouped \
@@ -263,7 +244,74 @@ echo "Step (15/25):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
+echo "Step (15/25):\n\n"
+
+./audio-god operate tree \
+    --source=./test/Output \
+    --output=./test/Output/test.output.tree \
+    --show-count \
+    --log-level=WARNING \
+    --log-file=stderr
+
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
 echo "Step (16/25):\n\n"
+
+./audio-god export note \
+    --source=./test/Output/Grouped \
+    --fields=basic \
+    --field-type=cn \
+    --output=./test/Output/test.export.songs.note \
+    --extensions=mp3,aac \
+    --recursive \
+    --ignored-file=./test/Source/test.ignores.txt \
+    --log-level=WARNING \
+    --log-file=stderr
+
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (17/25):\n\n"
+
+./audio-god convert note-to-markdown \
+    --document=./test/Output/test.export.songs.note \
+    --field-type=auto \
+    --output=./test/Output/test.convert.songs.note.md \
+    --log-level=WARNING \
+    --log-file=stderr
+
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (18/25):\n\n"
+
+./audio-god export markdown \
+    --source=./test/Output/Grouped \
+    --fields=basic \
+    --field-type=cn \
+    --output=./test/Output/test.export.songs.md \
+    --extensions=mp3,aac \
+    --recursive \
+    --ignored-file=./test/Source/test.ignores.txt \
+    --log-level=WARNING \
+    --log-file=stderr
+
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (19/25):\n\n"
+
+./audio-god convert markdown-to-note \
+    --document=./test/Output/test.export.songs.md \
+    --output=./test/Output/test.convert.songs.md.note \
+    --log-level=WARNING \
+    --log-file=stderr
+
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (20/25):\n\n"
 
 ./audio-god organize ituned \
     --source=./test/Source/Mp3 \
@@ -277,7 +325,7 @@ echo "Step (16/25):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (17/25):\n\n"
+echo "Step (21/25):\n\n"
 
 ./audio-god export plist \
     --source=./test/Source/Mp3 \
@@ -297,43 +345,7 @@ echo "Step (17/25):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (18/25):\n\n"
-
-./audio-god convert note-to-markdown \
-    --document=./test/Output/test.songs.note \
-    --field-type=auto \
-    --output=./test/Output/test.songs.note.md \
-    --log-level=WARNING \
-    --log-file=stderr
-
-#-----------------------------------------------------------------------------
-
-printf "%.0s-" {1..60}; printf "\n"
-echo "Step (19/25):\n\n"
-
-./audio-god convert markdown-to-note \
-    --document=./test/Output/test.songs.md \
-    --output=./test/Output/test.songs.md.note \
-    --log-level=WARNING \
-    --log-file=stderr
-
-#-----------------------------------------------------------------------------
-
-printf "%.0s-" {1..60}; printf "\n"
-echo "Step (20/25):\n\n"
-
-./audio-god extract-structure \
-    --document=./test/Output/test.songs.note \
-    --field-type=auto \
-    --output=./test/Output/songs.note.tree \
-    --show-count \
-    --log-level=WARNING \
-    --log-file=stderr
-
-#-----------------------------------------------------------------------------
-
-printf "%.0s-" {1..60}; printf "\n"
-echo "Step (21/25):\n\n"
+echo "Step (22/25):\n\n"
 
 ./audio-god operate backup \
     --source=./test/Source/test.operate.backup.txt \
@@ -344,23 +356,11 @@ echo "Step (21/25):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (22/25):\n\n"
+echo "Step (23/25):\n\n"
 
 ./audio-god operate remove \
     --source=./test/Source/test.operate.remove.txt \
     --ignored-file=./test/Source/test.ignores.txt \
-    --log-level=WARNING \
-    --log-file=stderr
-
-#-----------------------------------------------------------------------------
-
-printf "%.0s-" {1..60}; printf "\n"
-echo "Step (23/25):\n\n"
-
-./audio-god operate tree \
-    --source=./test/Output \
-    --output=./test/Output/test.output.tree \
-    --show-count \
     --log-level=WARNING \
     --log-file=stderr
 
