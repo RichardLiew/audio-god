@@ -2178,6 +2178,7 @@ class SummarizeRelatedBaseAction(AudioGod):
 
         self.__summaries = {}
 
+    #---------------------------------------------------------------------------
 
     @property
     def summaries(self):
@@ -2196,6 +2197,15 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
 
     KWARGS = None
     ARGUMENTS = None
+
+    REQUISITE_ARGUMENTS = {
+        'field_type': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': AudioGod.FieldType.AUTO,
+            },
+        },
+    } | copy.deepcopy(AudioGod.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
 
@@ -2666,12 +2676,6 @@ class RedecorateNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
                 'default': f'{OPTIONS.AUDGOD_SOURCE}/songs.note.origin',
             },
         },
-        'field_type': {
-            'use_public': AudioGod.ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': AudioGod.FieldType.AUTO,
-            },
-        },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
@@ -2679,6 +2683,8 @@ class RedecorateNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
             },
         },
     }
+
+    REQUISITE_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
 
@@ -2787,6 +2793,8 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
         },
     }
 
+    REQUISITE_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.REQUISITE_ARGUMENTS)
+
     #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
@@ -2874,7 +2882,11 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
             key = self.__generate_key_by_filename(source)
             if key in self.valid_clauses:
                 self.matched_sources.append(source)
-                self.matched_clauses.append(self.pack_properties(self.valid_clauses[key]))
+                self.matched_clauses.append(
+                    self.pack_properties(
+                        self.repack_audio_properties(self.valid_clauses[key]),
+                    ),
+                )
                 self.logger.debug(self.SourceType.MATCHED)
             else:
                 self.notmatched_sources.append(source)
@@ -5668,6 +5680,8 @@ class Convert__NoteToMarkdownAction(
         },
     }
 
+    REQUISITE_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.REQUISITE_ARGUMENTS)
+
     #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
@@ -5763,12 +5777,6 @@ class ExtractStructureAction(
                 'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note',
             },
         },
-        'field_type': {
-            'use_public': AudioGod.ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': AudioGod.FieldType.AUTO,
-            },
-        },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
@@ -5777,7 +5785,8 @@ class ExtractStructureAction(
         },
     }
 
-    REQUISITE_ARGUMENTS = copy.deepcopy(TreeRelatedBaseAction.REQUISITE_ARGUMENTS)
+    REQUISITE_ARGUMENTS = copy.deepcopy(TreeRelatedBaseAction.REQUISITE_ARGUMENTS) | \
+                          copy.deepcopy(NoteRelatedBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
 

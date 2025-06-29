@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-30T05:13:32Z
+# Created Time: 2025-06-30T06:28:44Z
 
 # Total Steps: 14
 
@@ -78,6 +78,7 @@ echo "Step (5/14):\n\n"
     --ignored-file='~/Music/Source/ignores.txt' \
     --document='~/Music/Output/songs.note' \
     --root='~/Music/Source/Mp3' \
+    --field-type=auto \
     --properties='{
         "_comment": "sources choose from command/file/directory/filename",
         "default": {
