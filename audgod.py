@@ -793,11 +793,8 @@ class AudioGod(OPTIONS):
         eyed3.log.setLevel(logging.ERROR)
 
 
-        self.__clauses = ([], {}, {}, [], [])
-        self.__clauses_counter = [0, 0, 0, 0, 0, 0]
         self.__sources = ([], [], [], [], [])
         self.__ignored_set = set()
-        self.__summaries = {}
 
 
         self.__parse_funcs = {
@@ -943,76 +940,6 @@ class AudioGod(OPTIONS):
 
 
     @property
-    def invalid_clauses(self):
-        return self.__clauses[0]
-
-    @property
-    def valid_clauses(self):
-        return self.__clauses[1]
-
-    @property
-    def repeated_clauses(self):
-        return self.__clauses[2]
-
-    @property
-    def grouping_clauses(self):
-        return self.__clauses[3]
-
-    @property
-    def warn_clauses(self):
-        return self.__clauses[4]
-
-
-    @property
-    def total_clauses_counter(self) -> int:
-        return self.__clauses_counter[0]
-
-    @total_clauses_counter.setter
-    def total_clauses_counter(self, value):
-        self.__clauses_counter[0] = value
-
-    @property
-    def invalid_clauses_counter(self) -> int:
-        return self.__clauses_counter[1]
-
-    @invalid_clauses_counter.setter
-    def invalid_clauses_counter(self, value):
-        self.__clauses_counter[1] = value
-
-    @property
-    def valid_clauses_counter(self) -> int:
-        return self.__clauses_counter[2]
-
-    @valid_clauses_counter.setter
-    def valid_clauses_counter(self, value):
-        self.__clauses_counter[2] = value
-
-    @property
-    def repeated_clauses_counter(self) -> int:
-        return self.__clauses_counter[3]
-
-    @repeated_clauses_counter.setter
-    def repeated_clauses_counter(self, value):
-        self.__clauses_counter[3] = value
-
-    @property
-    def grouping_clauses_counter(self) -> int:
-        return self.__clauses_counter[4]
-
-    @grouping_clauses_counter.setter
-    def grouping_clauses_counter(self, value):
-        self.__clauses_counter[4] = value
-
-    @property
-    def warn_clauses_counter(self) -> int:
-        return self.__clauses_counter[5]
-
-    @warn_clauses_counter.setter
-    def warn_clauses_counter(self, value):
-        self.__clauses_counter[5] = value
-
-
-    @property
     def original_sources(self):
         return self.__sources[0]
 
@@ -1035,15 +962,6 @@ class AudioGod(OPTIONS):
     @property
     def ignored_set(self):
         return self.__ignored_set
-
-
-    @property
-    def summaries(self):
-        return self.__summaries
-
-    @summaries.setter
-    def summaries(self, value):
-        self.__summaries = value
 
 
     @property
@@ -2243,7 +2161,7 @@ class AudioGod(OPTIONS):
 #                                                                              #
 ################################################################################
 
-class NoteRelatedBaseAction(AudioGod):
+class SummarizeRelatedBaseAction(AudioGod):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -2255,6 +2173,106 @@ class NoteRelatedBaseAction(AudioGod):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.__summaries = {}
+
+
+    @property
+    def summaries(self):
+        return self.__summaries
+
+    @summaries.setter
+    def summaries(self, value):
+        self.__summaries = value
+
+#===============================================================================
+
+class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = None
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.__clauses = ([], {}, {}, [], [])
+        self.__clauses_counter = [0, 0, 0, 0, 0, 0]
+
+    #---------------------------------------------------------------------------
+
+    @property
+    def invalid_clauses(self):
+        return self.__clauses[0]
+
+    @property
+    def valid_clauses(self):
+        return self.__clauses[1]
+
+    @property
+    def repeated_clauses(self):
+        return self.__clauses[2]
+
+    @property
+    def grouping_clauses(self):
+        return self.__clauses[3]
+
+    @property
+    def warn_clauses(self):
+        return self.__clauses[4]
+
+
+    @property
+    def total_clauses_counter(self) -> int:
+        return self.__clauses_counter[0]
+
+    @total_clauses_counter.setter
+    def total_clauses_counter(self, value):
+        self.__clauses_counter[0] = value
+
+    @property
+    def invalid_clauses_counter(self) -> int:
+        return self.__clauses_counter[1]
+
+    @invalid_clauses_counter.setter
+    def invalid_clauses_counter(self, value):
+        self.__clauses_counter[1] = value
+
+    @property
+    def valid_clauses_counter(self) -> int:
+        return self.__clauses_counter[2]
+
+    @valid_clauses_counter.setter
+    def valid_clauses_counter(self, value):
+        self.__clauses_counter[2] = value
+
+    @property
+    def repeated_clauses_counter(self) -> int:
+        return self.__clauses_counter[3]
+
+    @repeated_clauses_counter.setter
+    def repeated_clauses_counter(self, value):
+        self.__clauses_counter[3] = value
+
+    @property
+    def grouping_clauses_counter(self) -> int:
+        return self.__clauses_counter[4]
+
+    @grouping_clauses_counter.setter
+    def grouping_clauses_counter(self, value):
+        self.__clauses_counter[4] = value
+
+    @property
+    def warn_clauses_counter(self) -> int:
+        return self.__clauses_counter[5]
+
+    @warn_clauses_counter.setter
+    def warn_clauses_counter(self, value):
+        self.__clauses_counter[5] = value
 
     #---------------------------------------------------------------------------
 
@@ -2459,7 +2477,7 @@ class NoteRelatedBaseAction(AudioGod):
 
 #===============================================================================
 
-class ExportRelatedBaseAction(AudioGod):
+class ExportRelatedBaseAction(SummarizeRelatedBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -2759,6 +2777,12 @@ class FillPropertiesAction(NoteRelatedBaseAction):
                 'help': 'separators for matched filename',
             },
         },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/invalids.txt',
+            },
+        },
     }
 
     #---------------------------------------------------------------------------
@@ -2766,7 +2790,8 @@ class FillPropertiesAction(NoteRelatedBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.__sifted_sources = [[], [], []]
+        self.__sifted_sources = ([], [], [])
+        self.__sifted_clauses = ([], [])
 
     #---------------------------------------------------------------------------
 
@@ -2807,6 +2832,14 @@ class FillPropertiesAction(NoteRelatedBaseAction):
     def notmatched_sources(self):
         return self.__sifted_sources[2]
 
+    @property
+    def matched_clauses(self):
+        return self.__sifted_clauses[0]
+
+    @property
+    def notmatched_clauses(self):
+        return self.__sifted_clauses[1]
+
     #---------------------------------------------------------------------------
 
     def _import_note(self):
@@ -2839,16 +2872,22 @@ class FillPropertiesAction(NoteRelatedBaseAction):
             key = self.__generate_key_by_filename(source)
             if key in self.valid_clauses:
                 self.matched_sources.append(source)
+                self.matched_clauses.append(key)
                 self.logger.debug(self.SourceType.MATCHED)
             else:
                 self.notmatched_sources.append(source)
                 self.logger.debug(self.SourceType.NOTMATCHED)
 
+        self.notmatched_clauses.extend(list(
+            set(self.valid_clauses.keys()) - set(self.matched_clauses),
+        ))
+
         #self.logger.warning(f'\n{"#"*78}\n')
 
         self.logger.warning(
-            'Inv Name Sources: {inv_name}\n'
-            'Valid Sources:    {valid} {detail}'.format(
+            'Inv Name Sources:    {inv_name}\n'
+            'Valid Sources:       {valid} {detail}\n'
+            'Not Matched Clauses: {clauses}'.format(
                 inv_name=len(self.invalid_name_sources),
                 valid=sum(map(len, [
                     self.matched_sources,
@@ -2858,17 +2897,27 @@ class FillPropertiesAction(NoteRelatedBaseAction):
                     matched=len(self.matched_sources),
                     notmatched=len(self.notmatched_sources),
                 ),
+                clauses=len(self.notmatched_clauses),
             )
         )
 
+        content = ''
         if len(self.invalid_name_sources) > 0:
-            self.logger.warning('\nInvalid Name Sources:')
+            content += '\nInvalid Name Sources:\n\n'
             for source in self.invalid_name_sources:
-                self.logger.warning(f'\t{source}')
+                content += f'\t{source}\n'
+            content += f'\n{"*"*60}\n\n'
         if len(self.notmatched_sources) > 0:
-            self.logger.warning('\nNot Matched Sources:')
+            content += '\nNot Matched Sources:\n\n'
             for source in self.notmatched_sources:
-                self.logger.warning(f'\t{source}')
+                content += f'\t{source}\n'
+            content += f'\n{"*"*60}\n\n'
+        if len(self.notmatched_clauses) > 0:
+            content += '\nNot Matched Clauses:\n\n'
+            for clause in self.notmatched_clauses:
+                content += f'\t{clause}\n'
+
+        self.handle_output(content)
 
 
     def __resolve_filename(self, source):
@@ -6386,6 +6435,7 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
             document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.songs.note',
             root=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/invalids.txt',
         )),
         (True, 'format-properties', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
