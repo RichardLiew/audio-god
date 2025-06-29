@@ -389,7 +389,7 @@ def refresh_options(cls):
     cls.AUDGOD_SOURCE = os.path.join(cls.AUDGOD_ROOT, 'Source')
     cls.AUDGOD_OUTPUT = os.path.join(cls.AUDGOD_ROOT, 'Output')
 
-    cls.AUDGOD_CACHE  = os.path.join(cls.AUDGOD_ROOT, '.audgod-cache')
+    cls.AUDGOD_CACHE  = os.path.join(cls.AUDGOD_ROOT, '__AUDGOD_CACHE__')
     cls.AUDGOD_TRASH  = os.path.join(cls.AUDGOD_CACHE, 'trash')
     cls.AUDGOD_BACKUP = os.path.join(cls.AUDGOD_CACHE, 'backup')
 
