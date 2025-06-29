@@ -2882,19 +2882,18 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
             key = self.__generate_key_by_filename(source)
             if key in self.valid_clauses:
                 self.matched_sources.append(source)
-                self.matched_clauses.append(
-                    self.pack_properties(
-                        self.repack_audio_properties(self.valid_clauses[key]),
-                    ),
-                )
+                self.matched_clauses.append(key)
                 self.logger.debug(self.SourceType.MATCHED)
             else:
                 self.notmatched_sources.append(source)
                 self.logger.debug(self.SourceType.NOTMATCHED)
 
-        self.notmatched_clauses.extend(list(
-            set(self.valid_clauses.keys()) - set(self.matched_clauses),
-        ))
+        for key in list(set(self.valid_clauses.keys()) - set(self.matched_clauses)):
+            self.notmatched_clauses.append(
+                self.pack_properties(
+                    self.repack_audio_properties(self.valid_clauses[key]),
+                ),
+            )
 
         #self.logger.warning(f'\n{"#"*78}\n')
 
