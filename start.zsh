@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-29T08:35:36Z
+# Created Time: 2025-06-29T09:55:15Z
 
 # Total Steps: 15
 
@@ -28,7 +28,7 @@ echo "Step (1/15):\n\n"
     --extensions=qmc,qmc0,qmc1,qmc2,qmc3,qmcogg,qmcflac \
     --output='~/Music/Output/Qmc-To-Audio' \
     --recursive \
-    --ignored-file=./ignores.txt \
+    --ignored-file='~/Music/Source/ignores.txt' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -38,9 +38,9 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (2/15):\n\n"
 
 ./audio-god redecorate-note \
-    --document=./songs.note \
+    --document='~/Music/Source/songs.note' \
     --field-type=auto \
-    --output=./songs.note \
+    --output='~/Music/Source/songs.note' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -53,8 +53,8 @@ echo "Step (3/15):\n\n"
     --source='~/Music/Source/Mp3' \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignores.txt \
-    --document=./songs.note \
+    --ignored-file='~/Music/Source/ignores.txt' \
+    --document='~/Music/Source/songs.note' \
     --root='~/Music/Source/Mp3' \
     --properties='{
         "_comment": "sources choose from command/file/directory/filename",
@@ -80,7 +80,7 @@ echo "Step (4/15):\n\n"
     --source='~/Music/Source/Mp3' \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignores.txt \
+    --ignored-file='~/Music/Source/ignores.txt' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -93,7 +93,7 @@ echo "Step (5/15):\n\n"
     --source='~/Music/Source/Mp3' \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignores.txt \
+    --ignored-file='~/Music/Source/ignores.txt' \
     --filename-pattern='@{artist} # @{title}' \
     --log-level=WARNING \
     --log-file=stderr
@@ -105,10 +105,10 @@ echo "Step (6/15):\n\n"
 
 ./audio-god organize grouped \
     --source='~/Music/Source/Mp3' \
-    --root='~/Music/Output/Grouped' \
+    --output='~/Music/Output/Grouped' \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignores.txt \
+    --ignored-file='~/Music/Source/ignores.txt' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -121,10 +121,10 @@ echo "Step (7/15):\n\n"
     --source='~/Music/Output/Grouped' \
     --fields=basic \
     --field-type=cn \
-    --output=./songs.note \
+    --output='~/Music/Output/songs.note' \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignores.txt \
+    --ignored-file='~/Music/Source/ignores.txt' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -137,10 +137,10 @@ echo "Step (8/15):\n\n"
     --source='~/Music/Output/Grouped' \
     --fields=basic \
     --field-type=cn \
-    --output=./songs.md \
+    --output='~/Music/Output/songs.md' \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignores.txt \
+    --ignored-file='~/Music/Source/ignores.txt' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -153,8 +153,8 @@ echo "Step (9/15):\n\n"
     --source='~/Music/Output/Grouped' \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignores.txt \
-    --output=./repeated.txt \
+    --ignored-file='~/Music/Source/ignores.txt' \
+    --output='~/Music/Output/repeated.txt' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -164,11 +164,11 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (10/15):\n\n"
 
 ./audio-god organize ituned \
-    --source='~/Music/Output/Grouped' \
-    --root='~/Music/iTunes/iTunes Media/Music' \
+    --source='~/Music/Source/Mp3' \
+    --output='~/Music/iTunes/iTunes Media/Music' \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignores.txt \
+    --ignored-file='~/Music/Source/ignores.txt' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -188,7 +188,7 @@ echo "Step (11/15):\n\n"
     --playlist-initial-id=3001 \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./ignores.txt \
+    --ignored-file='~/Music/Source/ignores.txt' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -198,9 +198,9 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (12/15):\n\n"
 
 ./audio-god convert note-to-markdown \
-    --document=./songs.note \
+    --document='~/Music/Output/songs.note' \
     --field-type=auto \
-    --output=./songs.note.md \
+    --output='~/Music/Output/songs.note.md' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -210,8 +210,8 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (13/15):\n\n"
 
 ./audio-god convert markdown-to-note \
-    --document=./songs.md \
-    --output=./songs.md.note \
+    --document='~/Music/Output/songs.md' \
+    --output='~/Music/Output/songs.md.note' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -221,7 +221,7 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (14/15):\n\n"
 
 ./audio-god extract-structure \
-    --document=./songs.note \
+    --document='~/Music/Output/songs.note' \
     --field-type=auto \
     --output='' \
     --show-count \

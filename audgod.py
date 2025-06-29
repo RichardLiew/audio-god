@@ -254,7 +254,7 @@ General steps:
 Ready:
     Step.1: Run <operate cleanup> subcommand to clear repeats, backups, grouped folder, and iTunes related;
     Step.2: Download songs, and make sure that file named with "artist${filename_separator}title";
-    Step.3: Add detail of songs to notes, then grouped.
+    Step.3: Add detail of songs to original notes, then grouped.
 
 Process Method 1:
     Step.1: Redecorate note, until note file not changed, with subcommand <redecorate-note>;
@@ -268,11 +268,12 @@ Process Method 1:
     Step.9: Export plist file, with subcommand <export plist>.
 
 Process Method 2:
-    Step.1: Put note file to local folder (e.g. "${redecorate-note.document}");
-    Step.2: Put audios to source folder (e.g. "${fill-properties.source}");
-    Step.3: Put ignored file to local folder (e.g. "${fill-properties.ignored_file}");
-    Step.4: Run <generate-script start> subcommand to generate a shell script (e.g. "${generate-script.start.output}");
-    Step.5: Execute the shell script above.
+    Step.1: Put original note file to source folder (e.g. "${redecorate-note.document}");
+    Step.2: Put audio folders named with different extensions or media to source folder (e.g. "${fill-properties.source}");
+    Step.3: Put ignored file to source folder (e.g. "${fill-properties.ignored_file}");
+    Step.4: Put artworks under a folder to source folder (e.g. "${manage-artworks.bind.artworks}");
+    Step.5: Run <generate-script start> subcommand to generate a shell script (e.g. "${generate-script.start.output}");
+    Step.6: Execute the shell script above.
     Results under folders below:
         ${audgod_root}
           ├── ${audgod_output}
@@ -287,9 +288,10 @@ Ready:
     Step.1: Make sure folder "${testing_root}" is ready;
     Step.2: Make sure folder "${testing_origin}" is ready;
     Step.3: Make sure folder "${testing_orisrc}" is ready;
-    Step.4: Put test note file to "${testing_origin}";
-    Step.5: Put test ignored file to "${testing_origin}";
-    Step.6: Put test media under folders with different extentions to "${testing_orisrc}".
+    Step.4: Put test note origin file to "${testing_orisrc}";
+    Step.5: Put test ignored file to "${testing_orisrc}";
+    Step.6: Put test media under folders with different extentions to "${testing_orisrc}";
+    Step.7: Put test artworks under folder to "${testing_orisrc}".
 
 Process Method:
     Step.1: Run <testing generate-script> subcommand to generate a shell script for testing;
@@ -2649,7 +2651,7 @@ class RedecorateNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_SOURCE}/songs.note',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note',
             },
         },
     }
@@ -2711,7 +2713,10 @@ class FillPropertiesAction(NoteRelatedBaseAction):
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'document': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note',
+            },
         },
         'root': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
