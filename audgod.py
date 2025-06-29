@@ -1896,6 +1896,7 @@ class AudioGod(OPTIONS):
                 setattr(audio_object.tag, field, value)
         audio_object.tag.save(version=eyed3.id3.ID3_V2_4, encoding='utf-8')
 
+
     # Use AudioProperty type field here, you won't check field parameter.
     def fetch(self, audio_object, field):
         ret, filename = None, audio_object.tag.file_info.name
@@ -1936,6 +1937,7 @@ class AudioGod(OPTIONS):
                 elif hasattr(audio_object.tag.file_info, field):
                     ret = getattr(audio_object.tag.file_info, field)
         return ret
+
 
     def fetchx(self, audio_object, field,
                formatted=False, output_format=FileFormat.NONE, default=None):
@@ -2702,7 +2704,7 @@ class RedecorateNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
 
 #===============================================================================
 
-class FillPropertiesAction(NoteRelatedBaseAction):
+class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -2872,7 +2874,7 @@ class FillPropertiesAction(NoteRelatedBaseAction):
             key = self.__generate_key_by_filename(source)
             if key in self.valid_clauses:
                 self.matched_sources.append(source)
-                self.matched_clauses.append(key)
+                self.matched_clauses.append(self.pack_properties(self.valid_clauses[key]))
                 self.logger.debug(self.SourceType.MATCHED)
             else:
                 self.notmatched_sources.append(source)
