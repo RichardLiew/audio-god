@@ -144,7 +144,6 @@ import functools
 
 #-------------------------------------------------------------------------------
 
-from pathlib import Path
 from string import Template
 from collections import ChainMap
 
@@ -154,7 +153,7 @@ import psutil
 import pyfiglet
 
 from tqdm import tqdm
-from treelib import Tree # type: ignore
+from treelib import Tree
 from enumx import StringEnum
 from prettytable import PrettyTable
 
@@ -453,7 +452,7 @@ class AudioGod(OPTIONS):
                 self.addHandler(console_handler)
             else:
                 file_handler = logging.FileHandler(
-                    log_file, encoding='utf-8', delay=False, # type: ignore
+                    log_file, encoding='utf-8', delay=False,
                 )
                 file_handler.setFormatter(logging.Formatter('%(message)s'))
                 file_handler.setLevel(level)
@@ -1076,7 +1075,7 @@ class AudioGod(OPTIONS):
         if artist is None:
             return None
         ret = cls.unify_format(artist)
-        ret = re.sub(r'[、，/,]', r'&', ret) # type: ignore
+        ret = re.sub(r'[、，/,]', r'&', ret)
         ret = re.sub(r'&', r' & ', ret)
         ret = re.sub(r'\s*&\s*', r' & ', ret)
         return ret
@@ -1175,9 +1174,9 @@ class AudioGod(OPTIONS):
             reversify=False,
         )
         if len(value) >= 1:
-            ret[0] = int(value[0]) # type: ignore
+            ret[0] = int(value[0])
         if len(value) > 1:
-            ret[1] = int(value[1]) # type: ignore
+            ret[1] = int(value[1])
         return ret
 
 
@@ -1644,7 +1643,7 @@ class AudioGod(OPTIONS):
     def get_command(cls) -> str:
         interpreter = f'pipenv run python {sys.argv[0]}'
         try:
-            match psutil.Process().parent().name().lower(): # type: ignore
+            match psutil.Process().parent().name().lower():
                 case 'bash':
                     history_file = '~/.bash_history'
                 case 'zsh':
@@ -1731,7 +1730,7 @@ class AudioGod(OPTIONS):
         if cls.NAME and cls.ARGUMENTS is not None and cls.KWARGS is not None:
             cls.KWARGS['usage'] = '${prog} \\\n'
             indent = 4
-            for argument in cls.ARGUMENTS: # type: ignore
+            for argument in cls.ARGUMENTS:
                 label = cls.ARGUMENTS[argument]['args'][0]
                 action_ = cls.ARGUMENTS[argument]['kwargs'].get('action', 'store')
                 required = cls.ARGUMENTS[argument]['kwargs'].get('required', False)
@@ -1811,7 +1810,7 @@ class AudioGod(OPTIONS):
                     continue
                 cls.ARGUMENTS[argument] = copy.deepcopy(cls.REQUISITE_ARGUMENTS[argument])
 
-            for argument in cls.ARGUMENTS: # type: ignore
+            for argument in cls.ARGUMENTS:
                 public_argument = {}
                 use_public = cls.ARGUMENTS[argument].pop('use_public', cls.ReplaceType.NONE)
                 if cls.ReplaceType.NONE.ne(use_public):
@@ -1862,7 +1861,7 @@ class AudioGod(OPTIONS):
         ret = {}
         if cls.ARGUMENTS is None:
             return ret
-        for argment, params in cls.ARGUMENTS.items(): # type: ignore
+        for argment, params in cls.ARGUMENTS.items():
             ret[argment] = params['kwargs']['default']
         return ret
 
@@ -1942,7 +1941,7 @@ class AudioGod(OPTIONS):
                 if comments is not None:
                     comments = ''.join([comment.text for comment in comments])
                 comments = self.load_json(comments, {})
-                comments[field] = value # type: ignore
+                comments[field] = value
                 audio_object.tag.comments.set(json.dumps(comments))
                 if self.AudioProperty.ARTWORK.eq(field):
                     _, value = value
@@ -1979,7 +1978,7 @@ class AudioGod(OPTIONS):
                             return
             case _:
                 setattr(audio_object.tag, field, value)
-        audio_object.tag.save(version=eyed3.id3.ID3_V2_4, encoding='utf-8') # type: ignore
+        audio_object.tag.save(version=eyed3.id3.ID3_V2_4, encoding='utf-8')
 
     # Use AudioProperty type field here, you won't check field parameter.
     def fetch(self, audio_object, field):
@@ -2006,7 +2005,7 @@ class AudioGod(OPTIONS):
                 comments = audio_object.tag.comments
                 if comments:
                     comments = ''.join([comment.text for comment in comments])
-                ret = self.load_json(comments, {}).get(field, None) # type: ignore
+                ret = self.load_json(comments, {}).get(field, None)
                 match field:
                     case AudioGod.AudioProperty.ARTWORK:
                         if len(audio_object.tag.images) == 0 and not ret:
@@ -2042,7 +2041,7 @@ class AudioGod(OPTIONS):
             return None
         if audio_object.tag is None:
             audio_object.initTag()
-            audio_object.tag.save() # type: ignore
+            audio_object.tag.save()
         return audio_object
 
 
@@ -2275,7 +2274,7 @@ class NoteRelatedBaseAction(AudioGod):
             item for unit in detail_patterns.values() for item in unit
         ])
         for pattern, fields in detail_patterns.items():
-            detail_patterns[pattern] = _generate_detail_pattern(fields) # type: ignore
+            detail_patterns[pattern] = _generate_detail_pattern(fields)
 
         grouping_pattern = r'^\s*(?:\s*\(\s*(?:\s*[0-9]\s*)+\s*\)\s*)?\s*@\s*\[\s*((?:\s*\S\s*)+)\s*\]\s*((?:\s*[^:：\s]\s*)+)[:：]?\s*$'
         warn_pattern = r'(?:\s*[,，;；]+\s*)+(?:(?:\s*\S\s*)+)\s*[:：]+(?:\s*\S\s*)+'
@@ -2306,7 +2305,7 @@ class NoteRelatedBaseAction(AudioGod):
                 detail_match = re.match(detail_pattern, line, re.IGNORECASE)
                 if grouping and detail_match is not None:
                     for _type, _pattern in detail_patterns.items():
-                        if re.match(_pattern, line, re.IGNORECASE) is None: # type: ignore
+                        if re.match(_pattern, line, re.IGNORECASE) is None:
                             continue
                         field_type = _type
                     valid, repeated = True, False
@@ -2922,18 +2921,18 @@ class FillPropertiesAction(NoteRelatedBaseAction):
             self.logger.fatal(f'Properties <{ret}> is not a dict type!')
             return ret
         keys = [
-            key for key in list(ret.keys()) # type: ignore
+            key for key in list(ret.keys())
             if key != 'default'
         ]
         for key in keys:
-            value = ret.pop(key) # type: ignore
+            value = ret.pop(key)
             new_keys = self.resolve_fields(
                 key, sortify=True, reversify=False, stringify=False,
             )
             for new_key in new_keys:
-                ret[new_key] = value # type: ignore
-        for key in ret.keys(): # type: ignore
-            value = ret[key] # type: ignore
+                ret[new_key] = value
+        for key in ret.keys():
+            value = ret[key]
             if type(value) is not dict:
                 self.logger.fatal(f'Value <{value}> is not a dict type!')
                 return ret
@@ -2954,20 +2953,20 @@ class FillPropertiesAction(NoteRelatedBaseAction):
         parse_ = self.parse_funcs[field]
         default = self.__resolve_properties(
             self.ARGUMENTS_DEFAULTS()['properties'],
-        )['default'] # type: ignore
-        sources = self.parameters['properties'].get('default', {}).get( # type: ignore
+        )['default']
+        sources = self.parameters['properties'].get('default', {}).get(
             'sources', default['sources'],
         )
-        if field in self.parameters['properties'].keys(): # type: ignore
-            sources = self.parameters['properties'][field].get('sources', sources) # type: ignore
-        ret = self.parameters['properties'].get('default', {}).get( # type: ignore
+        if field in self.parameters['properties'].keys():
+            sources = self.parameters['properties'][field].get('sources', sources)
+        ret = self.parameters['properties'].get('default', {}).get(
             'value', default['value'],
         )
         for source in sources:
             match source:
                 case self.PropertySource.COMMAND:
-                    if field in self.parameters['properties'].keys(): # type: ignore
-                        _value = self.parameters['properties'][field].get('value', None) # type: ignore
+                    if field in self.parameters['properties'].keys():
+                        _value = self.parameters['properties'][field].get('value', None)
                         if _value is not None:
                             ret = _value
                             break
@@ -3608,7 +3607,7 @@ class DisplayAction(AudioGod):
         if type(sort_) is not list:
             self.logger.fatal(f'Sort <{sort_}> is not a list!')
             return
-        for i in range(len(sort_)): # type: ignore
+        for i in range(len(sort_)):
             if type(sort_[i]) is not list:
                 self.logger.fatal(f'Item <{sort_[i]}> in sort <{sort_}> is not a list!')
                 return
@@ -3618,8 +3617,8 @@ class DisplayAction(AudioGod):
             if type(sort_[i][1]) is not bool:
                 self.logger.fatal(f'Second of item <{sort_[i]}> in sort <{sort_}> is not boolean!')
                 return
-            sort_[i][0] = self.resolve_fields( # type: ignore
-                sort_[i][0], sortify=False, reversify=False, stringify=True, # type: ignore
+            sort_[i][0] = self.resolve_fields(
+                sort_[i][0], sortify=False, reversify=False, stringify=True,
             )
         return sort_
 
@@ -3630,14 +3629,14 @@ class DisplayAction(AudioGod):
             self.logger.fatal(f'Filter <{filter_}> is not a dict!')
             return
         filter_keys = [
-            key for key in list(filter_.keys()) # type: ignore
+            key for key in list(filter_.keys())
             if key != '_options'
         ]
         for key in filter_keys:
             new_key = self.resolve_fields(
                 key, sortify=True, reversify=False, stringify=True,
             )
-            filter_[new_key] = filter_.pop(key) # type: ignore
+            filter_[new_key] = filter_.pop(key)
         if filter_:
             if '_options' not in filter_.keys():
                 self.logger.fatal(f'Lack _options in <{filter_}>!')
@@ -3653,7 +3652,7 @@ class DisplayAction(AudioGod):
                 self.logger.fatal(f'Invalid relation of _options in <{filter_}>!')
                 return
             filter_keys = [
-                key for key in list(filter_.keys()) # type: ignore
+                key for key in list(filter_.keys())
                 if key != '_options'
             ]
             for key in filter_keys:
@@ -3682,13 +3681,13 @@ class DisplayAction(AudioGod):
         if type(align_) is not dict:
             self.logger.fatal(f'Align <{align_}> is not a dict!')
             return
-        align_keys = list(align_.keys()) # type: ignore
+        align_keys = list(align_.keys())
         for key in align_keys:
             new_key = self.resolve_fields(
                 key, sortify=True, reversify=False, stringify=True,
             )
-            align_[new_key] = align_.pop(key) # type: ignore
-        align_keys = list(align_.keys()) # type: ignore
+            align_[new_key] = align_.pop(key)
+        align_keys = list(align_.keys())
         for key in align_keys:
             value = align_[key]
             if type(value) is not str:
@@ -4269,8 +4268,8 @@ class Organize__GroupedAction(OrganizeBaseAction):
                 sortify=False, reversify=False,
             )
             if not groups:
-                self.logger.fatal(f'Invalid grouping of <{audio}>')
-                return
+                self.logger.warning(f'Invalid grouping of <{audio}>')
+                continue
             target = self.abspath(
                 self.parameters['output'], groups[0], os.path.basename(audio),
             )
@@ -4315,7 +4314,7 @@ class Organize__ItunedAction(OrganizeBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_ROOT}/iTunes/iTunes Media/Music', # type: ignore
+                'default': f'{OPTIONS.AUDGOD_ROOT}/iTunes/iTunes Media/Music',
             },
         },
     }
@@ -4331,59 +4330,67 @@ class Organize__ItunedAction(OrganizeBaseAction):
         self.prime_sources()
         for audio in self.primed_sources:
             audio_object = self.prime_audio(audio)
+
             artist = self.fetchx(audio_object, self.AudioProperty.ARTIST, formatted=True)
             if not artist:
-                self.logger.fatal(f'Invalid artist of <{audio}>')
-                return
+                self.logger.warning(f'Invalid artist of <{audio}>')
+                continue
+
             album = self.fetchx(audio_object, self.AudioProperty.ALBUM, formatted=True)
             if not album:
-                self.logger.fatal(f'Invalid album of <{audio}>')
-                return
+                self.logger.warning(f'Invalid album of <{audio}>')
+                continue
+
             newname = self.abspath(self.parameters['output'], artist, album, os.path.basename(audio))
-            if newname != audio:
-                if not os.path.exists(newname):
-                    os.makedirs(os.path.dirname(newname), exist_ok=True)
-                    self.duplicate(audio, newname)
-                else:
-                    current_grouping = self.fetchx(
-                        audio_object, self.AudioProperty.GROUPING, formatted=True,
-                    )
-                    current_groups = self.split(
-                        current_grouping,
-                        self.GROUPING_SEPARATOR,
-                        escaped=True,
-                        del_blank=True,
-                        filt_empty=True,
-                        filt_repeated=True,
-                        sortify=False,
-                        reversify=False,
-                    )
-                    existed_object = self.prime_audio(newname)
-                    existed_grouping = self.fetchx(
-                        existed_object, self.AudioProperty.GROUPING, formatted=True,
-                    )
-                    existed_groups = self.split(
-                        existed_grouping,
-                        self.GROUPING_SEPARATOR,
-                        escaped=True,
-                        del_blank=True,
-                        filt_empty=True,
-                        filt_repeated=True,
-                        sortify=False,
-                        reversify=False,
-                    )
-                    if not bool(set(current_groups) & set(existed_groups)):
-                        self.save(
-                            existed_object,
-                            self.AudioProperty.GROUPING,
-                            self.GROUPING_SEPARATOR.join(existed_groups+current_groups),
-                            formatted=True,
-                        )
-                    else:
-                        self.logger.fatal(
-                            f'Duplicate groupings between current <{audio}> and existed <{newname}>!',
-                        )
-                        return
+            if newname == audio:
+                continue
+
+            if not os.path.exists(newname):
+                os.makedirs(os.path.dirname(newname), exist_ok=True)
+                self.duplicate(audio, newname)
+                continue
+
+            current_grouping = self.fetchx(
+                audio_object, self.AudioProperty.GROUPING, formatted=True,
+            )
+            current_groups = self.split(
+                current_grouping,
+                self.GROUPING_SEPARATOR,
+                escaped=True,
+                del_blank=True,
+                filt_empty=True,
+                filt_repeated=True,
+                sortify=False,
+                reversify=False,
+            )
+
+            existed_object = self.prime_audio(newname)
+            existed_grouping = self.fetchx(
+                existed_object, self.AudioProperty.GROUPING, formatted=True,
+            )
+            existed_groups = self.split(
+                existed_grouping,
+                self.GROUPING_SEPARATOR,
+                escaped=True,
+                del_blank=True,
+                filt_empty=True,
+                filt_repeated=True,
+                sortify=False,
+                reversify=False,
+            )
+
+            if bool(set(current_groups) & set(existed_groups)):
+                self.logger.warning(
+                    f'Duplicate groupings between current <{audio}> and existed <{newname}>!',
+                )
+                continue
+
+            self.save(
+                existed_object,
+                self.AudioProperty.GROUPING,
+                self.GROUPING_SEPARATOR.join(existed_groups+current_groups),
+                formatted=True,
+            )
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -4436,24 +4443,24 @@ class ExportBaseAction(ExportRelatedBaseAction):
                 self.logger.fatal(f'Node <{nid}> is not in the tree!')
                 return
 
-            current_node = self[nid] # type: ignore
+            current_node = self[nid]
 
             if current_node.tag != new_tree[new_tree.root].tag:
                 self.logger.fatal('Current node not same with root of new tree.')
                 return
 
-            childs = self.children(nid) # type: ignore
+            childs = self.children(nid)
             child_tags = [child.tag for child in childs]
             new_childs = new_tree.children(new_tree.root)
             new_subtrees = [new_tree.subtree(child.identifier) for child in new_childs]
 
             if not childs:
                 for new_subtree in new_subtrees:
-                    self.paste(nid=nid, new_tree=new_subtree, deep=deep) # type: ignore
+                    self.paste(nid=nid, new_tree=new_subtree, deep=deep)
             else:
                 for new_child in new_childs:
                     if new_child.tag not in child_tags:
-                        self.paste(nid=nid, new_tree=new_tree.subtree(new_child.identifier), deep=deep) # type: ignore
+                        self.paste(nid=nid, new_tree=new_tree.subtree(new_child.identifier), deep=deep)
                         continue
                     self.perfect_merge(
                         childs[child_tags.index(new_child.tag)].identifier,
@@ -4781,7 +4788,7 @@ class Export__PlistAction(ExportBaseAction):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': f'{OPTIONS.AUDGOD_ROOT}/iTunes/iTunes Media/Music', # type: ignore
+                'default': f'{OPTIONS.AUDGOD_ROOT}/iTunes/iTunes Media/Music',
                 'help': 'the media folder of itunes or apple music',
             },
         },
@@ -4839,7 +4846,7 @@ class Export__PlistAction(ExportBaseAction):
 
     @staticmethod
     def encode(src) -> str:
-        return urllib.parse.quote(src, safe='/', encoding='utf-8', errors=None) # type: ignore
+        return urllib.parse.quote(src, safe='/', encoding='utf-8', errors=None)
 
 
     @classmethod
@@ -4992,7 +4999,7 @@ class Export__PlistAction(ExportBaseAction):
             playlist_persistent_id=self.generate_persistent_id(),
             visible='false',
             show_all_items='true',
-            tracks=self.__pack_simple_tracks(self.audios_tree[self.audios_tree.root]), # type: ignore
+            tracks=self.__pack_simple_tracks(self.audios_tree[self.audios_tree.root]),
         ))
 
 
@@ -5910,6 +5917,8 @@ class Operate__CleanupAction(OperateBaseAction):
     def execute(self):
         items = [
             '${audgod_output}',
+            '${export.plist.output}',
+            '${organize.ituned.output}',
         ]
         for item in items:
             self.remove(self.render_template(item, indent=None))
