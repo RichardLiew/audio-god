@@ -400,8 +400,8 @@ def refresh_options(cls):
 @refresh_options
 class OPTIONS(BASEOPTIONS):
     AUDGOD_ROOT = os.environ['AUDGOD_ROOT'] \
-                    if os.environ.get('AUDGOD_ROOT', '') \
-                    else f'~/Music'
+                    if os.environ.get('AUDGOD_ROOT', '').strip() \
+                    else '~/Music'
 
 #===============================================================================
 
@@ -6243,10 +6243,10 @@ class Testing__InitAction(TestingBaseAction):
         files = list(map(
             lambda x: os.path.join(self.AUDGOD_ORISRC, x),
             [
-                'test.songs.note.origin',
-                'test.ignores.txt',
-                'test.operate.backup.txt',
-                'test.operate.remove.txt',
+                'testing.songs.note.origin',
+                'testing.ignores.txt',
+                'testing.operate.backup.txt',
+                'testing.operate.remove.txt',
             ],
         ))
 
@@ -6360,127 +6360,127 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
         (True, 'testing', 'init', {}),
         (True, 'convert', 'kmx-to-mp4', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Kmx',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Kmx-To-Mp4',
         )),
         (True, 'convert', 'qmc-to-audio', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Qmc',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Qmc-To-Audio',
         )),
         (True, 'convert', 'media', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Media',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Media',
             format='mp3',
         )),
         (True, 'redecorate-note', dict(
-            document=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.songs.note.origin',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note',
+            document=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.songs.note.origin',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.songs.note',
         )),
         (True, 'extract-structure', dict(
-            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note.tree',
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.songs.note',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.songs.note.tree',
         )),
         (True, 'fill-properties', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
-            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.songs.note',
             root=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
         )),
         (True, 'format-properties', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
         )),
         (True, 'rename-audios', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
         )),
         # to complete
         (True, 'manage-artworks', 'bind', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
             artworks=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Artwork',
         )),
         (True, 'display', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.display.table',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.display.table',
         )),
         (True, 'organize', 'grouped', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
         )),
         (True, 'list-repeated', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.repeated.txt',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.repeated.txt',
         )),
         (True, 'operate', 'tree', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.output.tree',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.output.tree',
         )),
         (True, 'export', 'note', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.export.songs.note',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.export.songs.note',
         )),
         (True, 'convert', 'note-to-markdown', dict(
-            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.export.songs.note',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.convert.songs.note.md',
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.export.songs.note',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.convert.songs.note.md',
         )),
         (True, 'export', 'markdown', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.export.songs.md',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.export.songs.md',
         )),
         (True, 'convert', 'markdown-to-note', dict(
-            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.export.songs.md',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.convert.songs.md.note',
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.export.songs.md',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.convert.songs.md.note',
         )),
         # to complete
         (False, 'export', 'xml', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.export.songs.xml',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.export.songs.xml',
          )),
         # to complete
         (False, 'export', 'json', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.export.songs.json',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.export.songs.json',
          )),
         (True, 'organize', 'ituned', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/iTunes/iTunes Media/Music',
         )),
         (True, 'export', 'plist', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
             itunes_media_folder=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/iTunes/iTunes Media/Music',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/iTunes/Library.xml',
         )),
         # to complete
         (False, 'manage-artworks', 'derive', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/iTunes/iTunes Media/Music',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Artwork',
         )),
         (True, 'operate', 'backup', dict(
-            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.operate.backup.txt',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.operate.backup.txt',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
         )),
         (True, 'operate', 'remove', dict(
-            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.operate.remove.txt',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.operate.remove.txt',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
         )),
         (True, 'generate-script', 'start', dict(
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.start.zsh',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.start.zsh',
         )),
         (True, 'testing', 'generate-script', dict(
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.test.zsh',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.test.zsh',
         )),
     ]
 
