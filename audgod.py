@@ -381,7 +381,7 @@ def with_progress(iter_arg=None, total=None, **tqdm_kwargs):
 ################################################################################
 
 class BASEOPTIONS(object):
-    pass
+    GROUPING_SEPARATOR = '|'
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -406,9 +406,6 @@ class OPTIONS(BASEOPTIONS):
 #===============================================================================
 
 class AudioGod(OPTIONS):
-    GROUPING_SEPARATOR = '|'
-
-    #---------------------------------------------------------------------------
 
     class PerfectTemplate(Template):
         idpattern = r'(?a:[_a-z-][_a-z0-9-]*(\.[_a-z-][_a-z0-9-]*)*)'
