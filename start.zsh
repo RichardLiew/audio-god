@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-30T06:28:44Z
+# Created Time: 2025-06-30T06:42:43Z
 
 # Total Steps: 14
 
@@ -48,8 +48,8 @@ echo "Step (3/14):\n\n"
 
 ./audio-god redecorate-note \
     --document='~/Music/Source/songs.note.origin' \
-    --field-type=auto \
     --output='~/Music/Output/songs.note' \
+    --field-type=auto \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -60,11 +60,11 @@ echo "Step (4/14):\n\n"
 
 ./audio-god extract-structure \
     --document='~/Music/Output/songs.note' \
-    --field-type=auto \
     --output='~/Music/Output/songs.note.tree' \
     --show-count \
     --log-level=WARNING \
-    --log-file=stderr
+    --log-file=stderr \
+    --field-type=auto
 
 #-----------------------------------------------------------------------------
 
@@ -78,7 +78,6 @@ echo "Step (5/14):\n\n"
     --ignored-file='~/Music/Source/ignores.txt' \
     --document='~/Music/Output/songs.note' \
     --root='~/Music/Source/Mp3' \
-    --field-type=auto \
     --properties='{
         "_comment": "sources choose from command/file/directory/filename",
         "default": {
@@ -92,6 +91,7 @@ echo "Step (5/14):\n\n"
     }' \
     --separators='-,#' \
     --output='~/Music/Output/invalids.txt' \
+    --field-type=auto \
     --log-level=WARNING \
     --log-file=stderr
 
