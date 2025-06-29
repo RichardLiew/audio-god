@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-29T17:09:06Z
+# Created Time: 2025-06-29T21:27:15Z
 
 # Total Steps: 25
 
@@ -46,7 +46,7 @@ echo "Step (3/25):\n\n"
     --extensions=kmx \
     --output=./test/Output/Kmx-To-Mp4 \
     --recursive \
-    --ignored-file=./test/Source/test.ignores.txt \
+    --ignored-file=./test/Source/testing.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -60,7 +60,7 @@ echo "Step (4/25):\n\n"
     --extensions=qmc,qmc0,qmc1,qmc2,qmc3,qmcogg,qmcflac \
     --output=./test/Output/Qmc-To-Audio \
     --recursive \
-    --ignored-file=./test/Source/test.ignores.txt \
+    --ignored-file=./test/Source/testing.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -75,7 +75,7 @@ echo "Step (5/25):\n\n"
     --output=./test/Output/Media \
     --format=mp3 \
     --recursive \
-    --ignored-file=./test/Source/test.ignores.txt \
+    --ignored-file=./test/Source/testing.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -85,9 +85,9 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (6/25):\n\n"
 
 ./audio-god redecorate-note \
-    --document=./test/Source/test.songs.note.origin \
+    --document=./test/Source/testing.songs.note.origin \
     --field-type=auto \
-    --output=./test/Output/test.songs.note \
+    --output=./test/Output/testing.songs.note \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -97,9 +97,9 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (7/25):\n\n"
 
 ./audio-god extract-structure \
-    --document=./test/Output/test.songs.note \
+    --document=./test/Output/testing.songs.note \
     --field-type=auto \
-    --output=./test/Output/test.songs.note.tree \
+    --output=./test/Output/testing.songs.note.tree \
     --show-count \
     --log-level=WARNING \
     --log-file=stderr
@@ -113,8 +113,8 @@ echo "Step (8/25):\n\n"
     --source=./test/Source/Mp3 \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/Source/test.ignores.txt \
-    --document=./test/Output/test.songs.note \
+    --ignored-file=./test/Source/testing.ignores.txt \
+    --document=./test/Output/testing.songs.note \
     --root=./test/Source/Mp3 \
     --properties='{
         "_comment": "sources choose from command/file/directory/filename",
@@ -140,7 +140,7 @@ echo "Step (9/25):\n\n"
     --source=./test/Source/Mp3 \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/Source/test.ignores.txt \
+    --ignored-file=./test/Source/testing.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -153,7 +153,7 @@ echo "Step (10/25):\n\n"
     --source=./test/Source/Mp3 \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/Source/test.ignores.txt \
+    --ignored-file=./test/Source/testing.ignores.txt \
     --filename-pattern='@{artist} # @{title}' \
     --log-level=WARNING \
     --log-file=stderr
@@ -168,7 +168,7 @@ echo "Step (11/25):\n\n"
     --artworks=./test/Source/Artwork \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/Source/test.ignores.txt \
+    --ignored-file=./test/Source/testing.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -181,10 +181,10 @@ echo "Step (12/25):\n\n"
     --source=./test/Source/Mp3 \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/Source/test.ignores.txt \
+    --ignored-file=./test/Source/testing.ignores.txt \
     --fields=core \
     --field-type=cn \
-    --output=./test/Output/test.display.table \
+    --output=./test/Output/testing.display.table \
     --data-format=outputted \
     --page-number=1 \
     --page-size=0 \
@@ -223,7 +223,7 @@ echo "Step (13/25):\n\n"
     --output=./test/Output/Grouped \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/Source/test.ignores.txt \
+    --ignored-file=./test/Source/testing.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -236,8 +236,8 @@ echo "Step (14/25):\n\n"
     --source=./test/Output/Grouped \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/Source/test.ignores.txt \
-    --output=./test/Output/test.repeated.txt \
+    --ignored-file=./test/Source/testing.ignores.txt \
+    --output=./test/Output/testing.repeated.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -248,7 +248,7 @@ echo "Step (15/25):\n\n"
 
 ./audio-god operate tree \
     --source=./test/Output \
-    --output=./test/Output/test.output.tree \
+    --output=./test/Output/testing.output.tree \
     --show-count \
     --log-level=WARNING \
     --log-file=stderr
@@ -262,10 +262,10 @@ echo "Step (16/25):\n\n"
     --source=./test/Output/Grouped \
     --fields=basic \
     --field-type=cn \
-    --output=./test/Output/test.export.songs.note \
+    --output=./test/Output/testing.export.songs.note \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/Source/test.ignores.txt \
+    --ignored-file=./test/Source/testing.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -275,9 +275,9 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (17/25):\n\n"
 
 ./audio-god convert note-to-markdown \
-    --document=./test/Output/test.export.songs.note \
+    --document=./test/Output/testing.export.songs.note \
     --field-type=auto \
-    --output=./test/Output/test.convert.songs.note.md \
+    --output=./test/Output/testing.convert.songs.note.md \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -290,10 +290,10 @@ echo "Step (18/25):\n\n"
     --source=./test/Output/Grouped \
     --fields=basic \
     --field-type=cn \
-    --output=./test/Output/test.export.songs.md \
+    --output=./test/Output/testing.export.songs.md \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/Source/test.ignores.txt \
+    --ignored-file=./test/Source/testing.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -303,8 +303,8 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (19/25):\n\n"
 
 ./audio-god convert markdown-to-note \
-    --document=./test/Output/test.export.songs.md \
-    --output=./test/Output/test.convert.songs.md.note \
+    --document=./test/Output/testing.export.songs.md \
+    --output=./test/Output/testing.convert.songs.md.note \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -318,7 +318,7 @@ echo "Step (20/25):\n\n"
     --output='./test/Output/iTunes/iTunes Media/Music' \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/Source/test.ignores.txt \
+    --ignored-file=./test/Source/testing.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -338,7 +338,7 @@ echo "Step (21/25):\n\n"
     --playlist-initial-id=3001 \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/Source/test.ignores.txt \
+    --ignored-file=./test/Source/testing.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -348,8 +348,8 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (22/25):\n\n"
 
 ./audio-god operate backup \
-    --source=./test/Source/test.operate.backup.txt \
-    --ignored-file=./test/Source/test.ignores.txt \
+    --source=./test/Source/testing.operate.backup.txt \
+    --ignored-file=./test/Source/testing.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -359,8 +359,8 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (23/25):\n\n"
 
 ./audio-god operate remove \
-    --source=./test/Source/test.operate.remove.txt \
-    --ignored-file=./test/Source/test.ignores.txt \
+    --source=./test/Source/testing.operate.remove.txt \
+    --ignored-file=./test/Source/testing.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -370,7 +370,7 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (24/25):\n\n"
 
 ./audio-god generate-script start \
-    --output=./test/Output/test.start.zsh \
+    --output=./test/Output/testing.start.zsh \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -380,7 +380,7 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (25/25):\n\n"
 
 ./audio-god testing generate-script \
-    --output=./test/Output/test.test.zsh \
+    --output=./test/Output/testing.test.zsh \
     --log-level=WARNING \
     --log-file=stderr
 
