@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-29T09:55:15Z
+# Created Time: 2025-06-29T10:21:01Z
 
 # Total Steps: 15
 
@@ -40,7 +40,7 @@ echo "Step (2/15):\n\n"
 ./audio-god redecorate-note \
     --document='~/Music/Source/songs.note' \
     --field-type=auto \
-    --output='~/Music/Source/songs.note' \
+    --output='~/Music/Output/songs.note' \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -54,7 +54,7 @@ echo "Step (3/15):\n\n"
     --extensions=mp3,aac \
     --recursive \
     --ignored-file='~/Music/Source/ignores.txt' \
-    --document='~/Music/Source/songs.note' \
+    --document='~/Music/Output/songs.note' \
     --root='~/Music/Source/Mp3' \
     --properties='{
         "_comment": "sources choose from command/file/directory/filename",
