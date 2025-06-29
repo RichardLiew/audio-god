@@ -1075,6 +1075,7 @@ class AudioGod(OPTIONS):
         ret = re.sub(r'[、，/,]', r'&', ret)
         ret = re.sub(r'&', r' & ', ret)
         ret = re.sub(r'\s*&\s*', r' & ', ret)
+        #ret = re.sub(r'([a-zA-Z]\.){2,}', lambda m: m.group(0).replace(' ', ''), ret)
         return ret
 
     @classmethod
@@ -2274,6 +2275,7 @@ class NoteRelatedBaseAction(AudioGod):
             detail_patterns[pattern] = _generate_detail_pattern(fields)
 
         grouping_pattern = r'^\s*(?:\s*\(\s*(?:\s*[0-9]\s*)+\s*\)\s*)?\s*@\s*\[\s*((?:\s*\S\s*)+)\s*\]\s*((?:\s*[^:：\s]\s*)+)[:：]?\s*$'
+        # field detail contains invalid field name
         warn_pattern = r'(?:\s*[,，;；]+\s*)+(?:(?:\s*\S\s*)+)\s*[:：]+(?:\s*\S\s*)+'
 
         field_type = self.FieldType.ORIGINAL
