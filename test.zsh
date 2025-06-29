@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-29T01:27:06Z
+# Created Time: 2025-06-29T09:06:12Z
 
 # Total Steps: 28
 
@@ -12,7 +12,7 @@ set -e
 
 ##############################################################################
 
-export AUDGOD_CACHE_PATH=./test/.audgod-cache
+export AUDGOD_ROOT=./test
 
 ##############################################################################
 
@@ -46,7 +46,7 @@ echo "Step (3/28):\n\n"
     --extensions=kmx \
     --output=./test/Output/Kmx-To-Mp4 \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -60,7 +60,7 @@ echo "Step (4/28):\n\n"
     --extensions=qmc,qmc0,qmc1,qmc2,qmc3,qmcogg,qmcflac \
     --output=./test/Output/Qmc-To-Audio \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -75,7 +75,7 @@ echo "Step (5/28):\n\n"
     --output=./test/Output/Media \
     --format=mp3 \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -85,7 +85,7 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (6/28):\n\n"
 
 ./audio-god redecorate-note \
-    --document=./test/test.songs.note.origin \
+    --document=./test/Source/test.songs.note.origin \
     --field-type=auto \
     --output=./test/Output/test.songs.note \
     --log-level=WARNING \
@@ -100,7 +100,7 @@ echo "Step (7/28):\n\n"
     --source=./test/Source/Mp3 \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --document=./test/Output/test.songs.note \
     --root=./test/Source/Mp3 \
     --properties='{
@@ -127,7 +127,7 @@ echo "Step (8/28):\n\n"
     --source=./test/Source/Mp3 \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -140,7 +140,7 @@ echo "Step (9/28):\n\n"
     --source=./test/Source/Mp3 \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --filename-pattern='@{artist} # @{title}' \
     --log-level=WARNING \
     --log-file=stderr
@@ -155,7 +155,7 @@ echo "Step (10/28):\n\n"
     --artworks=./test/Source/Artwork \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -168,7 +168,7 @@ echo "Step (11/28):\n\n"
     --source=./test/Source/Mp3 \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --fields=core \
     --field-type=cn \
     --output=./test/Output/test.display.table \
@@ -210,7 +210,7 @@ echo "Step (12/28):\n\n"
     --root=./test/Output/Grouped \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -226,7 +226,7 @@ echo "Step (13/28):\n\n"
     --output=./test/Output/test.songs.note \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -242,7 +242,7 @@ echo "Step (14/28):\n\n"
     --output=./test/Output/test.songs.md \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -258,7 +258,7 @@ echo "Step (15/28):\n\n"
     --output=./test/Output/test.songs.xml \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -274,7 +274,7 @@ echo "Step (16/28):\n\n"
     --output=./test/Output/test.songs.json \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -287,7 +287,7 @@ echo "Step (17/28):\n\n"
     --source=./test/Output/Grouped \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --output=./test/Output/test.repeated.txt \
     --log-level=WARNING \
     --log-file=stderr
@@ -302,7 +302,7 @@ echo "Step (18/28):\n\n"
     --root='./test/Output/iTunes/iTunes Media/Music' \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -322,7 +322,7 @@ echo "Step (19/28):\n\n"
     --playlist-initial-id=3001 \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -336,7 +336,7 @@ echo "Step (20/28):\n\n"
     --output=./test/Output/Artwork \
     --extensions=mp3,aac \
     --recursive \
-    --ignored-file=./test/test.ignores.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -382,8 +382,8 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (24/28):\n\n"
 
 ./audio-god operate backup \
-    --source=./test/test.operate.backup.txt \
-    --ignored-file=./test/test.ignores.txt \
+    --source=./test/Source/test.operate.backup.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -393,8 +393,8 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (25/28):\n\n"
 
 ./audio-god operate remove \
-    --source=./test/test.operate.remove.txt \
-    --ignored-file=./test/test.ignores.txt \
+    --source=./test/Source/test.operate.remove.txt \
+    --ignored-file=./test/Source/test.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -432,7 +432,7 @@ echo "Step (28/28):\n\n"
 
 ##############################################################################
 
-unset AUDGOD_CACHE_PATH
+unset AUDGOD_ROOT
 
 ##############################################################################
 

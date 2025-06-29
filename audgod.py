@@ -227,12 +227,15 @@ Precautions:
 --------------------------------------------------------------------------------
 
 Attention:
-    Here is the cache folder, which contains backups and trash under it.
-    You can reset by shell environment variable "AUDGOD_CACHE_PATH".
-    You should clear the cache when the size is too big.
-        ${cache_dir}
-            ├── ${trash_dir}
-            └── ${backups_dir}
+    Here is the audio god root folder, which contains cache, source and output folder under it.
+    You can reset by shell environment variable "AUDGOD_ROOT".
+    You should clear the cache directory when the size is too big.
+        ${audgod_root}
+          ├── ${audgod_source}
+          ├── ${audgod_output}
+          └── ${audgod_cache}
+                ├── ${audgod_trash}
+                └── ${audgod_backup}
 
 --------------------------------------------------------------------------------
 
@@ -271,33 +274,31 @@ Process Method 2:
     Step.4: Run <generate-script start> subcommand to generate a shell script (e.g. "${generate-script.start.output}");
     Step.5: Execute the shell script above.
     Results under folders below:
-        "${redecorate-note.document}"
-        "${list-repeated.output}"
-        "${manage-artworks.derive.output}"
-        "${organize.ituned.source}"
-        "${export.plist.itunes_media_folder}"
-        "${export.plist.output}"
+        ${audgod_root}
+          ├── ${audgod_output}
+          ├── ${export.plist.output}
+          └── ${organize.ituned.output}
 
 --------------------------------------------------------------------------------
 
 Testing steps:
 
 Ready:
-    Step.1: Make sure folder "${test_dir}" is ready;
-    Step.2: Make sure folder "${test_origin_dir}" is ready;
-    Step.3: Make sure folder "${test_orisrc_dir}" is ready;
-    Step.4: Put test note file to "${test_origin_dir}";
-    Step.5: Put test ignored file to "${test_origin_dir}";
-    Step.6: Put test media under folders with different extentions to "${test_orisrc_dir}".
+    Step.1: Make sure folder "${testing_root}" is ready;
+    Step.2: Make sure folder "${testing_origin}" is ready;
+    Step.3: Make sure folder "${testing_orisrc}" is ready;
+    Step.4: Put test note file to "${testing_origin}";
+    Step.5: Put test ignored file to "${testing_origin}";
+    Step.6: Put test media under folders with different extentions to "${testing_orisrc}".
 
 Process Method:
     Step.1: Run <testing generate-script> subcommand to generate a shell script for testing;
     Step.2: Execute the shell script above.
 
 Attention:
-    1. Cache folder for testing is "${test_cache_dir}";
-    2. Folders named with different extentions under "${test_source_dir}";
-    3. Outputs are under local folder or "${test_output_dir}".
+    1. Cache folder for testing is "${testing_cache}";
+    2. Folders named with different extentions under "${testing_source}";
+    3. Outputs are under local folder or "${testing_output}".
 
 --------------------------------------------------------------------------------
 
@@ -377,18 +378,28 @@ def with_progress(iter_arg=None, total=None, **tqdm_kwargs):
 #                                                                              #
 ################################################################################
 
-class AudioGod(object):
+def reassign_options(cls):
+    cls.AUDGOD_SOURCE = os.path.join(cls.AUDGOD_ROOT, 'Source')
+    cls.AUDGOD_OUTPUT = os.path.join(cls.AUDGOD_ROOT, 'Output')
+
+    cls.AUDGOD_CACHE  = os.path.join(cls.AUDGOD_ROOT, '.audgod-cache')
+    cls.AUDGOD_TRASH  = os.path.join(cls.AUDGOD_CACHE, 'trash')
+    cls.AUDGOD_BACKUP = os.path.join(cls.AUDGOD_CACHE, 'backup')
+
+    return cls
+
+#===============================================================================
+
+@reassign_options
+class OPTIONS(object):
+    AUDGOD_ROOT = os.environ['AUDGOD_ROOT'] \
+                    if os.environ.get('AUDGOD_ROOT', '') \
+                    else f'~/Music'
+
+#===============================================================================
+
+class AudioGod(OPTIONS):
     GROUPING_SEPARATOR = '|'
-
-    #---------------------------------------------------------------------------
-
-    CACHE_NAME = '.audgod-cache'
-    CACHE_DIR = os.environ['AUDGOD_CACHE_PATH'] \
-                    if os.environ.get('AUDGOD_CACHE_PATH', '') \
-                    else f'~/{CACHE_NAME}'
-
-    TRASH_DIR = os.path.join(CACHE_DIR, 'trash')
-    BACKUPS_DIR = os.path.join(CACHE_DIR, 'backups')
 
     #---------------------------------------------------------------------------
 
@@ -641,7 +652,7 @@ class AudioGod(object):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': './songs.note',
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/songs.note',
                 'help': 'document to load',
             },
         },
@@ -651,7 +662,7 @@ class AudioGod(object):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': './ignores.txt',
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/ignores.txt',
                 'help': 'ignored files when load',
             },
         },
@@ -661,7 +672,7 @@ class AudioGod(object):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': '~/Music/Source/Mp3',
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/Mp3',
                 'help': 'files or directories you want to process',
             },
         },
@@ -671,7 +682,7 @@ class AudioGod(object):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': '~/Music/Source/Mp3',
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/Mp3',
                 'help': 'root directory',
             },
         },
@@ -1508,9 +1519,9 @@ class AudioGod(object):
             if not os.path.isdir(path):
                 self.logger.fatal(f'Path <{path}> not a directory!')
                 return
-        _init_path(self.CACHE_DIR)
-        _init_path(self.TRASH_DIR)
-        _init_path(self.BACKUPS_DIR)
+        _init_path(self.AUDGOD_CACHE)
+        _init_path(self.AUDGOD_TRASH)
+        _init_path(self.AUDGOD_BACKUP)
 
 
     @classmethod
@@ -1553,7 +1564,7 @@ class AudioGod(object):
                 if os.path.exists(item):
                     os.rename(
                         item, os.path.join(
-                            self.abspath(self.TRASH_DIR),
+                            self.abspath(self.AUDGOD_TRASH),
                             self.treat_basename(item, 'trash'),
                         ),
                     )
@@ -1571,7 +1582,7 @@ class AudioGod(object):
                 if os.path.exists(item):
                     self.duplicate(
                         item, os.path.join(
-                            self.abspath(self.BACKUPS_DIR),
+                            self.abspath(self.AUDGOD_BACKUP),
                             self.treat_basename(item, 'backup'),
                         ),
                     )
@@ -2520,9 +2531,9 @@ class TreeRelatedBaseAction(AudioGod):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
-    
-    FILES_MARK = '__files__'
-    
+
+    __FILES_MARK__ = '__files__'
+
     #---------------------------------------------------------------------------
 
     KWARGS = None
@@ -2569,7 +2580,7 @@ class TreeRelatedBaseAction(AudioGod):
 
                 def _count_children(node):
                     if isinstance(node, dict):
-                        return len({ key: node[key] for key in node if key != self.FILES_MARK })
+                        return len({ key: node[key] for key in node if key != self.__FILES_MARK__ })
                     return 0
 
                 total_leaves = _count_leaves(_data)
@@ -2578,7 +2589,7 @@ class TreeRelatedBaseAction(AudioGod):
                 if is_root:
                     key = list(_data.keys())[0] if len(_data) == 1 else 'Root'
                     direct_children = _count_children(next(iter(_data.values())))
-                    if key != self.FILES_MARK:
+                    if key != self.__FILES_MARK__:
                         content += f'{key}' + (f' (items: {total_leaves}, branches: {direct_children})' if show_count else '')
                         content += '\n'
                     new_prefix = prefix + '    '
@@ -2587,7 +2598,7 @@ class TreeRelatedBaseAction(AudioGod):
                     connector = '└── ' if is_last else '├── '
                     current_prefix = prefix + connector
                     key = current_key or 'Node'
-                    if key != self.FILES_MARK:
+                    if key != self.__FILES_MARK__:
                         content += f'{current_prefix}{key}' + (f' (items: {total_leaves}, branches: {direct_children})' if show_count else '')
                         content += '\n'
                     new_prefix = prefix + ('    ' if is_last else '│   ')
@@ -2598,7 +2609,7 @@ class TreeRelatedBaseAction(AudioGod):
                     if isinstance(value, dict):
                         content += _build(value, indent+1, new_prefix, child_is_last, False, key, show_count)
                     elif isinstance(value, list):
-                        if key != self.FILES_MARK:
+                        if key != self.__FILES_MARK__:
                             content += f'{new_prefix}{"└── " if child_is_last else "├── "}{key} ' + (f'(items: {len(value)}, branches: 0)' if show_count else '')
                             content += '\n'
             elif isinstance(_data, list):
@@ -2626,7 +2637,7 @@ class RedecorateNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
         'document': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
             'kwargs': {
-                'default': './songs.note.origin',
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/songs.note.origin',
             },
         },
         'field_type': {
@@ -2638,7 +2649,7 @@ class RedecorateNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': './songs.note',
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/songs.note',
             },
         },
     }
@@ -3156,7 +3167,7 @@ class ListRepeatedAction(AudioGod):
         'source': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Output/Grouped',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/Grouped',
             },
         },
         'extensions': {
@@ -3171,7 +3182,7 @@ class ListRepeatedAction(AudioGod):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': './repeated.txt',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/repeated.txt',
             },
         },
     }
@@ -3282,7 +3293,7 @@ class ManageArtworks__BindAction(ManageArtworksBaseAction):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': '~/Source/Artwork',
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/Artwork',
                 'help': 'source artworks to bind',
             },
         },
@@ -3330,13 +3341,13 @@ class ManageArtworks__DeriveAction(ManageArtworksBaseAction):
         'source': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/iTunes/iTunes Media/Music',
+                'default': f'{OPTIONS.AUDGOD_ROOT}/iTunes/iTunes Media/Music',
             },
         },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Output/Artwork',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/Artwork',
             },
         },
     }
@@ -4219,10 +4230,10 @@ class Organize__GroupedAction(OrganizeBaseAction):
         'source': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
-        'root': {
+        'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Output/Grouped',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/Grouped',
             },
         },
     }
@@ -4250,7 +4261,7 @@ class Organize__GroupedAction(OrganizeBaseAction):
                 self.logger.fatal(f'Invalid grouping of <{audio}>')
                 return
             target = self.abspath(
-                self.parameters['root'], groups[0], os.path.basename(audio),
+                self.parameters['output'], groups[0], os.path.basename(audio),
             )
             if target != audio:
                 os.makedirs(os.path.dirname(target), exist_ok=True)
@@ -4262,7 +4273,7 @@ class Organize__GroupedAction(OrganizeBaseAction):
             if len(groups) < 2:
                 continue
             for group in groups[1:]:
-                link = self.abspath(self.parameters['root'], group, os.path.basename(audio))
+                link = self.abspath(self.parameters['output'], group, os.path.basename(audio))
                 if link == target:
                     continue
                 os.makedirs(os.path.dirname(link), exist_ok=True)
@@ -4288,15 +4299,12 @@ class Organize__ItunedAction(OrganizeBaseAction):
 
     ARGUMENTS = {
         'source': {
-            'use_public': AudioGod.ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': '~/Music/Output/Grouped',
-            },
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
-        'root': {
+        'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/iTunes/iTunes Media/Music', # type: ignore
+                'default': f'{OPTIONS.AUDGOD_ROOT}/iTunes/iTunes Media/Music', # type: ignore
             },
         },
     }
@@ -4320,7 +4328,7 @@ class Organize__ItunedAction(OrganizeBaseAction):
             if not album:
                 self.logger.fatal(f'Invalid album of <{audio}>')
                 return
-            newname = self.abspath(self.parameters['root'], artist, album, os.path.basename(audio))
+            newname = self.abspath(self.parameters['output'], artist, album, os.path.basename(audio))
             if newname != audio:
                 if not os.path.exists(newname):
                     os.makedirs(os.path.dirname(newname), exist_ok=True)
@@ -4678,7 +4686,7 @@ class Export__NoteAction(ExportBaseAction, NoteRelatedBaseAction):
         'source': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Output/Grouped',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/Grouped',
             },
         },
         'fields': {
@@ -4693,7 +4701,7 @@ class Export__NoteAction(ExportBaseAction, NoteRelatedBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': './songs.note',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note',
             },
         },
     }
@@ -4741,7 +4749,7 @@ class Export__PlistAction(ExportBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/iTunes/Library.xml',
+                'default': f'{OPTIONS.AUDGOD_ROOT}/iTunes/Library.xml',
             },
         },
         'itunes_version_plist': {
@@ -4762,7 +4770,7 @@ class Export__PlistAction(ExportBaseAction):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': '~/Music/iTunes/iTunes Media/Music', # type: ignore
+                'default': f'{OPTIONS.AUDGOD_ROOT}/iTunes/iTunes Media/Music', # type: ignore
                 'help': 'the media folder of itunes or apple music',
             },
         },
@@ -5077,7 +5085,7 @@ class Export__MarkdownAction(ExportBaseAction):
         'source': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Output/Grouped',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/Grouped',
             },
         },
         'fields': {
@@ -5092,7 +5100,7 @@ class Export__MarkdownAction(ExportBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': './songs.md',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.md',
             },
         },
     }
@@ -5123,7 +5131,7 @@ class Export__XmlAction(ExportBaseAction):
         'source': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Output/Grouped',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/Grouped',
             },
         },
         'fields': {
@@ -5138,7 +5146,7 @@ class Export__XmlAction(ExportBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': './songs.xml',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.xml',
             },
         },
     }
@@ -5169,7 +5177,7 @@ class Export__JsonAction(ExportBaseAction):
         'source': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Output/Grouped',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/Grouped',
             },
         },
         'fields': {
@@ -5184,7 +5192,7 @@ class Export__JsonAction(ExportBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': './songs.json',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.json',
             },
         },
     }
@@ -5347,7 +5355,7 @@ class Convert__QmcToAudioAction(ConvertMediaBaseAction):
         'source': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Source/Qmc',
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/Qmc',
             },
         },
         'extensions': {
@@ -5359,7 +5367,7 @@ class Convert__QmcToAudioAction(ConvertMediaBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Output/Qmc-To-Audio',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/Qmc-To-Audio',
             },
         },
     }
@@ -5434,7 +5442,7 @@ class Convert__KmxToMp4Action(ConvertMediaBaseAction):
         'source': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Source/Kmx',
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/Kmx',
             },
         },
         'extensions': {
@@ -5446,7 +5454,7 @@ class Convert__KmxToMp4Action(ConvertMediaBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Output/Kmx-To-Mp4',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/Kmx-To-Mp4',
             },
         },
     }
@@ -5501,7 +5509,7 @@ class Convert__MediaAction(ConvertMediaBaseAction):
         'source': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Source/Media',
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/Media',
             },
         },
         'extensions': {
@@ -5513,7 +5521,7 @@ class Convert__MediaAction(ConvertMediaBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': '~/Music/Output/Media',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/Media',
             },
         },
         'format': {
@@ -5575,7 +5583,7 @@ class Convert__NoteToMarkdownAction(
         'document': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': './songs.note',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note',
             },
         },
         'field_type': {
@@ -5587,7 +5595,7 @@ class Convert__NoteToMarkdownAction(
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': './songs.note.md',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note.md',
             },
         },
     }
@@ -5625,13 +5633,13 @@ class Convert__MarkdownToNoteAction(ConvertDocumentBaseAction):
         'document': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': './songs.md',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.md',
             },
         },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': './songs.md.note',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.md.note',
             },
         },
     }
@@ -5684,7 +5692,7 @@ class ExtractStructureAction(
         'document': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': './songs.note',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note',
             },
         },
         'field_type': {
@@ -5890,14 +5898,7 @@ class Operate__CleanupAction(OperateBaseAction):
 
     def execute(self):
         items = [
-            './*.tmp',
-            './*.bak',
-            './*.backup',
-            '${redecorate-note.output}*',
-            '${list-repeated.output}*',
-            '${organize.grouped.root}',
-            '${export.plist.itunes_media_folder}/*',
-            '${export.plist.output}',
+            '${audgod_output}',
         ]
         for item in items:
             self.remove(self.render_template(item, indent=None))
@@ -5919,7 +5920,7 @@ class Operate__TreeAction(TreeRelatedBaseAction, OperateBaseAction):
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
                 'required': True,
-                'default': '~/Music/Output',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}',
             },
         },
         'output': {
@@ -5962,9 +5963,9 @@ class Operate__TreeAction(TreeRelatedBaseAction, OperateBaseAction):
                 if os.path.isdir(full_path):
                     ret[item] = _tree(full_path)
                     continue
-                if cls.FILES_MARK not in ret:
-                    ret[cls.FILES_MARK] = []
-                ret[cls.FILES_MARK].append(item)
+                if cls.__FILES_MARK__ not in ret:
+                    ret[cls.__FILES_MARK__] = []
+                ret[cls.__FILES_MARK__].append(item)
             return ret
         return { os.path.basename(path): _tree(path) }
 
@@ -6003,7 +6004,7 @@ class GenerateScriptBaseAction(AudioGod):
         content += '#' * 78 + '\n\n'
         content += 'set -e\n\n'
         content += '#' * 78 + '\n\n'
-        content += f'export AUDGOD_CACHE_PATH={self.CACHE_DIR}\n\n'
+        content += f'export AUDGOD_ROOT={self.AUDGOD_ROOT}\n\n'
         content += '#' * 78 + '\n\n'
         content += 'echo "\\n[***] Starting ...\\n"\n\n'
         content += '#' * 78 + '\n\n'
@@ -6029,7 +6030,7 @@ class GenerateScriptBaseAction(AudioGod):
                     content += '\n\n' + '#' + '-' * 77 + '\n\n'
         content += '\n\n'
         content += '#' * 78 + '\n\n'
-        content += 'unset AUDGOD_CACHE_PATH\n\n'
+        content += 'unset AUDGOD_ROOT\n\n'
         content += '#' * 78 + '\n\n'
         content += 'printf "%.0s@" {1..60}; printf "\\n"\n'
         content += 'echo "\\n[***] Finished!\\n"\n'
@@ -6094,39 +6095,48 @@ class GenerateScript__StartAction(GenerateScriptBaseAction):
     STEPS = [
         (False, 'operate', 'cleanup', {}),
         (False, 'convert', 'kmx-to-mp4', {}),
-        (False, 'convert', 'media', {}),
         (True,  'convert', 'qmc-to-audio', {}),
+        (False, 'convert', 'media', {}),
         (True,  'redecorate-note', {}),
         (True,  'fill-properties', {}),
         (True,  'format-properties', {}),
         (True,  'rename-audios', {}),
         (False, 'manage-artworks', 'bind', {}),
+        (False, 'display', {}),
         (True,  'organize', 'grouped', {}),
-        (True,  'list-repeated', {}),
         (True,  'export', 'note', {}),
-        (True,  'convert', 'note-to-markdown', {}),
+        (True,  'export', 'markdown', {}),
+        (False, 'export', 'xml', {}),
+        (False, 'export', 'json', {}),
+        (True,  'list-repeated', {}),
         (True,  'organize', 'ituned', {}),
         (True,  'export', 'plist', {}),
-        (True,  'manage-artworks', 'derive', {}),
+        (True,  'convert', 'note-to-markdown', {}),
+        (True,  'convert', 'markdown-to-note', {}),
+        (False, 'manage-artworks', 'derive', {}),
+        (True,  'extract-structure', {}),
+        (True,  'operate', 'tree', {}),
+        (False, 'operate', 'backup', {}),
+        (False, 'operate', 'remove', {}),
+        (False, 'generate-script', 'start', {}),
+        (False, 'testing', 'generate-script', {}),
+        (False, 'testing', 'init', {}),
+        (False, 'testing', 'cleanup', {}),
     ]
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-class TestingBaseAction(AudioGod):
+@reassign_options
+class TESTING_OPTIONS(object):
+    AUDGOD_ROOT = './test'
+
+    AUDGOD_ORIGIN = os.path.join(AudioGod.AUDGOD_ROOT, 'Origin')
+    AUDGOD_ORISRC = os.path.join(AUDGOD_ORIGIN, 'Source')
+
+#===============================================================================
+
+class TestingBaseAction(TESTING_OPTIONS, AudioGod):
     ACTIVE = True
-
-    #---------------------------------------------------------------------------
-
-    TEST_DIR = './test'
-    TEST_CACHE_DIR = os.path.join(TEST_DIR, AudioGod.CACHE_NAME)
-    TEST_ORIGIN_DIR = os.path.join(TEST_DIR, 'Origin')
-    TEST_ORISRC_DIR = os.path.join(TEST_ORIGIN_DIR, 'Source')
-    TEST_SOURCE_DIR = os.path.join(TEST_DIR, 'Source')
-    TEST_OUTPUT_DIR = os.path.join(TEST_DIR, 'Output')
-
-    #---------------------------------------------------------------------------
-
-    CACHE_DIR = TEST_CACHE_DIR
 
     #---------------------------------------------------------------------------
 
@@ -6184,8 +6194,8 @@ class Testing__InitAction(TestingBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        if self.CACHE_DIR != self.TEST_CACHE_DIR:
-            self.logger.fatal('${AUDGOD_CACHE_PATH} error!')
+        if AudioGod.AUDGOD_ROOT != self.AUDGOD_ROOT:
+            self.logger.fatal('${AUDGOD_ROOT} error!')
             return
 
         SOURCE_KINDS = {
@@ -6197,18 +6207,18 @@ class Testing__InitAction(TestingBaseAction):
         }
 
         srcs = list(map(
-            lambda x: os.path.join(self.TEST_ORISRC_DIR, x),
+            lambda x: os.path.join(self.AUDGOD_ORISRC, x),
             SOURCE_KINDS.keys(),
         ))
 
         dirs = [
-            self.TEST_DIR,
-            self.TEST_ORIGIN_DIR,
-            self.TEST_ORISRC_DIR,
+            self.AUDGOD_ROOT,
+            self.AUDGOD_ORIGIN,
+            self.AUDGOD_ORISRC,
         ] + srcs
 
         files = list(map(
-            lambda x: os.path.join(self.TEST_ORIGIN_DIR, x),
+            lambda x: os.path.join(self.AUDGOD_ORISRC, x),
             [
                 'test.songs.note.origin',
                 'test.ignores.txt',
@@ -6253,12 +6263,12 @@ class Testing__InitAction(TestingBaseAction):
                 self.logger.fatal(f'Directory <{src}> contains no valid files!')
                 return
             
-        for item in os.listdir(self.TEST_ORIGIN_DIR):
+        for item in os.listdir(self.AUDGOD_ORIGIN):
             if item.startswith('.'):
                 continue
             self.duplicate(
-                os.path.join(self.TEST_ORIGIN_DIR, item),
-                os.path.join(self.TEST_DIR, item),
+                os.path.join(self.AUDGOD_ORIGIN, item),
+                os.path.join(self.AUDGOD_ROOT, item),
             )
 
 #===============================================================================
@@ -6283,14 +6293,17 @@ class Testing__CleanupAction(TestingBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        if not os.path.exists(self.TEST_DIR):
+        if AudioGod.AUDGOD_ROOT != self.AUDGOD_ROOT:
+            self.logger.fatal('${AUDGOD_ROOT} error!')
             return
-        if not os.path.isdir(self.TEST_DIR):
+
+        if not os.path.exists(self.AUDGOD_ROOT):
+            return
+        if not os.path.isdir(self.AUDGOD_ROOT):
             return
         items = [
-            './test/test.*',
-            './test/Source',
-            './test/Output',
+            self.AUDGOD_SOURCE,
+            self.AUDGOD_OUTPUT,
         ]
         for item in items:
             self.remove(item)
@@ -6323,129 +6336,128 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
         (True, 'testing', 'cleanup', {}),
         (True, 'testing', 'init', {}),
         (True, 'convert', 'kmx-to-mp4', dict(
-            source='./test/Source/Kmx',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/Output/Kmx-To-Mp4',
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Kmx',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Kmx-To-Mp4',
         )),
         (True, 'convert', 'qmc-to-audio', dict(
-            source='./test/Source/Qmc',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/Output/Qmc-To-Audio',
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Qmc',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Qmc-To-Audio',
         )),
         (True, 'convert', 'media', dict(
-            source='./test/Source/Media',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/Output/Media',
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Media',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Media',
             format='mp3',
         )),
         (True, 'redecorate-note', dict(
-            document='./test/test.songs.note.origin',
-            #output='./test/test.songs.note',
-            output='./test/Output/test.songs.note',
+            document=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.songs.note.origin',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note',
         )),
         (True, 'fill-properties', dict(
-            source='./test/Source/Mp3',
-            ignored_file='./test/test.ignores.txt',
-            document='./test/Output/test.songs.note',
-            root='./test/Source/Mp3',
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note',
+            root=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
         )),
         (True, 'format-properties', dict(
-            source='./test/Source/Mp3',
-            ignored_file='./test/test.ignores.txt',
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
         )),
         (True, 'rename-audios', dict(
-            source='./test/Source/Mp3',
-            ignored_file='./test/test.ignores.txt',
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
         )),
         # to complete
         (True, 'manage-artworks', 'bind', dict(
-            source='./test/Source/Mp3',
-            ignored_file='./test/test.ignores.txt',
-            artworks='./test/Source/Artwork',
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            artworks=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Artwork',
         )),
         (True, 'display', dict(
-            source='./test/Source/Mp3',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/Output/test.display.table',
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.display.table',
         )),
         (True, 'organize', 'grouped', dict(
-            source='./test/Source/Mp3',
-            ignored_file='./test/test.ignores.txt',
-            root='./test/Output/Grouped',
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
         )),
         (True, 'export', 'note', dict(
-            source='./test/Output/Grouped',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/Output/test.songs.note',
+            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note',
         )),
         (True, 'export', 'markdown', dict(
-            source='./test/Output/Grouped',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/Output/test.songs.md',
+            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.md',
         )),
         # to complete
-        (True, 'export', 'xml', dict(
-            source='./test/Output/Grouped',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/Output/test.songs.xml',
+        (False, 'export', 'xml', dict(
+            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.xml',
          )),
         # to complete
-        (True, 'export', 'json', dict(
-            source='./test/Output/Grouped',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/Output/test.songs.json',
+        (False, 'export', 'json', dict(
+            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.json',
          )),
         (True, 'list-repeated', dict(
-            source='./test/Output/Grouped',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/Output/test.repeated.txt',
+            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.repeated.txt',
         )),
         (True, 'organize', 'ituned', dict(
-            source='./test/Output/Grouped',
-            ignored_file='./test/test.ignores.txt',
-            root='./test/Output/iTunes/iTunes Media/Music',
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/iTunes/iTunes Media/Music',
         )),
         (True, 'export', 'plist', dict(
-            source='./test/Source/Mp3',
-            ignored_file='./test/test.ignores.txt',
-            itunes_media_folder='./test/Output/iTunes/iTunes Media/Music',
-            output='./test/Output/iTunes/Library.xml',
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            itunes_media_folder=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/iTunes/iTunes Media/Music',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/iTunes/Library.xml',
         )),
         # to complete
-        (True, 'manage-artworks', 'derive', dict(
-            source='./test/Output/iTunes/iTunes Media/Music',
-            ignored_file='./test/test.ignores.txt',
-            output='./test/Output/Artwork',
+        (False, 'manage-artworks', 'derive', dict(
+            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/iTunes/iTunes Media/Music',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Artwork',
         )),
         (True, 'convert', 'note-to-markdown', dict(
-            document='./test/Output/test.songs.note',
-            output='./test/Output/test.songs.note.md',
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note.md',
         )),
         (True, 'convert', 'markdown-to-note', dict(
-            document='./test/Output/test.songs.md',
-            output='./test/Output/test.songs.md.note',
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.md',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.md.note',
         )),
         (True, 'extract-structure', dict(
-            document='./test/Output/test.songs.note',
-            output='./test/Output/songs.note.tree',
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.songs.note',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/songs.note.tree',
         )),
         (True, 'operate', 'backup', dict(
-            source='./test/test.operate.backup.txt',
-            ignored_file='./test/test.ignores.txt',
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.operate.backup.txt',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
         )),
         (True, 'operate', 'remove', dict(
-            source='./test/test.operate.remove.txt',
-            ignored_file='./test/test.ignores.txt',
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.operate.remove.txt',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/test.ignores.txt',
         )),
         (True, 'operate', 'tree', dict(
-            source='./test/Output',
-            output='./test/Output/test.output.tree',
+            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.output.tree',
         )),
         (True, 'generate-script', 'start', dict(
-            output='./test/Output/test.start.zsh',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.start.zsh',
         )),
         (True, 'testing', 'generate-script', dict(
-            output='./test/Output/test.test.zsh',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/test.test.zsh',
         )),
     ]
 
@@ -6794,15 +6806,18 @@ def main():
                 filename_separator=f'<{" or ".join(FillPropertiesAction.ARGUMENTS_DEFAULTS()["separators"].split(","))}>',
                 grouping_sep=AudioGod.GROUPING_SEPARATOR,
                 fnp_delimiter=RenameAudiosAction.FilenamePatternTemplate.delimiter,
-                cache_dir=AudioGod.CACHE_DIR,
-                trash_dir=os.path.basename(AudioGod.TRASH_DIR),
-                backups_dir=os.path.basename(AudioGod.BACKUPS_DIR),
-                test_dir=TestingAction.TEST_DIR,
-                test_cache_dir=TestingAction.TEST_CACHE_DIR,
-                test_origin_dir=TestingAction.TEST_ORIGIN_DIR,
-                test_orisrc_dir=TestingAction.TEST_ORISRC_DIR,
-                test_source_dir=TestingAction.TEST_SOURCE_DIR,
-                test_output_dir=TestingAction.TEST_OUTPUT_DIR,
+                audgod_root=AudioGod.AUDGOD_ROOT,
+                audgod_source=os.path.basename(OPTIONS.AUDGOD_SOURCE),
+                audgod_output=os.path.basename(OPTIONS.AUDGOD_OUTPUT),
+                audgod_cache= os.path.basename(OPTIONS.AUDGOD_CACHE),
+                audgod_trash= os.path.basename(OPTIONS.AUDGOD_TRASH),
+                audgod_backup=os.path.basename(OPTIONS.AUDGOD_BACKUP),
+                testing_root=  TESTING_OPTIONS.AUDGOD_ROOT,
+                testing_origin=TESTING_OPTIONS.AUDGOD_ORIGIN,
+                testing_orisrc=TESTING_OPTIONS.AUDGOD_ORISRC,
+                testing_source=TESTING_OPTIONS.AUDGOD_SOURCE,
+                testing_output=TESTING_OPTIONS.AUDGOD_OUTPUT,
+                testing_cache= TESTING_OPTIONS.AUDGOD_CACHE,
             ),
         ),
         description='🎻 God of audios 🎸',
