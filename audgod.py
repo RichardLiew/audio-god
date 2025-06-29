@@ -381,6 +381,11 @@ def with_progress(iter_arg=None, total=None, **tqdm_kwargs):
 #                                                                              #
 ################################################################################
 
+class BASEOPTIONS(object):
+    pass
+
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
 def refresh_options(cls):
     cls.AUDGOD_SOURCE = os.path.join(cls.AUDGOD_ROOT, 'Source')
     cls.AUDGOD_OUTPUT = os.path.join(cls.AUDGOD_ROOT, 'Output')
@@ -394,7 +399,7 @@ def refresh_options(cls):
 #===============================================================================
 
 @refresh_options
-class OPTIONS(object):
+class OPTIONS(BASEOPTIONS):
     AUDGOD_ROOT = os.environ['AUDGOD_ROOT'] \
                     if os.environ.get('AUDGOD_ROOT', '') \
                     else f'~/Music'
@@ -6136,7 +6141,7 @@ class GenerateScript__StartAction(GenerateScriptBaseAction):
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 @refresh_options
-class TESTING_OPTIONS(object):
+class TESTING_OPTIONS(BASEOPTIONS):
     AUDGOD_ROOT = './test'
 
     AUDGOD_ORIGIN = os.path.join(AudioGod.AUDGOD_ROOT, 'Origin')
