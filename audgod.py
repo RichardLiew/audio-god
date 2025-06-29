@@ -381,7 +381,7 @@ def with_progress(iter_arg=None, total=None, **tqdm_kwargs):
 #                                                                              #
 ################################################################################
 
-def reassign_options(cls):
+def refresh_options(cls):
     cls.AUDGOD_SOURCE = os.path.join(cls.AUDGOD_ROOT, 'Source')
     cls.AUDGOD_OUTPUT = os.path.join(cls.AUDGOD_ROOT, 'Output')
 
@@ -393,7 +393,7 @@ def reassign_options(cls):
 
 #===============================================================================
 
-@reassign_options
+@refresh_options
 class OPTIONS(object):
     AUDGOD_ROOT = os.environ['AUDGOD_ROOT'] \
                     if os.environ.get('AUDGOD_ROOT', '') \
@@ -6132,7 +6132,7 @@ class GenerateScript__StartAction(GenerateScriptBaseAction):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-@reassign_options
+@refresh_options
 class TESTING_OPTIONS(object):
     AUDGOD_ROOT = './test'
 
