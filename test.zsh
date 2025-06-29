@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-29T16:57:53Z
+# Created Time: 2025-06-29T17:09:06Z
 
 # Total Steps: 25
 
@@ -99,7 +99,7 @@ echo "Step (7/25):\n\n"
 ./audio-god extract-structure \
     --document=./test/Output/test.songs.note \
     --field-type=auto \
-    --output=./test/Output/songs.extract.tree \
+    --output=./test/Output/test.songs.note.tree \
     --show-count \
     --log-level=WARNING \
     --log-file=stderr

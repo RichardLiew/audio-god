@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-29T16:58:00Z
+# Created Time: 2025-06-29T17:09:00Z
 
 # Total Steps: 13
 
@@ -52,7 +52,7 @@ echo "Step (3/13):\n\n"
 ./audio-god extract-structure \
     --document='~/Music/Output/songs.note' \
     --field-type=auto \
-    --output='' \
+    --output='~/Music/Output/songs.note.tree' \
     --show-count \
     --log-level=WARNING \
     --log-file=stderr
@@ -146,7 +146,7 @@ echo "Step (9/13):\n\n"
 
 ./audio-god operate tree \
     --source='~/Music/Output' \
-    --output='' \
+    --output='~/Music/Output/output.tree' \
     --show-count \
     --log-level=WARNING \
     --log-file=stderr
@@ -160,7 +160,7 @@ echo "Step (10/13):\n\n"
     --source='~/Music/Output/Grouped' \
     --fields=basic \
     --field-type=cn \
-    --output='~/Music/Output/songs.note' \
+    --output='~/Music/Output/export.songs.note' \
     --extensions=mp3,aac \
     --recursive \
     --ignored-file='~/Music/Source/ignores.txt' \
@@ -173,9 +173,9 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (11/13):\n\n"
 
 ./audio-god convert note-to-markdown \
-    --document='~/Music/Output/songs.note' \
+    --document='~/Music/Output/export.songs.note' \
     --field-type=auto \
-    --output='~/Music/Output/songs.note.md' \
+    --output='~/Music/Output/convert.songs.note.md' \
     --log-level=WARNING \
     --log-file=stderr
 
