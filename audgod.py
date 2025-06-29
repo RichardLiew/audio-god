@@ -6164,7 +6164,7 @@ class GenerateScript__StartAction(GenerateScriptBaseAction):
     #---------------------------------------------------------------------------
 
     STEPS = [
-        (False, 'operate', 'cleanup', {}),
+        (True, 'operate', 'cleanup', {}),
         (False, 'convert', 'kmx-to-mp4', {}),
         (True,  'convert', 'qmc-to-audio', {}),
         (False, 'convert', 'media', {}),

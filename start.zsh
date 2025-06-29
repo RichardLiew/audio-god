@@ -2,9 +2,9 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-29T21:27:25Z
+# Created Time: 2025-06-30T05:09:32Z
 
-# Total Steps: 13
+# Total Steps: 14
 
 ##############################################################################
 
@@ -21,7 +21,16 @@ echo "\n[***] Starting ...\n"
 ##############################################################################
 
 printf "%.0s@" {1..60}; printf "\n"
-echo "Step (1/13):\n\n"
+echo "Step (1/14):\n\n"
+
+./audio-god operate cleanup \
+    --log-level=WARNING \
+    --log-file=stderr
+
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (2/14):\n\n"
 
 ./audio-god convert qmc-to-audio \
     --source='~/Music/Source/Qmc' \
@@ -35,7 +44,7 @@ echo "Step (1/13):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (2/13):\n\n"
+echo "Step (3/14):\n\n"
 
 ./audio-god redecorate-note \
     --document='~/Music/Source/songs.note.origin' \
@@ -47,7 +56,7 @@ echo "Step (2/13):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (3/13):\n\n"
+echo "Step (4/14):\n\n"
 
 ./audio-god extract-structure \
     --document='~/Music/Output/songs.note' \
@@ -60,7 +69,7 @@ echo "Step (3/13):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (4/13):\n\n"
+echo "Step (5/14):\n\n"
 
 ./audio-god fill-properties \
     --source='~/Music/Source/Mp3' \
@@ -81,13 +90,14 @@ echo "Step (4/13):\n\n"
         }
     }' \
     --separators='-,#' \
+    --output='~/Music/Output/invalids.txt' \
     --log-level=WARNING \
     --log-file=stderr
 
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (5/13):\n\n"
+echo "Step (6/14):\n\n"
 
 ./audio-god format-properties \
     --source='~/Music/Source/Mp3' \
@@ -100,7 +110,7 @@ echo "Step (5/13):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (6/13):\n\n"
+echo "Step (7/14):\n\n"
 
 ./audio-god rename-audios \
     --source='~/Music/Source/Mp3' \
@@ -114,7 +124,7 @@ echo "Step (6/13):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (7/13):\n\n"
+echo "Step (8/14):\n\n"
 
 ./audio-god organize grouped \
     --source='~/Music/Source/Mp3' \
@@ -128,7 +138,7 @@ echo "Step (7/13):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (8/13):\n\n"
+echo "Step (9/14):\n\n"
 
 ./audio-god list-repeated \
     --source='~/Music/Output/Grouped' \
@@ -142,7 +152,7 @@ echo "Step (8/13):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (9/13):\n\n"
+echo "Step (10/14):\n\n"
 
 ./audio-god operate tree \
     --source='~/Music/Output' \
@@ -154,7 +164,7 @@ echo "Step (9/13):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (10/13):\n\n"
+echo "Step (11/14):\n\n"
 
 ./audio-god export note \
     --source='~/Music/Output/Grouped' \
@@ -170,7 +180,7 @@ echo "Step (10/13):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (11/13):\n\n"
+echo "Step (12/14):\n\n"
 
 ./audio-god convert note-to-markdown \
     --document='~/Music/Output/export.songs.note' \
@@ -182,7 +192,7 @@ echo "Step (11/13):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (12/13):\n\n"
+echo "Step (13/14):\n\n"
 
 ./audio-god organize ituned \
     --source='~/Music/Source/Mp3' \
@@ -196,7 +206,7 @@ echo "Step (12/13):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (13/13):\n\n"
+echo "Step (14/14):\n\n"
 
 ./audio-god export plist \
     --source='~/Music/Source/Mp3' \

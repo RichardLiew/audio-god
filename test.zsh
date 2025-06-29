@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-29T21:27:15Z
+# Created Time: 2025-06-30T05:09:25Z
 
 # Total Steps: 25
 
@@ -128,6 +128,7 @@ echo "Step (8/25):\n\n"
         }
     }' \
     --separators='-,#' \
+    --output=./test/Output/invalids.txt \
     --log-level=WARNING \
     --log-file=stderr
 
