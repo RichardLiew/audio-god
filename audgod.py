@@ -383,7 +383,7 @@ def with_progress(iter_arg=None, total=None, **tqdm_kwargs):
 class BASEOPTIONS(object):
     GROUPING_SEPARATOR = '|'
 
-#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+#===============================================================================
 
 def refresh_options(cls):
     cls.AUDGOD_SOURCE = os.path.join(cls.AUDGOD_ROOT, 'Source')
@@ -403,7 +403,7 @@ class OPTIONS(BASEOPTIONS):
                     if os.environ.get('AUDGOD_ROOT', '').strip() \
                     else '~/Music'
 
-#===============================================================================
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 class AudioGod(OPTIONS):
 
