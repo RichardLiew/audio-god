@@ -575,7 +575,7 @@ class AudioGod(OPTIONS):
         AudioProperty.GENRE,
         AudioProperty.GROUPING,
     ]
- 
+
     ZIP_FIELDS = [
         AudioProperty.GROUPING,
         AudioProperty.SELECTED,
@@ -801,8 +801,8 @@ class AudioGod(OPTIONS):
         self.__sources = ([], [], [], [], [])
         self.__ignored_set = set()
         self.__summaries = {}
-        
-        
+
+
         self.__parse_funcs = {
             field: getattr(
                 self, f'parse_{field}', lambda x: x,
@@ -2386,7 +2386,7 @@ class NoteRelatedBaseAction(AudioGod):
                 items[i] = self.repack_audio_properties(properties)
 
         self.__transform_summaries_to_clauses()
-        
+
         #self.logger.warning(f'\n{"#"*78}\n')
         self.logger.warning(
             'Total Clauses:    {total}\n\n'
@@ -3206,7 +3206,7 @@ class ListRepeatedAction(AudioGod):
 
     def execute(self):
         self.prime_sources()
-        
+
         results = {}
         for audio in self.primed_sources:
             audio_object = self.prime_audio(audio)
@@ -3223,7 +3223,7 @@ class ListRepeatedAction(AudioGod):
                 results[key].append(audio)
             else:
                 results[key] = [audio]
-        
+
         results = { key: items for key, items in results.items() if len(items) > 1 }
         content = f'{self.glorify_exportation(results)}'
 
@@ -3857,7 +3857,7 @@ class DisplayAction(AudioGod):
                     )
                     if matched is not None:
                         is_cn_field_name = True
-                
+
                 for i, value in enumerate(row.split('|')):
                     if is_cn_field_name:
                         result += '{}{}{}\n'.format(
@@ -6285,7 +6285,7 @@ class Testing__InitAction(TestingBaseAction):
             if not has_children:
                 self.logger.fatal(f'Directory <{src}> contains no valid files!')
                 return
-            
+
         for item in os.listdir(self.AUDGOD_ORIGIN):
             if item.startswith('.'):
                 continue
