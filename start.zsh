@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-06-29T10:25:46Z
+# Created Time: 2025-06-29T16:30:57Z
 
 # Total Steps: 15
 
@@ -38,7 +38,7 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (2/15):\n\n"
 
 ./audio-god redecorate-note \
-    --document='~/Music/Source/songs.note' \
+    --document='~/Music/Source/songs.note.origin' \
     --field-type=auto \
     --output='~/Music/Output/songs.note' \
     --log-level=WARNING \

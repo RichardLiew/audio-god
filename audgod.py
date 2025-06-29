@@ -2638,7 +2638,7 @@ class RedecorateNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
 
     ARGUMENTS = {
         'document': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
                 'default': f'{OPTIONS.AUDGOD_SOURCE}/songs.note.origin',
             },
