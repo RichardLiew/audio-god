@@ -291,7 +291,8 @@ Ready:
     Step.4: Put test note origin file to "${testing_orisrc}";
     Step.5: Put test ignored file to "${testing_orisrc}";
     Step.6: Put test media under folders with different extentions to "${testing_orisrc}";
-    Step.7: Put test artworks under folder to "${testing_orisrc}".
+    Step.7: Put test artworks under folder to "${testing_orisrc}";
+    step.8: Put files for backup and remove testing to "${testing_orisrc}".
 
 Process Method:
     Step.1: Run <testing generate-script> subcommand to generate a shell script for testing;
