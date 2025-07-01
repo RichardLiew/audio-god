@@ -80,22 +80,30 @@
 # ---
 # Tools:
 #   1.  Apple Music Help Online: https://support.apple.com/en-hk/HT210403;
-#   2.  Mac Audio Processor: https://amvidia.com/;
-#   3.  Online Small Tools: https://tool.lu/;
-#   4.  Format Convert: https://www.aconvert.com/;
-#   5.  Videos Download: https://github.com/iawia002/annie;
-#   6.  Audio Convert: https://github.com/jiaaro/pydub;
-#   7.  QMC->MP3: https://openyyy.com/;
-#   8.  QMC->MP3: https://github.com/Presburger/qmc-decoder;
-#   9.  QMC->MP3: https://gitcode.com/gh_mirrors/qm/qmc-decoder;
-#   10. QMC->MP3: https://github.com/MegrezZhu/qmcdump;
-#   11. QMC->MP3: https://github.com/42arch/qmc_file_decrypter;
-#   12. KMX->MP4: https://gitee.com/aprl/kmx-MP4;
-#   13. MP4->MP3: https://pypi.org/project/ffmpy3/;
-#   14. MP4->MP3: https://github.com/wchill/ffmpy3;
-#   15. MP4->MP3: https://pypi.org/project/moviepy/;
-#   16. MP4->MP3: https://github.com/Zulko/moviepy;
-#   17. MP4->MP3: https://github.com/SiD-93/BatchMP3.
+#   2.  Mac Audio Processor: https://amvidia.com;
+#   3.  Online Small Tools: https://tool.lu;
+#   4.  Format Convert: https://www.aconvert.com;
+#   5.  Format Convert: https://audio.worthsee.com/convert;
+#   6.  Videos Download: https://github.com/iawia002/annie;
+#   7.  Audio Convert: https://github.com/jiaaro/pydub;
+#   8.  QMC->MP3: https://openyyy.com;
+#   9.  MGG->OGG: https://www.ncmdump.net;
+#   9.  QMC->MP3: https://github.com/Presburger/qmc-decoder;
+#   10. QMC->MP3: https://gitcode.com/gh_mirrors/qm/qmc-decoder;
+#   11. QMC->MP3: https://github.com/MegrezZhu/qmcdump;
+#   12. QMC->MP3: https://github.com/42arch/qmc_file_decrypter;
+#   13. KMX->MP4: https://gitee.com/aprl/kmx-MP4;
+#   14. MP4->MP3: https://pypi.org/project/ffmpy3;
+#   15. MP4->MP3: https://github.com/wchill/ffmpy3;
+#   16. MP4->MP3: https://pypi.org/project/moviepy;
+#   17. MP4->MP3: https://github.com/Zulko/moviepy;
+#   18. MP4->MP3: https://github.com/SiD-93/BatchMP3;
+#   19. MGG->MP3: https://github.com/nukemiko/libtakiyasha;
+#   20  MGG->MP3: https://gitcode.com/gh_mirrors/li/libtakiyasha;
+#   20  MGG->OGG: https://github.com/taurusxin/ncmdump;
+#   20  MGG->OGG: https://git.taurusxin.com/taurusxin/ncmdump-go;
+#   20  MGG->OGG: https://git.taurusxin.com/taurusxin/ncmdump-gui;
+#   20  QMC->MP3: https://git.unlock-music.dev/um/cli.
 #
 # ---
 # Commands:
@@ -118,6 +126,10 @@
 # ---
 # TODO (@Richard):
 #   1. None.
+# 增量更新note.orign，输出有冲突的item，并能够根据group自动合并，先操作note，合并note导出为新的note，处理完了，再根据冲突的note对应的source进行删除，然后再导出note，在ituned文件夹分类一下，再输出plist
+# mgg文件解密
+# 文件名下划线转&，尾部_L和_H去除
+# 看看能不能改成多进程以及多线程模式，加快速度
 #
 ###############################################################################
 
@@ -381,6 +393,7 @@ def with_progress(iter_arg=None, total=None, **tqdm_kwargs):
 ################################################################################
 
 class BASEOPTIONS(object):
+    ARTIST_SEPARATOR = '&'
     GROUPING_SEPARATOR = '|'
 
 #===============================================================================
@@ -990,9 +1003,9 @@ class AudioGod(OPTIONS):
         if artist is None:
             return None
         ret = cls.unify_format(artist)
-        ret = re.sub(r'[、，/,]', r'&', ret)
-        ret = re.sub(r'&', r' & ', ret)
-        ret = re.sub(r'\s*&\s*', r' & ', ret)
+        ret = re.sub(r'[、，/,]', cls.ARTIST_SEPARATOR, ret)
+        ret = re.sub(fr'{cls.ARTIST_SEPARATOR}', f' {cls.ARTIST_SEPARATOR} ', ret)
+        ret = re.sub(fr'\s*{cls.ARTIST_SEPARATOR}\s*', f' {cls.ARTIST_SEPARATOR} ', ret)
         #ret = re.sub(r'([a-zA-Z]\.){2,}', lambda m: m.group(0).replace(' ', ''), ret)
         return ret
 
@@ -2961,13 +2974,14 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
     def __generate_key_by_filename(self, source):
         _, separator = self.__resolve_filename(source)
         filename, _ = os.path.splitext(os.path.basename(source))
-        return self.generate_key(
-            *self.split(
-                filename, separator, escaped=True,
-                del_blank=False, filt_empty=False, filt_repeated=False,
-                sortify=False, reversify=False,
-            ),
+        artist, title = self.split(
+            filename, separator, escaped=True,
+            del_blank=False, filt_empty=False, filt_repeated=False,
+            sortify=False, reversify=False,
         )
+        artist = artist.replace('_', self.ARTIST_SEPARATOR)
+        title = re.sub(r'_(H|L)$', r'', title)
+        return self.generate_key(artist, title)
 
 
     def __load_properties_from_file(self):
@@ -4334,8 +4348,12 @@ class Organize__GroupedAction(OrganizeBaseAction):
             target = self.abspath(
                 self.parameters['output'], groups[0], os.path.basename(audio),
             )
+            if '禅舞不二' in audio:
+                print('0      AAAAAAAAAAAAAAAAAAA', audio, grouping, groups)
             if target != audio:
                 os.makedirs(os.path.dirname(target), exist_ok=True)
+                if '禅舞不二' in audio:
+                    print('1      AAAAAAAAAAAAAAAAAAA', target)
                 self.duplicate(audio, target)
                 ao = self.prime_audio(target)
                 self.save(
@@ -4350,6 +4368,8 @@ class Organize__GroupedAction(OrganizeBaseAction):
                 os.makedirs(os.path.dirname(link), exist_ok=True)
                 if os.path.exists(link):
                     self.remove(link)
+                if '禅舞不二' in audio:
+                    print('2      AAAAAAAAAAAAAAAAAAA', link)
                 self.duplicate(target, link)
                 ao = self.prime_audio(link)
                 self.save(
@@ -6859,6 +6879,7 @@ def _special_characters() -> str:
     for field in table.field_names:
         table.align[field] = 'l'
     characters = [
+        (AudioGod.ARTIST_SEPARATOR, 'Separator for several artists property of audio file.'),
         (AudioGod.GROUPING_SEPARATOR, 'Separator for several grouping property of audio file.'),
         (RenameAudiosAction.FilenamePatternTemplate.delimiter, 'Delimiter of template for filename pattern.'),
     ]
@@ -6886,6 +6907,7 @@ def main():
                 special_fields=_special_fields(),
                 special_characters=_special_characters(),
                 filename_separator=f'<{" or ".join(FillPropertiesAction.ARGUMENTS_DEFAULTS()["separators"].split(","))}>',
+                artist_sep=AudioGod.ARTIST_SEPARATOR,
                 grouping_sep=AudioGod.GROUPING_SEPARATOR,
                 fnp_delimiter=RenameAudiosAction.FilenamePatternTemplate.delimiter,
                 audgod_root=AudioGod.AUDGOD_ROOT,
