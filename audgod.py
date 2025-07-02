@@ -2210,7 +2210,50 @@ class SummarizeRelatedBaseAction(AudioGod):
 
 #===============================================================================
 
-class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
+class MergeRelatedBaseAction(AudioGod):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = None
+    ARGUMENTS = None
+
+    REQUISITE_ARGUMENTS = {
+        'another': {
+            'use_public': AudioGod.ReplaceType.NONE,
+            'args': ['-z'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '',
+                'help': 'another item to merge',
+            },
+        },
+    } | copy.deepcopy(AudioGod.REQUISITE_ARGUMENTS)
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def rewrite_parameters(self):
+        super().rewrite_parameters()
+
+        if 'another' in self.parameters:
+            self.parameters['another'] = self.abspath(
+                self.parameters['another'],
+            )
+            if self.parameters['another']:
+                if not os.path.exists(self.parameters['another']):
+                    self.logger.fatal(f'Another <{self.parameters["another"]}> not exists!')
+                    return
+
+#===============================================================================
+
+class NoteRelatedBaseAction(SummarizeRelatedBaseAction, MergeRelatedBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -2239,7 +2282,8 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
                 'help': 'separators for matched filename',
             },
         },
-    } | copy.deepcopy(SummarizeRelatedBaseAction.REQUISITE_ARGUMENTS)
+    } | copy.deepcopy(MergeRelatedBaseAction.REQUISITE_ARGUMENTS) | \
+        copy.deepcopy(SummarizeRelatedBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
 
@@ -2252,7 +2296,7 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        super().rewrite_parameters()
+        MergeRelatedBaseAction.rewrite_parameters(self)
 
         if 'separators' in self.parameters:
             self.parameters['separators'] = self.split(
@@ -2268,6 +2312,12 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
             if not self.parameters['separators']:
                 self.logger.fatal('Separators empty!')
                 return
+
+        if 'another' in self.parameters:
+            if self.parameters['another']:
+                if not os.path.isfile(self.parameters['another']):
+                    self.logger.fatal(f'Another <{self.parameters["another"]}> is not file!')
+                    return
 
     #---------------------------------------------------------------------------
 
@@ -2342,6 +2392,25 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
 
     #---------------------------------------------------------------------------
 
+    def __merge_notes(self):
+        ret = []
+        document_name = os.path.basename(self.parameters['document'])
+        with open(self.parameters['document'], 'r', encoding='utf-8') as f1:
+            for line_number, line in enumerate(f1, start=1):
+                prefix = f'@<{document_name}> &{line_number}:'
+                ret.append((prefix, line))
+        if not self.parameters.get('another', ''):
+            return ret
+        another_name = os.path.basename(self.parameters['another'])
+        if another_name == document_name:
+            another_name = f'another.{another_name}'
+        with open(self.parameters['another'], 'r', encoding='utf-8') as f2:
+            for line_number, line in enumerate(f2, start=1):
+                prefix = f'@<{another_name}> &{line_number}:'
+                ret.append((prefix, line))
+        return ret
+
+
     def analysis_note(self):
         def _generate_detail_pattern(fields):
             return r'^(?:(?:(?:\s*[0-9]\s*)+\.\s*)?(?:\s*\[\s*[a-zA-Z]?\s*\]\s*)?)?(?:\s*[,，;；]+\s*)?\s*({0})\s*[:：]+((?:\s*\S\s*)+?)((?:\s*[,，;；]+\s*(?:{0})\s*[:：]+(?:\s*\S\s*)+)*)$'.format(
@@ -2363,111 +2432,112 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
         warn_pattern = r'(?:\s*[,，;；]+\s*)+(?:(?:\s*\S\s*)+)\s*[:：]+(?:\s*\S\s*)+'
 
         field_type = self.FieldType.ORIGINAL
-        with open(self.parameters['document'], 'r', encoding='utf-8') as f:
-            keys, (genre, grouping) = {}, ('', [])
-            for line_number, line in enumerate(f, start=1):
-                if not line.strip():
+        keys, (genre, grouping) = {}, ('', [])
+
+        lines = self.__merge_notes()
+        for prefix, line in lines:
+            if not line.strip():
+                continue
+            if re.match(r'^\s*#+', line, re.IGNORECASE) is not None:
+                continue
+            self.total_clauses_counter += 1
+            line_with_no, invalid_info = f'{prefix} {line}'.strip(), 'not matched'
+            # grouping line
+            grouping_match = re.match(grouping_pattern, line, re.IGNORECASE)
+            if grouping_match is not None:
+                genre, grouping = tuple(map(
+                    lambda x: x.strip(), grouping_match.groups(),
+                ))
+                genre = self.format_funcs[self.AudioProperty.GENRE](genre)
+                grouping = self.format_funcs[self.AudioProperty.GROUPING](grouping)
+                if grouping:
+                    self.grouping_clauses.append(line_with_no)
+                    self.grouping_clauses_counter += 1
                     continue
-                if re.match(r'^\s*#+', line, re.IGNORECASE) is not None:
-                    continue
-                self.total_clauses_counter += 1
-                line_with_no, invalid_info = f'&{line_number}: {line}'.strip(), 'not matched'
-                # grouping line
-                grouping_match = re.match(grouping_pattern, line, re.IGNORECASE)
-                if grouping_match is not None:
-                    genre, grouping = tuple(map(
-                        lambda x: x.strip(), grouping_match.groups(),
+            # detail line
+            detail_match = re.match(detail_pattern, line, re.IGNORECASE)
+            if grouping and detail_match is not None:
+                for _type, _pattern in detail_patterns.items():
+                    if re.match(_pattern, line, re.IGNORECASE) is None:
+                        continue
+                    field_type = _type
+                valid, repeated = True, False
+                curr_key, properties = '', {}
+                temp_line = line
+                while True:
+                    temp_match = re.match(detail_pattern, temp_line, re.IGNORECASE)
+                    if not temp_match:
+                        break
+                    temp_line = temp_match.group(3)
+                    if not temp_line:
+                        temp_line = ''
+                    key, value = tuple(map(
+                        lambda x: x.strip(), temp_match.groups()[:2],
                     ))
-                    genre = self.format_funcs[self.AudioProperty.GENRE](genre)
-                    grouping = self.format_funcs[self.AudioProperty.GROUPING](grouping)
-                    if grouping:
-                        self.grouping_clauses.append(line_with_no)
-                        self.grouping_clauses_counter += 1
-                        continue
-                # detail line
-                detail_match = re.match(detail_pattern, line, re.IGNORECASE)
-                if grouping and detail_match is not None:
-                    for _type, _pattern in detail_patterns.items():
-                        if re.match(_pattern, line, re.IGNORECASE) is None:
-                            continue
-                        field_type = _type
-                    valid, repeated = True, False
-                    curr_key, properties = '', {}
-                    temp_line = line
-                    while True:
-                        temp_match = re.match(detail_pattern, temp_line, re.IGNORECASE)
-                        if not temp_match:
+                    if re.search(warn_pattern, value, re.IGNORECASE) is not None:
+                        self.warn_clauses.append(line_with_no)
+                        self.warn_clauses_counter += 1
+                    field = self.transform_field_name_synonyms(key)
+                    if not field:
+                        valid, invalid_info = False, 'invalid field name'
+                        break
+                    if field in properties:
+                        valid, invalid_info = False, 'duplicate field existed'
+                        break
+                    properties[field] = self.format_funcs[field](value)
+                if valid:
+                    for field in self.FIELDS['note']:
+                        if field not in properties:
+                            valid, invalid_info = False, 'lack note fields'
                             break
-                        temp_line = temp_match.group(3)
-                        if not temp_line:
-                            temp_line = ''
-                        key, value = tuple(map(
-                            lambda x: x.strip(), temp_match.groups()[:2],
-                        ))
-                        if re.search(warn_pattern, value, re.IGNORECASE) is not None:
-                            self.warn_clauses.append(line_with_no)
-                            self.warn_clauses_counter += 1
-                        field = self.transform_field_name_synonyms(key)
-                        if not field:
-                            valid, invalid_info = False, 'invalid field name'
+                if valid:
+                    title = properties[self.AudioProperty.TITLE]
+                    artist = properties[self.AudioProperty.ARTIST]
+                    for separator in self.parameters['separators']:
+                        if separator in title:
+                            valid, invalid_info = False, f'Title has separator <{separator}>!'
                             break
-                        if field in properties:
-                            valid, invalid_info = False, 'duplicate field existed'
+                        if separator in artist:
+                            valid, invalid_info = False, f'Artist has separator <{separator}>!'
                             break
-                        properties[field] = self.format_funcs[field](value)
-                    if valid:
-                        for field in self.FIELDS['note']:
-                            if field not in properties:
-                                valid, invalid_info = False, 'lack note fields'
-                                break
-                    if valid:
-                        title = properties[self.AudioProperty.TITLE]
-                        artist = properties[self.AudioProperty.ARTIST]
-                        for separator in self.parameters['separators']:
-                            if separator in title:
-                                valid, invalid_info = False, f'Title has separator <{separator}>!'
-                                break
-                            if separator in artist:
-                                valid, invalid_info = False, f'Artist has separator <{separator}>!'
-                                break
-                    if valid:
-                        curr_key = self.__generate_key_by_properties(properties)
-                        if curr_key not in keys:
-                            keys[curr_key] = set([genre])
+                if valid:
+                    curr_key = self.__generate_key_by_properties(properties)
+                    if curr_key not in keys:
+                        keys[curr_key] = set([genre])
+                    else:
+                        keys[curr_key].add(genre)
+                        if len(keys[curr_key]) > 1:
+                            valid, invalid_info = False, 'more than one genres for one detail item'
+                        repeated = True
+                if valid:
+                    groups = self.split(
+                        grouping, self.GROUPING_SEPARATOR, escaped=True,
+                        del_blank=True, filt_empty=True, filt_repeated=True,
+                        sortify=False, reversify=False,
+                    )
+                    for group in groups:
+                        if group not in self.summaries:
+                            self.summaries[group] = (genre, [properties])
                         else:
-                            keys[curr_key].add(genre)
-                            if len(keys[curr_key]) > 1:
-                                valid, invalid_info = False, 'more than one genres for one detail item'
-                            repeated = True
-                    if valid:
-                        groups = self.split(
-                            grouping, self.GROUPING_SEPARATOR, escaped=True,
-                            del_blank=True, filt_empty=True, filt_repeated=True,
-                            sortify=False, reversify=False,
-                        )
-                        for group in groups:
-                            if group not in self.summaries:
-                                self.summaries[group] = (genre, [properties])
-                            else:
-                                old_genre, items = self.summaries[group]
-                                if genre != old_genre:
-                                    self.logger.fatal(f'Grouping <{group}> with different genres!')
-                                    return
-                                if curr_key in [self.__generate_key_by_properties(x) for x in items]:
-                                    valid, invalid_info = False, 'duplicate detail items under same grouping'
-                                    continue
-                                items.append(properties)
-                    if valid:
-                        if repeated:
-                            if curr_key not in self.repeated_clauses:
-                                self.repeated_clauses[curr_key] = [line_with_no]
-                            else:
-                                self.repeated_clauses[curr_key].append(line_with_no)
-                            self.repeated_clauses_counter += 1
-                        self.valid_clauses_counter += 1
-                        continue
-                self.invalid_clauses.append((line_with_no, invalid_info))
-                self.invalid_clauses_counter += 1
+                            old_genre, items = self.summaries[group]
+                            if genre != old_genre:
+                                self.logger.fatal(f'Grouping <{group}> with different genres!')
+                                return
+                            if curr_key in [self.__generate_key_by_properties(x) for x in items]:
+                                valid, invalid_info = False, 'duplicate detail items under same grouping'
+                                continue
+                            items.append(properties)
+                if valid:
+                    if repeated:
+                        if curr_key not in self.repeated_clauses:
+                            self.repeated_clauses[curr_key] = [line_with_no]
+                        else:
+                            self.repeated_clauses[curr_key].append(line_with_no)
+                        self.repeated_clauses_counter += 1
+                    self.valid_clauses_counter += 1
+                    continue
+            self.invalid_clauses.append((line_with_no, invalid_info))
+            self.invalid_clauses_counter += 1
 
         if 'field_type' in self.parameters:
             if self.FieldType.AUTO.eq(self.parameters['field_type']):
@@ -2723,51 +2793,7 @@ class TreeRelatedBaseAction(AudioGod):
 
 #===============================================================================
 
-class MergeRelatedBaseAction(AudioGod):
-    ACTIVE = True
-
-    #---------------------------------------------------------------------------
-
-    KWARGS = None
-    ARGUMENTS = None
-
-    REQUISITE_ARGUMENTS = {
-        'another': {
-            'use_public': AudioGod.ReplaceType.NONE,
-            'args': ['-z'],
-            'kwargs': {
-                'action': 'store',
-                'type': str,
-                'required': False,
-                'default': '',
-                'help': 'another item to merge',
-            },
-        },
-    } | copy.deepcopy(AudioGod.REQUISITE_ARGUMENTS)
-
-    #---------------------------------------------------------------------------
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    #---------------------------------------------------------------------------
-
-    def rewrite_parameters(self):
-        super().rewrite_parameters()
-
-        if 'another' in self.parameters:
-            self.parameters['another'] = self.abspath(
-                self.parameters['another'],
-            )
-            if self.parameters['another']:
-                if not os.path.exists(self.parameters['another']):
-                    self.logger.fatal(f'Another <{self.parameters["another"]}> not exists!')
-                    return
-
-#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
 class RedecorateNoteAction(
-    MergeRelatedBaseAction,
     NoteRelatedBaseAction,
     ExportRelatedBaseAction,
 ):
@@ -2799,8 +2825,7 @@ class RedecorateNoteAction(
     }
 
     PUBLIC_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.PUBLIC_ARGUMENTS)
-    REQUISITE_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.REQUISITE_ARGUMENTS) |
-                          copy.deepcopy(MergeRelatedBaseAction.REQUISITE_ARGUMENTS)
+    REQUISITE_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
 
@@ -2811,18 +2836,11 @@ class RedecorateNoteAction(
 
     def rewrite_parameters(self):
         NoteRelatedBaseAction.rewrite_parameters(self)
-        MergeRelatedBaseAction.rewrite_parameters(self)
 
         if 'document' in self.parameters:
             if not self.parameters['document']:
                 self.logger.fatal(f'File <{self.parameters["document"]}> invalid!')
                 return
-
-        if 'another' in self.parameters:
-            if self.parameters['another']:
-                if not os.path.isfile(self.parameters['another']):
-                    self.logger.fatal(f'Another <{self.parameters["another"]}> is not file!')
-                    return
 
     #---------------------------------------------------------------------------
 
