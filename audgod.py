@@ -299,7 +299,7 @@ Ready:
     Step.3: Make sure folder "${testing_orisrc}" is ready;
     Step.4: Put test note origin file to "${testing_orisrc}";
     Step.5: Put test ignored file to "${testing_orisrc}";
-    Step.6: Put test media under folders with different extentions to "${testing_orisrc}";
+    Step.6: Put test media under folders with different extensions to "${testing_orisrc}";
     Step.7: Put test artworks under folder to "${testing_orisrc}";
     step.8: Put files for backup and remove testing to "${testing_orisrc}".
 
@@ -309,7 +309,7 @@ Process Method:
 
 Attention:
     1. Cache folder for testing is "${testing_cache}";
-    2. Folders named with different extentions under "${testing_source}";
+    2. Folders named with different extensions under "${testing_source}";
     3. Outputs are under local folder or "${testing_output}".
 
 --------------------------------------------------------------------------------
@@ -2410,6 +2410,8 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
 
 
     def analysis_note(self):
+        self.stow_clauses()
+
         def _generate_detail_pattern(fields):
             return r'^(?:(?:(?:\s*[0-9]\s*)+\.\s*)?(?:\s*\[\s*[a-zA-Z]?\s*\]\s*)?)?(?:\s*[,，;；]+\s*)?\s*({0})\s*[:：]+((?:\s*\S\s*)+?)((?:\s*[,，;；]+\s*(?:{0})\s*[:：]+(?:\s*\S\s*)+)*)$'.format(
                 '|'.join(list(fields)),
@@ -2473,7 +2475,7 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
                     ))
                     if re.search(warn_pattern, value, re.IGNORECASE) is not None:
                         self.warn_clauses.append(line_with_no)
-                        self.warn_clauses_counter += 1
+              /          self.warn_clauses_counter += 1
                     field = self.transform_field_name_synonyms(key)
                     if not field:
                         valid, invalid_info = False, 'invalid field name'
@@ -2842,6 +2844,50 @@ class RedecorateNoteAction(
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 @AudioGod.auto_extend
+class SiftSourcesAction(AudioGod):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Sift the sources',
+        'help': 'Sift the sources',
+    }
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'extensions': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/sift.sources.txt',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        pass
+
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+@AudioGod.auto_extend
 class MergeRelatedBaseAction(AudioGod):
     ACTIVE = True
 
@@ -2850,15 +2896,14 @@ class MergeRelatedBaseAction(AudioGod):
     KWARGS = None
     ARGUMENTS = None
 
-    REQUISITE_ARGUMENTS = {
+    PUBLIC_ARGUMENTS = {
         'another': {
-            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-z'],
             'kwargs': {
                 'action': 'store',
                 'type': str,
                 'required': True,
-                'default': f'{OPTIONS.AUDGOD_SOURCE}/another.songs.note.txt',
+                'default': '',
                 'help': 'another item to merge',
             },
         },
@@ -2903,6 +2948,12 @@ class MergeNotesAction(MergeRelatedBaseAction, NoteRelatedBaseAction):
         },
         'field_type': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'another': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/another.songs.note.txt',
+            },
         },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
@@ -2975,6 +3026,12 @@ class MergeSourcesAction(MergeRelatedBaseAction):
         },
         'ignored_file': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'another': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/Another',
+            },
         },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
@@ -6430,6 +6487,9 @@ class GenerateScript__StartAction(GenerateScriptBaseAction):
         (True,  'convert', 'qmc-to-audio', {}),
         (False, 'convert', 'media', {}),
         (True,  'redecorate-note', {}),
+        (True,  'sift-sources', {}),
+        (True,  'merge-notes', {}),
+        (True,  'merge-sources', {}),
         (True,  'extract-structure', {}),
         (True,  'fill-properties', {}),
         (True,  'format-properties', {}),
@@ -6532,6 +6592,7 @@ class Testing__InitAction(TestingBaseAction):
 
         SOURCE_KINDS = {
             'Mp3': RenameAudiosAction.ARGUMENTS_DEFAULTS()['extensions'],
+            'Another': RenameAudiosAction.ARGUMENTS_DEFAULTS()['extensions'],
             'Kmx': Convert__KmxToMp4Action.ARGUMENTS_DEFAULTS()['extensions'],
             'Media': Convert__MediaAction.ARGUMENTS_DEFAULTS()['extensions'],
             'Qmc': Convert__QmcToAudioAction.ARGUMENTS_DEFAULTS()['extensions'],
@@ -6553,6 +6614,7 @@ class Testing__InitAction(TestingBaseAction):
             lambda x: os.path.join(self.AUDGOD_ORISRC, x),
             [
                 'testing.origin.songs.note.txt',
+                'testing.another.songs.note.txt',
                 'testing.ignores.txt',
                 'testing.operate.backup.txt',
                 'testing.operate.remove.txt',
@@ -6686,6 +6748,20 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
         (True, 'redecorate-note', dict(
             document=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.origin.songs.note.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.songs.note.txt',
+        )),
+        (True, 'sift-sources', dict(
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.sift.sources.txt',
+        )),
+        (True, 'merge-notes', dict(
+            document=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.origin.songs.note.txt',
+            another=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.another.songs.note.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.merge.songs.note.txt',
+        )),
+        (True, 'merge-sources', dict(
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
+            another=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Another',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.merge.sources.txt',
         )),
         (True, 'extract-structure', dict(
             document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.songs.note.txt',
