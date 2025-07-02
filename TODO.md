@@ -25,7 +25,10 @@ mgg文件解密
 Redeco notes and merge sources 添加进 testing里，重新生成start和test脚本
 
 
-NOTERELATED 的 PUBLIC_ARGUMENTS 
+NOTERELATED 的 PUBLIC_ARGUMENTS
+
+
+新的注解里，所有继承自多个父类的，都梳理下
 
 separators 看看有的action是没有必要的
 

@@ -1711,14 +1711,49 @@ class AudioGod(OPTIONS):
 
     #---------------------------------------------------------------------------
 
-    #@classmethod
-    #def redecorate_public_arguments(cls, arguments={}, parents=[]):
-    #    return arguments
+    @classmethod
+    def auto_extend(cls, class_):
+        members = [
+            ('PUBLIC_ARGUMENTS', True),
+            ('REQUISITE_ARGUMENTS', False),
+        ]
+        methods = ['rewrite_parameters']
+
+        for member, redecorated in members:
+            if member not in class_.__dict__:
+                continue
+            current_value = getattr(class_, member)
+            if current_value is None:
+                continue
+            for base in reversed(class_.__bases__):
+                if not hasattr(base, member):
+                    continue
+                base_value = getattr(base, member)
+                if redecorated:
+                    base_value = cls.redecorate_arguments(base_value)
+                current_value.update(copy.deepcopy(base_value))
+
+        for method in methods:
+            if method not in class_.__dict__:
+                continue
+            def create_func(func):
+                def wrapper(self, *args, **kwargs):
+                    current_result = func(self, *args, **kwargs)
+                    for base in reversed(class_.__bases__):
+                        if not hasattr(base, method):
+                            continue
+                        base_func = getattr(base, method)
+                        if not callable(base_func):
+                            continue
+                        base_func(self, *args, **kwargs)
+                return wrapper
+            setattr(class_, method, create_func(getattr(class_, method)))
+        return class_
 
 
-    #@classmethod
-    #def redecorate_requisite_arguments(cls, arguments={}, parents=[]):
-    #    return arguments
+    @classmethod
+    def redecorate_arguments(cls, arguments={}, parents=[]):
+        return arguments
 
 
     @classmethod
@@ -2036,7 +2071,7 @@ class AudioGod(OPTIONS):
                     symbol=symbols[5][i],
                     number=f'{f"{item_number}.":<{len(str(len(items)))+1}}',
                     content=item,
-                )/
+                )
         return ret
 
 
