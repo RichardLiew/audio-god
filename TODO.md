@@ -25,6 +25,13 @@ mgg文件解密
 Redeco notes and merge sources 添加进 testing里，重新生成start和test脚本
 
 
+NOTERELATED 的 PUBLIC_ARGUMENTS 
+
+separators 看看有的action是没有必要的
+
+
+所有的action，有多个父类的，UBLIC_ARGUMENTS，REQUISITE_ARGUMENTS，rewrite_parameters无论是否有必要，都显示调用不影响逻辑的最多父类，全写出来
+
 
 
 python argparser是否支持多个同样的dlabel，然后组成list作为结果

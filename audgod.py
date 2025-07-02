@@ -903,13 +903,15 @@ class AudioGod(OPTIONS):
             self.parameters['document'] = self.abspath(
                 self.parameters['document'],
             )
-            if self.parameters['document']:
-                if not os.path.exists(self.parameters['document']):
-                    self.logger.fatal(f'File <{self.parameters["document"]}> not exists!')
-                    return
-                if not os.path.isfile(self.parameters['document']):
-                    self.logger.fatal(f'<{self.parameters["document"]}> is not file!')
-                    return
+            if not self.parameters['document']:
+                self.logger.fatal(f'File <{self.parameters["document"]}> invalid!')
+                return
+            if not os.path.exists(self.parameters['document']):
+                self.logger.fatal(f'File <{self.parameters["document"]}> not exists!')
+                return
+            if not os.path.isfile(self.parameters['document']):
+                self.logger.fatal(f'<{self.parameters["document"]}> is not file!')
+                return
 
         if 'ignored_file' in self.parameters:
             self.parameters['ignored_file'] = self.abspath(
@@ -1679,6 +1681,7 @@ class AudioGod(OPTIONS):
                 )
             cls.KWARGS['usage'] = cls.KWARGS['usage'].rstrip().rstrip('\\').rstrip()
 
+
     @classmethod
     def render_prog(cls):
         if cls.PROG:
@@ -1705,6 +1708,17 @@ class AudioGod(OPTIONS):
                             prog=cls.PROG,
                         ),
                     )
+
+    #---------------------------------------------------------------------------
+
+    #@classmethod
+    #def redecorate_public_arguments(cls, arguments={}, parents=[]):
+    #    return arguments
+
+
+    #@classmethod
+    #def redecorate_requisite_arguments(cls, arguments={}, parents=[]):
+    #    return arguments
 
 
     @classmethod
@@ -2210,7 +2224,7 @@ class SummarizeRelatedBaseAction(AudioGod):
 
 #===============================================================================
 
-class MergeRelatedBaseAction(AudioGod):
+class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -2218,61 +2232,14 @@ class MergeRelatedBaseAction(AudioGod):
     KWARGS = None
     ARGUMENTS = None
 
-    REQUISITE_ARGUMENTS = {
-        'another': {
-            'use_public': AudioGod.ReplaceType.NONE,
-            'args': ['-z'],
-            'kwargs': {
-                'action': 'store',
-                'type': str,
-                'required': False,
-                'default': '',
-                'help': 'another item to merge',
-            },
-        },
-    } | copy.deepcopy(AudioGod.REQUISITE_ARGUMENTS)
-
-    #---------------------------------------------------------------------------
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    #---------------------------------------------------------------------------
-
-    def rewrite_parameters(self):
-        super().rewrite_parameters()
-
-        if 'another' in self.parameters:
-            self.parameters['another'] = self.abspath(
-                self.parameters['another'],
-            )
-            if self.parameters['another']:
-                if not os.path.exists(self.parameters['another']):
-                    self.logger.fatal(f'Another <{self.parameters["another"]}> not exists!')
-                    return
-
-#===============================================================================
-
-class NoteRelatedBaseAction(SummarizeRelatedBaseAction, MergeRelatedBaseAction):
-    ACTIVE = True
-
-    #---------------------------------------------------------------------------
-
-    KWARGS = None
-    ARGUMENTS = None
-
-    PUBLIC_ARGUMENTS = {
+    PUBLIC_ARGUMENTS = AudioGod.decorate_arguments({
         'field_type': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
                 'default': AudioGod.FieldType.AUTO,
             },
         },
-    } | copy.deepcopy(SummarizeRelatedBaseAction.PUBLIC_ARGUMENTS)
-
-    REQUISITE_ARGUMENTS = {
         'separators': {
-            'use_public': AudioGod.ReplaceType.NONE,
             'args': ['-6'],
             'kwargs': {
                 'action': 'store',
@@ -2282,21 +2249,22 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction, MergeRelatedBaseAction):
                 'help': 'separators for matched filename',
             },
         },
-    } | copy.deepcopy(MergeRelatedBaseAction.REQUISITE_ARGUMENTS) | \
-        copy.deepcopy(SummarizeRelatedBaseAction.REQUISITE_ARGUMENTS)
+    })
+
+    REQUISITE_ARGUMENTS = copy.deepcopy(SummarizeRelatedBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.__clauses = ([], {}, {}, [], [])
+        self.__clauses = ([], [], {}, {}, [], [])
         self.__clauses_counter = [0, 0, 0, 0, 0, 0]
 
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        MergeRelatedBaseAction.rewrite_parameters(self)
+        super().rewrite_parameters()
 
         if 'separators' in self.parameters:
             self.parameters['separators'] = self.split(
@@ -2313,33 +2281,31 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction, MergeRelatedBaseAction):
                 self.logger.fatal('Separators empty!')
                 return
 
-        if 'another' in self.parameters:
-            if self.parameters['another']:
-                if not os.path.isfile(self.parameters['another']):
-                    self.logger.fatal(f'Another <{self.parameters["another"]}> is not file!')
-                    return
-
     #---------------------------------------------------------------------------
 
     @property
-    def invalid_clauses(self):
+    def all_clauses(self):
         return self.__clauses[0]
 
     @property
-    def valid_clauses(self):
+    def invalid_clauses(self):
         return self.__clauses[1]
 
     @property
-    def repeated_clauses(self):
+    def valid_clauses(self):
         return self.__clauses[2]
 
     @property
-    def grouping_clauses(self):
+    def repeated_clauses(self):
         return self.__clauses[3]
 
     @property
-    def warn_clauses(self):
+    def grouping_clauses(self):
         return self.__clauses[4]
+
+    @property
+    def warn_clauses(self):
+        return self.__clauses[5]
 
 
     @property
@@ -2392,23 +2358,12 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction, MergeRelatedBaseAction):
 
     #---------------------------------------------------------------------------
 
-    def __merge_notes(self):
-        ret = []
+    def stow_clauses(self):
         document_name = os.path.basename(self.parameters['document'])
-        with open(self.parameters['document'], 'r', encoding='utf-8') as f1:
-            for line_number, line in enumerate(f1, start=1):
+        with open(self.parameters['document'], 'r', encoding='utf-8') as f:
+            for line_number, line in enumerate(f, start=1):
                 prefix = f'@<{document_name}> &{line_number}:'
-                ret.append((prefix, line))
-        if not self.parameters.get('another', ''):
-            return ret
-        another_name = os.path.basename(self.parameters['another'])
-        if another_name == document_name:
-            another_name = f'another.{another_name}'
-        with open(self.parameters['another'], 'r', encoding='utf-8') as f2:
-            for line_number, line in enumerate(f2, start=1):
-                prefix = f'@<{another_name}> &{line_number}:'
-                ret.append((prefix, line))
-        return ret
+                self.all_clauses.append((prefix, line))
 
 
     def analysis_note(self):
@@ -2434,8 +2389,7 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction, MergeRelatedBaseAction):
         field_type = self.FieldType.ORIGINAL
         keys, (genre, grouping) = {}, ('', [])
 
-        lines = self.__merge_notes()
-        for prefix, line in lines:
+        for prefix, line in self.all_clauses:
             if not line.strip():
                 continue
             if re.match(r'^\s*#+', line, re.IGNORECASE) is not None:
@@ -2491,15 +2445,16 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction, MergeRelatedBaseAction):
                             valid, invalid_info = False, 'lack note fields'
                             break
                 if valid:
-                    title = properties[self.AudioProperty.TITLE]
-                    artist = properties[self.AudioProperty.ARTIST]
-                    for separator in self.parameters['separators']:
-                        if separator in title:
-                            valid, invalid_info = False, f'Title has separator <{separator}>!'
-                            break
-                        if separator in artist:
-                            valid, invalid_info = False, f'Artist has separator <{separator}>!'
-                            break
+                    if 'separators' in self.parameters:
+                        title = properties[self.AudioProperty.TITLE]
+                        artist = properties[self.AudioProperty.ARTIST]
+                        for separator in self.parameters['separators']:
+                            if separator in title:
+                                valid, invalid_info = False, f'Title has separator <{separator}>!'
+                                break
+                            if separator in artist:
+                                valid, invalid_info = False, f'Artist has separator <{separator}>!'
+                                break
                 if valid:
                     curr_key = self.__generate_key_by_properties(properties)
                     if curr_key not in keys:
@@ -2791,7 +2746,7 @@ class TreeRelatedBaseAction(AudioGod):
 
         return _build(data, show_count=self.parameters['show_count']).strip()
 
-#===============================================================================
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 class RedecorateNoteAction(
     NoteRelatedBaseAction,
@@ -2816,6 +2771,9 @@ class RedecorateNoteAction(
         'field_type': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
+        'separators': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
@@ -2837,17 +2795,135 @@ class RedecorateNoteAction(
     def rewrite_parameters(self):
         NoteRelatedBaseAction.rewrite_parameters(self)
 
-        if 'document' in self.parameters:
-            if not self.parameters['document']:
-                self.logger.fatal(f'File <{self.parameters["document"]}> invalid!')
-                return
-
     #---------------------------------------------------------------------------
 
     def execute(self):
         self.analysis_note()
         self.sort_summaries()
         self.handle_output(self.plain_generalize())
+
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+class MergeRelatedBaseAction(AudioGod):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = None
+    ARGUMENTS = None
+
+    REQUISITE_ARGUMENTS = {
+        'another': {
+            'use_public': AudioGod.ReplaceType.NONE,
+            'args': ['-z'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '',
+                'help': 'another item to merge',
+            },
+        },
+    } | copy.deepcopy(AudioGod.REQUISITE_ARGUMENTS)
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def rewrite_parameters(self):
+        super().rewrite_parameters()
+
+        if 'another' in self.parameters:
+            self.parameters['another'] = self.abspath(
+                self.parameters['another'],
+            )
+            if self.parameters['another']:
+                if not os.path.exists(self.parameters['another']):
+                    self.logger.fatal(f'Another <{self.parameters["another"]}> not exists!')
+                    return
+
+#===============================================================================
+
+class MergeNotesAction(MergeRelatedBaseAction, NoteRelatedBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Merge notes',
+        'help': 'merge notes',
+    }
+
+    ARGUMENTS = {
+        'document': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/songs.note.origin',
+            },
+        },
+        'field_type': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note',
+            },
+        },
+    }
+
+    PUBLIC_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.PUBLIC_ARGUMENTS)
+    REQUISITE_ARGUMENTS = copy.deepcopy(MergeRelatedBaseAction.REQUISITE_ARGUMENTS) | \
+                          copy.deepcopy(NoteRelatedBaseAction.REQUISITE_ARGUMENTS)
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def rewrite_parameters(self):
+        MergeRelatedBaseAction.rewrite_parameters(self)
+        NoteRelatedBaseAction.rewrite_parameters(self)
+
+        if 'document' in self.parameters:
+            if not self.parameters['document']:
+                self.logger.fatal(f'File <{self.parameters["document"]}> invalid!')
+                return
+
+        if 'another' in self.parameters:
+            if self.parameters['another']:
+                if not os.path.isfile(self.parameters['another']):
+                    self.logger.fatal(f'Another <{self.parameters["another"]}> is not file!')
+                    return
+
+    #---------------------------------------------------------------------------
+
+    def stow_clauses(self):
+        document_name = os.path.basename(self.parameters['document'])
+        with open(self.parameters['document'], 'r', encoding='utf-8') as f1:
+            for line_number, line in enumerate(f1, start=1):
+                prefix = f'@<{document_name}> &{line_number}:'
+                self.all_clauses.append((prefix, line))
+        if not self.parameters.get('another', ''):
+            return ret
+        another_name = os.path.basename(self.parameters['another'])
+        if another_name == document_name:
+            another_name = f'another.{another_name}'
+        with open(self.parameters['another'], 'r', encoding='utf-8') as f2:
+            for line_number, line in enumerate(f2, start=1):
+                prefix = f'@<{another_name}> &{line_number}:'
+                ret.append((prefix, line))
+        return ret
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        pass
 
 #===============================================================================
 
@@ -2888,7 +2964,7 @@ class MergeSourcesAction(MergeRelatedBaseAction):
     def execute(self):
         pass
 
-#===============================================================================
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
     ACTIVE = True
@@ -2929,6 +3005,9 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
             },
         },
         'root': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'separators': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'properties': {
