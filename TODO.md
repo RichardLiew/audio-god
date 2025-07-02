@@ -19,25 +19,16 @@ mgg文件解密
 
 
 
-增加检验去重音频文件的action
 -a -b -c 参数重新分配
 
-Redeco notes and merge sources 添加进 testing里，重新生成start和test脚本
-
-
-NOTERELATED 的 PUBLIC_ARGUMENTS
-
-
-新的注解里，所有继承自多个父类的，都梳理下
-
-separators 看看有的action是没有必要的
-
-
-所有的action，有多个父类的，UBLIC_ARGUMENTS，REQUISITE_ARGUMENTS，rewrite_parameters无论是否有必要，都显示调用不影响逻辑的最多父类，全写出来
+merge notes and merge sources 添加进 testing里，重新生成start和test脚本
 
 
 
-python argparser是否支持多个同样的dlabel，然后组成list作为结果
+增加check sources name的action
+
+
+
 增加合并多个notefile的功能，为增量g更新, 合并多个note，首先要对每一个note各自进行去重和优化处理，然后再合并，合并后，再解决新发现的重复问题,合并audios也是一样的
 预处理 note 和 audios的name时，先把checkname不合格的都筛出来,再去执行下面的第一和第二步,可以多执行几步，直到消除所有错误
 

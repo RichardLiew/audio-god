@@ -667,7 +667,7 @@ class AudioGod(OPTIONS):
                 'action': 'store',
                 'type': str,
                 'required': False,
-                'default': f'{OPTIONS.AUDGOD_SOURCE}/songs.note',
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/songs.note.txt',
                 'help': 'document to load',
             },
         },
@@ -1725,20 +1725,24 @@ class AudioGod(OPTIONS):
             current_value = getattr(class_, member)
             if current_value is None:
                 continue
+            result = {}
             for base in reversed(class_.__bases__):
                 if not hasattr(base, member):
                     continue
                 base_value = getattr(base, member)
                 if redecorated:
-                    base_value = cls.redecorate_arguments(base_value)
-                current_value.update(copy.deepcopy(base_value))
+                    base_value = cls.redecorate_arguments(
+                        base_value, AudioGod.PUBLIC_ARGUMENTS,
+                    )
+                result.update(copy.deepcopy(base_value))
+            result.update(copy.deepcopy(current_value))
+            setattr(class_, member, result)
 
         for method in methods:
             if method not in class_.__dict__:
                 continue
             def create_func(func):
                 def wrapper(self, *args, **kwargs):
-                    current_result = func(self, *args, **kwargs)
                     for base in reversed(class_.__bases__):
                         if not hasattr(base, method):
                             continue
@@ -1746,14 +1750,59 @@ class AudioGod(OPTIONS):
                         if not callable(base_func):
                             continue
                         base_func(self, *args, **kwargs)
+                    func(self, *args, **kwargs)
                 return wrapper
             setattr(class_, method, create_func(getattr(class_, method)))
         return class_
 
 
     @classmethod
-    def redecorate_arguments(cls, arguments={}, parents=[]):
-        return arguments
+    def redecorate_arguments(cls, arguments, public_arguments=PUBLIC_ARGUMENTS):
+        for argument in arguments:
+            public_argument = {}
+            use_public = arguments[argument].pop('use_public', cls.ReplaceType.NONE)
+            if cls.ReplaceType.NONE.ne(use_public):
+                public_argument = copy.deepcopy(public_arguments[argument])
+            match use_public:
+                case cls.ReplaceType.NONE:
+                    pass
+                case cls.ReplaceType.ENTIRE:
+                    arguments[argument] = public_argument
+                case cls.ReplaceType.PARTIAL:
+                    if 'args' not in arguments[argument]:
+                        arguments[argument]['args'] = public_argument['args']
+                    if 'kwargs' not in arguments[argument]:
+                        arguments[argument]['kwargs'] = public_argument['kwargs']
+                    else:
+                        arguments[argument]['kwargs'] = public_argument['kwargs'] | \
+                                                            arguments[argument]['kwargs']
+            if 'args' in arguments[argument]:
+                if len(arguments[argument]['args']) > 0:
+                    if not arguments[argument]['args'][0].startswith('--'):
+                        arguments[argument]['args'].insert(
+                            0, f'--{cls.replace_underline(argument)}',
+                        )
+            if 'kwargs' in arguments[argument]:
+                if 'dest' not in arguments[argument]['kwargs']:
+                    arguments[argument]['kwargs']['dest'] = argument
+                type_ = arguments[argument]['kwargs'].get('type', None)
+                action_ = arguments[argument]['kwargs'].get('action', 'store')
+                if 'default' not in arguments[argument]['kwargs']:
+                    default = None
+                    match type_:
+                        case str():
+                            default = ''
+                        case int():
+                            default = 0
+                    if default is None and action_ == argparse.BooleanOptionalAction:
+                        default = True
+                    arguments[argument]['kwargs']['default'] = default
+                if isinstance(arguments[argument]['kwargs']['default'], str):
+                    if '\n' in arguments[argument]['kwargs']['default']:
+                        arguments[argument]['kwargs']['default'] = cls.glorify_indents(
+                            arguments[argument]['kwargs']['default'], indent=0,
+                        ).strip()
+        return copy.deepcopy(arguments)
 
 
     @classmethod
@@ -1786,45 +1835,7 @@ class AudioGod(OPTIONS):
                     continue
                 cls.ARGUMENTS[argument] = copy.deepcopy(cls.REQUISITE_ARGUMENTS[argument])
 
-            for argument in cls.ARGUMENTS:
-                public_argument = {}
-                use_public = cls.ARGUMENTS[argument].pop('use_public', cls.ReplaceType.NONE)
-                if cls.ReplaceType.NONE.ne(use_public):
-                    public_argument = copy.deepcopy(cls.PUBLIC_ARGUMENTS[argument])
-                match use_public:
-                    case cls.ReplaceType.NONE:
-                        pass
-                    case cls.ReplaceType.ENTIRE:
-                        cls.ARGUMENTS[argument] = public_argument
-                    case cls.ReplaceType.PARTIAL:
-                        if 'args' not in cls.ARGUMENTS[argument]:
-                            cls.ARGUMENTS[argument]['args'] = public_argument['args']
-                        if 'kwargs' not in cls.ARGUMENTS[argument]:
-                            cls.ARGUMENTS[argument]['kwargs'] = public_argument['kwargs']
-                        else:
-                            cls.ARGUMENTS[argument]['kwargs'] = public_argument['kwargs'] | \
-                                                                cls.ARGUMENTS[argument]['kwargs']
-                cls.ARGUMENTS[argument]['args'].insert(
-                    0, f'--{cls.replace_underline(argument)}',
-                )
-                cls.ARGUMENTS[argument]['kwargs']['dest'] = argument
-                type_ = cls.ARGUMENTS[argument]['kwargs'].get('type', None)
-                action_ = cls.ARGUMENTS[argument]['kwargs'].get('action', 'store')
-                if 'default' not in cls.ARGUMENTS[argument]['kwargs']:
-                    default = None
-                    match type_:
-                        case str():
-                            default = ''
-                        case int():
-                            default = 0
-                    if default is None and action_ == argparse.BooleanOptionalAction:
-                        default = True
-                    cls.ARGUMENTS[argument]['kwargs']['default'] = default
-                if isinstance(cls.ARGUMENTS[argument]['kwargs']['default'], str):
-                    if '\n' in cls.ARGUMENTS[argument]['kwargs']['default']:
-                        cls.ARGUMENTS[argument]['kwargs']['default'] = cls.glorify_indents(
-                            cls.ARGUMENTS[argument]['kwargs']['default'], indent=0,
-                        ).strip()
+            cls.redecorate_arguments(cls.ARGUMENTS, cls.PUBLIC_ARGUMENTS)
 
         # decorate $KWARGS
         cls.set_prog()
@@ -2259,6 +2270,7 @@ class SummarizeRelatedBaseAction(AudioGod):
 
 #===============================================================================
 
+@AudioGod.auto_extend
 class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
     ACTIVE = True
 
@@ -2267,7 +2279,7 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
     KWARGS = None
     ARGUMENTS = None
 
-    PUBLIC_ARGUMENTS = AudioGod.decorate_arguments({
+    PUBLIC_ARGUMENTS = {
         'field_type': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
@@ -2284,9 +2296,7 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
                 'help': 'separators for matched filename',
             },
         },
-    })
-
-    REQUISITE_ARGUMENTS = copy.deepcopy(SummarizeRelatedBaseAction.REQUISITE_ARGUMENTS)
+    }
 
     #---------------------------------------------------------------------------
 
@@ -2299,8 +2309,6 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        super().rewrite_parameters()
-
         if 'separators' in self.parameters:
             self.parameters['separators'] = self.split(
                 self.parameters['separators'],
@@ -2687,6 +2695,7 @@ class ExportRelatedBaseAction(SummarizeRelatedBaseAction):
 
 #===============================================================================
 
+@AudioGod.auto_extend
 class TreeRelatedBaseAction(AudioGod):
     ACTIVE = True
 
@@ -2710,7 +2719,7 @@ class TreeRelatedBaseAction(AudioGod):
                 'help': 'if show count when extract structure',
             },
         },
-    } | copy.deepcopy(AudioGod.REQUISITE_ARGUMENTS)
+    }
 
     #---------------------------------------------------------------------------
 
@@ -2783,6 +2792,7 @@ class TreeRelatedBaseAction(AudioGod):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+@AudioGod.auto_extend
 class RedecorateNoteAction(
     NoteRelatedBaseAction,
     ExportRelatedBaseAction,
@@ -2800,7 +2810,7 @@ class RedecorateNoteAction(
         'document': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_SOURCE}/songs.note.origin',
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/origin.songs.note.txt',
             },
         },
         'field_type': {
@@ -2812,23 +2822,15 @@ class RedecorateNoteAction(
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note.txt',
             },
         },
     }
-
-    PUBLIC_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.PUBLIC_ARGUMENTS)
-    REQUISITE_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-    #---------------------------------------------------------------------------
-
-    def rewrite_parameters(self):
-        NoteRelatedBaseAction.rewrite_parameters(self)
 
     #---------------------------------------------------------------------------
 
@@ -2839,6 +2841,7 @@ class RedecorateNoteAction(
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+@AudioGod.auto_extend
 class MergeRelatedBaseAction(AudioGod):
     ACTIVE = True
 
@@ -2854,12 +2857,12 @@ class MergeRelatedBaseAction(AudioGod):
             'kwargs': {
                 'action': 'store',
                 'type': str,
-                'required': False,
-                'default': '',
+                'required': True,
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/another.songs.note.txt',
                 'help': 'another item to merge',
             },
         },
-    } | copy.deepcopy(AudioGod.REQUISITE_ARGUMENTS)
+    }
 
     #---------------------------------------------------------------------------
 
@@ -2869,8 +2872,6 @@ class MergeRelatedBaseAction(AudioGod):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        super().rewrite_parameters()
-
         if 'another' in self.parameters:
             self.parameters['another'] = self.abspath(
                 self.parameters['another'],
@@ -2882,6 +2883,7 @@ class MergeRelatedBaseAction(AudioGod):
 
 #===============================================================================
 
+@AudioGod.auto_extend
 class MergeNotesAction(MergeRelatedBaseAction, NoteRelatedBaseAction):
     ACTIVE = True
 
@@ -2896,7 +2898,7 @@ class MergeNotesAction(MergeRelatedBaseAction, NoteRelatedBaseAction):
         'document': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_SOURCE}/songs.note.origin',
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/origin.songs.note.txt',
             },
         },
         'field_type': {
@@ -2905,14 +2907,10 @@ class MergeNotesAction(MergeRelatedBaseAction, NoteRelatedBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/merge.songs.note.txt',
             },
         },
     }
-
-    PUBLIC_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.PUBLIC_ARGUMENTS)
-    REQUISITE_ARGUMENTS = copy.deepcopy(MergeRelatedBaseAction.REQUISITE_ARGUMENTS) | \
-                          copy.deepcopy(NoteRelatedBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
 
@@ -2922,14 +2920,6 @@ class MergeNotesAction(MergeRelatedBaseAction, NoteRelatedBaseAction):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        MergeRelatedBaseAction.rewrite_parameters(self)
-        NoteRelatedBaseAction.rewrite_parameters(self)
-
-        if 'document' in self.parameters:
-            if not self.parameters['document']:
-                self.logger.fatal(f'File <{self.parameters["document"]}> invalid!')
-                return
-
         if 'another' in self.parameters:
             if self.parameters['another']:
                 if not os.path.isfile(self.parameters['another']):
@@ -2962,6 +2952,7 @@ class MergeNotesAction(MergeRelatedBaseAction, NoteRelatedBaseAction):
 
 #===============================================================================
 
+@AudioGod.auto_extend
 class MergeSourcesAction(MergeRelatedBaseAction):
     ACTIVE = True
 
@@ -2985,9 +2976,13 @@ class MergeSourcesAction(MergeRelatedBaseAction):
         'ignored_file': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/merge.sources.txt',
+            },
+        },
     }
-
-    REQUISITE_ARGUMENTS = copy.deepcopy(MergeRelatedBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
 
@@ -2996,11 +2991,19 @@ class MergeSourcesAction(MergeRelatedBaseAction):
 
     #---------------------------------------------------------------------------
 
+    def rewrite_parameters(self):
+        if 'another' in self.parameters:
+            if self.parameters['another']:
+                pass
+
+    #---------------------------------------------------------------------------
+
     def execute(self):
         pass
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+@AudioGod.auto_extend
 class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
     ACTIVE = True
 
@@ -3036,7 +3039,7 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
         'document': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note.txt',
             },
         },
         'root': {
@@ -3076,9 +3079,6 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
         },
     }
 
-    PUBLIC_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.PUBLIC_ARGUMENTS)
-    REQUISITE_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.REQUISITE_ARGUMENTS)
-
     #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
@@ -3090,8 +3090,6 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        NoteRelatedBaseAction.rewrite_parameters(self)
-
         if 'properties' in self.parameters:
             self.parameters['properties'] = self.__resolve_properties(
                 self.parameters['properties'],
@@ -3419,6 +3417,7 @@ class FormatPropertiesAction(AudioGod):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+@AudioGod.auto_extend
 class RenameAudiosAction(AudioGod):
     ACTIVE = True
 
@@ -3470,8 +3469,6 @@ class RenameAudiosAction(AudioGod):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        super().rewrite_parameters()
-
         if 'filename_pattern' in self.parameters:
             pass
 
@@ -3563,6 +3560,7 @@ class ListRepeatedAction(AudioGod):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+@AudioGod.auto_extend
 class ManageArtworksBaseAction(AudioGod):
     ACTIVE = True
 
@@ -3581,7 +3579,7 @@ class ManageArtworksBaseAction(AudioGod):
         'ignored_file': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
-    } | copy.deepcopy(AudioGod.REQUISITE_ARGUMENTS)
+    }
 
     #---------------------------------------------------------------------------
 
@@ -3614,6 +3612,7 @@ class ManageArtworksAction(ManageArtworksBaseAction):
 
 #===============================================================================
 
+@AudioGod.auto_extend
 class ManageArtworks__BindAction(ManageArtworksBaseAction):
     ACTIVE = True
 
@@ -3649,8 +3648,6 @@ class ManageArtworks__BindAction(ManageArtworksBaseAction):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        super().rewrite_parameters()
-
         if 'artworks' in self.parameters:
             self.parameters['artworks'] = self.abspath(
                 self.parameters['artworks'],
@@ -3727,6 +3724,7 @@ class ManageArtworks__DeriveAction(ManageArtworksBaseAction):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+@AudioGod.auto_extend
 class DisplayAction(AudioGod):
     ACTIVE = True
 
@@ -3896,8 +3894,6 @@ class DisplayAction(AudioGod):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        super().rewrite_parameters()
-
         if 'page_number' in self.parameters:
             pass
 
@@ -4497,6 +4493,7 @@ class DisplayAction(AudioGod):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+@AudioGod.auto_extend
 class OrganizeBaseAction(AudioGod):
     ACTIVE = True
 
@@ -4515,7 +4512,7 @@ class OrganizeBaseAction(AudioGod):
         'ignored_file': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
-    } | copy.deepcopy(AudioGod.REQUISITE_ARGUMENTS)
+    }
 
     #---------------------------------------------------------------------------
 
@@ -4525,8 +4522,6 @@ class OrganizeBaseAction(AudioGod):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        super().rewrite_parameters()
-
         if 'root' in self.parameters:
            if not self.parameters['root']:
                self.logger.fatal('Invalid root!')
@@ -4732,6 +4727,7 @@ class Organize__ItunedAction(OrganizeBaseAction):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+@AudioGod.auto_extend
 class ExportBaseAction(ExportRelatedBaseAction):
     ACTIVE = True
 
@@ -4821,7 +4817,7 @@ class ExportBaseAction(ExportRelatedBaseAction):
         'ignored_file': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
-    } | copy.deepcopy(ExportRelatedBaseAction.REQUISITE_ARGUMENTS)
+    }
 
     #---------------------------------------------------------------------------
 
@@ -5028,6 +5024,7 @@ class ExportAction(ExportBaseAction):
 
 #===============================================================================
 
+@AudioGod.auto_extend
 class Export__NoteAction(ExportBaseAction, NoteRelatedBaseAction):
     ACTIVE = True
 
@@ -5060,13 +5057,10 @@ class Export__NoteAction(ExportBaseAction, NoteRelatedBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/export.songs.note',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/export.songs.note.txt',
             },
         },
     }
-
-    PUBLIC_ARGUMENTS = copy.deepcopy(ExportBaseAction.PUBLIC_ARGUMENTS)
-    REQUISITE_ARGUMENTS = copy.deepcopy(ExportBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
 
@@ -5075,16 +5069,12 @@ class Export__NoteAction(ExportBaseAction, NoteRelatedBaseAction):
 
     #---------------------------------------------------------------------------
     
-    def rewrite_parameters(self):
-        NoteRelatedBaseAction.rewrite_parameters(self)
-    
-    #---------------------------------------------------------------------------
-
     def generalize(self):
         return self.plain_generalize()
 
 #===============================================================================
 
+@AudioGod.auto_extend
 class Export__PlistAction(ExportBaseAction):
     ACTIVE = True
 
@@ -5171,8 +5161,6 @@ class Export__PlistAction(ExportBaseAction):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        super().rewrite_parameters()
-
         if 'itunes_version_plist' in self.parameters:
             self.parameters['itunes_version_plist'] = self.abspath(
                 self.parameters['itunes_version_plist'],
@@ -5589,6 +5577,7 @@ class ConvertBaseAction(AudioGod):
 
 #===============================================================================
 
+@AudioGod.auto_extend
 class ConvertMediaBaseAction(ConvertBaseAction):
     ACTIVE = True
 
@@ -5604,7 +5593,7 @@ class ConvertMediaBaseAction(ConvertBaseAction):
         'ignored_file': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
-    } | copy.deepcopy(ConvertBaseAction.REQUISITE_ARGUMENTS)
+    }
 
     #---------------------------------------------------------------------------
 
@@ -5614,8 +5603,6 @@ class ConvertMediaBaseAction(ConvertBaseAction):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        super().rewrite_parameters()
-
         if 'output' in self.parameters:
             if self.parameters['output']:
                 if not os.path.exists(self.parameters['output']):
@@ -5657,6 +5644,7 @@ class ConvertMediaBaseAction(ConvertBaseAction):
 
 #===============================================================================
 
+@AudioGod.auto_extend
 class ConvertDocumentBaseAction(ConvertBaseAction):
     ACTIVE = True
 
@@ -5673,8 +5661,6 @@ class ConvertDocumentBaseAction(ConvertBaseAction):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        super().rewrite_parameters()
-
         if 'document' in self.parameters:
             if not self.parameters['document']:
                 self.logger.fatal(f'File <{self.parameters["document"]}> invalid!')
@@ -5856,6 +5842,7 @@ class Convert__KmxToMp4Action(ConvertMediaBaseAction):
 
 #===============================================================================
 
+@AudioGod.auto_extend
 class Convert__MediaAction(ConvertMediaBaseAction):
     ACTIVE = True
 
@@ -5911,8 +5898,6 @@ class Convert__MediaAction(ConvertMediaBaseAction):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        super().rewrite_parameters()
-
         if 'format' in self.parameters:
             self.parameters['format'] = self.parameters['format'].lower()
 
@@ -5930,6 +5915,7 @@ class Convert__MediaAction(ConvertMediaBaseAction):
 
 #===============================================================================
 
+@AudioGod.auto_extend
 class Convert__NoteToMarkdownAction(
     ConvertDocumentBaseAction,
     NoteRelatedBaseAction,
@@ -5948,7 +5934,7 @@ class Convert__NoteToMarkdownAction(
         'document': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/export.songs.note',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/export.songs.note.txt',
             },
         },
         'field_type': {
@@ -5962,19 +5948,10 @@ class Convert__NoteToMarkdownAction(
         },
     }
 
-    PUBLIC_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.PUBLIC_ARGUMENTS)
-    REQUISITE_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.REQUISITE_ARGUMENTS)
-
     #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-    #---------------------------------------------------------------------------
-
-    def rewrite_parameters(self):
-        ConvertDocumentBaseAction.rewrite_parameters(self)
-        NoteRelatedBaseAction.rewrite_parameters(self)
 
     #---------------------------------------------------------------------------
 
@@ -6005,7 +5982,7 @@ class Convert__MarkdownToNoteAction(ConvertDocumentBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/convert.songs.md.note',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/convert.songs.md.note.txt',
             },
         },
     }
@@ -6039,6 +6016,7 @@ class Convert__MarkdownToNoteAction(ConvertDocumentBaseAction):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+@AudioGod.auto_extend
 class ExtractStructureAction(
     TreeRelatedBaseAction,
     ConvertDocumentBaseAction,
@@ -6058,30 +6036,21 @@ class ExtractStructureAction(
         'document': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note.txt',
             },
         },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/songs.note.tree',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/tree.songs.note.txt',
             },
         },
     }
-
-    REQUISITE_ARGUMENTS = copy.deepcopy(TreeRelatedBaseAction.REQUISITE_ARGUMENTS) | \
-                          copy.deepcopy(NoteRelatedBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-    #---------------------------------------------------------------------------
-
-    def rewrite_parameters(self):
-        TreeRelatedBaseAction.rewrite_parameters(self)
-        ConvertDocumentBaseAction.rewrite_parameters(self)
 
     #---------------------------------------------------------------------------
 
@@ -6268,6 +6237,7 @@ class Operate__CleanupAction(OperateBaseAction):
 
 #===============================================================================
 
+@AudioGod.auto_extend
 class Operate__TreeAction(TreeRelatedBaseAction, OperateBaseAction):
     ACTIVE = True
 
@@ -6289,12 +6259,10 @@ class Operate__TreeAction(TreeRelatedBaseAction, OperateBaseAction):
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}/output.tree',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/tree.output.txt',
             },
         },
     }
-
-    REQUISITE_ARGUMENTS = copy.deepcopy(TreeRelatedBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
 
@@ -6304,8 +6272,6 @@ class Operate__TreeAction(TreeRelatedBaseAction, OperateBaseAction):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        TreeRelatedBaseAction.rewrite_parameters(self)
-
         if 'source' in self.parameters:
             if not os.path.exists(self.parameters['source']):
                 self.logger.fatal(f'Source <{self.parameters["source"]}> not exists!')
@@ -6586,7 +6552,7 @@ class Testing__InitAction(TestingBaseAction):
         files = list(map(
             lambda x: os.path.join(self.AUDGOD_ORISRC, x),
             [
-                'testing.songs.note.origin',
+                'testing.origin.songs.note.txt',
                 'testing.ignores.txt',
                 'testing.operate.backup.txt',
                 'testing.operate.remove.txt',
@@ -6718,17 +6684,17 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
             format='mp3',
         )),
         (True, 'redecorate-note', dict(
-            document=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.songs.note.origin',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.songs.note',
+            document=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.origin.songs.note.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.songs.note.txt',
         )),
         (True, 'extract-structure', dict(
-            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.songs.note',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.songs.note.tree',
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.songs.note.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.tree.songs.note.txt',
         )),
         (True, 'fill-properties', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
-            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.songs.note',
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.songs.note.txt',
             root=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/invalids.txt',
         )),
@@ -6749,7 +6715,7 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
         (True, 'display', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.display.table',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.display.table.txt',
         )),
         (True, 'organize', 'grouped', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
@@ -6763,15 +6729,15 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
         )),
         (True, 'operate', 'tree', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.output.tree',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.tree.output.txt',
         )),
         (True, 'export', 'note', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.export.songs.note',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.export.songs.note.txt',
         )),
         (True, 'convert', 'note-to-markdown', dict(
-            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.export.songs.note',
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.export.songs.note.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.convert.songs.note.md',
         )),
         (True, 'export', 'markdown', dict(
@@ -6781,7 +6747,7 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
         )),
         (True, 'convert', 'markdown-to-note', dict(
             document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.export.songs.md',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.convert.songs.md.note',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.convert.songs.md.note.txt',
         )),
         # to complete
         (False, 'export', 'xml', dict(
