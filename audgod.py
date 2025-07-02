@@ -2851,6 +2851,45 @@ class RedecorateNoteAction(
 
 #===============================================================================
 
+class MergeSourcesAction(MergeRelatedBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Merge sources',
+        'help': 'merge sources',
+    }
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'extensions': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+    }
+
+    REQUISITE_ARGUMENTS = copy.deepcopy(MergeRelatedBaseAction.REQUISITE_ARGUMENTS)
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        pass
+
+#===============================================================================
+
 class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
     ACTIVE = True
 
