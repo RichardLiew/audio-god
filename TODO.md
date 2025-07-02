@@ -1,8 +1,50 @@
 Processing:
 抓包 Mac 酷我下载音乐的链接，然后集成到脚本中自动下载
 steps in usage需要和generate script以及cleanup, 以及所有的actions和branches都要覆盖到里 同步更新, start和test都要同步
-
 有一个地想不起来了，和 cls.NAME? output? 有关
+
+
+
+
+
+增量更新note.orign，输出有冲突的item，并能够根据group自动合并，先操作note，合并note导出为新的note，处理完了，再根据冲突的note对应的source进行删除，然后再导出note，在ituned文件夹分类一下，再输出plist
+mgg文件解密
+看看能不能改成多进程以及多线程模式，加快速度
+
+在每一个调用 for in sources 里，都记得输出处理日志，并带有 23/136 这样的处理进度，最好同时额外带一个进度条，看看日志和进度条是线程的全d吗
+
+
+
+
+
+
+
+增加检验去重音频文件的action
+-a -b -c 参数重新分配
+
+Redeco notes and merge sources 添加进 testing里，重新生成start和test脚本
+
+
+
+
+python argparser是否支持多个同样的dlabel，然后组成list作为结果
+增加合并多个notefile的功能，为增量g更新, 合并多个note，首先要对每一个note各自进行去重和优化处理，然后再合并，合并后，再解决新发现的重复问题,合并audios也是一样的
+预处理 note 和 audios的name时，先把checkname不合格的都筛出来,再去执行下面的第一和第二步,可以多执行几步，直到消除所有错误
+
+每个步骤里，针对 artist和title的多次处理逻辑里，只要有歧义，那就把-#都消除歧义，无论是note里还是文件名里, 先消除歧义后，再去去重, note and filename都是一样的逻辑
+
+详细梳理增量更新的逻辑，并写在usage里
+增量更新步骤：
+针对增量部分：
+1. redecorate-note，反复调用，直到消除所有错误
+2. 处理完note，就先单独处理音频文件，看看音频文件里format之后有没有重复的，
+3. 
+
+
+增量部分处理完，note和音频文件都start.zsh全流程处理完完美无暇后，和主体部分进行汇合，同样先处理note，再处理音频文件，去重，剩下的逻辑就一样了
+
+
+
 
 type: ignore
 All done.
@@ -49,6 +91,11 @@ os.path.dirname如果是根目录，那么结尾会带有/，其他情况不带�
 
 
 Fixed:
+没有必要增加多个note合并的功能，直接追加到 origin 文件底部就可以了，逻辑上是一样的
+输出的note或者其他的，plist、markdown，各种tree等，排序要第一是artist，第二是album，第三才是title
+所有的logger是否需要集成到handle_out里？（应该不用，保持现状就挺好）
+有必要在ARGUMENTS里增加disable字段吗？表示排除这个参数(没有必要，违背当时设定 必要参数这个选项了)
+对于 summaries里的properties，有必要根据fields的指定顺序排序下吗？
 把所有的.format()都改为keyvalue形式
 os.environ['HOME'], os.path.expandvars('${HOME}'), '~' 看看是否需要统一下
 看看所有的路径或者其他的可配置的内容，是否独立出来写成宏

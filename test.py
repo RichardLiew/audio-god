@@ -1,72 +1,120 @@
+import os
+import re
+import sys
 
-def tree(data):
-    def _build(_data, lines, indent=0, prefix='', is_last=True, is_root=True, current_key='', show_count=True):
-        if isinstance(_data, dict):
-            def _count_leaves(node):
-                if isinstance(node, list):
-                    return len(node)
-                elif isinstance(node, dict):
-                    return sum(_count_leaves(v) for v in node.values())
-                return 0
 
-            def _count_children(node):
-                if isinstance(node, dict):
-                    return len(node)
-                return 0
+qmc_dir = '~/Library/Containers/com.tencent.QQMusicMac/Data/Library/Application Support/QQMusicMac/iQmc/'
 
-            total_leaves = _count_leaves(_data)
-            direct_children = _count_children(_data)
+mgg_dir = '~/Music/Source/Primary/Mgg/Sad'
 
-            if is_root:
-                key = list(_data.keys())[0] if len(_data) == 1 else 'Root'
-                lines.append(
-                    f'{key}' + f' (leaves: {total_leaves}, children: {direct_children})' if show_count else '',
-                )
-                new_prefix = prefix + '    '
-                items = _data[key].items() if len(_data) == 1 else _data.items()
-            else:
-                connector = '└── ' if is_last else '├── '
-                current_prefix = prefix + connector
-                key = current_key if current_key else 'Node'
-                lines.append(
-                    f'{current_prefix}{key}' + f' (leaves: {total_leaves}, children: {direct_children})' if show_count else '',
-                )
-                new_prefix = prefix + ('    ' if is_last else '│   ')
-                items = _data.items()
 
-            for i, (key, value) in enumerate(items):
-                child_is_last = i == len(items) - 1
-                if isinstance(value, dict):
-                    _build(value, lines, indent+1, new_prefix, child_is_last, False, key)
-                elif isinstance(value, list):
-                    lines.append(
-                        f'{new_prefix}{"└── " if child_is_last else "├── "}{key} ' + f'(leaves: {len(value)}, children: 0)' if show_count else '',
+
+work_dir = '~/Music/Output/Temp'
+
+def absdir(dir_):
+    return os.path.normpath(os.path.abspath(os.path.expanduser(dir_)))
+
+qmc_dir = absdir(qmc_dir)
+mgg_dir = absdir(mgg_dir)
+work_dir = absdir(work_dir)
+
+
+mgg_set = {}
+with open('./mgg.txt', 'r', encoding='utf-8') as f1:
+    for line in f1:
+        line = line.strip()
+        origin = line
+        line = re.sub(r'_(L|H).mgg$', '', line)
+        line = re.sub(r'\s*-\s*', ' - ', line)
+        line = re.sub(r'\s+_\s+', ' & ', line)
+        mgg_set[line] = origin
+
+
+qmc_set = {}
+with open('./aaa.txt', 'r', encoding='utf-8') as f2:
+    for line in f2:
+        line = line.strip()
+        origin = line
+        line = re.sub(r'\.\S+$', '', line)
+        line = re.sub(r'\s*-\s*', ' - ', line)
+        line = re.sub(r'\s*,\s*', ' & ', line)
+        qmc_set[line] = origin
+
+
+
+temp_set = set(set(mgg_set.keys()) - set(qmc_set.keys()))
+happy_set = set(mgg_set.keys()) - temp_set
+
+
+
+
+
+
+
+big_string = '|'.join(list(qmc_set.keys()))
+invalid_set = set()
+
+for item in temp_set:
+    units = item.split('-')
+    #if len(units) != 2:
+    #    print('0     AAAAAAAAAAAAAAA', item)
+    #    continue
+    invalid = True
+    for unit in units:
+        unit = unit.strip()
+        if not unit in big_string:
+            continue
+        invalid = False
+
+    if invalid:
+        invalid_set.add(item)
+
+part_set = temp_set - invalid_set
+
+for key in happy_set:
+    os.rename(
+        os.path.join(qmc_dir, qmc_set[key]),
+        os.path.join(work_dir, 'happy/qmc', qmc_set[key])
+    )
+    os.rename(
+        os.path.join(mgg_dir, mgg_set[key]),
+        os.path.join(work_dir, 'happy/mgg', mgg_set[key])
+    )
+
+for key in part_set:
+    os.rename(
+        os.path.join(mgg_dir, mgg_set[key]),
+        os.path.join(work_dir, 'part/mgg', mgg_set[key])
+    )
+    units = key.split('-')
+    #if len(units) != 2:
+    #    print('0     AAAAAAAAAAAAAAA', item)
+    #    continue
+    selected = False
+    for unit in units[1:]:
+        unit = unit.strip()
+        for qmc_k in qmc_set:
+            if unit in qmc_k:
+                selected = True
+                if os.path.exists(qmc_set[qmc_k]):
+                    os.rename(
+                        os.path.join(qmc_dir, qmc_set[qmc_k]),
+                        os.path.join(work_dir, 'part/qmc', qmc_set[qmc_k])
                     )
-        elif isinstance(_data, list):
-            lines.append(
-                f'{prefix}└── ' + f'(leaves: {len(_data)}, children: 0)' if show_count else '',
-            )
-        else:
-            raise Exception('Data must be a dict!')
+                else:
+                    print(key, mgg_set[key], qmc_set[qmc_k])
+                break
+        if selected:
+            break
 
-    lines = []
-    _build(data, lines, show_count=True)
-    return '\n'.join(lines)
+#for key in sad_set:
+#    os.rename(
+#        os.path.join(qmc_dir, qmc_set[key]),
+#        os.path.join(work_dir, 'sad/qmc', qmc_set[key])
+#    )
+#    os.rename(
+#        os.path.join(mgg_dir, mgg_set[key]),
+#        os.path.join(work_dir, 'sad/mgg', mgg_set[key])
+#    )
 
 
-
-print(tree({
-    'RRRott': {
-        'Branch1': ['a', 'b'],
-        'Branch2': {
-            'Sub1': ['c'],
-            'Sub2': ['d', 'e', 'f'],
-            'Sub3': {
-                'Leaf1': ['g'],
-                'Leaf2': ['h', 'i']
-            }
-        },
-        'aaa': [],
-        #'bbb': None,
-    }
-}))

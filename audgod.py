@@ -103,6 +103,7 @@
 #   20  MGG->OGG: https://github.com/taurusxin/ncmdump;
 #   20  MGG->OGG: https://git.taurusxin.com/taurusxin/ncmdump-go;
 #   20  MGG->OGG: https://git.taurusxin.com/taurusxin/ncmdump-gui;
+#   21  Bilibili: https://snapany.com/zh/bilibili;
 #   20  QMC->MP3: https://git.unlock-music.dev/um/cli.
 #
 # ---
@@ -115,7 +116,8 @@
 #
 # ---
 # FAQs:
-#   1. pipenv 依赖于 pyenv，如果异常，建议先 "pyenv uninstall (python)X.X.X"，
+#   1. 项目依赖很多第三方库，需要一一验证确认是否线程安全，因此，本项目暂不支持多线程；
+#   2. pipenv 依赖于 pyenv，如果异常，建议先 "pyenv uninstall (python)X.X.X"，
 #      然后再重新 "pyenv install (python)X.X.X"；安装完成后，需要在 ~/.zshrc
 #     （或者 ~/.bashrc、~/.bash_profile）文件最下方添加如下内容并重载 => ```
 #          export PYENV_ROOT="$HOME/.pyenv"
@@ -126,10 +128,6 @@
 # ---
 # TODO (@Richard):
 #   1. None.
-# 增量更新note.orign，输出有冲突的item，并能够根据group自动合并，先操作note，合并note导出为新的note，处理完了，再根据冲突的note对应的source进行删除，然后再导出note，在ituned文件夹分类一下，再输出plist
-# mgg文件解密
-# 文件名下划线转&，尾部_L和_H去除
-# 看看能不能改成多进程以及多线程模式，加快速度
 #
 ###############################################################################
 
@@ -1978,7 +1976,7 @@ class AudioGod(OPTIONS):
 
     def handle_output(self, content):
         if not self.parameters['output']:
-            print(content)
+            self.logger.debug(content)
         else:
             if os.path.exists(self.parameters['output']):
                 self.remove(self.parameters['output'])
@@ -2024,12 +2022,21 @@ class AudioGod(OPTIONS):
                     symbol=symbols[5][i],
                     number=f'{f"{item_number}.":<{len(str(len(items)))+1}}',
                     content=item,
-                )
+                )/
+        return ret
+
+
+    def sort_properties(self, properties):
+        ret = {}
+        for field in self.FIELDS['all']:
+            if field in properties:
+                ret[field] = properties[field]
         return ret
 
 
     def repack_audio_properties(self, properties):
         ret = {}
+        properties = self.sort_properties(properties)
         field_type = self.parameters.get('field_type', self.FieldType.ORIGINAL)
         if self.FieldType.AUTO.eq(field_type):
             field_type = self.FieldType.ORIGINAL
@@ -2211,14 +2218,28 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
     KWARGS = None
     ARGUMENTS = None
 
-    REQUISITE_ARGUMENTS = {
+    PUBLIC_ARGUMENTS = {
         'field_type': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
                 'default': AudioGod.FieldType.AUTO,
             },
         },
-    } | copy.deepcopy(AudioGod.REQUISITE_ARGUMENTS)
+    } | copy.deepcopy(SummarizeRelatedBaseAction.PUBLIC_ARGUMENTS)
+
+    REQUISITE_ARGUMENTS = {
+        'separators': {
+            'use_public': AudioGod.ReplaceType.NONE,
+            'args': ['-6'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '-,#',
+                'help': 'separators for matched filename',
+            },
+        },
+    } | copy.deepcopy(SummarizeRelatedBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
 
@@ -2227,6 +2248,26 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
 
         self.__clauses = ([], {}, {}, [], [])
         self.__clauses_counter = [0, 0, 0, 0, 0, 0]
+
+    #---------------------------------------------------------------------------
+
+    def rewrite_parameters(self):
+        super().rewrite_parameters()
+
+        if 'separators' in self.parameters:
+            self.parameters['separators'] = self.split(
+                self.parameters['separators'],
+                ',',
+                escaped=True,
+                del_blank=True,
+                filt_empty=True,
+                filt_repeated=True,
+                sortify=False,
+                reversify=False,
+            )
+            if not self.parameters['separators']:
+                self.logger.fatal('Separators empty!')
+                return
 
     #---------------------------------------------------------------------------
 
@@ -2378,6 +2419,16 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
                         for field in self.FIELDS['note']:
                             if field not in properties:
                                 valid, invalid_info = False, 'lack note fields'
+                                break
+                    if valid:
+                        title = properties[self.AudioProperty.TITLE]
+                        artist = properties[self.AudioProperty.ARTIST]
+                        for separator in self.parameters['separators']:
+                            if separator in title:
+                                valid, invalid_info = False, f'Title has separator <{separator}>!'
+                                break
+                            if separator in artist:
+                                valid, invalid_info = False, f'Artist has separator <{separator}>!'
                                 break
                     if valid:
                         curr_key = self.__generate_key_by_properties(properties)
@@ -2670,9 +2721,56 @@ class TreeRelatedBaseAction(AudioGod):
 
         return _build(data, show_count=self.parameters['show_count']).strip()
 
+#===============================================================================
+
+class MergeRelatedBaseAction(AudioGod):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = None
+    ARGUMENTS = None
+
+    REQUISITE_ARGUMENTS = {
+        'another': {
+            'use_public': AudioGod.ReplaceType.NONE,
+            'args': ['-z'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': False,
+                'default': '',
+                'help': 'another item to merge',
+            },
+        },
+    } | copy.deepcopy(AudioGod.REQUISITE_ARGUMENTS)
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def rewrite_parameters(self):
+        super().rewrite_parameters()
+
+        if 'another' in self.parameters:
+            self.parameters['another'] = self.abspath(
+                self.parameters['another'],
+            )
+            if self.parameters['another']:
+                if not os.path.exists(self.parameters['another']):
+                    self.logger.fatal(f'Another <{self.parameters["another"]}> not exists!')
+                    return
+
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-class RedecorateNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
+class RedecorateNoteAction(
+    MergeRelatedBaseAction,
+    NoteRelatedBaseAction,
+    ExportRelatedBaseAction,
+):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -2689,6 +2787,9 @@ class RedecorateNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
                 'default': f'{OPTIONS.AUDGOD_SOURCE}/songs.note.origin',
             },
         },
+        'field_type': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
@@ -2697,7 +2798,9 @@ class RedecorateNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
         },
     }
 
-    REQUISITE_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.REQUISITE_ARGUMENTS)
+    PUBLIC_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.PUBLIC_ARGUMENTS)
+    REQUISITE_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.REQUISITE_ARGUMENTS) |
+                          copy.deepcopy(MergeRelatedBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
 
@@ -2707,12 +2810,19 @@ class RedecorateNoteAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        super().rewrite_parameters()
+        NoteRelatedBaseAction.rewrite_parameters(self)
+        MergeRelatedBaseAction.rewrite_parameters(self)
 
         if 'document' in self.parameters:
             if not self.parameters['document']:
                 self.logger.fatal(f'File <{self.parameters["document"]}> invalid!')
                 return
+
+        if 'another' in self.parameters:
+            if self.parameters['another']:
+                if not os.path.isfile(self.parameters['another']):
+                    self.logger.fatal(f'Another <{self.parameters["another"]}> is not file!')
+                    return
 
     #---------------------------------------------------------------------------
 
@@ -2787,17 +2897,6 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
                 'help': 'properties for sources',
             },
         },
-        'separators': {
-            'use_public': AudioGod.ReplaceType.NONE,
-            'args': ['-6'],
-            'kwargs': {
-                'action': 'store',
-                'type': str,
-                'required': False,
-                'default': '-,#',
-                'help': 'separators for matched filename',
-            },
-        },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
@@ -2806,6 +2905,7 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
         },
     }
 
+    PUBLIC_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.PUBLIC_ARGUMENTS)
     REQUISITE_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
@@ -2819,27 +2919,12 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
-        super().rewrite_parameters()
+        NoteRelatedBaseAction.rewrite_parameters(self)
 
         if 'properties' in self.parameters:
             self.parameters['properties'] = self.__resolve_properties(
                 self.parameters['properties'],
             )
-
-        if 'separators' in self.parameters:
-            self.parameters['separators'] = self.split(
-                self.parameters['separators'],
-                ',',
-                escaped=True,
-                del_blank=True,
-                filt_empty=True,
-                filt_repeated=True,
-                sortify=False,
-                reversify=False,
-            )
-            if not self.parameters['separators']:
-                self.logger.fatal('Separators empty!')
-                return
 
     #---------------------------------------------------------------------------
 
@@ -2956,7 +3041,8 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
             if name.count(item) == 0:
                 continue
             if name.count(item) > 1:
-                continue
+                valid, separator = False, ''
+                break
             if name.startswith(item) or name.endswith(item):
                 continue
             valid, separator = True, item
@@ -2979,7 +3065,7 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
             del_blank=False, filt_empty=False, filt_repeated=False,
             sortify=False, reversify=False,
         )
-        artist = artist.replace('_', self.ARTIST_SEPARATOR)
+        artist = artist.replace(' _ ', self.ARTIST_SEPARATOR)
         title = re.sub(r'_(H|L)$', r'', title)
         return self.generate_key(artist, title)
 
@@ -4795,7 +4881,10 @@ class Export__NoteAction(ExportBaseAction, NoteRelatedBaseAction):
             },
         },
         'field_type': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': AudioGod.FieldType.CHINESE,
+            },
         },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
@@ -4805,6 +4894,7 @@ class Export__NoteAction(ExportBaseAction, NoteRelatedBaseAction):
         },
     }
 
+    PUBLIC_ARGUMENTS = copy.deepcopy(ExportBaseAction.PUBLIC_ARGUMENTS)
     REQUISITE_ARGUMENTS = copy.deepcopy(ExportBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
@@ -4812,6 +4902,11 @@ class Export__NoteAction(ExportBaseAction, NoteRelatedBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    #---------------------------------------------------------------------------
+    
+    def rewrite_parameters(self):
+        NoteRelatedBaseAction.rewrite_parameters(self)
+    
     #---------------------------------------------------------------------------
 
     def generalize(self):
@@ -5686,10 +5781,7 @@ class Convert__NoteToMarkdownAction(
             },
         },
         'field_type': {
-            'use_public': AudioGod.ReplaceType.PARTIAL,
-            'kwargs': {
-                'default': AudioGod.FieldType.AUTO,
-            },
+            'use_public': AudioGod.ReplaceType.ENTIRE,
         },
         'output': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
@@ -5699,6 +5791,7 @@ class Convert__NoteToMarkdownAction(
         },
     }
 
+    PUBLIC_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.PUBLIC_ARGUMENTS)
     REQUISITE_ARGUMENTS = copy.deepcopy(NoteRelatedBaseAction.REQUISITE_ARGUMENTS)
 
     #---------------------------------------------------------------------------
@@ -5710,6 +5803,7 @@ class Convert__NoteToMarkdownAction(
 
     def rewrite_parameters(self):
         ConvertDocumentBaseAction.rewrite_parameters(self)
+        NoteRelatedBaseAction.rewrite_parameters(self)
 
     #---------------------------------------------------------------------------
 
