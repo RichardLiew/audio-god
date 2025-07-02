@@ -7,7 +7,6 @@ steps in usage需要和generate script以及cleanup, 以及所有的actions和br
 
 
 
-增量更新note.orign，输出有冲突的item，并能够根据group自动合并，先操作note，合并note导出为新的note，处理完了，再根据冲突的note对应的source进行删除，然后再导出note，在ituned文件夹分类一下，再输出plist
 mgg文件解密
 看看能不能改成多进程以及多线程模式，加快速度
 
@@ -21,15 +20,8 @@ mgg文件解密
 
 -a -b -c 参数重新分配
 
-merge notes and merge sources 添加进 testing里，重新生成start和test脚本
 
-
-
-增加check sources name的action
-
-
-
-增加合并多个notefile的功能，为增量g更新, 合并多个note，首先要对每一个note各自进行去重和优化处理，然后再合并，合并后，再解决新发现的重复问题,合并audios也是一样的
+合并多个note，首先要对每一个note各自进行去重和优化处理，然后再合并，合并后，再解决新发现的重复问题,合并audios也是一样的
 预处理 note 和 audios的name时，先把checkname不合格的都筛出来,再去执行下面的第一和第二步,可以多执行几步，直到消除所有错误
 
 每个步骤里，针对 artist和title的多次处理逻辑里，只要有歧义，那就把-#都消除歧义，无论是note里还是文件名里, 先消除歧义后，再去去重, note and filename都是一样的逻辑

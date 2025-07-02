@@ -2475,7 +2475,7 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
                     ))
                     if re.search(warn_pattern, value, re.IGNORECASE) is not None:
                         self.warn_clauses.append(line_with_no)
-              /          self.warn_clauses_counter += 1
+                        self.warn_clauses_counter += 1
                     field = self.transform_field_name_synonyms(key)
                     if not field:
                         valid, invalid_info = False, 'invalid field name'
@@ -2929,7 +2929,11 @@ class MergeRelatedBaseAction(AudioGod):
 #===============================================================================
 
 @AudioGod.auto_extend
-class MergeNotesAction(MergeRelatedBaseAction, NoteRelatedBaseAction):
+class MergeNotesAction(
+    MergeRelatedBaseAction,
+    NoteRelatedBaseAction,
+    ExportRelatedBaseAction,
+):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -2980,26 +2984,21 @@ class MergeNotesAction(MergeRelatedBaseAction, NoteRelatedBaseAction):
     #---------------------------------------------------------------------------
 
     def stow_clauses(self):
-        document_name = os.path.basename(self.parameters['document'])
-        with open(self.parameters['document'], 'r', encoding='utf-8') as f1:
-            for line_number, line in enumerate(f1, start=1):
-                prefix = f'@<{document_name}> &{line_number}:'
-                self.all_clauses.append((prefix, line))
-        if not self.parameters.get('another', ''):
-            return ret
+        NoteRelatedBaseAction.stow_clauses(self)
         another_name = os.path.basename(self.parameters['another'])
-        if another_name == document_name:
+        if another_name == os.path.basename(self.parameters['document']):
             another_name = f'another.{another_name}'
-        with open(self.parameters['another'], 'r', encoding='utf-8') as f2:
-            for line_number, line in enumerate(f2, start=1):
+        with open(self.parameters['another'], 'r', encoding='utf-8') as f:
+            for line_number, line in enumerate(f, start=1):
                 prefix = f'@<{another_name}> &{line_number}:'
-                ret.append((prefix, line))
-        return ret
+                self.all_clauses.append((prefix, line))
 
     #---------------------------------------------------------------------------
 
     def execute(self):
-        pass
+        self.analysis_note()
+        self.sort_summaries()
+        self.handle_output(self.plain_generalize())
 
 #===============================================================================
 
