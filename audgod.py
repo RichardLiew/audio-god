@@ -3069,6 +3069,31 @@ class MatchSourcesAction(NoteRelatedBaseAction):
 
     def execute(self):
         self.analysis_note()
+        self.prime_sources()
+
+        for source in self.primed_sources:
+            self.logger.debug(f'Loading <{source}> ...')
+            _type = self.check_source(source)
+            match _type:
+                case self.SourceType.INVALID_NAME:
+                    self.invalid_name_sources.append(source)
+                    self.logger.debug(self.SourceType.INVALID_NAME)
+                    continue
+            key = self.generate_key_by_filename(source)
+            if key in self.valid_clauses:
+                self.matched_sources.append(source)
+                self.matched_clauses.append(key)
+                self.logger.debug(self.SourceType.MATCHED)
+            else:
+                self.notmatched_sources.append(source)
+                self.logger.debug(self.SourceType.NOTMATCHED)
+
+        for key in list(set(self.valid_clauses.keys()) - set(self.matched_clauses)):
+            self.notmatched_clauses.append(
+                self.pack_properties(
+                    self.repack_audio_properties(self.valid_clauses[key]),
+                ),
+            )
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -3363,20 +3388,20 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
 
     #---------------------------------------------------------------------------
 
-    def _import_note(self):
-        self.analysis_note()
+    #def _import_note(self):
+    #    self.analysis_note()
 
-    def _import_plist(self):
-        pass
+    #def _import_plist(self):
+    #    pass
 
-    def _import_markdown(self):
-        pass
+    #def _import_markdown(self):
+    #    pass
 
-    def _import_xml(self):
-        pass
+    #def _import_xml(self):
+    #    pass
 
-    def _import_json(self):
-        pass
+    #def _import_json(self):
+    #    pass
 
 
     def __load_sources(self):
@@ -3444,10 +3469,10 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
         self.handle_output(content)
 
 
-    def __load_properties_from_file(self):
-        if self.parameters['document']:
-            file_format = self.recognize_file_format(self.parameters['document'])
-            getattr(self, f'_import_{file_format}')()
+    #def __load_properties_from_file(self):
+    #    if self.parameters['document']:
+    #        file_format = self.recognize_file_format(self.parameters['document'])
+    #        getattr(self, f'_import_{file_format}')()
 
 
     def __resolve_properties(self, properties):
@@ -3556,7 +3581,8 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        self.__load_properties_from_file()
+        #self.__load_properties_from_file()
+        self.analysis_note()
         self.__load_sources()
         self.__fill_audio_properties()
 
