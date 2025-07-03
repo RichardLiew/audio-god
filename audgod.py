@@ -1551,6 +1551,43 @@ class AudioGod(OPTIONS):
                     self.logger.debug(f'Backup warning: File {item} not exists!')
 
 
+    def resolve_filename(self, source):
+        name, _ = os.path.splitext(os.path.basename(source))
+        name = name.strip()
+        valid, separator = False, ''
+        if not name:
+            return (valid, separator)
+        for item in self.parameters['separators']:
+            if name.count(item) == 0:
+                continue
+            if name.count(item) > 1:
+                valid, separator = False, ''
+                break
+            if name.startswith(item) or name.endswith(item):
+                continue
+            valid, separator = True, item
+            break
+        return (valid, separator)
+
+
+    def check_source(self, source):
+        valid, _ = self.resolve_filename(source)
+        if not valid:
+            return self.SourceType.INVALID_NAME
+        return self.SourceType.VALID
+
+
+    def generate_key_by_filename(self, source):
+        _, separator = self.resolve_filename(source)
+        filename, _ = os.path.splitext(os.path.basename(source))
+        artist, title = self.split(
+            filename, separator, escaped=True,
+            del_blank=False, filt_empty=False, filt_repeated=False,
+            sortify=False, reversify=False,
+        )
+        return self.generate_key(artist, title)
+
+
     @staticmethod
     def chmod(path, mode=0o755):
         if path and os.path.exists(path):
@@ -2879,17 +2916,89 @@ class SiftSourcesAction(AudioGod):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.__sifted_sources = ([], {}, [])
+
+    #---------------------------------------------------------------------------
+    
+    @property
+    def invalid_sources(self):
+        return self.__sifted_sources[0]
+    
+    
+    @property
+    def repeated_sources(self):
+        return self.__sifted_sources[1]
+    
+    
+    @property
+    def formatted_sources(self):
+        return self.__sifted_sources[2]
+    
+    #---------------------------------------------------------------------------
+    
+    def __pack_output(self):
+        content = f'Invalid sources show below: ({len(self.invalid_sources)})\n\n'
+        for i, source in enumerate(self.invalid_sources, start=1):
+            content += f'\t{i}. {source}\n'
+        content += '\n\n'
+
+        content += f'Formatted sources show below: ({len(self.formatted_sources)})\n\n'
+        for i, (old, new) in enumerate(self.formatted_sources, start=1):
+            content += f'\t{i}. {old}\n'
+            content += f'\t\t --> {new}\n'
+        content += '\n\n'
+
+        content += 'Repeated sources show below: (name: {name}, file: {file})\n\n'.format(
+            name=len(self.repeated_sources),
+            file=sum(len(files) for files in self.repeated_sources.values()),
+        )
+        for name_no, (filename, files) in enumerate(self.repeated_sources.items(), start=1):
+            content += f'\t({name_no}) {filename}: ({len(files)})\n'
+            for i, file in enumerate(files, start=1):
+                content += f'\t\t{i}. {file}\n'
+            content += '\n'
+        return content
+    
     #---------------------------------------------------------------------------
 
     def execute(self):
         self.prime_sources()
+        unique_sources = {}
         for source in self.primed_sources:
-            _type = self.__check_source(source)
+            _type = self.check_source(source)
             match _type:
                 case self.SourceType.INVALID_NAME:
-                    self.invalid_name_sources.append(source)
-                    self.logger.debug(self.SourceType.INVALID_NAME)
+                    self.invalid_sources.append(source)
                     continue
+            filename, _ = os.path.splitext(os.path.basename(source))
+            formatted_filename = re.sub(
+                r'_(H|L)$',
+                r'',
+                filename.replace(' _ ', f' {self.ARTIST_SEPARATOR} '),
+            )
+            if filename != formatted_filename:
+                self.formatted_sources.append((
+                    source,
+                    os.path.join(
+                        os.path.dirname(source), formatted_filename,
+                    ),
+                ))
+                filename = formatted_filename
+            value = os.path.join(os.path.dirname(source), filename)
+            if filename not in unique_sources:
+                unique_sources[filename] = [value]
+            else:
+                unique_sources[filename].append(value)
+
+        for name, files in unique_sources.items():
+            if len(files) <= 1:
+                continue
+            self.repeated_sources[name] = files
+
+        for old, new in self.formatted_sources:
+            self.rename(old, new)
+
+        self.handle_output(self.__pack_output())
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -3258,13 +3367,13 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
 
         for source in self.primed_sources:
             self.logger.debug(f'Loading <{source}> ...')
-            _type = self.__check_source(source)
+            _type = self.check_source(source)
             match _type:
                 case self.SourceType.INVALID_NAME:
                     self.invalid_name_sources.append(source)
                     self.logger.debug(self.SourceType.INVALID_NAME)
                     continue
-            key = self.__generate_key_by_filename(source)
+            key = self.generate_key_by_filename(source)
             if key in self.valid_clauses:
                 self.matched_sources.append(source)
                 self.matched_clauses.append(key)
@@ -3316,45 +3425,6 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
                 content += f'\t{clause}\n'
 
         self.handle_output(content)
-
-
-    def __resolve_filename(self, source):
-        name, _ = os.path.splitext(os.path.basename(source))
-        name = name.strip()
-        valid, separator = False, ''
-        if not name:
-            return (valid, separator)
-        for item in self.parameters['separators']:
-            if name.count(item) == 0:
-                continue
-            if name.count(item) > 1:
-                valid, separator = False, ''
-                break
-            if name.startswith(item) or name.endswith(item):
-                continue
-            valid, separator = True, item
-            break
-        return (valid, separator)
-
-
-    def __check_source(self, source):
-        valid, _ = self.__resolve_filename(source)
-        if not valid:
-            return self.SourceType.INVALID_NAME
-        return self.SourceType.VALID
-
-
-    def __generate_key_by_filename(self, source):
-        _, separator = self.__resolve_filename(source)
-        filename, _ = os.path.splitext(os.path.basename(source))
-        artist, title = self.split(
-            filename, separator, escaped=True,
-            del_blank=False, filt_empty=False, filt_repeated=False,
-            sortify=False, reversify=False,
-        )
-        artist = artist.replace(' _ ', self.ARTIST_SEPARATOR)
-        title = re.sub(r'_(H|L)$', r'', title)
-        return self.generate_key(artist, title)
 
 
     def __load_properties_from_file(self):
@@ -3421,7 +3491,7 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
                 case self.PropertySource.FILE:
                     if audio not in self.matched_sources:
                         continue
-                    key = self.__generate_key_by_filename(audio)
+                    key = self.generate_key_by_filename(audio)
                     _value = self.valid_clauses.get(key, {}).get(field, None)
                     if _value is not None:
                         ret = _value
