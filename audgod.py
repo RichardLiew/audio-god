@@ -2983,7 +2983,7 @@ class SiftSourcesAction(AudioGod):
             content += '\n'
         content += '\n\n'
         return content
-    
+
     #---------------------------------------------------------------------------
 
     def execute(self):
@@ -3031,7 +3031,7 @@ class SiftSourcesAction(AudioGod):
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 @AudioGod.auto_extend
-class MatchSourcesAction(NoteRelatedBaseAction):
+class MatchSourcesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -3099,16 +3099,21 @@ class MatchSourcesAction(NoteRelatedBaseAction):
     #---------------------------------------------------------------------------
 
     def pack_output(self):
-        content = ''
-        if len(self.notmatched_sources) > 0:
-            content += '\nNot Matched Sources:\n\n'
-            for source in self.notmatched_sources:
-                content += f'\t{source}\n'
-            content += f'\n{"*"*60}\n\n'
-        if len(self.notmatched_clauses) > 0:
-            content += '\nNot Matched Clauses:\n\n'
-            for clause in self.notmatched_clauses:
-                content += f'\t{clause}\n'
+        content = 'Total sources: {total}, Notmatched sources: {notmatched}\n\n'.format(
+            total=len(self.primed_sources),
+            notmatched=len(self.notmatched_sources),
+        )
+        for i, source in enumerate(self.notmatched_sources, start=1):
+            content += f'\t{i}. {source}\n'
+        content += '\n\n'
+        
+        content += 'Total clauses: {total}, Notmatched clauses: {notmatched}\n\n'.format(
+            total=sum([len(self.matched_clauses), len(self.notmatched_clauses)]),
+            notmatched=len(self.notmatched_clauses),
+        )
+        for i, clause in enumerate(self.notmatched_clauses, start=1):
+            content += f'\t{i}. {clause}\n'
+        content += '\n\n'
         return content
 
     #---------------------------------------------------------------------------
@@ -3118,21 +3123,12 @@ class MatchSourcesAction(NoteRelatedBaseAction):
         self.prime_sources()
 
         for source in self.primed_sources:
-            self.logger.debug(f'Loading <{source}> ...')
-            _type = self.check_source(source)
-            match _type:
-                case self.SourceType.INVALID_NAME:
-                    self.invalid_name_sources.append(source)
-                    self.logger.debug(self.SourceType.INVALID_NAME)
-                    continue
             key = self.generate_key_by_filename(source)
             if key in self.valid_clauses:
                 self.matched_sources.append(source)
                 self.matched_clauses.append(key)
-                self.logger.debug(self.SourceType.MATCHED)
             else:
                 self.notmatched_sources.append(source)
-                self.logger.debug(self.SourceType.NOTMATCHED)
 
         for key in list(set(self.valid_clauses.keys()) - set(self.matched_clauses)):
             self.notmatched_clauses.append(
@@ -3141,31 +3137,12 @@ class MatchSourcesAction(NoteRelatedBaseAction):
                 ),
             )
 
-        #self.logger.warning(f'\n{"#"*78}\n')
-
-        self.logger.warning(
-            'Inv Name Sources:    {inv_name}\n'
-            'Valid Sources:       {valid} {detail}\n'
-            'Not Matched Clauses: {clauses}'.format(
-                inv_name=len(self.invalid_name_sources),
-                valid=sum(map(len, [
-                    self.matched_sources,
-                    self.notmatched_sources,
-                ])),
-                detail='(Matched: {matched}, NotMatched: {notmatched})\n'.format(
-                    matched=len(self.matched_sources),
-                    notmatched=len(self.notmatched_sources),
-                ),
-                clauses=len(self.notmatched_clauses),
-            )
-        )
-
         self.handle_output()
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 @AudioGod.auto_extend
-class MergeRelatedBaseAction(AudioGod):
+class MergeBaseAction(AudioGod):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -3205,9 +3182,33 @@ class MergeRelatedBaseAction(AudioGod):
 
 #===============================================================================
 
+class MergeAction(MergeBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Merge files or sources',
+        'help': 'merge files or sources',
+    }
+
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        pass
+
+#===============================================================================
+
 @AudioGod.auto_extend
-class MergeNotesAction(
-    MergeRelatedBaseAction,
+class Merge__NotesAction(
+    MergeBaseAction,
     NoteRelatedBaseAction,
     ExportRelatedBaseAction,
 ):
@@ -3284,7 +3285,7 @@ class MergeNotesAction(
 #===============================================================================
 
 @AudioGod.auto_extend
-class MergeSourcesAction(MergeRelatedBaseAction):
+class Merge__SourcesAction(MergeBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -3564,9 +3565,22 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
 
     #---------------------------------------------------------------------------
 
+    def pack_output(self):
+        content = 'Total sources: {total}, Notfilled sources: {notfilled}\n\n'.format(
+            total=len(self.primed_sources),
+            notfilled=len(self.notfilled_sources),
+        )
+        for i, source in enumerate(self.notfilled_sources, start=1):
+            content += f'\t{i}. {source}\n'
+        content += '\n\n'
+        return content
+
+    #---------------------------------------------------------------------------
+
     def execute(self):
         self.analysis_note()
         self.__fill_audio_properties()
+        self.handle_output()
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -6659,8 +6673,8 @@ class GenerateScript__StartAction(GenerateScriptBaseAction):
         (True,  'redecorate-note', {}),
         (True,  'sift-sources', {}),
         (True,  'match-sources', {}),
-        (True,  'merge-notes', {}),
-        (True,  'merge-sources', {}),
+        (True,  'merge', 'notes', {}),
+        (True,  'merge', 'sources', {}),
         (True,  'extract-structure', {}),
         (True,  'fill-properties', {}),
         (True,  'format-properties', {}),
@@ -6946,12 +6960,12 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
             document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.another.redecorate.note.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.another.match.sources.txt',
         )),
-        (True, 'merge-notes', dict(
+        (True, 'merge', 'notes', dict(
             document=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.origin.songs.note.txt',
             another=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.another.origin.songs.note.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.merge.notes.txt',
         )),
-        (True, 'merge-sources', dict(
+        (True, 'merge', 'sources', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
             another=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Another',
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
