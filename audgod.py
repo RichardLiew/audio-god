@@ -2916,28 +2916,41 @@ class SiftSourcesAction(AudioGod):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.__sifted_sources = ([], {}, [])
+        self.__sifted_sources = ([], [], {}, [])
 
     #---------------------------------------------------------------------------
     
     @property
-    def invalid_sources(self):
+    def valid_sources(self):
         return self.__sifted_sources[0]
     
     
     @property
-    def repeated_sources(self):
+    def invalid_sources(self):
         return self.__sifted_sources[1]
     
     
     @property
-    def formatted_sources(self):
+    def repeated_sources(self):
         return self.__sifted_sources[2]
+    
+    
+    @property
+    def formatted_sources(self):
+        return self.__sifted_sources[3]
     
     #---------------------------------------------------------------------------
     
     def __pack_output(self):
-        content = f'Invalid sources show below: ({len(self.invalid_sources)})\n\n'
+        content = 'Total sources: {total}, Valid sources: {valid}\n\n'.format(
+            total=sum([
+                len(self.valid_sources),
+                len(self.invalid_sources),
+                sum(len(files) for files in self.repeated_sources.values()),
+            ]),
+            valid=len(self.valid_sources),
+        )
+        content += f'Invalid sources show below: ({len(self.invalid_sources)})\n\n'
         for i, source in enumerate(self.invalid_sources, start=1):
             content += f'\t{i}. {source}\n'
         content += '\n\n'
@@ -2957,6 +2970,7 @@ class SiftSourcesAction(AudioGod):
             for i, file in enumerate(files, start=1):
                 content += f'\t\t{i}. {file}\n'
             content += '\n'
+        content += '\n\n'
         return content
     
     #---------------------------------------------------------------------------
@@ -2991,7 +3005,10 @@ class SiftSourcesAction(AudioGod):
                 unique_sources[filename].append(value)
 
         for name, files in unique_sources.items():
-            if len(files) <= 1:
+            if len(files) < 1:
+                continue
+            if len(files) == 1:
+                self.valid_sources.append(files[0])
                 continue
             self.repeated_sources[name] = files
 
@@ -3003,7 +3020,7 @@ class SiftSourcesAction(AudioGod):
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 @AudioGod.auto_extend
-class MatchSourcesAction(AudioGod):
+class MatchSourcesAction(NoteRelatedBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -3051,7 +3068,7 @@ class MatchSourcesAction(AudioGod):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        pass
+        self.analysis_note()
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
