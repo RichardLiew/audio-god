@@ -285,9 +285,9 @@ Process Method 2:
     Step.6: Execute the shell script above.
     Results under folders below:
         ${audgod_root}
-          ├── ${audgod_output}
-          ├── ${export.plist.output}
-          └── ${organize.ituned.output}
+          └── ${audgod_output}
+        ${export.plist.output}
+        ${organize.ituned.output}
 
 --------------------------------------------------------------------------------
 
@@ -1782,7 +1782,7 @@ class AudioGod(OPTIONS):
         methods = ['rewrite_parameters']
 
         for member, redecorated in members:
-            if member not in class_.__dict__:
+            if not hasattr(class_, member):
                 continue
             current_value = getattr(class_, member)
             if current_value is None:
@@ -1801,7 +1801,7 @@ class AudioGod(OPTIONS):
             setattr(class_, member, result)
 
         for method in methods:
-            if method not in class_.__dict__:
+            if not hasattr(class_, method):
                 continue
             def create_func(func):
                 def wrapper(self, *args, **kwargs):
@@ -6768,7 +6768,7 @@ class GenerateScript__StartAction(GenerateScriptBaseAction):
 class TESTING_OPTIONS(BASEOPTIONS):
     AUDGOD_ROOT = './test'
 
-    AUDGOD_ORIGIN = os.path.join(AudioGod.AUDGOD_ROOT, 'Origin')
+    AUDGOD_ORIGIN = os.path.join(AUDGOD_ROOT, 'Origin')
     AUDGOD_ORISRC = os.path.join(AUDGOD_ORIGIN, 'Source')
 
 #===============================================================================
