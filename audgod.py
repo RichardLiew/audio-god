@@ -2096,7 +2096,13 @@ class AudioGod(OPTIONS):
         return audio_object
 
 
-    def handle_output(self, content):
+    def pack_output(self):
+        return ''
+
+
+    def handle_output(self, content=''):
+        if not content:
+            content = self.pack_output()
         if not self.parameters['output']:
             self.logger.debug(content)
         else:
@@ -2869,10 +2875,15 @@ class RedecorateNoteAction(
 
     #---------------------------------------------------------------------------
 
+    def pack_output(self):
+        return self.plain_generalize()
+
+    #---------------------------------------------------------------------------
+
     def execute(self):
         self.analysis_note()
         self.sort_summaries()
-        self.handle_output(self.plain_generalize())
+        self.handle_output()
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -2941,7 +2952,7 @@ class SiftSourcesAction(AudioGod):
     
     #---------------------------------------------------------------------------
     
-    def __pack_output(self):
+    def pack_output(self):
         content = 'Total sources: {total}, Valid sources: {valid}\n\n'.format(
             total=sum([
                 len(self.valid_sources),
@@ -3015,7 +3026,7 @@ class SiftSourcesAction(AudioGod):
         for old, new in self.formatted_sources:
             self.rename(old, new)
 
-        self.handle_output(self.__pack_output())
+        self.handle_output()
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -3065,6 +3076,41 @@ class MatchSourcesAction(NoteRelatedBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.__data = ([], [], [], [])
+
+    #---------------------------------------------------------------------------
+
+    @property
+    def matched_sources(self):
+        return self.__data[0]
+
+    @property
+    def notmatched_sources(self):
+        return self.__data[1]
+
+    @property
+    def matched_clauses(self):
+        return self.__data[2]
+
+    @property
+    def notmatched_clauses(self):
+        return self.__data[3]
+
+    #---------------------------------------------------------------------------
+
+    def pack_output(self):
+        content = ''
+        if len(self.notmatched_sources) > 0:
+            content += '\nNot Matched Sources:\n\n'
+            for source in self.notmatched_sources:
+                content += f'\t{source}\n'
+            content += f'\n{"*"*60}\n\n'
+        if len(self.notmatched_clauses) > 0:
+            content += '\nNot Matched Clauses:\n\n'
+            for clause in self.notmatched_clauses:
+                content += f'\t{clause}\n'
+        return content
+
     #---------------------------------------------------------------------------
 
     def execute(self):
@@ -3094,6 +3140,27 @@ class MatchSourcesAction(NoteRelatedBaseAction):
                     self.repack_audio_properties(self.valid_clauses[key]),
                 ),
             )
+
+        #self.logger.warning(f'\n{"#"*78}\n')
+
+        self.logger.warning(
+            'Inv Name Sources:    {inv_name}\n'
+            'Valid Sources:       {valid} {detail}\n'
+            'Not Matched Clauses: {clauses}'.format(
+                inv_name=len(self.invalid_name_sources),
+                valid=sum(map(len, [
+                    self.matched_sources,
+                    self.notmatched_sources,
+                ])),
+                detail='(Matched: {matched}, NotMatched: {notmatched})\n'.format(
+                    matched=len(self.matched_sources),
+                    notmatched=len(self.notmatched_sources),
+                ),
+                clauses=len(self.notmatched_clauses),
+            )
+        )
+
+        self.handle_output()
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -3203,12 +3270,16 @@ class MergeNotesAction(
                 prefix = f'@<{another_name}> &{line_number}:'
                 self.all_clauses.append((prefix, line))
 
+
+    def pack_output(self):
+        return self.plain_generalize()
+
     #---------------------------------------------------------------------------
 
     def execute(self):
         self.analysis_note()
         self.sort_summaries()
-        self.handle_output(self.plain_generalize())
+        self.handle_output()
 
 #===============================================================================
 
@@ -3353,8 +3424,18 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.__sifted_sources = ([], [], [])
-        self.__sifted_clauses = ([], [])
+        self.__data = ([], [])
+
+    #---------------------------------------------------------------------------
+
+    @property
+    def filled_sources(self):
+        return self.__data[0]
+
+
+    @property
+    def notfilled_sources(self):
+        return self.__data[1]
 
     #---------------------------------------------------------------------------
 
@@ -3365,115 +3446,6 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
             )
 
     #---------------------------------------------------------------------------
-
-    @property
-    def invalid_name_sources(self):
-        return self.__sifted_sources[0]
-
-    @property
-    def matched_sources(self):
-        return self.__sifted_sources[1]
-
-    @property
-    def notmatched_sources(self):
-        return self.__sifted_sources[2]
-
-    @property
-    def matched_clauses(self):
-        return self.__sifted_clauses[0]
-
-    @property
-    def notmatched_clauses(self):
-        return self.__sifted_clauses[1]
-
-    #---------------------------------------------------------------------------
-
-    #def _import_note(self):
-    #    self.analysis_note()
-
-    #def _import_plist(self):
-    #    pass
-
-    #def _import_markdown(self):
-    #    pass
-
-    #def _import_xml(self):
-    #    pass
-
-    #def _import_json(self):
-    #    pass
-
-
-    def __load_sources(self):
-        self.prime_sources()
-
-        for source in self.primed_sources:
-            self.logger.debug(f'Loading <{source}> ...')
-            _type = self.check_source(source)
-            match _type:
-                case self.SourceType.INVALID_NAME:
-                    self.invalid_name_sources.append(source)
-                    self.logger.debug(self.SourceType.INVALID_NAME)
-                    continue
-            key = self.generate_key_by_filename(source)
-            if key in self.valid_clauses:
-                self.matched_sources.append(source)
-                self.matched_clauses.append(key)
-                self.logger.debug(self.SourceType.MATCHED)
-            else:
-                self.notmatched_sources.append(source)
-                self.logger.debug(self.SourceType.NOTMATCHED)
-
-        for key in list(set(self.valid_clauses.keys()) - set(self.matched_clauses)):
-            self.notmatched_clauses.append(
-                self.pack_properties(
-                    self.repack_audio_properties(self.valid_clauses[key]),
-                ),
-            )
-
-        #self.logger.warning(f'\n{"#"*78}\n')
-
-        self.logger.warning(
-            'Inv Name Sources:    {inv_name}\n'
-            'Valid Sources:       {valid} {detail}\n'
-            'Not Matched Clauses: {clauses}'.format(
-                inv_name=len(self.invalid_name_sources),
-                valid=sum(map(len, [
-                    self.matched_sources,
-                    self.notmatched_sources,
-                ])),
-                detail='(Matched: {matched}, NotMatched: {notmatched})\n'.format(
-                    matched=len(self.matched_sources),
-                    notmatched=len(self.notmatched_sources),
-                ),
-                clauses=len(self.notmatched_clauses),
-            )
-        )
-
-        content = ''
-        if len(self.invalid_name_sources) > 0:
-            content += '\nInvalid Name Sources:\n\n'
-            for source in self.invalid_name_sources:
-                content += f'\t{source}\n'
-            content += f'\n{"*"*60}\n\n'
-        if len(self.notmatched_sources) > 0:
-            content += '\nNot Matched Sources:\n\n'
-            for source in self.notmatched_sources:
-                content += f'\t{source}\n'
-            content += f'\n{"*"*60}\n\n'
-        if len(self.notmatched_clauses) > 0:
-            content += '\nNot Matched Clauses:\n\n'
-            for clause in self.notmatched_clauses:
-                content += f'\t{clause}\n'
-
-        self.handle_output(content)
-
-
-    #def __load_properties_from_file(self):
-    #    if self.parameters['document']:
-    #        file_format = self.recognize_file_format(self.parameters['document'])
-    #        getattr(self, f'_import_{file_format}')()
-
 
     def __resolve_properties(self, properties):
         ret = self.load_json(properties, {})
@@ -3531,10 +3503,10 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
                             ret = _value
                             break
                 case self.PropertySource.FILE:
-                    if audio not in self.matched_sources:
-                        continue
                     key = self.generate_key_by_filename(audio)
-                    _value = self.valid_clauses.get(key, {}).get(field, None)
+                    if key not in self.valid_clauses:
+                        continue
+                    _value = self.valid_clauses[key].get(field, None)
                     if _value is not None:
                         ret = _value
                         break
@@ -3557,33 +3529,43 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
 
 
     def __fill_audio_properties(self):
-        filled_count, audios = 0, self.primed_sources
-        #self.logger.warning(f'\n{"#"*78}\n')
-        for audio in audios:
-            self.logger.debug(f'Filling <{audio}> ...')
-            filled, audio_object = False, self.prime_audio(audio)
+        for source in self.primed_sources:
+            filled, audio_object = False, self.prime_audio(source)
             for field in self.FIELDS['all']:
-                property_ = self.__fetch_from_outside(audio, field)
+                property_ = self.__fetch_from_outside(source, field)
                 if property_ is not None:
                     filled = True
                     self.save(audio_object, field, property_, True)
-                    self.logger.debug(f'Field <{field}> assigned!')
             if filled:
-                filled_count += 1
-                self.logger.debug(f'Audio <{audio}> filled!\n')
-        self.logger.warning(
-            'Sources To Fill: {total}, Filled Sources: {filled}\n'.format(
-                total=len(audios),
-                filled=filled_count,
-            )
-        )
+                self.filled_sources.append(source)
+            else:
+                self.notfilled_sources.append(source)
+
+
+    #def __load_properties_from_file(self):
+    #    if self.parameters['document']:
+    #        file_format = self.recognize_file_format(self.parameters['document'])
+    #        getattr(self, f'_import_{file_format}')()
+
+    #def _import_note(self):
+    #    self.analysis_note()
+
+    #def _import_plist(self):
+    #    pass
+
+    #def _import_markdown(self):
+    #    pass
+
+    #def _import_xml(self):
+    #    pass
+
+    #def _import_json(self):
+    #    pass
 
     #---------------------------------------------------------------------------
 
     def execute(self):
-        #self.__load_properties_from_file()
         self.analysis_note()
-        self.__load_sources()
         self.__fill_audio_properties()
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -5221,7 +5203,7 @@ class ExportBaseAction(ExportRelatedBaseAction):
     #---------------------------------------------------------------------------
 
     def generalize(self):
-        pass
+        return ''
 
     #---------------------------------------------------------------------------
 
@@ -6186,10 +6168,15 @@ class Convert__NoteToMarkdownAction(
 
     #---------------------------------------------------------------------------
 
+    def pack_output(self):
+        return self.plain_generalize()
+
+    #---------------------------------------------------------------------------
+
     def execute(self):
         self.analysis_note()
         self.sort_summaries()
-        self.handle_output(self.plain_generalize())
+        self.handle_output()
 
 #===============================================================================
 
@@ -6320,12 +6307,16 @@ class ExtractStructureAction(
                 break
         return { 'Music': result }
 
+
+    def pack_output(self):
+        return self.tree(self.__stow_tree())
+
     #---------------------------------------------------------------------------
 
     def execute(self):
         self.analysis_note()
         self.sort_summaries()
-        self.handle_output(self.tree(self.__stow_tree()))
+        self.handle_output()
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -6532,10 +6523,14 @@ class Operate__TreeAction(TreeRelatedBaseAction, OperateBaseAction):
             return ret
         return { os.path.basename(path): _tree(path) }
 
+    
+    def pack_output(self):
+        return self.tree(self.stow_tree(self.parameters['source']))
+
     #---------------------------------------------------------------------------
 
     def execute(self):
-        self.handle_output(self.tree(self.stow_tree(self.parameters['source'])))
+        self.handle_output()
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -6599,6 +6594,7 @@ class GenerateScriptBaseAction(AudioGod):
         content += 'echo "\\n[***] Finished!\\n"\n'
 
         self.handle_output(content)
+
         if self.parameters['output']:
             if os.path.exists(self.parameters['output']):
                 self.chmod(self.parameters['output'], mode=0o755)
