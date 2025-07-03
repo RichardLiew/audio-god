@@ -2194,9 +2194,9 @@ class AudioGod(OPTIONS):
         return ext[1:].lower() in extensions
 
 
-    def stow_sources(self):
+    def hoard_sources(self, source, recursive):
         ret = []
-        for item in self.expand_globbing(self.parameters['source'], recursive=True):
+        for item in self.expand_globbing(source, recursive=True):
             if not os.path.exists(item):
                 self.logger.warning(f'Source <{item}> not exists!')
                 continue
@@ -2206,7 +2206,7 @@ class AudioGod(OPTIONS):
             if not os.path.isdir(item):
                 self.logger.warning(f'Source <{item}> not a file or directory!')
                 continue
-            if self.parameters['recursive']:
+            if recursive:
                 for _root, _dirs, _files in os.walk(item):
                     for _dir in _dirs:
                         ret.append(self.abspath(_root, _dir))
@@ -2217,16 +2217,17 @@ class AudioGod(OPTIONS):
                     self.abspath(item, target)
                     for target in os.listdir(item)
                 ])
-        self.original_sources.extend(list(dict.fromkeys(ret)))
+        return self.original_sources.extend(list(dict.fromkeys(ret)))
 
 
-    def prime_sources(self):
-        self.stow_sources()
-        self.stow_ignored()
+    def stow_sources(self):
+        self.hoard_sources(
+            self.parameters['source'], self.parameters['recursive'],
+        )
 
+
+    def trim_sources(self):
         for source in self.original_sources:
-            self.logger.debug(f'Priming <{source}> ...')
-
             _source, ignored = source, False
             while True:
                 if re.match(r'^/*$', _source) is not None:
@@ -2237,24 +2238,19 @@ class AudioGod(OPTIONS):
                 _source = os.path.dirname(_source)
             if ignored:
                 self.ignored_sources.append(source)
-                self.logger.debug(self.SourceType.IGNORED)
                 continue
 
             if os.path.basename(source) == '.DS_Store' \
                     or os.path.islink(source) \
                     or not os.path.isfile(source):
                 self.omitted_sources.append(source)
-                self.logger.debug(self.SourceType.OMITTED)
                 continue
 
             if not self.__check_extension(source):
                 self.invalid_ext_sources.append(source)
-                self.logger.debug(self.SourceType.INVALID_EXT)
                 continue
 
             self.primed_sources.append(source)
-
-        #self.logger.warning(f'\n{"#"*78}\n')
 
         self.logger.warning(
             'Total Sources:   {total}\n\n'
@@ -2282,6 +2278,12 @@ class AudioGod(OPTIONS):
             self.logger.warning('\nInvalid Extension Sources:')
             for source in self.invalid_ext_sources:
                 self.logger.warning(f'\t{source}')
+
+
+    def prime_sources(self):
+        self.stow_sources()
+        self.stow_ignored()
+        self.trim_sources()
 
     #---------------------------------------------------------------------------
 
@@ -2990,26 +2992,33 @@ class SiftSourcesAction(AudioGod):
         self.prime_sources()
         unique_sources = {}
         for source in self.primed_sources:
-            _type = self.check_source(source)
-            match _type:
-                case self.SourceType.INVALID_NAME:
-                    self.invalid_sources.append(source)
-                    continue
-            filename, _ = os.path.splitext(os.path.basename(source))
+            valid, separator = self.resolve_filename(source)
+            if not valid:
+                self.invalid_sources.append(source)
+                continue
+            filename, ext = os.path.splitext(os.path.basename(source))
             formatted_filename = re.sub(
                 r'_(H|L)$',
                 r'',
                 filename.replace(' _ ', f' {self.ARTIST_SEPARATOR} '),
             )
+            artist, title = self.split(
+                formatted_filename, separator, escaped=True,
+                del_blank=False, filt_empty=False, filt_repeated=False,
+                sortify=False, reversify=False,
+            )
+            artist = self.format_artist(artist)
+            title = self.format_artist(title)
+            formatted_filename = f'{artist} {separator} {title}'
             if filename != formatted_filename:
                 self.formatted_sources.append((
                     source,
                     os.path.join(
-                        os.path.dirname(source), formatted_filename,
+                        os.path.dirname(source), f'{formatted_filename}.{ext}',
                     ),
                 ))
                 filename = formatted_filename
-            value = os.path.join(os.path.dirname(source), filename)
+            value = os.path.join(os.path.dirname(source), f'{filename}.{ext}')
             if filename not in unique_sources:
                 unique_sources[filename] = [value]
             else:
@@ -3330,6 +3339,24 @@ class Merge__SourcesAction(MergeBaseAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.__data = ([], [], [])
+
+    #---------------------------------------------------------------------------
+
+    @property
+    def main_sources(self):
+        return self.__data[0]
+
+
+    @property
+    def another_sources(self):
+        return self.__data[1]
+
+
+    @property
+    def conflicts(self):
+        return self.__data[2]
+
     #---------------------------------------------------------------------------
 
     def rewrite_parameters(self):
@@ -3339,8 +3366,54 @@ class Merge__SourcesAction(MergeBaseAction):
 
     #---------------------------------------------------------------------------
 
+    def load_sources(self):
+        self.stow_ignored()
+
+        self.hoard_sources(self.parameters['source'], self.parameters['recursive'])
+        self.trim_sources()
+        self.main_sources.extend(self.primed_sources)
+
+        self.original_sources.clear()
+        self.primed_sources.clear()
+
+        self.hoard_sources(self.parameters['another'], self.parameters['recursive'])
+        self.trim_sources()
+        self.another_sources.extend(self.primed_sources)
+
+
+    def pack_output(self):
+        content = 'Total another sources: {total}, Conflicting sources: {conflict}\n\n'.format(
+            total=len(self.another_sources),
+            conflict=len(self.conflicts),
+        )
+        for number, (file, conflicts) in enumerate(self.conflicts, start=1):
+            content += f'\t({number}) {file}: ({len(conflicts)})\n'
+            for i, conflict in enumerate(conflicts, start=1):
+                content += f'\t\t{i}. {conflict}\n'
+            content += '\n'
+        content += '\n\n'
+        return content
+
+    #---------------------------------------------------------------------------
+
     def execute(self):
-        pass
+        self.load_sources()
+
+        main_set = {}
+        for source in self.main_sources:
+            filename, _ = os.path.splitext(os.path.basename(source))
+            if filename not in main_set:
+                main_set[filename] = [source]
+            else:
+                main_set[filename].append(source)
+
+        for source in self.another_sources:
+            filename, _ = os.path.splitext(os.path.basename(source))
+            if filename not in main_set:
+                continue
+            self.conflicts.append((source, main_set[filename]))
+
+        self.handle_output()
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -3726,7 +3799,7 @@ class ListRepeatedAction(AudioGod):
 
     KWARGS = {
         'description': '✋ List repeated audios by artist and title',
-        'help': 'list repeated audios',
+        'help': 'list repeated audios',/Si
     }
 
     ARGUMENTS = {
