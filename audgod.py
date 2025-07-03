@@ -2932,28 +2932,19 @@ class SiftSourcesAction(AudioGod):
         self.__sifted_sources = ([], [], {}, [])
 
     #---------------------------------------------------------------------------
-    
     @property
     def valid_sources(self):
         return self.__sifted_sources[0]
-    
-    
     @property
     def invalid_sources(self):
         return self.__sifted_sources[1]
-    
-    
     @property
     def repeated_sources(self):
         return self.__sifted_sources[2]
-    
-    
     @property
     def formatted_sources(self):
         return self.__sifted_sources[3]
-    
     #---------------------------------------------------------------------------
-    
     def pack_output(self):
         content = 'Total sources: {total}, Valid sources: {valid}\n\n'.format(
             total=sum([
@@ -3115,7 +3106,6 @@ class MatchSourcesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
         for i, source in enumerate(self.notmatched_sources, start=1):
             content += f'\t{i}. {source}\n'
         content += '\n\n'
-        
         content += 'Total clauses: {total}, Notmatched clauses: {notmatched}\n\n'.format(
             total=sum([len(self.matched_clauses), len(self.notmatched_clauses)]),
             notmatched=len(self.notmatched_clauses),
@@ -3799,7 +3789,7 @@ class ListRepeatedAction(AudioGod):
 
     KWARGS = {
         'description': '✋ List repeated audios by artist and title',
-        'help': 'list repeated audios',/Si
+        'help': 'list repeated audios',
     }
 
     ARGUMENTS = {
@@ -5368,7 +5358,6 @@ class Export__NoteAction(ExportBaseAction, NoteRelatedBaseAction):
         super().__init__(*args, **kwargs)
 
     #---------------------------------------------------------------------------
-    
     def generalize(self):
         return self.plain_generalize()
 
@@ -6610,7 +6599,6 @@ class Operate__TreeAction(TreeRelatedBaseAction, OperateBaseAction):
             return ret
         return { os.path.basename(path): _tree(path) }
 
-    
     def pack_output(self):
         return self.tree(self.stow_tree(self.parameters['source']))
 
