@@ -61,7 +61,7 @@
 #       mdutils = "==1.6.0"
 #       pyfiglet = "==1.0.3"
 #       pydub = "==0.25.1"
-#       tqdm = "==4.67.1"
+#       alive-progress = "==3.2.0"
 #
 #       [dev-packages]
 #       pylint = "==3.3.6"
@@ -162,10 +162,10 @@ from collections import ChainMap
 import psutil
 import pyfiglet
 
-from tqdm import tqdm
 from treelib import Tree
 from enumx import StringEnum
 from prettytable import PrettyTable
+from alive_progress import alive_bar
 
 import eyed3
 from eyed3.id3 import Genre, frames
@@ -294,7 +294,6 @@ Process Method 2:
 Update steps:
 
     Read the ./test.zsh file, and follow the steps to update the library when add new songs.
-
 
 --------------------------------------------------------------------------------
 
@@ -2357,7 +2356,6 @@ class AudioGod(OPTIONS):
 
     #---------------------------------------------------------------------------
 
-    #@with_progress()
     @log_decorator
     def run(self):
         self.execute()
