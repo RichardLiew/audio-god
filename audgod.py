@@ -2264,6 +2264,10 @@ class AudioGod(OPTIONS):
         self.hoard_sources(
             self.parameters['source'], self.parameters['recursive'],
         )
+        if self.parameters.get('another', ''):
+            self.hoard_sources(
+                self.parameters['another'], self.parameters['recursive'],
+            )
 
 
     def trim_sources(self):
@@ -2380,6 +2384,47 @@ class SummarizeRelatedBaseAction(AudioGod):
 #===============================================================================
 
 @AudioGod.auto_extend
+class MergeRelatedBaseAction(AudioGod):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = None
+    ARGUMENTS = None
+
+    PUBLIC_ARGUMENTS = {
+        'another': {
+            'args': ['-z'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': True,
+                'default': '',
+                'help': 'another item to merge',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def rewrite_parameters(self):
+        if 'another' in self.parameters:
+            self.parameters['another'] = self.abspath(
+                self.parameters['another'],
+            )
+            if self.parameters['another']:
+                if not os.path.exists(self.parameters['another']):
+                    self.logger.fatal(f'Another <{self.parameters["another"]}> not exists!')
+                    return
+
+#===============================================================================
+
+@AudioGod.auto_extend
 class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
     ACTIVE = True
 
@@ -2404,6 +2449,15 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
 
         self.__clauses = ([], [], {}, {}, [], [])
         self.__clauses_counter = [0, 0, 0, 0, 0, 0]
+
+    #---------------------------------------------------------------------------
+
+    def rewrite_parameters(self):
+        if 'another' in self.parameters:
+            if self.parameters['another']:
+                if not os.path.isfile(self.parameters['another']):
+                    self.logger.fatal(f'Another <{self.parameters["another"]}> is not file!')
+                    return
 
     #---------------------------------------------------------------------------
 
@@ -2488,6 +2542,14 @@ class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
             for line_number, line in enumerate(f, start=1):
                 prefix = f'@<{document_name}> &{line_number}:'
                 self.all_clauses.append((prefix, line))
+        if self.parameters.get('another', ''):
+            another_name = os.path.basename(self.parameters['another'])
+            if another_name == os.path.basename(self.parameters['document']):
+                another_name = f'another.{another_name}'
+            with open(self.parameters['another'], 'r', encoding='utf-8') as f:
+                for line_number, line in enumerate(f, start=1):
+                    prefix = f'@<{another_name}> &{line_number}:'
+                    self.all_clauses.append((prefix, line))
 
 
     def analysis_note(self):
@@ -3079,6 +3141,211 @@ class SiftSourcesAction(AudioGod):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+class PickBaseAction(AudioGod):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = None
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        pass
+
+#===============================================================================
+
+class PickAction(PickBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Pick files or sources by sort',
+        'help': 'pick files or sources by sort',
+    }
+
+    ARGUMENTS = None
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        pass
+
+#===============================================================================
+
+@AudioGod.auto_extend
+class Pick__NoteAction(
+    NoteRelatedBaseAction,
+    PickBaseAction,
+    ExportRelatedBaseAction,
+):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Pick note',
+        'help': 'pick note',
+    }
+
+    ARGUMENTS = {
+        'document': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/origin.songs.note.txt',
+            },
+        },
+        'another': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/another.origin.songs.note.txt',
+            },
+        },
+        'field_type': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/pick.note.txt',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.__discrete_clauses = []
+
+    #---------------------------------------------------------------------------
+
+    @property
+    def discrete_clauses(self):
+        return self.__discrete_clauses
+
+    #---------------------------------------------------------------------------
+
+    def pack_output(self):
+        content = f'Total: {len(self.discrete_clauses)}\n\n'
+        content += '\n'.join(self.discrete_clauses) + '\n'
+        content += '\n\n'
+        return content
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        self.analysis_note()
+        self.sort_summaries()
+
+        for _, (_, items) in self.summaries:
+            for item in items:
+                self.discrete_clauses.append(self.pack_properties(item))
+        self.discrete_clauses.sort()
+
+        self.handle_output()
+
+#===============================================================================
+
+@AudioGod.auto_extend
+class Pick__SourcesAction(PickBaseAction, MergeRelatedBaseAction):
+    ACTIVE = True
+
+    #---------------------------------------------------------------------------
+
+    KWARGS = {
+        'description': '✋ Pick sources',
+        'help': 'pick sources',
+    }
+
+    ARGUMENTS = {
+        'source': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'extensions': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'recursive': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'ignored_file': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'another': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': f'{OPTIONS.AUDGOD_SOURCE}/Another',
+            },
+        },
+        'separators': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
+        'output': {
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/pick.sources.txt',
+            },
+        },
+    }
+
+    #---------------------------------------------------------------------------
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.__discrete_sources = []
+
+    #---------------------------------------------------------------------------
+
+    @property
+    def discrete_sources(self):
+        return self.__discrete_sources
+
+    #---------------------------------------------------------------------------
+
+    def pack_output(self):
+        content = f'Total: {len(self.discrete_sources)}\n\n'
+        for _, (filename, source) in enumerate(self.discrete_sources, start=1):
+            content += f'{filename}: {source}\n'
+        content += '\n\n'
+        return content
+
+    #---------------------------------------------------------------------------
+
+    def execute(self):
+        self.prime_sources()
+        for source in self.primed_sources:
+            valid, separator = self.resolve_filename(source)
+            if not valid:
+                self.logger.fatal(f'Invalid source <{source}>!')
+                return
+            filename, _ = os.path.splitext(os.path.basename(source))
+            artist, title = self.split(
+                filename, separator, escaped=True,
+                del_blank=False, filt_empty=False, filt_repeated=False,
+                sortify=False, reversify=False,
+            )
+            self.discrete_sources.append((
+                f'{title} {separator} {artist}', source,
+            ))
+        self.discrete_sources.sort(key=lambda x: x[0])
+        self.handle_output()
+
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
 @AudioGod.auto_extend
 class MatchSourcesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
     ACTIVE = True
@@ -3189,27 +3456,13 @@ class MatchSourcesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-@AudioGod.auto_extend
-class MergeBaseAction(AudioGod):
+class MergeBaseAction(MergeRelatedBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
 
     KWARGS = None
     ARGUMENTS = None
-
-    PUBLIC_ARGUMENTS = {
-        'another': {
-            'args': ['-z'],
-            'kwargs': {
-                'action': 'store',
-                'type': str,
-                'required': True,
-                'default': '',
-                'help': 'another item to merge',
-            },
-        },
-    }
 
     #---------------------------------------------------------------------------
 
@@ -3218,15 +3471,8 @@ class MergeBaseAction(AudioGod):
 
     #---------------------------------------------------------------------------
 
-    def rewrite_parameters(self):
-        if 'another' in self.parameters:
-            self.parameters['another'] = self.abspath(
-                self.parameters['another'],
-            )
-            if self.parameters['another']:
-                if not os.path.exists(self.parameters['another']):
-                    self.logger.fatal(f'Another <{self.parameters["another"]}> not exists!')
-                    return
+    def execute(self):
+        pass
 
 #===============================================================================
 
@@ -3299,26 +3545,6 @@ class Merge__NotesAction(
         super().__init__(*args, **kwargs)
 
     #---------------------------------------------------------------------------
-
-    def rewrite_parameters(self):
-        if 'another' in self.parameters:
-            if self.parameters['another']:
-                if not os.path.isfile(self.parameters['another']):
-                    self.logger.fatal(f'Another <{self.parameters["another"]}> is not file!')
-                    return
-
-    #---------------------------------------------------------------------------
-
-    def stow_clauses(self):
-        NoteRelatedBaseAction.stow_clauses(self)
-        another_name = os.path.basename(self.parameters['another'])
-        if another_name == os.path.basename(self.parameters['document']):
-            another_name = f'another.{another_name}'
-        with open(self.parameters['another'], 'r', encoding='utf-8') as f:
-            for line_number, line in enumerate(f, start=1):
-                prefix = f'@<{another_name}> &{line_number}:'
-                self.all_clauses.append((prefix, line))
-
 
     def pack_output(self):
         return self.plain_generalize()
@@ -6778,10 +7004,12 @@ class GenerateScript__StartAction(GenerateScriptBaseAction):
         (True,  'convert', 'qmc-to-audio', {}),
         (False, 'convert', 'media', {}),
         (True,  'redecorate-note', {}),
-        (True,  'sift-sources', {}),
-        (True,  'match-sources', {}),
+        (True,  'pick', 'note', {}),
         (True,  'merge', 'notes', {}),
+        (True,  'sift-sources', {}),
+        (True,  'pick', 'sources', {}),
         (True,  'merge', 'sources', {}),
+        (True,  'match-sources', {}),
         (True,  'extract-structure', {}),
         (True,  'fill-properties', {}),
         (True,  'format-properties', {}),
@@ -7019,8 +7247,10 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
 
     STEPS = [
         (False, 'operate', 'cleanup', {}), # same as <test cleanup>
+        # testing part
         (True, 'testing', 'cleanup', {}),
         (True, 'testing', 'init', {}),
+        # convert part
         (True, 'convert', 'kmx-to-mp4', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Kmx',
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
@@ -7037,23 +7267,26 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Media',
             format='mp3',
         )),
+        # main part
         (True, 'redecorate-note', dict(
             document=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.origin.songs.note.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.redecorate.note.txt',
         )),
-        (True, 'redecorate-note', dict(
-            document=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.another.origin.songs.note.txt',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.another.redecorate.note.txt',
+        (True, 'pick', 'note', dict(
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.redecorate.note.txt',
+            another='',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.pick.note.txt',
         )),
         (True, 'sift-sources', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.sift.sources.txt',
         )),
-        (True, 'sift-sources', dict(
-            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Another',
+        (True, 'pick', 'sources', dict(
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
+            another='',
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
-            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.another.sift.sources.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.pick.sources.txt',
         )),
         (True, 'match-sources', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
@@ -7061,16 +7294,43 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
             document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.redecorate.note.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.match.sources.txt',
         )),
+        # another part
+        (True, 'redecorate-note', dict(
+            document=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.another.origin.songs.note.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.another.redecorate.note.txt',
+        )),
+        (True, 'pick', 'note', dict(
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.another.redecorate.note.txt',
+            another='',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.another.pick.note.txt',
+        )),
+        (True, 'sift-sources', dict(
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Another',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.another.sift.sources.txt',
+        )),
+        (True, 'pick', 'sources', dict(
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Another',
+            another='',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.another.pick.sources.txt',
+        )),
         (True, 'match-sources', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Another',
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
             document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.another.redecorate.note.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.another.match.sources.txt',
         )),
+        # merge part
         (True, 'merge', 'notes', dict(
-            document=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.origin.songs.note.txt',
-            another=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.another.origin.songs.note.txt',
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.redecorate.note.txt',
+            another=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.another.redecorate.note.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.merge.notes.txt',
+        )),
+        (True, 'pick', 'note', dict(
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.redecorate.note.txt',
+            another=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.another.redecorate.note.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.merge.pick.note.txt',
         )),
         (True, 'merge', 'sources', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
@@ -7078,6 +7338,20 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.merge.sources.txt',
         )),
+        (True, 'pick', 'sources', dict(
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
+            another=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Another',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.merge.pick.sources.txt',
+        )),
+        ## mv another sources folder to main sources folder, then execute commands below
+        (True, 'match-sources', dict(
+            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
+            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
+            document=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.merge.notes.txt',
+            output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.merge.match.sources.txt',
+        )),
+        # normal steps
         (True, 'extract-structure', dict(
             document=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.origin.songs.note.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.extract.structure.txt',
@@ -7169,12 +7443,14 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Artwork',
         )),
+        # operate part
         (True, 'operate', 'backup', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.operate.backup.txt',
         )),
         (True, 'operate', 'remove', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.operate.remove.txt',
         )),
+        # script part
         (True, 'generate-script', 'start', dict(
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.start.zsh',
         )),
