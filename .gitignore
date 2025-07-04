@@ -1,9 +1,4 @@
 .DS_Store
-notes.*
-songs.*
-*.note
-*.xml
-*.backup*
 test/
 
 # Byte-compiled / optimized / DLL files
