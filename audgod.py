@@ -3229,7 +3229,7 @@ class Pick__NoteAction(
         self.analysis_note()
         self.sort_summaries()
 
-        for _, (_, items) in self.summaries:
+        for _, (_, items) in self.summaries.items():
             for item in items:
                 self.discrete_clauses.append(self.pack_properties(item))
         self.discrete_clauses.sort()
