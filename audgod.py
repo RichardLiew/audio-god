@@ -1312,12 +1312,12 @@ class AudioGod(OPTIONS):
                  .replace('！', '!')\
                  .replace('？', '?')\
                  .replace('。', '.')\
-                 .replace('【', '[')\
-                 .replace('】', ']')\
                  .replace('｜', '|')\
-                 .replace('《', '<')\
-                 .replace('》', '>')\
                  .replace('——', '-')
+                 #.replace('【', '[')\
+                 #.replace('】', ']')\
+                 #.replace('《', '<')\
+                 #.replace('》', '>')\
         ret = re.sub(r'([\(\[\<\|])', r' \1', ret)
         ret = re.sub(r'([\)\]\>\|:,;\!\?])', r'\1 ', ret)
         ret = re.sub(r'([\&])', r' \1 ', ret)
