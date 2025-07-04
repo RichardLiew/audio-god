@@ -2163,7 +2163,7 @@ class AudioGod(OPTIONS):
         if not content:
             content = self.pack_output()
         if not self.parameters['output']:
-            self.logger.debug(content)
+            self.logger.error(content)
         else:
             if os.path.exists(self.parameters['output']):
                 self.remove(self.parameters['output'])
@@ -3088,7 +3088,7 @@ class SiftSourcesAction(AudioGod):
                 sortify=False, reversify=False,
             )
             artist = self.format_artist(artist)
-            title = self.format_artist(title)
+            title = self.format_title(title)
             formatted_filename = f'{artist} {separator} {title}'
             if filename != formatted_filename:
                 self.formatted_sources.append((
