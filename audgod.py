@@ -6554,7 +6554,7 @@ class Operate__CleanupAction(OperateBaseAction):
 
     def execute(self):
         items = [
-            '${audgod_output}',
+            '${audgod_fullout}',
             '${export.plist.output}',
             '${organize.ituned.output}',
         ]
@@ -7522,6 +7522,8 @@ def main():
                 audgod_root=AudioGod.AUDGOD_ROOT,
                 audgod_source=os.path.basename(OPTIONS.AUDGOD_SOURCE),
                 audgod_output=os.path.basename(OPTIONS.AUDGOD_OUTPUT),
+                audgod_fullsrc=OPTIONS.AUDGOD_SOURCE,
+                audgod_fullout=OPTIONS.AUDGOD_OUTPUT,
                 audgod_cache= os.path.basename(OPTIONS.AUDGOD_CACHE),
                 audgod_trash= os.path.basename(OPTIONS.AUDGOD_TRASH),
                 audgod_backup=os.path.basename(OPTIONS.AUDGOD_BACKUP),
