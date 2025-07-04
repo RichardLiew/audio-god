@@ -8,7 +8,6 @@ steps in usage需要和generate script以及cleanup, 以及所有的actions和br
 
 
 在每一个调用 for in sources 里，都记得输出处理日志，并带有 23/136 这样的处理进度，最好同时额外带一个进度条，看看日志和进度条是线程的全d吗
-详细梳理增量更新的逻辑，并写在usage里
 
 
 
@@ -23,6 +22,7 @@ Useful Paths:
 
 
 Relax:
+详细梳理增量更新的逻辑，并写在usage里
 mgg文件解密（意义不大，因为tencent会定期更换mgg的加密算法，windows下生成的是mgg，而mac下是qmc，很好解密）
 -a -b -c 参数重新分配
 看看能不能改成多进程以及多线程模式，加快速度（应该不行，好多依赖的库，貌似都是线程不安全的，更别提多进程了，暂时维持现状吧）

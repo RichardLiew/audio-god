@@ -291,6 +291,13 @@ Process Method 2:
 
 --------------------------------------------------------------------------------
 
+Update steps:
+
+    Read the ./test.zsh file, and follow the steps to update the library when add new songs.
+
+
+--------------------------------------------------------------------------------
+
 Testing steps:
 
 Ready:
