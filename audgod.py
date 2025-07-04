@@ -5627,7 +5627,10 @@ class Export__PlistAction(ExportBaseAction):
 
     ARGUMENTS = {
         'source': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
+            'use_public': AudioGod.ReplaceType.PARTIAL,
+            'kwargs': {
+                'default': f'{OPTIONS.AUDGOD_ROOT}/iTunes/iTunes Media/Music',
+            },
         },
         'fields': {
             'use_public': AudioGod.ReplaceType.PARTIAL,
@@ -6798,7 +6801,7 @@ class Operate__TreeAction(TreeRelatedBaseAction, OperateBaseAction):
             'use_public': AudioGod.ReplaceType.PARTIAL,
             'kwargs': {
                 'required': True,
-                'default': f'{OPTIONS.AUDGOD_OUTPUT}',
+                'default': f'{OPTIONS.AUDGOD_OUTPUT}/Grouped',
             },
         },
         'output': {
@@ -7368,7 +7371,7 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.list.repeated.txt',
         )),
         (True, 'operate', 'tree', dict(
-            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}',
+            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/Grouped',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.operate.tree.txt',
         )),
         (True, 'export', 'note', dict(
@@ -7407,7 +7410,7 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/iTunes/iTunes Media/Music',
         )),
         (True, 'export', 'plist', dict(
-            source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/Mp3',
+            source=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/iTunes/iTunes Media/Music',
             ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
             itunes_media_folder=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/iTunes/iTunes Media/Music',
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/iTunes/Library.xml',

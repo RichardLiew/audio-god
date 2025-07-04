@@ -1,0 +1,1385 @@
+------------------------------------------------------------
+
+#### Summary: Collects 69, Items 1241
+##### Created Time: 2025-07-05T06:26:52Z
+
+------------------------------------------------------------
+
+###### (1) **[Pop]** All/Processing:
+  1.   歌曲名: *10 Minutes*; 歌手名: *李孝利*; 专辑名: *Stylish*
+  2.   歌曲名: *1492 Conquest Of Paradise*; 歌手名: *Livingstone Orchestra*; 专辑名: *La Mejor Musica Del Cine*
+  3.   歌曲名: *7 элемент*; 歌手名: *Vitas*; 专辑名: *Философия чуда*
+  4.   歌曲名: *Alpha*; 歌手名: *Christophe Lebled*; 专辑名: *Tribute to Vangelis*
+  5.   歌曲名: *Always Online*; 歌手名: *林俊杰*; 专辑名: *JJ陆*
+  6.   歌曲名: *Andy*; 歌手名: *阿杜*; 专辑名: *天黑*
+  7.   歌曲名: *Angelina*; 歌手名: *Lou Bega*; 专辑名: *Ladies And Gentlemen*
+  8.   歌曲名: *Aphrodite*; 歌手名: *S.E.N.S.*; 专辑名: *Sound. Earth. Nature. Spirit vol. SPIRIT*
+  9.   歌曲名: *Apologize*; 歌手名: *OneRepublic*; 专辑名: *Shock Value*
+  10.  歌曲名: *Apologize*; 歌手名: *Timbaland & OneRepublic*; 专辑名: *Dreaming Out Loud*
+  11.  歌曲名: *Archangel*; 歌手名: *Two Steps From Hell*; 专辑名: *Archangel*
+  12.  歌曲名: *Are You With Me*; 歌手名: *Lost Frequencies*; 专辑名: *Are You With Me*
+  13.  歌曲名: *As Long As You Love Me*; 歌手名: *Backstreet Boys*; 专辑名: *Backstreet's Back*
+  14.  歌曲名: *Ask For More*; 歌手名: *F4*; 专辑名: *烟火的季节*
+  15.  歌曲名: *Astronomia*; 歌手名: *Vicetone & Tony Igy*; 专辑名: *Astronomia*
+  16.  歌曲名: *Attention*; 歌手名: *Charlie Puth*; 专辑名: *Attention*
+  17.  歌曲名: *Axel F*; 歌手名: *Crazy Frog*; 专辑名: *Top Of The Pops 2005 Vol.2*
+  18.  歌曲名: *BANG BANG BANG (KR Ver.)*; 歌手名: *BIGBANG*; 专辑名: *MADE SERIES*
+  19.  歌曲名: *Baby One More Time*; 歌手名: *Britney Spears*; 专辑名: *Essential - Girls Night In (Explicit)*
+  20.  歌曲名: *Baby*; 歌手名: *Justin Bieber & Ludacris*; 专辑名: *My World 2.0*
+  21.  歌曲名: *Batte forte (Vanni G Remix)*; 歌手名: *Lollipop*; 专辑名: *Batte forte*
+  22.  歌曲名: *Beat It*; 歌手名: *Michael Jackson*; 专辑名: *HIStory: Past, Present and Future, Book I*
+  23.  歌曲名: *Believer*; 歌手名: *Imagine Dragons*; 专辑名: *Evolve*
+  24.  歌曲名: *Bi la Bi la Bi*; 歌手名: *柚子姐姐*; 专辑名: *关于孤独*
+  25.  歌曲名: *Big Big World*; 歌手名: *Emilia Rydberg*; 专辑名: *Big Big World*
+  26.  歌曲名: *Billie Jean*; 歌手名: *Michael Jackson*; 专辑名: *HIStory: Past, Present and Future, Book I*
+  27.  歌曲名: *Bo Peep Bo Peep*; 歌手名: *T.ara*; 专辑名: *Absolute First Album*
+  28.  歌曲名: *Boys*; 歌手名: *魏晨 & 何洁*; 专辑名: *乐天派*
+  29.  歌曲名: *Brother Louie*; 歌手名: *Modern Talking*; 专辑名: *Ready For Romance*
+  30.  歌曲名: *Burn Me Down*; 歌手名: *hanji*; 专辑名: *Burn Me Down*
+  31.  歌曲名: *Burning*; 歌手名: *Maria Arredondo*; 专辑名: *Not Going Under*
+  32.  歌曲名: *Butter Fly*; 歌手名: *和田光司*; 专辑名: *デジモンアドベンチャー・シングルヒットパレード (数码宝贝大冒险·最流行单曲)*
+  33.  歌曲名: *CHINA 2*; 歌手名: *Sand*; 专辑名: *[EDM] CHINA*
+  34.  歌曲名: *Call Me Maybe*; 歌手名: *Carly Rae Jepsen*; 专辑名: *Call Me Maybe*
+  35.  歌曲名: *Call Your Dancing (DJ原版)*; 歌手名: *coco*; 专辑名: *Call Your Dancing*
+  36.  歌曲名: *Caravan*; 歌手名: *a_hisa*; 专辑名: *Single Collection*
+  37.  歌曲名: *Centuries*; 歌手名: *Fall Out Boy*; 专辑名: *Centuries*
+  38.  歌曲名: *Children Of The Dark*; 歌手名: *Mono Inc.*; 专辑名: *Together Till the End*
+  39.  歌曲名: *Come Back Down (Original Mix)*; 歌手名: *Mediks*; 专辑名: *Cannibals EP*
+  40.  歌曲名: *Count The Hours*; 歌手名: *BEAUZ & Nevve & Kastilione*; 专辑名: *Count The Hours*
+  41.  歌曲名: *Counting Stars*; 歌手名: *OneRepublic*; 专辑名: *Native (Deluxe Version)*
+  42.  歌曲名: *Cry For Me (feat. Ami)*; 歌手名: *Michita*; 专辑名: *Pureness*
+  43.  歌曲名: *DAY BY DAY*; 歌手名: *T.ara*; 专辑名: *DAY BY DAY*
+  44.  歌曲名: *DOAR CU TINE*; 歌手名: *Activ*; 专辑名: *苏荷酒吧*
+  45.  歌曲名: *Da Da Da (Remix by Mikis)*; 歌手名: *Tanir & Tyomcha*; 专辑名: *Da Da Da (Remix by Mikis)*
+  46.  歌曲名: *Dancin (Krono Remix)*; 歌手名: *Aaron Smith & Luvli*; 专辑名: *Dancin (feat. Luvli) [Krono Remix]*
+  47.  歌曲名: *Dangerous*; 歌手名: *Michael Jackson*; 专辑名: *Dangerous*
+  48.  歌曲名: *Dead Eyes (Remix)*; 歌手名: *Powfu & DJ Thailand*; 专辑名: *Powfu*
+  49.  歌曲名: *Deja Vu*; 歌手名: *Various Artists*; 专辑名: *SUPER EUROBEAT presents 頭文字D SUPER EURO-BEST*
+  50.  歌曲名: *Diamonds (Album Version)*; 歌手名: *Rihanna*; 专辑名: *Diamonds*
+  51.  歌曲名: *Disaster (PHONK)*; 歌手名: *Cub L*; 专辑名: *Disaster*
+  52.  歌曲名: *Djara*; 歌手名: *Rasster & Renomty & Mr Lumoss*; 专辑名: *Djara*
+  53.  歌曲名: *Don't Cha (DJ版)*; 歌手名: *The Pussycat Dolls & Busta Rhymes*; 专辑名: *Pussycat*
+  54.  歌曲名: *Don't Touch (Explicit)*; 歌手名: *Dan Farber*; 专辑名: *Gangsta Sh*t*
+  55.  歌曲名: *Doobi Doobi Doo (Don't Be Shy)*; 歌手名: *Cassandra*; 专辑名: *Doobi Doobi Doo (Don't Be Shy)*
+  56.  歌曲名: *Dragostea Din Tei (Romanian Version)*; 歌手名: *O.Zone*; 专辑名: *Big Brother Allstars - Die Sommerfete*
+  57.  歌曲名: *Dream It Possible*; 歌手名: *Delacey*; 专辑名: *Dream It Possible*
+  58.  歌曲名: *Drown*; 歌手名: *ZABO*; 专辑名: *Drown*
+  59.  歌曲名: *Early Morning Dreams (Kled Mone Remix)*; 歌手名: *Kadebostany*; 专辑名: *Early Morning Dreams*
+  60.  歌曲名: *Ein Kleines Lied (Around the World)*; 歌手名: *Candee!*; 专辑名: *Hier kommt Candee!*
+  61.  歌曲名: *Electric Romeo*; 歌手名: *Gavin Henry*; 专辑名: *absolute music*
+  62.  歌曲名: *Empty Love*; 歌手名: *Lulleaux & Kid Princess*; 专辑名: *Empty Love (feat. Kid Princess)*
+  63.  歌曲名: *Epic Sax Guy (Remix)*; 歌手名: *Cruzo*; 专辑名: *Epic Sax Guy*
+  64.  歌曲名: *Everlasting*; 歌手名: *Two Steps From Hell*; 专辑名: *Archangel*
+  65.  歌曲名: *Everytime We Touch*; 歌手名: *Cascada*; 专辑名: *Everytime We Touch*
+  66.  歌曲名: *Everytime*; 歌手名: *Britney Spears*; 专辑名: *In The Zone*
+  67.  歌曲名: *Exodus*; 歌手名: *Maksim Mrvica*; 专辑名: *The Piano Player*
+  68.  歌曲名: *FANTASTIC BABY*; 歌手名: *BIGBANG*; 专辑名: *BIGBANG迷你5辑 'ALIVE' (빅뱅 미니앨범 5집 'ALIVE')*
+  69.  歌曲名: *FRIENDS (Explicit)*; 歌手名: *Marshmello & Anne Marie*; 专辑名: *FRIENDS*
+  70.  歌曲名: *Far Away from Home*; 歌手名: *Groove Coverage*; 专辑名: *Covergirl*
+  71.  歌曲名: *Ferrari*; 歌手名: *Bebe Rexha*; 专辑名: *Ferrari*
+  72.  歌曲名: *Fire*; 歌手名: *Gavin DeGraw*; 专辑名: *Fire*
+  73.  歌曲名: *Flex Your Way Out*; 歌手名: *Sofi de la Torre & blackbear*; 专辑名: *Flex Your Way Out*
+  74.  歌曲名: *Floorfiller*; 歌手名: *A*Teens*; 专辑名: *Greatest hits 1999-2004*
+  75.  歌曲名: *Flow*; 歌手名: *方大同 & 王力宏*; 专辑名: *JTW 西游记 (Black)*
+  76.  歌曲名: *Flute (Radio Edit)*; 歌手名: *Barcode Brothers*; 专辑名: *Flute*
+  77.  歌曲名: *Fly Away*; 歌手名: *F.I.R.飞儿乐团*; 专辑名: *F.I.R.飞儿乐团*
+  78.  歌曲名: *Frontier*; 歌手名: *Doctor Vox*; 专辑名: *Level Up*
+  79.  歌曲名: *Frontier*; 歌手名: *xige12138 & VINAI & SCNDL*; 专辑名: *Frontier (xige12138 Bootleg)*
+  80.  歌曲名: *Future Funk*; 歌手名: *Varien*; 专辑名: *Pick Your Poison Vol. 01*
+  81.  歌曲名: *Gam Gam (HYPERTECHNO)*; 歌手名: *Kosimo & Elong Wong & EL Records*; 专辑名: *Gam Gam*
+  82.  歌曲名: *Girlfriend (Explicit)*; 歌手名: *Avril Lavigne*; 专辑名: *Girlfriend*
+  83.  歌曲名: *Golden Sky*; 歌手名: *SMiLE.dk*; 专辑名: *Golden Sky*
+  84.  歌曲名: *Good Time*; 歌手名: *Owl City & Carly Rae Jepsen*; 专辑名: *Good Time*
+  85.  歌曲名: *Hall om mig*; 歌手名: *Nanne*; 专辑名: *Alltid på väg*
+  86.  歌曲名: *Halo*; 歌手名: *Beyoncé*; 专辑名: *I AM...SASHA FIERCE*
+  87.  歌曲名: *Haschenparty*; 歌手名: *Schnuffel*; 专辑名: *Haschenparty - Famous 5*
+  88.  歌曲名: *Heart of Courage*; 歌手名: *Two Steps From Hell*; 专辑名: *Legend*
+  89.  歌曲名: *Heathens*; 歌手名: *Twenty One Pilots*; 专辑名: *Heathens*
+  90.  歌曲名: *Here With You*; 歌手名: *Asher Monroe*; 专辑名: *Here With You*
+  91.  歌曲名: *Hey Oh*; 歌手名: *Tragédie*; 专辑名: *Hey Oh*
+  92.  歌曲名: *High 歌*; 歌手名: *黄龄*; 专辑名: *特别*
+  93.  歌曲名: *HowDoYouDo*; 歌手名: *Befour*; 专辑名: *How Do You Do*
+  94.  歌曲名: *I Knew You Were Trouble*; 歌手名: *Taylor Swift*; 专辑名: *Red (Deluxe Edition)*
+  95.  歌曲名: *I LOVE YOU*; 歌手名: *Kevin Rater*; 专辑名: *I LOVE YOU*
+  96.  歌曲名: *I LOVE YOU*; 歌手名: *筷子兄弟*; 专辑名: *I LOVE YOU*
+  97.  歌曲名: *I Miss You*; 歌手名: *罗百吉 & 宝贝*; 专辑名: *舞动人生*
+  98.  歌曲名: *I Say Yeah (Vanni G Radio Edit)*; 歌手名: *Vanni G*; 专辑名: *I Say Yeah*
+  99.  歌曲名: *I'm folle de toi*; 歌手名: *In.Grid*; 专辑名: *Rendèz-vous (French Version)*
+  100. 歌曲名: *IF YOU*; 歌手名: *BIGBANG*; 专辑名: *MADE SERIES <D>*
+  101. 歌曲名: *Ich hab' dich lieb*; 歌手名: *Schnuffel*; 专辑名: *Ich Hab' Dich Lieb*
+  102. 歌曲名: *Illusionary Daytime*; 歌手名: *Shirfine*; 专辑名: *Illusionary Daytime*
+  103. 歌曲名: *Immortals (From "Big Hero 6")*; 歌手名: *Fall Out Boy*; 专辑名: *Immortals (From "Big Hero 6")*
+  104. 歌曲名: *Innocence*; 歌手名: *Avril Lavigne*; 专辑名: *The Best Damn Thing/Under My Skin*
+  105. 歌曲名: *It's My Life*; 歌手名: *Bon Jovi*; 专辑名: *Bon Jovi Greatest Hits - The Ultimate Collection (Deluxe)*
+  106. 歌曲名: *Jar Of Love (Album Version)*; 歌手名: *曲婉婷*; 专辑名: *Everything In The World (Deluxe Version)*
+  107. 歌曲名: *Jealousy (Dance Radio)*; 歌手名: *French Kiss*; 专辑名: *Jealousy*
+  108. 歌曲名: *Just One Last Dance (Album Version)*; 歌手名: *Sarah Connor*; 专辑名: *Key To My Soul*
+  109. 歌曲名: *Keep On Loving You*; 歌手名: *Tokyo Square*; 专辑名: *最新热歌慢摇62*
+  110. 歌曲名: *Kissy, Kissy*; 歌手名: *Smile.DK*; 专辑名: *Future Girls*
+  111. 歌曲名: *Kkgm*; 歌手名: *舞曲帝*; 专辑名: *I Love*
+  112. 歌曲名: *K歌之王*; 歌手名: *陈奕迅*; 专辑名: *反正是我*
+  113. 歌曲名: *LA BOMBA*; 歌手名: *Eddy Wata*; 专辑名: *ITALO DANCE TOP CHARTS*
+  114. 歌曲名: *La Isla Bonita (Live)*; 歌手名: *Alizee*; 专辑名: *歌曲合辑*
+  115. 歌曲名: *La Isla Bonita*; 歌手名: *Madonna*; 专辑名: *True Blue*
+  116. 歌曲名: *La La Love On My Mind*; 歌手名: *Ann Winsborn*; 专辑名: *Pink-Collar-Crime*
+  117. 歌曲名: *Last Ride Of The Day*; 歌手名: *Nightwish*; 专辑名: *Imaginaerum (Tour Edition)*
+  118. 歌曲名: *Lemon Tree*; 歌手名: *Fool's Garden*; 专辑名: *Dish of the Day*
+  119. 歌曲名: *Let It Go*; 歌手名: *Idina Menzel*; 专辑名: *Brit Awards 2015*
+  120. 歌曲名: *Let's Talk About a Man (Radio Version)*; 歌手名: *Prezioso & Marvin*; 专辑名: *TIME2DANCE: Best of '90s - '00s, Vol. 2*
+  121. 歌曲名: *Letting Go*; 歌手名: *蔡健雅*; 专辑名: *说到爱*
+  122. 歌曲名: *Liberators*; 歌手名: *Epic Score*; 专辑名: *Vengeance - ES033*
+  123. 歌曲名: *Lies*; 歌手名: *BIGBANG*; 专辑名: *1st Mini Album : Always*
+  124. 歌曲名: *Little Do You Know (Nightcore Switching Vocals)*; 歌手名: *Sinnon Nightcore & Rebeating Sounds & Jason Chen*; 专辑名: *Best Covers (Vol. 3) [Explicit]*
+  125. 歌曲名: *Little Do You Know*; 歌手名: *Alex & Sierra*; 专辑名: *It's About Us*
+  126. 歌曲名: *Lone Ranger*; 歌手名: *Rachel Platten*; 专辑名: *Fight Song*
+  127. 歌曲名: *Lose Yourself (Explicit)*; 歌手名: *Eminem*; 专辑名: *8 Mile (Music From And Inspired By The Motion Picture) [Explicit]*
+  128. 歌曲名: *Love Love Love*; 歌手名: *蔡依林*; 专辑名: *城堡*
+  129. 歌曲名: *Love Me Like You Do*; 歌手名: *Ellie Goulding*; 专辑名: *Love Me Like You Do (From "Fifty Shades of Grey")*
+  130. 歌曲名: *Love Yourself*; 歌手名: *Justin Bieber*; 专辑名: *Purpose*
+  131. 歌曲名: *Loves Me Not*; 歌手名: *t.A.T.u.*; 专辑名: *Dangerous and Moving*
+  132. 歌曲名: *Low*; 歌手名: *Flo Rida*; 专辑名: *Now That's What I Call Music! 70*
+  133. 歌曲名: *Lydia*; 歌手名: *F.I.R.飞儿乐团*; 专辑名: *F.I.R.飞儿乐团*
+  134. 歌曲名: *Maria*; 歌手名: *华莎*; 专辑名: *María*
+  135. 歌曲名: *Me Liga*; 歌手名: *DJ Nene & Megs boys*; 专辑名: *Me Liga*
+  136. 歌曲名: *Monsters*; 歌手名: *Katie Sky*; 专辑名: *Monsters*
+  137. 歌曲名: *Moonlight Shadow*; 歌手名: *Dana Winner*; 专辑名: *Unforgettable*
+  138. 歌曲名: *Morsmorder*; 歌手名: *Crazy Donkey*; 专辑名: *Morsmorder*
+  139. 歌曲名: *Move Your Body (Alan Walker Remix)*; 歌手名: *Sia & Alan Walker*; 专辑名: *This Is Acting (Deluxe Version)*
+  140. 歌曲名: *My Songs Know What You Did in the Dark (Light Em Up)*; 歌手名: *Fall Out Boy*; 专辑名: *Save Rock And Roll (Explicit)*
+  141. 歌曲名: *My Stupid Heart (Kids Version)*; 歌手名: *Walk off the Earth & Luminati Suns*; 专辑名: *My Stupid Heart (Kids Version)*
+  142. 歌曲名: *Natural*; 歌手名: *Imagine Dragons*; 专辑名: *Natural*
+  143. 歌曲名: *Nemo*; 歌手名: *Nightwish*; 专辑名: *Highest Hopes - The Best Of Nightwish*
+  144. 歌曲名: *Never Say Good Bye*; 歌手名: *Mario & Nesty*; 专辑名: *마이걸 (我的女孩 电视剧原声带)*
+  145. 歌曲名: *Ngau Hung*; 歌手名: *Hoaprox & MonBet*; 专辑名: *Ngẫu Hứng*
+  146. 歌曲名: *Ngay Tho (feat. Phong Max)*; 歌手名: *Tang Duy Tan & Phong Max*; 专辑名: *Ngây Thơ*
+  147. 歌曲名: *Ngay Tho*; 歌手名: *Tang Duy Tan*; 专辑名: *Ngây Thơ*
+  148. 歌曲名: *Nightingale*; 歌手名: *Yanni*; 专辑名: *Tribute*
+  149. 歌曲名: *No Limit*; 歌手名: *2 Unlimited*; 专辑名: *Greatest Hits and Remixes*
+  150. 歌曲名: *Nobody (Korean Ver.)*; 歌手名: *Wonder Girls*; 专辑名: *The Wonder Years - Trilogy*
+  151. 歌曲名: *Numb*; 歌手名: *Linkin Park*; 专辑名: *Meteora (Bonus Edition)*
+  152. 歌曲名: *O SAO BE KHONG LAK (DJ版)*; 歌手名: *BigDaddy & Emily*; 专辑名: *BigDaddy*
+  153. 歌曲名: *On My Own*; 歌手名: *Ashes Remain*; 专辑名: *What I've Become*
+  154. 歌曲名: *One More Night*; 歌手名: *Maroon 5*; 专辑名: *One More Night*
+  155. 歌曲名: *One Two One One*; 歌手名: *PiuPiuPiu*; 专辑名: *Tuesady*
+  156. 歌曲名: *Oriente*; 歌手名: *INNDRIVE*; 专辑名: *Oriente*
+  157. 歌曲名: *PLANET*; 歌手名: *Lambsey*; 专辑名: *3ラムジ (3 Lambsey)*
+  158. 歌曲名: *Pacific Rim*; 歌手名: *Ramin Djawadi & Tom Morello*; 专辑名: *Pacific Rim Soundtrack from Warner Bros. Pictures and Legendary Pictures*
+  159. 歌曲名: *Para Para Sakura*; 歌手名: *郭富城*; 专辑名: *芭啦芭啦樱之花*
+  160. 歌曲名: *Penguin's Game (English Version)*; 歌手名: *Gelato*; 专辑名: *今夜はマイム・マイム (今夜是哑剧・哑剧)*
+  161. 歌曲名: *Piep Piep*; 歌手名: *Schnuffel*; 专辑名: *Komm Kuscheln*
+  162. 歌曲名: *Piu Piu Piu*; 歌手名: *拼音师*; 专辑名: *Piu Piu Piu (2021)*
+  163. 歌曲名: *Please Don't Go*; 歌手名: *Joel Adams*; 专辑名: *Please Don't Go*
+  164. 歌曲名: *Pretty Boy*; 歌手名: *M2M*; 专辑名: *Shades of Purple*
+  165. 歌曲名: *Price Tag*; 歌手名: *Jessie J & B.o.B*; 专辑名: *Price Tag*
+  166. 歌曲名: *Pump It Up (Original Mix)*; 歌手名: *Danko*; 专辑名: *Pump It Up*
+  167. 歌曲名: *QQ爱 (2025版)*; 歌手名: *孙辉 & 蓝若兮*; 专辑名: *QQ爱 (2025版)*
+  168. 歌曲名: *Radio*; 歌手名: *宋雨琦*; 专辑名: *Radio*
+  169. 歌曲名: *Remember Our Summer (小提琴版)*; 歌手名: *Y2002*; 专辑名: *Remember Our Summer (小提琴版)*
+  170. 歌曲名: *Remember Our Summer*; 歌手名: *FrogMonster*; 专辑名: *Remember Our Summer*
+  171. 歌曲名: *Remember the Name (feat. Styles of Beyond) (Explicit)*; 歌手名: *Fort Minor & Styles of Beyond*; 专辑名: *The Rising Tied (Explicit)*
+  172. 歌曲名: *Right Here Waiting*; 歌手名: *Richard Marx*; 专辑名: *Repeat Offender*
+  173. 歌曲名: *Right Now (Na Na Na)*; 歌手名: *Akon*; 专辑名: *Freedom*
+  174. 歌曲名: *Ring Ring Ring (最热男版)*; 歌手名: *Gaston庞加斯顿*; 专辑名: *Ring Ring Ring (最热男版)*
+  175. 歌曲名: *Ring Ring Ring*; 歌手名: *S.H.E*; 专辑名: *Forever 新歌+精选*
+  176. 歌曲名: *Roar*; 歌手名: *Katy Perry*; 专辑名: *PRISM (Deluxe)*
+  177. 歌曲名: *Rock House Jail*; 歌手名: *Nick Glennie.Smith & Harry Gregson.Williams & Hans Zimmer*; 专辑名: *The Rock*
+  178. 歌曲名: *Rolling In The Deep*; 歌手名: *Adele*; 专辑名: *NOW That's What I Call Music! 78*
+  179. 歌曲名: *SOBER*; 歌手名: *BIGBANG*; 专辑名: *MADE SERIES <D>*
+  180. 歌曲名: *STAY (Explicit)*; 歌手名: *The Kid LAROI & Justin Bieber*; 专辑名: *STAY (Explicit)*
+  181. 歌曲名: *Sakura Tears*; 歌手名: *Snigellin*; 专辑名: *壹伍壹捌·离*
+  182. 歌曲名: *Salt*; 歌手名: *Ava Max*; 专辑名: *Salt*
+  183. 歌曲名: *Save Me*; 歌手名: *DEAMN*; 专辑名: *Save Me (Deluxe)*
+  184. 歌曲名: *Scarborough Fair*; 歌手名: *Sarah Brightman*; 专辑名: *La Luna*
+  185. 歌曲名: *Schnuffels Weihnachtslied*; 歌手名: *Schnuffel*; 专辑名: *冬季仙境 (Winterwunderland)*
+  186. 歌曲名: *Se Kejam itu Kau Fitnahkan, Siapa Benar Siapa Salah Tiktok*; 歌手名: *Dj*; 专辑名: *Kau*
+  187. 歌曲名: *See You Again (feat. Charlie Puth)*; 歌手名: *Wiz Khalifa & Charlie Puth*; 专辑名: *Furious 7: Original Motion Picture Soundtrack (Explicit)*
+  188. 歌曲名: *She Is My Sin*; 歌手名: *Nightwish*; 专辑名: *Wishmaster (Spinefarm Official Collector's Re-Issue Bonus)*
+  189. 歌曲名: *She taught me how to yodel*; 歌手名: *Various Artists*; 专辑名: *Yodel*
+  190. 歌曲名: *She*; 歌手名: *Groove Coverage*; 专辑名: *7 Years And 50 Days*
+  191. 歌曲名: *Shots (Broiler Remix)*; 歌手名: *Imagine Dragons & Broiler*; 专辑名: *Shots EP*
+  192. 歌曲名: *Sing For You*; 歌手名: *曲婉婷*; 专辑名: *Say The Words*
+  193. 歌曲名: *Sleepyhead*; 歌手名: *Galen Crew*; 专辑名: *Acoustic Daydreams*
+  194. 歌曲名: *Smooth Criminal*; 歌手名: *Michael Jackson*; 专辑名: *Bad*
+  195. 歌曲名: *Sold Out*; 歌手名: *Hawk Nelson*; 专辑名: *Diamonds*
+  196. 歌曲名: *Sorry*; 歌手名: *Justin Bieber*; 专辑名: *Purpose (Deluxe)*
+  197. 歌曲名: *Stand By Me*; 歌手名: *SHINee*; 专辑名: *꽃보다 남자 OST (花样男子OST)*
+  198. 歌曲名: *Stand*; 歌手名: *Jewel*; 专辑名: *世界上最动听的歌超级天籁系列合集 下*
+  199. 歌曲名: *Stronger (What Doesn't Kill You)*; 歌手名: *Kelly Clarkson*; 专辑名: *Stronger (Deluxe Version)*
+  200. 歌曲名: *Sugar In The Marmalade*; 歌手名: *黎明*; 专辑名: *热爆 BPM*
+  201. 歌曲名: *Sugar*; 歌手名: *Maroon 5*; 专辑名: *Sugar*
+  202. 歌曲名: *Summertime (夏日时光)*; 歌手名: *Cinnamons & Evening Cinema*; 专辑名: *Summertime*
+  203. 歌曲名: *Summertime Sadness*; 歌手名: *Lana Del Rey*; 专辑名: *Born To Die (Explicit)*
+  204. 歌曲名: *Sunburst*; 歌手名: *Tobu & Itro*; 专辑名: *Sunburst*
+  205. 歌曲名: *Sunshine Girl*; 歌手名: *沐月*; 专辑名: *SPARK*
+  206. 歌曲名: *Sweet but Psycho*; 歌手名: *Ava Max*; 专辑名: *Sweet but Psycho*
+  207. 歌曲名: *TAKE IT OFF (TECHNO)*; 歌手名: *BassTon & Strøbe & Tazzy*; 专辑名: *TAKE IT OFF (TECHNO)*
+  208. 歌曲名: *Take It Off*; 歌手名: *Kesha*; 专辑名: *Animal*
+  209. 歌曲名: *Take Me Hand*; 歌手名: *DAISHI DANCE & Cécile Corbel*; 专辑名: *WONDER Tourism*
+  210. 歌曲名: *Take My Hand*; 歌手名: *Simple Plan*; 专辑名: *Simple Plan*
+  211. 歌曲名: *Tarzan and Jane*; 歌手名: *Toy.Box*; 专辑名: *Fantastic*
+  212. 歌曲名: *Tassel*; 歌手名: *Cymophane*; 专辑名: *Lingering Sound Waves Vol.2*
+  213. 歌曲名: *Tell Me*; 歌手名: *潘玮柏 & 蔡娟娟*; 专辑名: *壁虎漫步*
+  214. 歌曲名: *That Girl (DJ_LIU Remix)*; 歌手名: *Liu*; 专辑名: *That Girl*
+  215. 歌曲名: *ThatGirl (DJ热搜改编版)*; 歌手名: *Nike*; 专辑名: *Good Boy*
+  216. 歌曲名: *The Cure (Spiros Hamza Remix)*; 歌手名: *Spiros Hamza & Lady Gaga*; 专辑名: *The Cure (Spiros Hamza Remix)*
+  217. 歌曲名: *The Dawn*; 歌手名: *Dreamtale*; 专辑名: *Beyond Reality*
+  218. 歌曲名: *The Fox (What Does the Fox Say?)*; 歌手名: *Ylvis*; 专辑名: *The Fox (What Does The Fox Say?)*
+  219. 歌曲名: *The Last Of The Mohicans*; 歌手名: *Mato Grosso*; 专辑名: *Native Indian's Music*
+  220. 歌曲名: *The Magic Bomb*; 歌手名: *Tài Muzik & Hoàng Read*; 专辑名: *The Magic Bomb*
+  221. 歌曲名: *The Nights*; 歌手名: *Avicii*; 专辑名: *The Days / Nights (Remixes / EP)*
+  222. 歌曲名: *The Phoenix*; 歌手名: *Fall Out Boy*; 专辑名: *Save Rock And Roll (Explicit)*
+  223. 歌曲名: *The Riddle*; 歌手名: *Dj Christmas Dance Party*; 专辑名: *40 Christmas Dance Hits*
+  224. 歌曲名: *The Truth That You Leave*; 歌手名: *Pianoboy高至豪*; 专辑名: *Pianoboy*
+  225. 歌曲名: *This Is How We Do It*; 歌手名: *Solid Base*; 专辑名: *Express*
+  226. 歌曲名: *Time Back*; 歌手名: *Bad Style*; 专辑名: *Kontrabanda*
+  227. 歌曲名: *Time after time*; 歌手名: *仓木麻衣*; 专辑名: *Time after time ～花舞う街で～*
+  228. 歌曲名: *To Be Or Not To Be*; 歌手名: *Rimini Project*; 专辑名: *Heartbeats*
+  229. 歌曲名: *Tokyo (Remix)*; 歌手名: *DJ Kantik*; 专辑名: *The Best Hits*
+  230. 歌曲名: *Tokyo Drift*; 歌手名: *Teriyaki Boyz*; 专辑名: *The Fast and the Furious: Tokyo Drift (Original Motion Picture Soundtrack)*
+  231. 歌曲名: *Trouble Is a Friend (Album Version)*; 歌手名: *Lenka*; 专辑名: *Lenka (Expanded Edition)*
+  232. 歌曲名: *Umbrella (Matte Remix)*; 歌手名: *Matte & Ember Island*; 专辑名: *Umbrella (Matte Remix)*
+  233. 歌曲名: *Unstoppable*; 歌手名: *Sia*; 专辑名: *This Is Acting*
+  234. 歌曲名: *Uptown Funk*; 歌手名: *Mark Ronson & Bruno Mars*; 专辑名: *Uptown Special*
+  235. 歌曲名: *VIVI NELL'ARIA (Extended)*; 歌手名: *DJ MAXWELL*; 专辑名: *TRUST NO ONE*
+  236. 歌曲名: *Walking In the Sun (Defrix Remix)*; 歌手名: *Defrix*; 专辑名: *Walking In the Sun*
+  237. 歌曲名: *We Are Never Ever Getting Back Together*; 歌手名: *Taylor Swift*; 专辑名: *Red (Deluxe Edition)*
+  238. 歌曲名: *Wellerman (Sea Shanty)*; 歌手名: *Nathan Evans*; 专辑名: *Wellerman (Sea Shanty)*
+  239. 歌曲名: *Wellerman*; 歌手名: *蔡文姬 & 澜*; 专辑名: *Black Suit*
+  240. 歌曲名: *What Makes You Beautiful*; 歌手名: *One Direction*; 专辑名: *What Makes You Beautiful*
+  241. 歌曲名: *Whistle (Karaoke Version_Originally Performed By Flo Rida)*; 歌手名: *Flo Rida*; 专辑名: *Whistle (Flo Rida Tribute)*
+  242. 歌曲名: *Wild Wild Web*; 歌手名: *John The Whistler*; 专辑名: *It's Crazy*
+  243. 歌曲名: *Wild*; 歌手名: *Monogem*; 专辑名: *Wild*
+  244. 歌曲名: *With You (Ngẫu Hứng)*; 歌手名: *Nick Strand & Hoaprox & Mio*; 专辑名: *With You (Ngẫu Hứng)*
+  245. 歌曲名: *Wrap Me In Plastic*; 歌手名: *CHROMANCE*; 专辑名: *Wrap Me In Plastic*
+  246. 歌曲名: *Ye ye ye 耶耶耶*; 歌手名: *群星*; 专辑名: *BEST OF 2008*
+  247. 歌曲名: *Yeah*; 歌手名: *Usher & Lil Jon & Ludacris*; 专辑名: *Confessions (Special edition)*
+  248. 歌曲名: *You Are Not Alone*; 歌手名: *Michael Jackson*; 专辑名: *Lovesongs*
+  249. 歌曲名: *You Bring Me Joy*; 歌手名: *69*; 专辑名: *You Bring Me Joy*
+  250. 歌曲名: *You Know I'll Go Get*; 歌手名: *DJ Haning & Rizky Ayuba*; 专辑名: *You Know I'll Go Get*
+  251. 歌曲名: *You're Beautiful (Explicit)*; 歌手名: *James Blunt*; 专辑名: *Back to Bedlam (Explicit)*
+  252. 歌曲名: *[顶级车载dj舞曲] 晴诚 玛田神曲 (越南鼓)*; 歌手名: *郝鸽*; 专辑名: *dj舞曲 劲爆舞曲*
+  253. 歌曲名: *Ơ Sao Bé Không Lak*; 歌手名: *Siêu vương*; 专辑名: *Ơ Sao Bé Không Lak*
+  254. 歌曲名: *เจอกับตัวเอง...ถึงรู้*; 歌手名: *Sara Nussara Pungprasert*; 专辑名: *Girl Friend*
+  255. 歌曲名: *거짓말 (Lies) (谎言) (Inst) 伴奏 by BIGBANG*; 歌手名: *金珉奎是我的爸比*; 专辑名: *KPOP (Inst) 伴奏*
+  256. 歌曲名: *따라해봐*; 歌手名: *이정현*; 专辑名: *따라해봐*
+  257. 歌曲名: *소년이여 (少年呀)*; 歌手名: *G.DRAGON (权志龙)*; 专辑名: *1st Album : Heartbreaker*
+  258. 歌曲名: *あなただけ見つめてる (只凝视着你)*; 歌手名: *大黒摩季*; 专辑名: *あなただけ見つめてる (只注视着你)*
+  259. 歌曲名: *アシタカせっ記 (The Legend of Ashitaka)*; 歌手名: *久石让*; 专辑名: *もののけ姫 イメージアルバム (幽灵公主 印象集)*
+  260. 歌曲名: *一万个理由*; 歌手名: *郑源*; 专辑名: *真的用心良苦*
+  261. 歌曲名: *一丝不挂*; 歌手名: *陈奕迅*; 专辑名: *Time Flies*
+  262. 歌曲名: *一千个伤心的理由*; 歌手名: *张学友*; 专辑名: *非常 Cool*
+  263. 歌曲名: *一席之地Cypher (Live)*; 歌手名: *杨和苏KeyNG & 早安 & 王以太 & 艾热 & 黄旭*; 专辑名: *中国说唱巅峰对决*
+  264. 歌曲名: *一生有你*; 歌手名: *水木年华*; 专辑名: *一生有你*
+  265. 歌曲名: *一百万个可能*; 歌手名: *Christine Welch*; 专辑名: *一百万个可能*
+  266. 歌曲名: *一百万个可能*; 歌手名: *DJ成总 & DJ龙总*; 专辑名: *一百万个可能*
+  267. 歌曲名: *一直很安静*; 歌手名: *阿桑*; 专辑名: *仙剑奇侠传 电视剧原声带*
+  268. 歌曲名: *一眼万年*; 歌手名: *林俊杰*; 专辑名: *她说 概念自选辑*
+  269. 歌曲名: *一笑倾城*; 歌手名: *汪苏泷*; 专辑名: *微微一笑很倾城 电视剧原声带*
+  270. 歌曲名: *一笑懸命*; 歌手名: *遊助*; 专辑名: *一笑懸命/イナヅマ侍 コンプリートパック*
+  271. 歌曲名: *一起摇摆*; 歌手名: *汪峰*; 专辑名: *生来彷徨*
+  272. 歌曲名: *一起走过的日子*; 歌手名: *刘德华*; 专辑名: *回家真好 新曲+精选*
+  273. 歌曲名: *一路上有你*; 歌手名: *张学友*; 专辑名: *吻别*
+  274. 歌曲名: *一路生花*; 歌手名: *温奕心*; 专辑名: *一路生花*
+  275. 歌曲名: *七年间的爱*; 歌手名: *金贤政*; 专辑名: *Fun Town 20 (Dance Remake Album)*
+  276. 歌曲名: *七月七日晴*; 歌手名: *许慧欣*; 专辑名: *美丽的爱情*
+  277. 歌曲名: *七秒钟的记忆*; 歌手名: *徐良 & 孙羽幽*; 专辑名: *北京巷弄*
+  278. 歌曲名: *万有引力*; 歌手名: *汪苏泷*; 专辑名: *万有引力*
+  279. 歌曲名: *三国恋*; 歌手名: *Tank*; 专辑名: *Fighting! 生存之道*
+  280. 歌曲名: *三国杀*; 歌手名: *汪苏泷*; 专辑名: *好安静*
+  281. 歌曲名: *三拜红尘凉*; 歌手名: *尹昔眠*; 专辑名: *三拜红尘凉*
+  282. 歌曲名: *上海滩*; 歌手名: *刘德华*; 专辑名: *新上海滩 电影原声大碟*
+  283. 歌曲名: *下一个天亮*; 歌手名: *郭静*; 专辑名: *下一个天亮*
+  284. 歌曲名: *下个, 路口, 见*; 歌手名: *李宇春*; 专辑名: *Chris Lee 同名专辑*
+  285. 歌曲名: *下山*; 歌手名: *要不要买菜*; 专辑名: *下山*
+  286. 歌曲名: *不再犹豫*; 歌手名: *BEYOND*; 专辑名: *犹豫*
+  287. 歌曲名: *不分手的恋爱*; 歌手名: *汪苏泷*; 专辑名: *好安静*
+  288. 歌曲名: *不怕不怕*; 歌手名: *美美jocie*; 专辑名: *不怕不怕*
+  289. 歌曲名: *不甘 (Live)*; 歌手名: *弦子 & 小乐哥 (王唯乐)*; 专辑名: *天赐的声音第三季 第3期*
+  290. 歌曲名: *不谓侠 (原唱: 萧忆情Alex)*; 歌手名: *CRITTY*; 专辑名: *不谓侠*
+  291. 歌曲名: *不谓侠*; 歌手名: *萧忆情Alex*; 专辑名: *萧音弥漫*
+  292. 歌曲名: *不过人间*; 歌手名: *海来阿木*; 专辑名: *不过人间*
+  293. 歌曲名: *不问ciaga (不问别离)*; 歌手名: *指尖笑*; 专辑名: *不问别离*
+  294. 歌曲名: *世界第一等 (Live)*; 歌手名: *伍佰*; 专辑名: *滚石香港黄金十年 伍佰精选*
+  295. 歌曲名: *世界第一等*; 歌手名: *刘德华*; 专辑名: *爱在刻骨铭心时*
+  296. 歌曲名: *世间美好与你环环相扣*; 歌手名: *柏松*; 专辑名: *世间美好与你环环相扣*
+  297. 歌曲名: *两个人*; 歌手名: *蔡妍*; 专辑名: *Virginalness Bloom*
+  298. 歌曲名: *乱世巨星*; 歌手名: *陈小春*; 专辑名: *97古惑仔战无不胜*
+  299. 歌曲名: *五分熟*; 歌手名: *Yummy*; 专辑名: *YUMMY同名专辑*
+  300. 歌曲名: *亲爱的你啊*; 歌手名: *任素汐*; 专辑名: *亲爱的你啊*
+  301. 歌曲名: *人来疯 (Live)*; 歌手名: *艾热 & 王以太 & 杨和苏KeyNG & 早安*; 专辑名: *中国说唱巅峰对决*
+  302. 歌曲名: *人间惊鸿客*; 歌手名: *叶里*; 专辑名: *人间惊鸿客*
+  303. 歌曲名: *他一定很爱你*; 歌手名: *阿杜*; 专辑名: *天黑*
+  304. 歌曲名: *会开花的云*; 歌手名: *王樾安*; 专辑名: *会开花的云*
+  305. 歌曲名: *伤心太平洋*; 歌手名: *任贤齐*; 专辑名: *爱像太平洋*
+  306. 歌曲名: *伯虎说*; 歌手名: *伯爵Johnny & 唐伯虎Annie*; 专辑名: *伯虎说 (feat.唐伯虎Annie)*
+  307. 歌曲名: *作曲家*; 歌手名: *李荣浩*; 专辑名: *作曲家*
+  308. 歌曲名: *你把爱情给了谁*; 歌手名: *王强 & 龙梅子*; 专辑名: *冷漠的爱*
+  309. 歌曲名: *你的样子*; 歌手名: *罗大佑*; 专辑名: *爱人同志*
+  310. 歌曲名: *你的答案*; 歌手名: *阿冗*; 专辑名: *你的答案*
+  311. 歌曲名: *你的背包*; 歌手名: *陈奕迅*; 专辑名: *Special Thanks To…*
+  312. 歌曲名: *你的酒馆对我打了烊*; 歌手名: *陈雪凝*; 专辑名: *你的酒馆对我打了烊*
+  313. 歌曲名: *你若三冬 (将军进行曲) (0.8xDJ沈乐版)*; 歌手名: *阿悠悠*; 专辑名: *你若三冬 (将军进行曲) (DJ沈乐版)*
+  314. 歌曲名: *你若成风*; 歌手名: *许嵩 & 石头剪子布*; 专辑名: *Vae新歌+精选珍藏合辑*
+  315. 歌曲名: *依兰爱情故事*; 歌手名: *方磊 & 贾玲*; 专辑名: *依兰爱情故事*
+  316. 歌曲名: *倒带*; 歌手名: *蔡依林*; 专辑名: *城堡*
+  317. 歌曲名: *倒数*; 歌手名: *G.E.M. 邓紫棋*; 专辑名: *另一个童话*
+  318. 歌曲名: *倔强*; 歌手名: *五月天*; 专辑名: *步步 自选作品辑 the Best of 1999-2013*
+  319. 歌曲名: *偏爱*; 歌手名: *张芸京*; 专辑名: *破天荒*
+  320. 歌曲名: *像风一样自由*; 歌手名: *许巍*; 专辑名: *在路上……*
+  321. 歌曲名: *兄弟*; 歌手名: *任贤齐*; 专辑名: *天使兄弟小白脸*
+  322. 歌曲名: *光年之外*; 歌手名: *G.E.M. 邓紫棋*; 专辑名: *光年之外*
+  323. 歌曲名: *光辉岁月*; 歌手名: *BEYOND*; 专辑名: *命运派对*
+  324. 歌曲名: *全日爱*; 歌手名: *黎明*; 专辑名: *北京站*
+  325. 歌曲名: *全是爱*; 歌手名: *凤凰传奇*; 专辑名: *最炫民族风*
+  326. 歌曲名: *关不上的窗*; 歌手名: *周传雄*; 专辑名: *恋人创世纪*
+  327. 歌曲名: *关山酒*; 歌手名: *邓寓君 (等什么君)*; 专辑名: *关山酒*
+  328. 歌曲名: *再也没有*; 歌手名: *戴羽彤*; 专辑名: *再也没有*
+  329. 歌曲名: *冰河时代 (DJ版)*; 歌手名: *DJ*; 专辑名: *冰河时代*
+  330. 歌曲名: *冰雨*; 歌手名: *刘德华*; 专辑名: *爱在刻骨铭心时*
+  331. 歌曲名: *冷雨夜*; 歌手名: *BEYOND*; 专辑名: *现代舞台*
+  332. 歌曲名: *凑热闹*; 歌手名: *BY2*; 专辑名: *成人礼*
+  333. 歌曲名: *凤舞九天 (DJ原版)*; 歌手名: *苏小宝 (腾)*; 专辑名: *凤舞九天*
+  334. 歌曲名: *出山*; 歌手名: *花粥 & 王胜娚*; 专辑名: *粥请客 (四)*
+  335. 歌曲名: *刀剑如梦 (国语)*; 歌手名: *周华健*; 专辑名: *风雨无阻*
+  336. 歌曲名: *分开旅行*; 歌手名: *刘若英 & 黄立行*; 专辑名: *我的失败与伟大*
+  337. 歌曲名: *分手在那个秋天 (网络版)*; 歌手名: *浩瀚*; 专辑名: *分手在那个秋天*
+  338. 歌曲名: *分飞*; 歌手名: *徐怀钰*; 专辑名: *Love*
+  339. 歌曲名: *刚好遇见你*; 歌手名: *李玉刚*; 专辑名: *刚好遇见你*
+  340. 歌曲名: *别在我离开之前离开*; 歌手名: *雷诺儿*; 专辑名: *不要在我离开之前离开*
+  341. 歌曲名: *别说我的眼泪你无所谓*; 歌手名: *东来东往*; 专辑名: *回到我身边*
+  342. 歌曲名: *剑魂 (鱼多余DJ版)*; 歌手名: *鱼多余*; 专辑名: *剑魂 (鱼多余DJ版)*
+  343. 歌曲名: *加速度*; 歌手名: *瞿颖*; 专辑名: *加速度*
+  344. 歌曲名: *动起来*; 歌手名: *郭富城*; 专辑名: *浪漫情声*
+  345. 歌曲名: *勋章*; 歌手名: *鹿晗*; 专辑名: *勋章*
+  346. 歌曲名: *北京北京*; 歌手名: *汪峰*; 专辑名: *勇敢的心*
+  347. 歌曲名: *北极熊*; 歌手名: *萌萌哒天团*; 专辑名: *北极熊*
+  348. 歌曲名: *十年*; 歌手名: *陈奕迅*; 专辑名: *黑白灰*
+  349. 歌曲名: *千年の祈り*; 歌手名: *姫神*; 专辑名: *千年回廊*
+  350. 歌曲名: *千年之恋*; 歌手名: *F.I.R.飞儿乐团*; 专辑名: *无限*
+  351. 歌曲名: *千年等一回*; 歌手名: *高胜美*; 专辑名: *新白娘子传奇 电视剧原声带*
+  352. 歌曲名: *半城烟沙*; 歌手名: *许嵩*; 专辑名: *半城烟沙*
+  353. 歌曲名: *半壶纱*; 歌手名: *刘珂矣*; 专辑名: *半壶纱*
+  354. 歌曲名: *半熟宣言*; 歌手名: *杨丞琳*; 专辑名: *半熟宣言*
+  355. 歌曲名: *半生雪*; 歌手名: *七叔 (叶泽浩)*; 专辑名: *半生雪*
+  356. 歌曲名: *单恋一枝花 (Live)*; 歌手名: *胡彦斌 & 白举纲*; 专辑名: *天赐的声音 第8期*
+  357. 歌曲名: *单身情歌*; 歌手名: *林志炫*; 专辑名: *单身情歌．超炫精选*
+  358. 歌曲名: *卜卦*; 歌手名: *崔子格*; 专辑名: *老婆最大*
+  359. 歌曲名: *卡路里*; 歌手名: *火箭少女101*; 专辑名: *西虹市首富 电影原声*
+  360. 歌曲名: *即使说抱歉*; 歌手名: *徐良 & Melodia*; 专辑名: *犯贱*
+  361. 歌曲名: *卷珠帘*; 歌手名: *霍尊*; 专辑名: *天韵·霍尊*
+  362. 歌曲名: *只对你有感觉*; 歌手名: *飞轮海 & 田馥甄*; 专辑名: *飞轮海 首张同名专辑*
+  363. 歌曲名: *只要有你*; 歌手名: *孙楠 & 那英*; 专辑名: *少年包青天 电视剧原声带*
+  364. 歌曲名: *可不可以*; 歌手名: *张紫豪*; 专辑名: *可不可以*
+  365. 歌曲名: *叹*; 歌手名: *黄龄*; 专辑名: *Ngây Thơ*
+  366. 歌曲名: *后会无期*; 歌手名: *汪苏泷 & 徐良*; 专辑名: *不良少年*
+  367. 歌曲名: *后来*; 歌手名: *刘若英*; 专辑名: *我等你*
+  368. 歌曲名: *吹 right now (现在吹) (Live)*; 歌手名: *王以太 & 艾热AIR*; 专辑名: *中国说唱巅峰对决 第9期*
+  369. 歌曲名: *吻得太逼真*; 歌手名: *张敬轩*; 专辑名: *我们的主打歌3*
+  370. 歌曲名: *告白の夜 (告白之夜) (Live)*; 歌手名: *Ayasa绚沙*; 专辑名: *CHRONICLE VI*
+  371. 歌曲名: *咆哮 (Growl) (Korean Ver.)*; 歌手名: *EXO (엑소)*; 专辑名: *The 1st Album 'XOXO (Kiss & Hug) ' Repackage*
+  372. 歌曲名: *和平分手*; 歌手名: *徐良 & Britneylee小暖*; 专辑名: *徐良原创合集*
+  373. 歌曲名: *咏春*; 歌手名: *七朵组合*; 专辑名: *咏春*
+  374. 歌曲名: *啤啤旋律*; 歌手名: *DJ小宸宸*; 专辑名: *好好跟我说话*
+  375. 歌曲名: *喜欢你*; 歌手名: *BEYOND*; 专辑名: *正东 10 X 10 我至爱唱片 - BEYOND'秘密警察'*
+  376. 歌曲名: *嗵嗵*; 歌手名: *福禄寿*; 专辑名: *嗵嗵*
+  377. 歌曲名: *回心转意*; 歌手名: *黑龙*; 专辑名: *回心转意*
+  378. 歌曲名: *因为爱情*; 歌手名: *陈奕迅 & 王菲*; 专辑名: *因为爱情*
+  379. 歌曲名: *在那遥远的地方*; 歌手名: *王洛宾*; 专辑名: *王洛宾歌曲精选集 (演唱篇)*
+  380. 歌曲名: *坏女孩*; 歌手名: *徐良 & 小凌*; 专辑名: *不良少年*
+  381. 歌曲名: *坚持到底*; 歌手名: *阿杜*; 专辑名: *坚持到底*
+  382. 歌曲名: *城府*; 歌手名: *许嵩*; 专辑名: *Vae新歌+精选珍藏合辑*
+  383. 歌曲名: *塔罗骑士牌*; 歌手名: *汪苏泷*; 专辑名: *汪苏泷精选合集*
+  384. 歌曲名: *壁上观*; 歌手名: *一棵小葱 & 张曦匀*; 专辑名: *壁上观*
+  385. 歌曲名: *多幸运*; 歌手名: *韩安旭*; 专辑名: *多幸运*
+  386. 歌曲名: *多想还小 (姜晨艾凝版)*; 歌手名: *姜晨艾凝*; 专辑名: *多想还小 (姜晨艾凝版)*
+  387. 歌曲名: *多想还小*; 歌手名: *豆包*; 专辑名: *多想还小*
+  388. 歌曲名: *夜空中最亮的星*; 歌手名: *逃跑计划*; 专辑名: *世界*
+  389. 歌曲名: *夜色 (DJ Candy)*; 歌手名: *艺涛 & 梁剑东*; 专辑名: *夜色*
+  390. 歌曲名: *大地*; 歌手名: *BEYOND*; 专辑名: *正东 10 X 10 我至爱唱片 - BEYOND'秘密警察'*
+  391. 歌曲名: *大海*; 歌手名: *张雨生*; 专辑名: *大海*
+  392. 歌曲名: *大笑江湖*; 歌手名: *小沈阳*; 专辑名: *大笑江湖*
+  393. 歌曲名: *大风吹 (Live)*; 歌手名: *刘惜君 & 王赫野*; 专辑名: *大风吹*
+  394. 歌曲名: *大风吹过青瓦房 (藏语版)*; 歌手名: *宫巴*; 专辑名: *大风吹过青瓦房*
+  395. 歌曲名: *大鱼 (Live)*; 歌手名: *周深 & 郭沁*; 专辑名: *中国新歌声第二季 第11期*
+  396. 歌曲名: *天下*; 歌手名: *张杰*; 专辑名: *听! 我们的歌*
+  397. 歌曲名: *天下有情人*; 歌手名: *周华健 & 齐豫*; 专辑名: *爱相随*
+  398. 歌曲名: *天使*; 歌手名: *五月天*; 专辑名: *为爱而生*
+  399. 歌曲名: *天使的翅膀*; 歌手名: *徐誉滕*; 专辑名: *李雷和韩梅梅*
+  400. 歌曲名: *天地龙鳞*; 歌手名: *王力宏*; 专辑名: *天地龙鳞*
+  401. 歌曲名: *天意*; 歌手名: *刘德华*; 专辑名: *天意*
+  402. 歌曲名: *天涯*; 歌手名: *任贤齐*; 专辑名: *为爱走天涯*
+  403. 歌曲名: *天涯*; 歌手名: *爱乐团王超*; 专辑名: *天涯*
+  404. 歌曲名: *天真*; 歌手名: *徐良 & 阿悄*; 专辑名: *犯贱*
+  405. 歌曲名: *天黑*; 歌手名: *阿杜*; 专辑名: *天黑*
+  406. 歌曲名: *天黑黑*; 歌手名: *孙燕姿*; 专辑名: *2her*
+  407. 歌曲名: *太多*; 歌手名: *陈冠蒲*; 专辑名: *新蜀山剑侠 电视原声带1*
+  408. 歌曲名: *太想念*; 歌手名: *彭筝*; 专辑名: *太想念*
+  409. 歌曲名: *失恋阵线联盟*; 歌手名: *草蜢*; 专辑名: *失恋阵线联盟*
+  410. 歌曲名: *奢香夫人*; 歌手名: *凤凰传奇*; 专辑名: *最炫民族风*
+  411. 歌曲名: *好久不见*; 歌手名: *陈奕迅*; 专辑名: *认了吧*
+  412. 歌曲名: *好心分手 (合唱版)*; 歌手名: *卢巧音 & 王力宏*; 专辑名: *赏味人间*
+  413. 歌曲名: *如果当时 (Live)*; 歌手名: *杨坤 & 王赫野*; 专辑名: *天赐的声音第五季 第2期*
+  414. 歌曲名: *如果当时*; 歌手名: *许嵩*; 专辑名: *自定义*
+  415. 歌曲名: *如果有来生*; 歌手名: *谭维维*; 专辑名: *谭某某*
+  416. 歌曲名: *娅咪*; 歌手名: *晴诚*; 专辑名: *娅咪*
+  417. 歌曲名: *孤单北半球*; 歌手名: *欧得洋*; 专辑名: *孤单北半球*
+  418. 歌曲名: *孤独颂歌*; 歌手名: *陈文非*; 专辑名: *孤独颂歌*
+  419. 歌曲名: *学不会*; 歌手名: *潘玮柏*; 专辑名: *壁虎漫步*
+  420. 歌曲名: *完美生活*; 歌手名: *许巍*; 专辑名: *时光·漫步*
+  421. 歌曲名: *客官不可以*; 歌手名: *徐良 & 小凌*; 专辑名: *犯贱*
+  422. 歌曲名: *宾克斯的美酒*; 歌手名: *9个草帽小子*; 专辑名: *海贼王 宾克斯的美酒 (ONE PIECE ワンピース ビンクスの酒)*
+  423. 歌曲名: *寂寞沙洲冷*; 歌手名: *周传雄*; 专辑名: *星空下的传说*
+  424. 歌曲名: *寂寞的人伤心的歌*; 歌手名: *龙梅子 & 杨海彪*; 专辑名: *寂寞的人伤心的歌*
+  425. 歌曲名: *寓言*; 歌手名: *张韶涵*; 专辑名: *Over The Rainbow*
+  426. 歌曲名: *对面的女孩看过来*; 歌手名: *任贤齐*; 专辑名: *爱像太平洋*
+  427. 歌曲名: *小小*; 歌手名: *容祖儿*; 专辑名: *小小*
+  428. 歌曲名: *小恋曲*; 歌手名: *徐良*; 专辑名: *犯贱*
+  429. 歌曲名: *小情歌*; 歌手名: *苏打绿*; 专辑名: *小宇宙*
+  430. 歌曲名: *小星星*; 歌手名: *汪苏泷*; 专辑名: *慢慢懂*
+  431. 歌曲名: *小永远*; 歌手名: *何洁*; 专辑名: *短暂的爱情*
+  432. 歌曲名: *小酒窝 (国语)*; 歌手名: *林俊杰 & 蔡卓妍*; 专辑名: *JJ陆*
+  433. 歌曲名: *小雨*; 歌手名: *黄龄*; 专辑名: *花 & 色*
+  434. 歌曲名: *少年*; 歌手名: *梦然*; 专辑名: *少年*
+  435. 歌曲名: *就是爱*; 歌手名: *蔡依林*; 专辑名: *城堡*
+  436. 歌曲名: *就现在这样*; 歌手名: *US*; 专辑名: *Koyote 2006 Best Of All*
+  437. 歌曲名: *山楂树之恋 (永远站在你的身边)*; 歌手名: *陈雪凝*; 专辑名: *山楂树之恋*
+  438. 歌曲名: *山河图*; 歌手名: *凤凰传奇*; 专辑名: *山河图*
+  439. 歌曲名: *山海皆可平*; 歌手名: *南瓜饼*; 专辑名: *山海皆可平*
+  440. 歌曲名: *左手指月*; 歌手名: *萨顶顶*; 专辑名: *香蜜沉沉烬如霜*
+  441. 歌曲名: *差一步*; 歌手名: *大壮*; 专辑名: *差一步*
+  442. 歌曲名: *差不多姑娘 (Live)*; 歌手名: *G.E.M. 邓紫棋*; 专辑名: *中国新说唱2019 第6期*
+  443. 歌曲名: *巴比伦*; 歌手名: *潘玮柏*; 专辑名: *Mr.R & Beats节奏先生*
+  444. 歌曲名: *帝都*; 歌手名: *萌萌哒天团*; 专辑名: *帝都*
+  445. 歌曲名: *平凡之路*; 歌手名: *朴树*; 专辑名: *猎户星座*
+  446. 歌曲名: *年少有为*; 歌手名: *李荣浩*; 专辑名: *耳朵*
+  447. 歌曲名: *年轮*; 歌手名: *汪苏泷*; 专辑名: *花千骨 电视剧原声带*
+  448. 歌曲名: *幸福恋人*; 歌手名: *沈丹丹 & 郑源*; 专辑名: *魔法爱*
+  449. 歌曲名: *幻听*; 歌手名: *许嵩*; 专辑名: *梦游计*
+  450. 歌曲名: *幻昼*; 歌手名: *小可*; 专辑名: *硬曲配美人*
+  451. 歌曲名: *广寒宫*; 歌手名: *丸子呦*; 专辑名: *广寒宫*
+  452. 歌曲名: *广寒谣*; 歌手名: *伊格赛听 & 不靠谱组合*; 专辑名: *广寒谣*
+  453. 歌曲名: *庐州月*; 歌手名: *许嵩*; 专辑名: *寻雾启示*
+  454. 歌曲名: *康定情歌与溜溜调 (Live)*; 歌手名: *谭维维*; 专辑名: *我是歌手第三季 第9期*
+  455. 歌曲名: *开往早晨的午夜*; 歌手名: *张碧晨*; 专辑名: *开往早晨的午夜*
+  456. 歌曲名: *异客 (Live)*; 歌手名: *杨坤 & 王赫野 & 王睿卓*; 专辑名: *天赐的声音第五季 第7期*
+  457. 歌曲名: *弱水三千 (0_8x_DJ苏熠鸣版)*; 歌手名: *苏熠鸣*; 专辑名: *弱水三千 (DJ苏熠鸣版)*
+  458. 歌曲名: *归去来兮*; 歌手名: *花粥*; 专辑名: *一碗*
+  459. 歌曲名: *当你孤单你会想起谁*; 歌手名: *张栋梁*; 专辑名: *首选*
+  460. 歌曲名: *彩虹节拍 (Live)*; 歌手名: *张雨绮 & 金莎 & 蓝盈莹 & 伊能静 & 张含韵*; 专辑名: *乘风破浪的姐姐 第7期*
+  461. 歌曲名: *很爱很爱你*; 歌手名: *刘若英*; 专辑名: *很爱很爱你*
+  462. 歌曲名: *心在跳情在烧*; 歌手名: *谢军*; 专辑名: *又一夜*
+  463. 歌曲名: *心太软*; 歌手名: *任贤齐*; 专辑名: *心太软*
+  464. 歌曲名: *忘川彼岸*; 歌手名: *零一九零贰*; 专辑名: *忘川彼岸*
+  465. 歌曲名: *忘情水*; 歌手名: *刘德华*; 专辑名: *忘情水*
+  466. 歌曲名: *忽然之间*; 歌手名: *莫文蔚*; 专辑名: *就是 莫文蔚*
+  467. 歌曲名: *怒放的生命*; 歌手名: *汪峰*; 专辑名: *北京青年 电视剧原声带*
+  468. 歌曲名: *恋人心*; 歌手名: *魏新雨*; 专辑名: *恋人心*
+  469. 歌曲名: *悟空*; 歌手名: *戴荃*; 专辑名: *悟空*
+  470. 歌曲名: *悬溺*; 歌手名: *葛东琪*; 专辑名: *第二街区*
+  471. 歌曲名: *情与法*; 歌手名: *FORMOSA*; 专辑名: *新白娘子传奇 电视剧原声带*
+  472. 歌曲名: *情话*; 歌手名: *徐良 & 孙羽幽*; 专辑名: *北京巷弄*
+  473. 歌曲名: *惊鸿一面*; 歌手名: *许嵩 & 黄龄*; 专辑名: *不如吃茶去*
+  474. 歌曲名: *想太多*; 歌手名: *李玖哲*; 专辑名: *想太多*
+  475. 歌曲名: *感动天感动地*; 歌手名: *宇桐非*; 专辑名: *与你同飞*
+  476. 歌曲名: *感觉自己萌萌哒*; 歌手名: *贾玲 & 刘维*; 专辑名: *感觉自己萌萌哒*
+  477. 歌曲名: *愿望*; 歌手名: *胡彦斌*; 专辑名: *音乐密码*
+  478. 歌曲名: *成都*; 歌手名: *赵雷*; 专辑名: *无法长大*
+  479. 歌曲名: *我为你歌唱 (中文版)*; 歌手名: *曲婉婷*; 专辑名: *Say The Words*
+  480. 歌曲名: *我从草原来*; 歌手名: *凤凰传奇*; 专辑名: *我从草原来*
+  481. 歌曲名: *我们不一样*; 歌手名: *大壮*; 专辑名: *我们不一样*
+  482. 歌曲名: *我们的爱*; 歌手名: *F.I.R.飞儿乐团*; 专辑名: *F.I.R.飞儿乐团*
+  483. 歌曲名: *我们的纪念*; 歌手名: *李雅微*; 专辑名: *放羊的星星 电视剧原声带*
+  484. 歌曲名: *我好像在哪见过你*; 歌手名: *薛之谦*; 专辑名: *初学者*
+  485. 歌曲名: *我想 (Live | remix)*; 歌手名: *法老*; 专辑名: *中国说唱巅峰对决2023 总决赛 (下集)*
+  486. 歌曲名: *我是一只小小鸟*; 歌手名: *任贤齐 & 李宗盛*; 专辑名: *认真 精选辑*
+  487. 歌曲名: *我是一只鱼*; 歌手名: *任贤齐*; 专辑名: *爱像太平洋*
+  488. 歌曲名: *我期待的不是雪 (而是有你的冬天)*; 歌手名: *张妙格*; 专辑名: *我期待的不是雪 (而是有你的冬天)*
+  489. 歌曲名: *我爱你中国*; 歌手名: *谭晶*; 专辑名: *歌曲合辑*
+  490. 歌曲名: *我用什么把你留住 (Live)*; 歌手名: *福禄寿FloruitShow*; 专辑名: *乐队的夏天2 第12期*
+  491. 歌曲名: *我的中国心 (2019梦想的声音第三季第12期现场)*; 歌手名: *黄俊杰 & 达桑嘉措*; 专辑名: *2019梦想的声音第三季第12期现场*
+  492. 歌曲名: *我的亲爱*; 歌手名: *黎明*; 专辑名: *倾城之最*
+  493. 歌曲名: *我的天空*; 歌手名: *南征北战NZBZ*; 专辑名: *青春派 电影原声带*
+  494. 歌曲名: *我的好兄弟*; 歌手名: *高进 & 小沈阳*; 专辑名: *拿得起放不下*
+  495. 歌曲名: *我的果汁分你一半*; 歌手名: *花儿乐队*; 专辑名: *花天囍世*
+  496. 歌曲名: *我的歌声里*; 歌手名: *曲婉婷*; 专辑名: *Everything In The World (Celebration Version)*
+  497. 歌曲名: *我的眼里只有你*; 歌手名: *景岗山*; 专辑名: *我的眼里只有你*
+  498. 歌曲名: *我管你 (Live)*; 歌手名: *华晨宇*; 专辑名: *歌手第二季 第7期*
+  499. 歌曲名: *我要找到你*; 歌手名: *陈明*; 专辑名: *幸福*
+  500. 歌曲名: *打上花火*; 歌手名: *DAOKO & 米津玄師*; 专辑名: *打上花火 (初回限定盤)*
+  501. 歌曲名: *折风渡夜 (DJ名龙版)*; 歌手名: *泽国同学*; 专辑名: *折风渡夜*
+  502. 歌曲名: *护花使者*; 歌手名: *李克勤*; 专辑名: *雨中街头剧*
+  503. 歌曲名: *拯救*; 歌手名: *孙楠*; 专辑名: *缘分的天空*
+  504. 歌曲名: *挪威的森林*; 歌手名: *伍佰*; 专辑名: *滚石香港黄金十年 伍佰精选*
+  505. 歌曲名: *掀起你的盖头来*; 歌手名: *王洛宾*; 专辑名: *王洛宾歌曲精选集 (演唱篇)*
+  506. 歌曲名: *探故知 (0_8x混响版)*; 歌手名: *勿*; 专辑名: *探故知*
+  507. 歌曲名: *探清水河*; 歌手名: *张云雷*; 专辑名: *探清水河*
+  508. 歌曲名: *撕夜*; 歌手名: *阿杜*; 专辑名: *天黑*
+  509. 歌曲名: *擦肩而过*; 歌手名: *宇桐非 & 胡雯*; 专辑名: *与你同飞*
+  510. 歌曲名: *改革春风吹满地 (鬼畜版)*; 歌手名: *小奶瓶 & 安小能 & 小可*; 专辑名: *让我回首那首断情笔*
+  511. 歌曲名: *放不下*; 歌手名: *汪苏泷*; 专辑名: *慢慢懂*
+  512. 歌曲名: *放生*; 歌手名: *范逸臣 Van Fan*; 专辑名: *不说出的温柔*
+  513. 歌曲名: *故乡*; 歌手名: *许巍*; 专辑名: *那一年*
+  514. 歌曲名: *断桥残雪*; 歌手名: *许嵩*; 专辑名: *Vae新歌+精选珍藏合辑*
+  515. 歌曲名: *断点*; 歌手名: *张敬轩*; 专辑名: *My Way*
+  516. 歌曲名: *新贵妃醉酒*; 歌手名: *李玉刚*; 专辑名: *新贵妃醉酒*
+  517. 歌曲名: *无名 (Live)*; 歌手名: *杨和苏KeyNG*; 专辑名: *中国说唱巅峰对决 第9期*
+  518. 歌曲名: *无湘不成军 (Live)*; 歌手名: *盛宇D.SHINE*; 专辑名: *中国说唱巅峰对决*
+  519. 歌曲名: *日不落*; 歌手名: *蔡依林*; 专辑名: *特务J*
+  520. 歌曲名: *日落大道*; 歌手名: *梁博*; 专辑名: *迷藏*
+  521. 歌曲名: *旧梦一场*; 歌手名: *阿悠悠*; 专辑名: *旧梦一场*
+  522. 歌曲名: *时光背面的我*; 歌手名: *刘至佳 & 韩瞳*; 专辑名: *时光背面的我*
+  523. 歌曲名: *时间煮雨*; 歌手名: *郁可唯*; 专辑名: *时间煮雨*
+  524. 歌曲名: *明天会更好*; 歌手名: *蔡琴 & 余天 & 苏芮 & 潘越云 & 甄妮 & 李建复 & 林慧萍 & 王芷蕾 & 黄莺莺 & 洪荣宏 & 陈淑桦 & 娃娃 & 王梦麟 & 李珮菁 & 费玉清 & 齐豫 & 郑怡 & 江蕙 & 杨林 & 齐秦*; 专辑名: *明天会更好*
+  525. 歌曲名: *星星 (Live)*; 歌手名: *张杰*; 专辑名: *天籁之战第二季 第9期*
+  526. 歌曲名: *星语心愿 (国语)*; 歌手名: *张柏芝*; 专辑名: *真女人情歌*
+  527. 歌曲名: *星辰大海*; 歌手名: *黄霄雲*; 专辑名: *星辰大海*
+  528. 歌曲名: *春不晚 (with 冰洁)*; 歌手名: *郑浩 & 冰洁*; 专辑名: *须尽欢 (Deluxe)*
+  529. 歌曲名: *春天花会开*; 歌手名: *任贤齐*; 专辑名: *为爱走天涯*
+  530. 歌曲名: *春天里*; 歌手名: *汪峰*; 专辑名: *信仰在空中飘扬*
+  531. 歌曲名: *春庭雪 (0.9x版DJ Wave版)*; 歌手名: *邓寓君 (等什么君)*; 专辑名: *春庭雪 (DJ Wave版)*
+  532. 歌曲名: *春泥*; 歌手名: *庾澄庆*; 专辑名: *哈林天堂*
+  533. 歌曲名: *暖暖*; 歌手名: *梁静茹*; 专辑名: *亲亲*
+  534. 歌曲名: *暧昧*; 歌手名: *杨丞琳*; 专辑名: *暧昧*
+  535. 歌曲名: *暮色回响*; 歌手名: *吉星出租*; 专辑名: *神啊可不可以让我感受一下*
+  536. 歌曲名: *最初的梦想*; 歌手名: *范玮琪*; 专辑名: *最初的梦想*
+  537. 歌曲名: *最幸福的人*; 歌手名: *曾春年*; 专辑名: *最幸福的人*
+  538. 歌曲名: *月光*; 歌手名: *徐良 & 阿悄*; 专辑名: *犯贱*
+  539. 歌曲名: *月光*; 歌手名: *胡彦斌*; 专辑名: *音乐斌潮*
+  540. 歌曲名: *月牙湾*; 歌手名: *F.I.R.飞儿乐团*; 专辑名: *爱‧歌姬*
+  541. 歌曲名: *月老掉线*; 歌手名: *王不醒*; 专辑名: *月老掉线*
+  542. 歌曲名: *月话 (TV Version)*; 歌手名: *张晴*; 专辑名: *奔月*
+  543. 歌曲名: *有一种爱叫做放手*; 歌手名: *阿木*; 专辑名: *有一种爱叫做放手*
+  544. 歌曲名: *有何不可*; 歌手名: *许嵩*; 专辑名: *自定义*
+  545. 歌曲名: *有多少爱可以重来*; 歌手名: *迪克牛仔*; 专辑名: *别港*
+  546. 歌曲名: *有没有人告诉你*; 歌手名: *陈楚生*; 专辑名: *原来我一直都不孤单*
+  547. 歌曲名: *有点甜*; 歌手名: *汪苏泷 & BY2*; 专辑名: *万有引力*
+  548. 歌曲名: *朋友*; 歌手名: *周华健*; 专辑名: *朋友*
+  549. 歌曲名: *朋友的酒*; 歌手名: *李晓杰*; 专辑名: *老大*
+  550. 歌曲名: *期待爱*; 歌手名: *林俊杰 & 金莎*; 专辑名: *JJ陆*
+  551. 歌曲名: *杀手*; 歌手名: *林俊杰*; 专辑名: *西界*
+  552. 歌曲名: *李白*; 歌手名: *李荣浩*; 专辑名: *模特*
+  553. 歌曲名: *来生缘*; 歌手名: *刘德华*; 专辑名: *来生缘*
+  554. 歌曲名: *来自天堂的魔鬼*; 歌手名: *G.E.M. 邓紫棋*; 专辑名: *新的心跳*
+  555. 歌曲名: *枕着光的她*; 歌手名: *任素汐*; 专辑名: *枕着光的她*
+  556. 歌曲名: *林中鸟*; 歌手名: *葛林*; 专辑名: *林中鸟*
+  557. 歌曲名: *桃花扇*; 歌手名: *汪苏泷*; 专辑名: *万有引力*
+  558. 歌曲名: *梦想天空分外蓝*; 歌手名: *陈奕迅*; 专辑名: *梦想天空分外蓝*
+  559. 歌曲名: *棉花糖*; 歌手名: *至上励合*; 专辑名: *降临*
+  560. 歌曲名: *森林狂想曲*; 歌手名: *吴金黛*; 专辑名: *森林狂想曲*
+  561. 歌曲名: *樱花树下的约定*; 歌手名: *旺仔小乔*; 专辑名: *樱花树下的约定*
+  562. 歌曲名: *欧若拉*; 歌手名: *张韶涵*; 专辑名: *欧若拉*
+  563. 歌曲名: *歌在飞*; 歌手名: *苏勒亚其其格*; 专辑名: *歌在飞*
+  564. 歌曲名: *此生不换*; 歌手名: *青鸟飞鱼*; 专辑名: *仙剑奇侠传三 电视剧原声带*
+  565. 歌曲名: *死一样的痛过 (回声纯享版)*; 歌手名: *Shake9.*; 专辑名: *死一样的痛过 (回声纯享版)*
+  566. 歌曲名: *毓贞*; 歌手名: *张云雷*; 专辑名: *毓贞*
+  567. 歌曲名: *水晶*; 歌手名: *任贤齐 & 徐怀钰*; 专辑名: *情义 新歌+精选 光耀全纪录*
+  568. 歌曲名: *求佛*; 歌手名: *誓言*; 专辑名: *我的誓言*
+  569. 歌曲名: *没有你陪伴真的好孤单*; 歌手名: *梦然*; 专辑名: *噢 爱人*
+  570. 歌曲名: *沧海一声笑*; 歌手名: *任贤齐*; 专辑名: *为爱走天涯*
+  571. 歌曲名: *沧海一声笑*; 歌手名: *黄霑 & 罗大佑 & 徐克*; 专辑名: *笑傲江湖-百无禁忌黄沾作品集*
+  572. 歌曲名: *泰语童声ให้เคอรี่มาส่งได้บ่ (热播版)*; 歌手名: *South Entering*; 专辑名: *执行总裁*
+  573. 歌曲名: *流星飞呀*; 歌手名: *徐誉滕*; 专辑名: *流星飞呀*
+  574. 歌曲名: *流着泪的你的脸*; 歌手名: *任贤齐*; 专辑名: *为爱走天涯*
+  575. 歌曲名: *浪子闲话*; 歌手名: *花僮*; 专辑名: *浪子闲话*
+  576. 歌曲名: *浪花一朵朵*; 歌手名: *任贤齐 & 阿牛 & 光良*; 专辑名: *流浪汉*
+  577. 歌曲名: *浮夸*; 歌手名: *陈奕迅*; 专辑名: *U 87*
+  578. 歌曲名: *海底*; 歌手名: *凤凰传奇*; 专辑名: *海底*
+  579. 歌曲名: *海盗*; 歌手名: *蔡依林*; 专辑名: *城堡*
+  580. 歌曲名: *海角七号*; 歌手名: *东来东往*; 专辑名: *海角七号EP*
+  581. 歌曲名: *海阔天空*; 歌手名: *BEYOND*; 专辑名: *乐与怒*
+  582. 歌曲名: *消愁*; 歌手名: *毛不易*; 专辑名: *平凡的一天*
+  583. 歌曲名: *淘汰*; 歌手名: *陈奕迅*; 专辑名: *认了吧*
+  584. 歌曲名: *清明上河图*; 歌手名: *李玉刚*; 专辑名: *新贵妃醉酒*
+  585. 歌曲名: *渡情*; 歌手名: *左宏元 & 张慧清*; 专辑名: *新白娘子传奇 电视剧原声带*
+  586. 歌曲名: *渡我不渡她*; 歌手名: *孤独诗人*; 专辑名: *渡我不渡她*
+  587. 歌曲名: *游山恋*; 歌手名: *海伦*; 专辑名: *游山恋*
+  588. 歌曲名: *漂洋过海来看你*; 歌手名: *王丽坤 & 朱亚文*; 专辑名: *漂洋过海来看你*
+  589. 歌曲名: *漫步人生路*; 歌手名: *刘德华*; 专辑名: *Unforgettable*
+  590. 歌曲名: *潮汐 (Natural) (DJ版)*; 歌手名: *傅梦彤*; 专辑名: *潮汐 (Natural)*
+  591. 歌曲名: *火红的萨日朗*; 歌手名: *要不要买菜*; 专辑名: *火红的萨日朗*
+  592. 歌曲名: *点歌的人*; 歌手名: *海来阿木*; 专辑名: *点歌的人*
+  593. 歌曲名: *烟火*; 歌手名: *光良*; 专辑名: *不会分离*
+  594. 歌曲名: *热爱105°C的你*; 歌手名: *阿肆*; 专辑名: *热爱105°C的你*
+  595. 歌曲名: *燕无歇 (DJ黑桃A) feat.是七叔呢*; 歌手名: *是七叔呢 & DJ黑桃A*; 专辑名: *燕无歇 (DJ黑桃A) (feat.是七叔呢)*
+  596. 歌曲名: *燕无歇*; 歌手名: *是七叔呢*; 专辑名: *燕无歇*
+  597. 歌曲名: *燕无歇*; 歌手名: *蒋雪儿*; 专辑名: *燕无歇*
+  598. 歌曲名: *爱不会绝迹*; 歌手名: *林俊杰*; 专辑名: *恐龙宝贝之龙神勇士 动漫原声带*
+  599. 歌曲名: *爱丫爱丫*; 歌手名: *BY2*; 专辑名: *16未成年*
+  600. 歌曲名: *爱你*; 歌手名: *王心凌*; 专辑名: *爱你*
+  601. 歌曲名: *爱如潮水*; 歌手名: *张信哲*; 专辑名: *心事*
+  602. 歌曲名: *爱情三十六计*; 歌手名: *蔡依林*; 专辑名: *城堡*
+  603. 歌曲名: *爱情诺曼底*; 歌手名: *黄征*; 专辑名: *爱情诺曼底*
+  604. 歌曲名: *爱情转移*; 歌手名: *陈奕迅*; 专辑名: *认了吧*
+  605. 歌曲名: *爱死了昨天*; 歌手名: *李慧珍*; 专辑名: *爱死了*
+  606. 歌曲名: *爱的主打歌*; 歌手名: *萧亚轩*; 专辑名: *爱的主打歌·吻*
+  607. 歌曲名: *爱的故事 (上集)*; 歌手名: *孙耀威*; 专辑名: *爱的故事 (上集)*
+  608. 歌曲名: *爱相随*; 歌手名: *周华健*; 专辑名: *爱相随*
+  609. 歌曲名: *牧马人*; 歌手名: *杨坤*; 专辑名: *牧马人*
+  610. 歌曲名: *牵丝戏*; 歌手名: *银临 & Aki阿杰*; 专辑名: *牵丝戏*
+  611. 歌曲名: *特务J*; 歌手名: *蔡依林*; 专辑名: *特务J*
+  612. 歌曲名: *特斯河之赞*; 歌手名: *九宝乐队*; 专辑名: *中国摇滚榜*
+  613. 歌曲名: *犯贱*; 歌手名: *徐良 & 阿悄*; 专辑名: *犯贱*
+  614. 歌曲名: *独立*; 歌手名: *蜜雪薇琪*; 专辑名: *蜜雪薇琪同名专辑*
+  615. 歌曲名: *独角戏*; 歌手名: *许茹芸*; 专辑名: *如果云知道*
+  616. 歌曲名: *王招君 (你看你拉住我的模样)*; 歌手名: *任素汐*; 专辑名: *TA·说*
+  617. 歌曲名: *玫瑰花的葬礼*; 歌手名: *许嵩*; 专辑名: *Vae新歌+精选珍藏合辑*
+  618. 歌曲名: *琵琶行*; 歌手名: *奇然 & 沈谧仁*; 专辑名: *琵琶行*
+  619. 歌曲名: *生如夏花*; 歌手名: *朴树*; 专辑名: *生如夏花*
+  620. 歌曲名: *生日礼物*; 歌手名: *江涛*; 专辑名: *等到花没开*
+  621. 歌曲名: *生生世世爱*; 歌手名: *吴雨霏*; 专辑名: *仙剑奇侠传三 电视剧原声带*
+  622. 歌曲名: *电音之王 (DJ版)*; 歌手名: *王绎龙*; 专辑名: *电音之王*
+  623. 歌曲名: *男人哭吧不是罪*; 歌手名: *刘德华*; 专辑名: *男人的爱*
+  624. 歌曲名: *男人海洋*; 歌手名: *周传雄*; 专辑名: *男人·海洋*
+  625. 歌曲名: *画 (Live Piano Session Ⅱ)*; 歌手名: *G.E.M. 邓紫棋*; 专辑名: *画 (Live Piano Session Ⅱ)*
+  626. 歌曲名: *痒*; 歌手名: *黄龄*; 专辑名: *特别*
+  627. 歌曲名: *痴心绝对*; 歌手名: *李圣杰*; 专辑名: *音乐十年李圣杰唯一精选*
+  628. 歌曲名: *白山茶*; 歌手名: *陈雪凝*; 专辑名: *白山茶*
+  629. 歌曲名: *白桦林*; 歌手名: *朴树*; 专辑名: *我去2000年*
+  630. 歌曲名: *白狐*; 歌手名: *陈瑞*; 专辑名: *白狐*
+  631. 歌曲名: *白鸽乌鸦相爱的戏码*; 歌手名: *潘成 (皮卡潘)*; 专辑名: *白鸽乌鸦相爱的戏码*
+  632. 歌曲名: *百战成诗*; 歌手名: *王者荣耀同人局*; 专辑名: *百战成诗 (王者荣耀·100英雄群像献礼歌)*
+  633. 歌曲名: *百花香*; 歌手名: *魏新雨*; 专辑名: *百花香*
+  634. 歌曲名: *皇帝*; 歌手名: *胡彦斌*; 专辑名: *音乐密码*
+  635. 歌曲名: *盗墓笔记·十年人间*; 歌手名: *李常超 (Lao乾妈)*; 专辑名: *盗墓笔记·十年人间*
+  636. 歌曲名: *盗将行*; 歌手名: *花粥 & 马雨阳*; 专辑名: *粥请客 (二)*
+  637. 歌曲名: *盗御马*; 歌手名: *徐良*; 专辑名: *盗御马*
+  638. 歌曲名: *盛夏的果实*; 歌手名: *莫文蔚*; 专辑名: *NO.1新曲精选全记录20首*
+  639. 歌曲名: *相思风雨中*; 歌手名: *张学友 & 汤宝如*; 专辑名: *真情流露*
+  640. 歌曲名: *看上她*; 歌手名: *黎明*; 专辑名: *The Red Shoes*
+  641. 歌曲名: *看我72变*; 歌手名: *蔡依林*; 专辑名: *看我72变*
+  642. 歌曲名: *真的爱你*; 歌手名: *BEYOND*; 专辑名: *BEYOND IV*
+  643. 歌曲名: *知足*; 歌手名: *五月天*; 专辑名: *步步 自选作品辑 the Best of 1999-2013*
+  644. 歌曲名: *破晓*; 歌手名: *魏晨*; 专辑名: *破晓*
+  645. 歌曲名: *祈祷 (粤语版)*; 歌手名: *罗广振*; 专辑名: *祈祷*
+  646. 歌曲名: *祈祷*; 歌手名: *王韵婵 & 王杰*; 专辑名: *祈祷*
+  647. 歌曲名: *祝福*; 歌手名: *张学友*; 专辑名: *真爱 新曲 + 真正精选*
+  648. 歌曲名: *神话情话*; 歌手名: *周华健 & 齐豫*; 专辑名: *烧得厉害4两个世界*
+  649. 歌曲名: *离别*; 歌手名: *阿杜*; 专辑名: *天黑*
+  650. 歌曲名: *离歌*; 歌手名: *信乐团*; 专辑名: *挑信*
+  651. 歌曲名: *私奔到月球*; 歌手名: *五月天 & 陈绮贞*; 专辑名: *离开地球表面 Jump!*
+  652. 歌曲名: *秋天不回来*; 歌手名: *王强*; 专辑名: *秋天不回来*
+  653. 歌曲名: *空城*; 歌手名: *杨坤*; 专辑名: *杨坤 同名专辑*
+  654. 歌曲名: *空城计之梦刘备 (Live)*; 歌手名: *KEY.L刘聪 & 万妮达Vinida Weng & VaVa娃娃*; 专辑名: *中国说唱巅峰对决 第9期*
+  655. 歌曲名: *空空如也 (Live)*; 歌手名: *汪峰*; 专辑名: *歌手第二季 第11期*
+  656. 歌曲名: *穿越时空的思念 (DiESi Remix)*; 歌手名: *DiESi*; 专辑名: *穿越时空的思念 (DiESi Remix)*
+  657. 歌曲名: *突然好想你*; 歌手名: *五月天*; 专辑名: *后青春期的诗*
+  658. 歌曲名: *童话*; 歌手名: *光良*; 专辑名: *童话*
+  659. 歌曲名: *童话镇*; 歌手名: *陈一发儿*; 专辑名: *童话镇*
+  660. 歌曲名: *笑傲江湖曲 (琴箫合奏版)*; 歌手名: *胡伟立*; 专辑名: *武侠音乐系列之疗伤神法*
+  661. 歌曲名: *笨小孩 (独唱版)*; 歌手名: *刘德华*; 专辑名: *笨小孩 国语精选 [1993-1998]*
+  662. 歌曲名: *第一次*; 歌手名: *光良*; 专辑名: *第1次个人创作专辑*
+  663. 歌曲名: *第一次爱的人*; 歌手名: *王心凌*; 专辑名: *爱你*
+  664. 歌曲名: *等一分钟*; 歌手名: *徐誉滕*; 专辑名: *茉莉花开*
+  665. 歌曲名: *等不来花开*; 歌手名: *pro*; 专辑名: *等不来花开*
+  666. 歌曲名: *等你爱我*; 歌手名: *陈奕迅*; 专辑名: *等你爱我*
+  667. 歌曲名: *答案*; 歌手名: *杨坤 & 郭采洁*; 专辑名: *今夜二十岁*
+  668. 歌曲名: *算你狠*; 歌手名: *陈小春*; 专辑名: *算你狠*
+  669. 歌曲名: *篇章*; 歌手名: *张韶涵 & 王赫野*; 专辑名: *篇章*
+  670. 歌曲名: *精卫*; 歌手名: *王悦辰*; 专辑名: *精卫*
+  671. 歌曲名: *素颜*; 歌手名: *许嵩 & 何曼婷*; 专辑名: *素颜*
+  672. 歌曲名: *索命梵音*; 歌手名: *黄霑*; 专辑名: *倩女幽魂三部曲 电影原声大碟*
+  673. 歌曲名: *红日 (国语)*; 歌手名: *李克勤*; 专辑名: *爱可以问谁*
+  674. 歌曲名: *红玫瑰*; 歌手名: *陈奕迅*; 专辑名: *认了吧*
+  675. 歌曲名: *红色高跟鞋*; 歌手名: *蔡健雅*; 专辑名: *若你碰到他*
+  676. 歌曲名: *红装*; 歌手名: *徐良 & 阿悄*; 专辑名: *犯贱*
+  677. 歌曲名: *红颜*; 歌手名: *胡彦斌*; 专辑名: *MuSiC混合体*
+  678. 歌曲名: *练习*; 歌手名: *刘德华*; 专辑名: *美丽的一天*
+  679. 歌曲名: *终章 (Live)*; 歌手名: *杨和苏KeyNG*; 专辑名: *中国说唱巅峰对决*
+  680. 歌曲名: *给你一点颜色 (Live)*; 歌手名: *谭维维*; 专辑名: *中国之星 第3期*
+  681. 歌曲名: *绿色*; 歌手名: *陈雪凝*; 专辑名: *绿色*
+  682. 歌曲名: *编号89757*; 歌手名: *林俊杰*; 专辑名: *编号89757*
+  683. 歌曲名: *缘分的天空*; 歌手名: *孙楠*; 专辑名: *缘分的天空*
+  684. 歌曲名: *罗刹海市*; 歌手名: *刀郎*; 专辑名: *山歌寥哉*
+  685. 歌曲名: *美丽的神话*; 歌手名: *孙楠 & 韩红*; 专辑名: *神话 电影原声音乐*
+  686. 歌曲名: *羡慕风羡慕雨*; 歌手名: *怪阿姨*; 专辑名: *羡慕风羡慕雨*
+  687. 歌曲名: *老人与海*; 歌手名: *海鸣威*; 专辑名: *梦醉心声 汽车音响专用*
+  688. 歌曲名: *老男孩*; 歌手名: *筷子兄弟*; 专辑名: *父亲*
+  689. 歌曲名: *耍猴儿 (Live)*; 歌手名: *梁龙 & MC HotDog 热狗 & Capper & Tizzy T*; 专辑名: *中国说唱巅峰对决*
+  690. 歌曲名: *耍猴儿*; 歌手名: *二手玫瑰乐队*; 专辑名: *耍猴儿*
+  691. 歌曲名: *耍猴儿唢呐 (百鬼夜行)*; 歌手名: *Harry来了*; 专辑名: *百鬼夜行*
+  692. 歌曲名: *耶耶耶 (Remix)*; 歌手名: *杨洋金彪*; 专辑名: *耶耶耶*
+  693. 歌曲名: *胡广生*; 歌手名: *任素汐*; 专辑名: *胡广生*
+  694. 歌曲名: *自由自在*; 歌手名: *凤凰传奇*; 专辑名: *最好的时代*
+  695. 歌曲名: *舞娘*; 歌手名: *蔡依林*; 专辑名: *舞娘*
+  696. 歌曲名: *艾瑞巴迪 (Live)*; 歌手名: *丁当 & 张雨绮 & 黄圣依 & 张萌 & 吴昕 & 刘芸 & 许飞*; 专辑名: *乘风破浪的姐姐 第3期*
+  697. 歌曲名: *芒种*; 歌手名: *音阙诗听 & 赵方婧*; 专辑名: *二十四节气*
+  698. 歌曲名: *花好月圆夜*; 歌手名: *任贤齐 & 杨千嬅*; 专辑名: *任贤齐创作集 音乐旅行者*
+  699. 歌曲名: *花心*; 歌手名: *周华健*; 专辑名: *花心*
+  700. 歌曲名: *花桥流水 (合唱)*; 歌手名: *高安 & 纳兰珠儿*; 专辑名: *花桥流水*
+  701. 歌曲名: *花花宇宙*; 歌手名: *陈慧琳*; 专辑名: *花花宇宙*
+  702. 歌曲名: *若月亮没来 (Live)*; 歌手名: *杨宗纬 & 宝石Gem & 王宇宙Leto*; 专辑名: *天赐的声音第五季 第5期*
+  703. 歌曲名: *若月亮没来 (若是月亮还没来)*; 歌手名: *王宇宙Leto & 乔浚丞*; 专辑名: *若月亮没来 (若是月亮还没来)*
+  704. 歌曲名: *茉莉花开*; 歌手名: *徐誉滕*; 专辑名: *茉莉花开*
+  705. 歌曲名: *莫问归期*; 歌手名: *蒋雪儿*; 专辑名: *莫问归期*
+  706. 歌曲名: *菊花爆满山*; 歌手名: *马博*; 专辑名: *菊花爆满山*
+  707. 歌曲名: *萬千花蕊慈母悲哀*; 歌手名: *珂拉琪 Collage*; 专辑名: *MEmento·MORI*
+  708. 歌曲名: *落 (花开花落日升日没)*; 歌手名: *唐伯虎Annie*; 专辑名: *落 (花开花落日升日没)*
+  709. 歌曲名: *落了白 (降调减速版)*; 歌手名: *蒋雪儿Snow.J*; 专辑名: *落了白 (降调减速版)*
+  710. 歌曲名: *落了白*; 歌手名: *蒋雪儿Snow.J*; 专辑名: *落了白*
+  711. 歌曲名: *落花雨*; 歌手名: *蒋蒋*; 专辑名: *蒋公爵漂流记*
+  712. 歌曲名: *蓝色土耳其*; 歌手名: *周传雄*; 专辑名: *蓝色土耳其*
+  713. 歌曲名: *虞兮叹*; 歌手名: *闻人听書_*; 专辑名: *虞兮叹*
+  714. 歌曲名: *虫儿飞*; 歌手名: *儿歌*; 专辑名: *童年的歌谣*
+  715. 歌曲名: *蝴蝶*; 歌手名: *胡彦斌*; 专辑名: *音乐密码*
+  716. 歌曲名: *蝴蝶夫人*; 歌手名: *黄霄雲 & 王赫野*; 专辑名: *蝴蝶夫人*
+  717. 歌曲名: *蝴蝶泉边 (Live)*; 歌手名: *张月*; 专辑名: *跨界歌王第五季 第8期*
+  718. 歌曲名: *蝴蝶泉边*; 歌手名: *黄雅莉*; 专辑名: *蝴蝶泉边*
+  719. 歌曲名: *表白*; 歌手名: *萧亚轩*; 专辑名: *1087*
+  720. 歌曲名: *被风吹过的夏天*; 歌手名: *金莎 & 林俊杰*; 专辑名: *空气*
+  721. 歌曲名: *触电*; 歌手名: *芭比*; 专辑名: *摇头舞曲3*
+  722. 歌曲名: *让我欢喜让我忧*; 歌手名: *周华健*; 专辑名: *让我欢喜让我忧*
+  723. 歌曲名: *让泪化作相思雨*; 歌手名: *南合文斗*; 专辑名: *混了31年*
+  724. 歌曲名: *记·念 (Live)*; 歌手名: *雷雨心*; 专辑名: *中国好歌曲第二季 第2期*
+  725. 歌曲名: *记事本*; 歌手名: *周传雄*; 专辑名: *transfer*
+  726. 歌曲名: *许愿池的希腊少女*; 歌手名: *蔡依林*; 专辑名: *野蛮游戏*
+  727. 歌曲名: *诀别诗*; 歌手名: *胡彦斌*; 专辑名: *少年杨家将 电视剧原声带*
+  728. 歌曲名: *诛仙 我回来*; 歌手名: *任贤齐*; 专辑名: *如果没有你*
+  729. 歌曲名: *该死的温柔*; 歌手名: *马天宇*; 专辑名: *宇光十色*
+  730. 歌曲名: *说爱你*; 歌手名: *蔡依林*; 专辑名: *看我72变*
+  731. 歌曲名: *调查中*; 歌手名: *糯米Nomi*; 专辑名: *<开端> 影视剧BGM推广曲*
+  732. 歌曲名: *谎言 (Live)*; 歌手名: *BigBang*; 专辑名: *韩流音乐现场集锦1*
+  733. 歌曲名: *谢谢你的爱 (国语)*; 歌手名: *刘德华*; 专辑名: *谢谢你的爱*
+  734. 歌曲名: *谪仙*; 歌手名: *伊格赛听 & 叶里*; 专辑名: *谪仙*
+  735. 歌曲名: *赐我*; 歌手名: *一只白羊*; 专辑名: *赐我*
+  736. 歌曲名: *赢在江湖*; 歌手名: *姜鹏*; 专辑名: *赢在江湖*
+  737. 歌曲名: *赤伶*; 歌手名: *HITA*; 专辑名: *赤伶*
+  738. 歌曲名: *起风了*; 歌手名: *买辣椒也用券*; 专辑名: *起风了*
+  739. 歌曲名: *超能力*; 歌手名: *G.E.M. 邓紫棋*; 专辑名: *超能力*
+  740. 歌曲名: *路灯下的小姑娘 (Live)*; 歌手名: *张蔷*; 专辑名: *超级歌单 第6期*
+  741. 歌曲名: *踏山河*; 歌手名: *是七叔呢*; 专辑名: *踏山河*
+  742. 歌曲名: *踏浪*; 歌手名: *徐怀钰*; 专辑名: *Love*
+  743. 歌曲名: *踏雪*; 歌手名: *邓寓君 (等什么君) & FOX胡天渝*; 专辑名: *予·君*
+  744. 歌曲名: *轮回 (Live)*; 歌手名: *杭盖乐队*; 专辑名: *中国好歌曲第二季 第7期*
+  745. 歌曲名: *达坂城的姑娘*; 歌手名: *王洛宾*; 专辑名: *王洛宾歌曲精选集 (演唱篇)*
+  746. 歌曲名: *达拉崩吧*; 歌手名: *周深*; 专辑名: *歌手·当打之年 第8期*
+  747. 歌曲名: *过火*; 歌手名: *张信哲*; 专辑名: *宽容*
+  748. 歌曲名: *这世界那么多人*; 歌手名: *莫文蔚*; 专辑名: *这世界那么多人 (电影 <我要我们在一起> 主题曲)*
+  749. 歌曲名: *这个年纪*; 歌手名: *齐一*; 专辑名: *这个年纪*
+  750. 歌曲名: *这就是爱*; 歌手名: *张杰*; 专辑名: *听! 我们的歌*
+  751. 歌曲名: *远走高飞 (合唱版)*; 歌手名: *金志文 & 徐佳莹*; 专辑名: *Hello 1*
+  752. 歌曲名: *迷失幻境*; 歌手名: *IN.K & 王忻辰*; 专辑名: *回忆观影券*
+  753. 歌曲名: *追梦人*; 歌手名: *群星*; 专辑名: *雪之吟*
+  754. 歌曲名: *追梦人*; 歌手名: *阿木*; 专辑名: *有一种爱叫做放手*
+  755. 歌曲名: *逆战*; 歌手名: *张杰*; 专辑名: *听! 我们的歌*
+  756. 歌曲名: *逆流成河*; 歌手名: *金南玲*; 专辑名: *来生*
+  757. 歌曲名: *逢石*; 歌手名: *易烊千玺*; 专辑名: *逢石*
+  758. 歌曲名: *遇见*; 歌手名: *孙燕姿*; 专辑名: *The Moment*
+  759. 歌曲名: *那丝也有春天*; 歌手名: *大鹏*; 专辑名: *屌丝男士 电视剧原声带*
+  760. 歌曲名: *那么爱你为什么*; 歌手名: *黄品源 & 莫文蔚*; 专辑名: *狠不下心*
+  761. 歌曲名: *那么美*; 歌手名: *杨坤*; 专辑名: *无所谓*
+  762. 歌曲名: *那年年少 (戏腔版)*; 歌手名: *李袁杰*; 专辑名: *那年·年少*
+  763. 歌曲名: *都是你的错*; 歌手名: *陈慧琳 & 郑中基*; 专辑名: *恋爱情色*
+  764. 歌曲名: *都是兄弟*; 歌手名: *浩天*; 专辑名: *都是兄弟*
+  765. 歌曲名: *酒馆儿*; 歌手名: *蛋黄*; 专辑名: *酒馆儿*
+  766. 歌曲名: *醉倾城*; 歌手名: *小阿枫*; 专辑名: *醉倾城*
+  767. 歌曲名: *醉清风*; 歌手名: *弦子*; 专辑名: *不爱最大*
+  768. 歌曲名: *醉赤壁*; 歌手名: *林俊杰*; 专辑名: *JJ陆*
+  769. 歌曲名: *里约热内卢*; 歌手名: *杨坤*; 专辑名: *无所谓*
+  770. 歌曲名: *重生之我在异乡为异客*; 歌手名: *王睿卓 & Damn5z*; 专辑名: *重生之我在异乡为异客*
+  771. 歌曲名: *野子 (Live)*; 歌手名: *苏运莹*; 专辑名: *中国好歌曲第二季 第1期*
+  772. 歌曲名: *野狼disco*; 歌手名: *宝石Gem*; 专辑名: *野狼disco*
+  773. 歌曲名: *長い間 (Nagai Aida [Remastered])*; 歌手名: *Kiroro*; 专辑名: *長い間 ～キロロの森～*
+  774. 歌曲名: *长安故事*; 歌手名: *李玉刚*; 专辑名: *刚好遇见你*
+  775. 歌曲名: *阿刁 (Live)*; 歌手名: *张韶涵*; 专辑名: *歌手第二季 第2期*
+  776. 歌曲名: *阿衣莫*; 歌手名: *阿吉太组合*; 专辑名: *阿衣莫*
+  777. 歌曲名: *阿里阿里*; 歌手名: *李贞贤*; 专辑名: *I Love Natural*
+  778. 歌曲名: *陈楚生, 陆虎, 王栎鑫, 张远, 俞灏明 <直到世界尽头> (长音频)*; 歌手名: *虚拟恋人*; 专辑名: *综艺*
+  779. 歌曲名: *隆里电丝 (Live)*; 歌手名: *盛宇D.SHINE & KEY.L刘聪 & ICE*; 专辑名: *中国说唱巅峰对决 第4期*
+  780. 歌曲名: *隐形的翅膀*; 歌手名: *张韶涵*; 专辑名: *潘朵拉*
+  781. 歌曲名: *隔壁泰山*; 歌手名: *阿里郎*; 专辑名: *隔壁泰山*
+  782. 歌曲名: *难却 (吉他版)*; 歌手名: *祥嘞嘞*; 专辑名: *难却 (吉他版)*
+  783. 歌曲名: *难却*; 歌手名: *平生不晚*; 专辑名: *难却*
+  784. 歌曲名: *难念的经*; 歌手名: *周华健*; 专辑名: *乐剧2电视原声带*
+  785. 歌曲名: *难渡*; 歌手名: *邓寓君 (等什么君)*; 专辑名: *难渡*
+  786. 歌曲名: *雨蝶*; 歌手名: *李翊君*; 专辑名: *誓言谎言*
+  787. 歌曲名: *青丝*; 歌手名: *时光胶囊*; 专辑名: *记忆给他的礼物*
+  788. 歌曲名: *青春圆舞曲*; 歌手名: *中国娃娃*; 专辑名: *歌曲合辑*
+  789. 歌曲名: *青春舞曲*; 歌手名: *王洛宾 & 李毓敏*; 专辑名: *王洛宾歌曲精选集 (演奏篇)*
+  790. 歌曲名: *青花*; 歌手名: *周传雄*; 专辑名: *蓝色土耳其*
+  791. 歌曲名: *青鸟*; 歌手名: *生物股长*; 专辑名: *青鸟*
+  792. 歌曲名: *風の住む街 (风居住的街道)*; 歌手名: *矶村由纪子 (Yukiko Isomura)*; 专辑名: *风居住的街道 (風の住む街)*
+  793. 歌曲名: *风中的花瓣*; 歌手名: *醉梦千城*; 专辑名: *醉梦千城第一期曲目集*
+  794. 歌曲名: *风吹麦浪*; 歌手名: *李健*; 专辑名: *想念你*
+  795. 歌曲名: *风的季节*; 歌手名: *Soler*; 专辑名: *Canto*
+  796. 歌曲名: *风经过, 唱离合*; 歌手名: *婉枫 & 张朕*; 专辑名: *风经过, 唱离合*
+  797. 歌曲名: *飞舞*; 歌手名: *王冰洋*; 专辑名: *飞舞*
+  798. 歌曲名: *飞鸟*; 歌手名: *任贤齐*; 专辑名: *飞鸟*
+  799. 歌曲名: *飞鸟和蝉*; 歌手名: *任然*; 专辑名: *飞鸟和蝉*
+  800. 歌曲名: *饿狼传说*; 歌手名: *张学友*; 专辑名: *饿狼传说*
+  801. 歌曲名: *香水百合*; 歌手名: *张韶涵*; 专辑名: *潘朵拉*
+  802. 歌曲名: *骄傲的少年*; 歌手名: *南征北战NZBZ*; 专辑名: *6415*
+  803. 歌曲名: *魅力无限*; 歌手名: *孙悦*; 专辑名: *百合花*
+  804. 歌曲名: *鸳鸯戏 (DJ哈市小鹏版)*; 歌手名: *邓寓君 (等什么君)*; 专辑名: *鸳鸯戏*
+  805. 歌曲名: *麒麟*; 歌手名: *早安*; 专辑名: *中国说唱巅峰对决*
+  806. 歌曲名: *黄昏*; 歌手名: *周传雄*; 专辑名: *transfer*
+  807. 歌曲名: *黄梅戏*; 歌手名: *慕容晓晓*; 专辑名: *爱情买卖*
+  808. 歌曲名: *黎明前的黑暗 (Live)*; 歌手名: *张韶涵 & 王晰*; 专辑名: *天赐的声音 第2期*
+  809. 歌曲名: *黑い花*; 歌手名: *榊原由依*; 专辑名: *Fractal*
+  810. 歌曲名: *黑桃A (合唱版)*; 歌手名: *王大毛 & DJ小鱼儿*; 专辑名: *黑桃A*
+  811. 歌曲名: *黑蝙蝠中队*; 歌手名: *刘德华*; 专辑名: *美丽的一天*
+
+###### (2) **[Buddhism]** Buddhism/Others:
+  1. 歌曲名: *大悲咒*; 歌手名: *佛教歌曲*; 专辑名: *歌曲合辑*
+
+###### (3) **[Accompaniment]** Melodies/Accompaniments:
+  1. 歌曲名: *Whistle (伴奏)*; 歌手名: *Amazing Karaoke*; 专辑名: *Best of American Pop Hits, Vol. 2 (Karaoke Version)*
+
+###### (4) **[Composer]** Melodies/Composers/Beethoven:
+  1. 歌曲名: *Fur Elise*; 歌手名: *Beethoven Band*; 专辑名: *Beethoven Classics*
+  2. 歌曲名: *欢乐颂 (Ode an die Freude) (片段版)*; 歌手名: *纯音乐*; 专辑名: *世界名曲一百首*
+
+###### (5) **[Composer]** Melodies/Composers/Chaikovskiy:
+  1. 歌曲名: *Tchaikovsky @Swan Lake (Suite), Op. 20a, TH. 219@ I. Scene, Swan Theme*; 歌手名: *Wiener Philharmoniker & Mstislav Rostropovich*; 专辑名: *The Little Ballerina (Classics For Kids)*
+
+###### (6) **[Composer]** Melodies/Composers/Joe:
+  1. 歌曲名: *Summer (PIANO VER.)*; 歌手名: *久石让*; 专辑名: *ENCORE*
+
+###### (7) **[Composer]** Melodies/Composers/Maksim:
+  1. 歌曲名: *Croatian Rhapsody (Arr. Bratos, Kazinoti)*; 歌手名: *Maksim & Nikša Bratoš & Remi Kazinoti & Craig Pruess & Orchestra*; 专辑名: *The Piano Player*
+  2. 歌曲名: *He's a Pirate*; 歌手名: *Maksim*; 专辑名: *The Movies*
+  3. 歌曲名: *The Flight of the Bumble Bee*; 歌手名: *Maksim*; 专辑名: *Greatest Maksim*
+
+###### (8) **[Composer]** Melodies/Composers/Mozart:
+  1. 歌曲名: *Symphony No.41 In C Major, K.551.IV.Molto allegro*; 歌手名: *Slovak Philharmonic Orchestra & Wolfgang Amadeus Mozart & Libor Pešek*; 专辑名: *Mozart@ Symphonies from the Vienna Era*
+
+###### (9) **[Guitar]** Melodies/Instruments/Guitar:
+  1. 歌曲名: *奇迹の山*; 歌手名: *岸部真明*; 专辑名: *奇跡の山 (奇迹之山)*
+  2. 歌曲名: *流れ行く云 (流行的云)*; 歌手名: *岸部真明*; 专辑名: *奇跡の山 (奇迹之山)*
+
+###### (10) **[Piano]** Melodies/Instruments/Piano:
+  1. 歌曲名: *Mariage d'amour*; 歌手名: *Richard Clayderman*; 专辑名: *40 Relaxing Piano Classics*
+
+###### (11) **[Symphony]** Melodies/Instruments/Symphony:
+  1. 歌曲名: *Radetzky March*; 歌手名: *André Rieu & Johann Strauss Orchestra*; 专辑名: *Rieu Royale (International Version)*
+
+###### (12) **[Violin]** Melodies/Instruments/Violin:
+  1. 歌曲名: *梁祝小提琴协奏曲 (61珍藏版)*; 歌手名: *俞丽拿*; 专辑名: *梁祝 绝响*
+
+###### (13) **[Lullaby]** Melodies/Lullabies:
+  1. 歌曲名: *Weightless*; 歌手名: *Marconi Union*; 专辑名: *The Ambient Zone Just Music Cafe, Vol. 4*
+
+###### (14) **[Masterpiece]** Melodies/Masterpieces/Canon:
+  1. 歌曲名: *Canon*; 歌手名: *Johann Pachelbel*; 专辑名: *A Calendar Of Classics - A 12 CD Set Of Romantic Classics For Every Month Of The Year*
+
+###### (15) **[Masterpiece]** Melodies/Masterpieces/He's a Pirate:
+  1. 歌曲名: *He's a Pirate (From "Pirates of the Caribbean: The Curse Of the Black Pearl", Score)*; 歌手名: *Klaus Badelt*; 专辑名: *Pirates of the Caribbean: The Curse of the Black Pearl (Original Motion Picture Soundtrack)*
+
+###### (16) **[Masterpiece]** Melodies/Masterpieces/Horse Racing:
+  1. 歌曲名: *Horse Racing*; 歌手名: *Canada Eight Rainbows*; 专辑名: *Horse Racing*
+  2. 歌曲名: *赛马 (Live)*; 歌手名: *女子十二乐坊*; 专辑名: *魅力音乐会*
+
+###### (17) **[Melody]** Melodies/Others:
+  1. 歌曲名: *Stand, Believe*; 歌手名: *Tanaki Alison*; 专辑名: *Reach Higher*
+
+###### (18) **[Closet]** Vocals/Closet:
+  1. 歌曲名: *Aankhein Khuli*; 歌手名: *Lata Mangeshkar & Udit Narayan & Ishaan & Shweta Pandit*; 专辑名: *Mohabbatein (Original Motion Picture Soundtrack)*
+
+###### (19) **[Explosive]** Vocals/Explosive/Chinese:
+  1. 歌曲名: *不变的音乐*; 歌手名: *王绎龙*; 专辑名: *康电情歌*
+  2. 歌曲名: *人间惊鸿客 (DJ沈念版)*; 歌手名: *叶里*; 专辑名: *人间惊鸿客 (DJ沈念版)*
+  3. 歌曲名: *小鸡哔哔*; 歌手名: *洛天依*; 专辑名: *洛天依小鸡哔哔*
+
+###### (20) **[Explosive]** Vocals/Explosive/English:
+  1.   歌曲名: *All Falls Down*; 歌手名: *Alan Walker & Noah Cyrus & Digital Farm Animals & Juliander*; 专辑名: *Different World*
+  2.   歌曲名: *All Rise*; 歌手名: *Blue*; 专辑名: *Road Trip Sing-Along (Explicit)*
+  3.   歌曲名: *Alone*; 歌手名: *Alan Walker*; 专辑名: *Different World*
+  4.   歌曲名: *Andale*; 歌手名: *Matteo*; 专辑名: *Andale*
+  5.   歌曲名: *Animals*; 歌手名: *Maroon 5*; 专辑名: *Singles (Explicit)*
+  6.   歌曲名: *Barbie Girl*; 歌手名: *Aqua*; 专辑名: *Hits Of The 90s*
+  7.   歌曲名: *Be What You Wanna Be*; 歌手名: *Darin*; 专辑名: *Darin*
+  8.   歌曲名: *Beautiful Now*; 歌手名: *Zedd & Jon Bellion*; 专辑名: *True Colors*
+  9.   歌曲名: *Boom*; 歌手名: *Tiësto*; 专辑名: *Boom*
+  10.  歌曲名: *Boomerang*; 歌手名: *Brooks & GRX*; 专辑名: *Boomerang*
+  11.  歌曲名: *Booyah*; 歌手名: *Showtek & Sonny Wilson & We Are Loud*; 专辑名: *Future Trance Vol. 67*
+  12.  歌曲名: *Boys*; 歌手名: *Smile.DK*; 专辑名: *Smile*
+  13.  歌曲名: *Butterfly*; 歌手名: *Smile.DK*; 专辑名: *Smile*
+  14.  歌曲名: *Call Of The Ambulance*; 歌手名: *Trackformers*; 专辑名: *Call Of The Ambulance*
+  15.  歌曲名: *Children Of The Wild*; 歌手名: *Steve Angello & Mako*; 专辑名: *Tomorrowland 2019: The Book of Wisdom, The Return*
+  16.  歌曲名: *Closer*; 歌手名: *The Chainsmokers & Halsey*; 专辑名: *Collage EP*
+  17.  歌曲名: *Complicated*; 歌手名: *Dimitri Vegas & Like Mike & David Guetta & Kiiara*; 专辑名: *Island Of The Fiery Star 2*
+  18.  歌曲名: *Concussive*; 歌手名: *英雄联盟*; 专辑名: *DJ Sona*
+  19.  歌曲名: *Dance Monkey*; 歌手名: *Tones and I*; 专辑名: *Dance Monkey*
+  20.  歌曲名: *Despair*; 歌手名: *LookedatHerFore*; 专辑名: *despair*
+  21.  歌曲名: *Don't Give Up (Original Mix)*; 歌手名: *Croatia Squad*; 专辑名: *Don't Give Up*
+  22.  歌曲名: *Don't Push Me*; 歌手名: *Sweetbox*; 专辑名: *Jade*
+  23.  歌曲名: *Drag Me Down*; 歌手名: *One Direction*; 专辑名: *Drag Me Down*
+  24.  歌曲名: *El Dorado (Dubstep Remix)*; 歌手名: *Two Steps From Hell & Thomas Bergersen*; 专辑名: *Burn*
+  25.  歌曲名: *Empire of Angels*; 歌手名: *Two Steps From Hell & Thomas Bergersen*; 专辑名: *Sun*
+  26.  歌曲名: *Es Rappelt Im Karton*; 歌手名: *Pixie Paris*; 专辑名: *Es Rappelt Im Karton*
+  27.  歌曲名: *Faded*; 歌手名: *Alan Walker & Iselin Solheim*; 专辑名: *Faded*
+  28.  歌曲名: *Fireflies (Extended Mix)*; 歌手名: *Bassjackers & Luciana*; 专辑名: *Fireflies*
+  29.  歌曲名: *First Time*; 歌手名: *Kygo & Ellie Goulding*; 专辑名: *First Time*
+  30.  歌曲名: *Five Hours*; 歌手名: *Deorro*; 专辑名: *Five Hours*
+  31.  歌曲名: *Flight Of The Silverbird*; 歌手名: *Two Steps From Hell & Thomas Bergersen*; 专辑名: *Battlecry*
+  32.  歌曲名: *Follow the Light*; 歌手名: *Brennan Heart & Jonathan Mendelsohn*; 专辑名: *Cap'tain Harderz 2015 (Cap'tain Belgium)*
+  33.  歌曲名: *For the Win*; 歌手名: *Thomas Bergersen & Two Steps From Hell*; 专辑名: *SkyWorld*
+  34.  歌曲名: *Forever*; 歌手名: *Martin Garrix & Matisse & Sadko*; 专辑名: *Forever*
+  35.  歌曲名: *Freaks (Radio Edit)*; 歌手名: *Timmy Trumpet & Savage*; 专辑名: *Collide (Original Motion Picture Soundtrack)*
+  36.  歌曲名: *Free Loop*; 歌手名: *Daniel Powter*; 专辑名: *Daniel Powter*
+  37.  歌曲名: *Friendships (Original Mix)*; 歌手名: *Pascal Letoublon*; 专辑名: *Friendships*
+  38.  歌曲名: *Geisha*; 歌手名: *Dino Sor*; 专辑名: *Dino Sor, Vol. 3*
+  39.  歌曲名: *Glad You Came*; 歌手名: *The Wanted*; 专辑名: *Glad You Came - EP*
+  40.  歌曲名: *Go Off*; 歌手名: *Lil Uzi Vert & Quavo & Travis Scott*; 专辑名: *Fast & Furious 8: The Album*
+  41.  歌曲名: *Go Time*; 歌手名: *Mark Petrie*; 专辑名: *Go Time*
+  42.  歌曲名: *God Is a Girl*; 歌手名: *Groove Coverage*; 专辑名: *God Is a Girl*
+  43.  歌曲名: *Good Life*; 歌手名: *G.Eazy*; 专辑名: *Fast & Furious 8: The Album*
+  44.  歌曲名: *Hall of Fame*; 歌手名: *The Script & will.i.am*; 专辑名: *#3*
+  45.  歌曲名: *HandClap*; 歌手名: *Fitz and The Tantrums*; 专辑名: *Fitz & the Tantrums*
+  46.  歌曲名: *Havana*; 歌手名: *Camila Cabello & Young Thug*; 专辑名: *Camila*
+  47.  歌曲名: *Heroes (we could be)*; 歌手名: *Alesso & Tove Lo*; 专辑名: *Forever*
+  48.  歌曲名: *Home (Blaze U Remix)*; 歌手名: *ThimLife & Bibiane Z & Blaze U*; 专辑名: *Home (Blaze U Remix)*
+  49.  歌曲名: *Horizon*; 歌手名: *Janji*; 专辑名: *Horizon*
+  50.  歌曲名: *Hymn For The Weekend (Remix)*; 歌手名: *Alan Walker & Coldplay*; 专辑名: *Hymn For The Weekend [Remix]*
+  51.  歌曲名: *I Want My Tears Back*; 歌手名: *Nightwish*; 专辑名: *Imaginaerum (Tour Edition)*
+  52.  歌曲名: *I'm Gonna Getcha Good! (Red Single Edit)*; 歌手名: *Shania Twain*; 专辑名: *Greatest Hits*
+  53.  歌曲名: *If You Feel My Love (Chaow Mix)*; 歌手名: *Blaxy Girls*; 专辑名: *If You Feel My Love*
+  54.  歌曲名: *Ignite*; 歌手名: *K.391*; 专辑名: *Ignite*
+  55.  歌曲名: *Intro*; 歌手名: *Alan Walker*; 专辑名: *Different World*
+  56.  歌曲名: *It Ain't Me*; 歌手名: *Kygo & Selena Gomez*; 专辑名: *Stargazing*
+  57.  歌曲名: *Jealousy (Dance Extended)*; 歌手名: *French Kiss*; 专辑名: *Jealousy*
+  58.  歌曲名: *KNAI*; 歌手名: *Deltabot*; 专辑名: *Rushdown Assemble Vol.1*
+  59.  歌曲名: *Laputa (Original Mix)*; 歌手名: *Shogun*; 专辑名: *Laputa*
+  60.  歌曲名: *Last of the Wilds*; 歌手名: *Nightwish*; 专辑名: *Dark Passion Play*
+  61.  歌曲名: *Lean On*; 歌手名: *Major Lazer & MØ & DJ Snake*; 专辑名: *Peace Is The Mission (Explicit)*
+  62.  歌曲名: *Lily*; 歌手名: *Alan Walker*; 专辑名: *Different World*
+  63.  歌曲名: *Lonely*; 歌手名: *Alan Walker*; 专辑名: *Different World*
+  64.  歌曲名: *Lonely*; 歌手名: *Nana*; 专辑名: *Nana*
+  65.  歌曲名: *Lou Lou*; 歌手名: *Albin Lee Meldau*; 专辑名: *Lovers*
+  66.  歌曲名: *Love The Way You Lie (Part II) (Explicit)*; 歌手名: *Rihanna & Eminem*; 专辑名: *Loud*
+  67.  歌曲名: *Man At Arms*; 歌手名: *Position Music*; 专辑名: *Position Music - Production Music Series Vol. 55 - Epic Hip-Hop*
+  68.  歌曲名: *Maps*; 歌手名: *Maroon 5*; 专辑名: *Singles (Explicit)*
+  69.  歌曲名: *Monody*; 歌手名: *TheFatRat & Laura Brehm*; 专辑名: *Monody*
+  70.  歌曲名: *More Than You Know*; 歌手名: *Axwell Λ Ingrosso*; 专辑名: *More Than You Know*
+  71.  歌曲名: *Move Up (Lost Gravity)*; 歌手名: *Mr. Polska*; 专辑名: *Move Up (Lost Gravity)*
+  72.  歌曲名: *My Way*; 歌手名: *Calvin Harris*; 专辑名: *My Way*
+  73.  歌曲名: *Narco (Extended Mix)*; 歌手名: *BlasterJaxx & Timmy Trumpet*; 专辑名: *Narco*
+  74.  歌曲名: *Nevada*; 歌手名: *Vicetone & Cozi Zuehlsdorff*; 专辑名: *Nevada*
+  75.  歌曲名: *Never Back Down*; 歌手名: *Two Steps From Hell & Thomas Bergersen*; 专辑名: *Battlecry*
+  76.  歌曲名: *Nothing But Trouble (Instagram Models Dance Remix)*; 歌手名: *Charlie Puth*; 专辑名: *Nine Track Mind Deluxe*
+  77.  歌曲名: *Nubia*; 歌手名: *Aly & Fila & Ferry Tayle*; 专辑名: *Solarstone Presents Pure Trance 3*
+  78.  歌曲名: *On The Floor*; 歌手名: *Jennifer Lopez & Pitbull*; 专辑名: *Smash Hits 2000 (Explicit)*
+  79.  歌曲名: *One Kiss*; 歌手名: *Calvin Harris & Dua Lipa*; 专辑名: *Dua Lipa (Complete Edition) [Explicit]*
+  80.  歌曲名: *Panama*; 歌手名: *Matteo*; 专辑名: *Panama*
+  81.  歌曲名: *Party Rock Anthem*; 歌手名: *LMFAO & Lauren Bennett & GoonRock*; 专辑名: *Sorry for Party Rocking*
+  82.  歌曲名: *Pneumatic Tokyo*; 歌手名: *ENV*; 专辑名: *Pneumatic Tokyo*
+  83.  歌曲名: *Prelude (VIP Edit)*; 歌手名: *TheFatRat & JJD*; 专辑名: *Prelude (VIP Edit)*
+  84.  歌曲名: *Pyro*; 歌手名: *Chester Young*; 专辑名: *Pyro*
+  85.  歌曲名: *Remember (DJ Kira Remix)*; 歌手名: *Gift & Miah*; 专辑名: *Remember*
+  86.  歌曲名: *Rip N Dip (Kill The Noise Remix)*; 歌手名: *Getter & Kill The Noise*; 专辑名: *Rip N Dip (Remixes)*
+  87.  歌曲名: *Rise And Fall (DJ版)*; 歌手名: *Camelot*; 专辑名: *Rise And Fall*
+  88.  歌曲名: *River Flows In You (Original Mix)*; 歌手名: *Mark Pride*; 专辑名: *Into The Deep Vol.02*
+  89.  歌曲名: *Say Less*; 歌手名: *Dillon Francis*; 专辑名: *Say Less*
+  90.  歌曲名: *Seve (Radio Edit)*; 歌手名: *Tez Cadey*; 专辑名: *Seve*
+  91.  歌曲名: *Sexual Healing (Kygo Remix)*; 歌手名: *Kygo & Marvin Gaye*; 专辑名: *Sexual Healing (Kygo Remix)*
+  92.  歌曲名: *Shape of You*; 歌手名: *Ed Sheeran*; 专辑名: *÷ (Deluxe)*
+  93.  歌曲名: *Shelter*; 歌手名: *Porter Robinson & Madeon*; 专辑名: *Shelter*
+  94.  歌曲名: *Shotgun Senorita*; 歌手名: *Blue Stahli*; 专辑名: *Antisleep Vol. 01*
+  95.  歌曲名: *Sing Me to Sleep*; 歌手名: *Alan Walker & Iselin Solheim*; 专辑名: *Sing Me to Sleep*
+  96.  歌曲名: *Sky*; 歌手名: *Alan Walker & Alex Skrindo*; 专辑名: *EDC Las Vegas 2017*
+  97.  歌曲名: *Something Just Like This*; 歌手名: *The Chainsmokers & Coldplay*; 专辑名: *Memories...Do Not Open*
+  98.  歌曲名: *Space Bass*; 歌手名: *Onionz*; 专辑名: *Global Underground #38: Carl Cox - Black Rock Desert*
+  99.  歌曲名: *Star Sky*; 歌手名: *Two Steps From Hell & Thomas Bergersen*; 专辑名: *Battlecry*
+  100. 歌曲名: *Stay Here Forever*; 歌手名: *Jewel*; 专辑名: *Great Big Love Songs*
+  101. 歌曲名: *Strength of a Thousand Men*; 歌手名: *Two Steps From Hell*; 专辑名: *Archangel*
+  102. 歌曲名: *Summertime*; 歌手名: *K.391*; 专辑名: *Hello, World*
+  103. 歌曲名: *Take Me to Infinity (Radio Edit)*; 歌手名: *Oussema Saffar*; 专辑名: *Take Me to Infinity*
+  104. 歌曲名: *Take Me to Infinity*; 歌手名: *Consoul Trainin*; 专辑名: *Take Me to Infinity*
+  105. 歌曲名: *Thank You*; 歌手名: *Diego Miranda*; 专辑名: *Thank You*
+  106. 歌曲名: *That Girl*; 歌手名: *Olly Murs*; 专辑名: *24 HRS (Deluxe)*
+  107. 歌曲名: *The Mass (Album Version)*; 歌手名: *Era*; 专辑名: *The Mass*
+  108. 歌曲名: *The Ocean (Radio Edit)*; 歌手名: *Mike Perry & Shy Martin*; 专辑名: *The Ocean (Radio Edit)*
+  109. 歌曲名: *The Saltwater Room*; 歌手名: *Owl City*; 专辑名: *Ocean Eyes (Deluxe Edition)*
+  110. 歌曲名: *The Show*; 歌手名: *Lenka*; 专辑名: *Lenka (Expanded Edition)*
+  111. 歌曲名: *The Spectre*; 歌手名: *Alan Walker*; 专辑名: *The Spectre*
+  112. 歌曲名: *The Spook*; 歌手名: *KSHMR & Basskillers & B3nte*; 专辑名: *The Spook*
+  113. 歌曲名: *There For You*; 歌手名: *Martin Garrix & Troye Sivan*; 专辑名: *There For You*
+  114. 歌曲名: *Tiger (IR Edit)*; 歌手名: *R3HAB & Skytech & Fafaq*; 专辑名: *R3HAB: Inspired - Ministry of Sound*
+  115. 歌曲名: *Touch The Sky*; 歌手名: *Cedric Gervais & Digital Farm Animals & Dallas Austin*; 专辑名: *Armada Music Top 100 (Mini Mix 001)*
+  116. 歌曲名: *Trippy Love*; 歌手名: *Vexento*; 专辑名: *Trippy Love*
+  117. 歌曲名: *Unity*; 歌手名: *TheFatRat*; 专辑名: *Unity*
+  118. 歌曲名: *Vagrant*; 歌手名: *Feint & Veela*; 专辑名: *Vagrant*
+  119. 歌曲名: *Victory*; 歌手名: *Two Steps From Hell & Thomas Bergersen*; 专辑名: *Battlecry*
+  120. 歌曲名: *Waiting for Love*; 歌手名: *Avicii*; 专辑名: *Waiting For Love*
+  121. 歌曲名: *Walk Thru Fire*; 歌手名: *Vicetone & Meron Ryan*; 专辑名: *Walk Thru Fire*
+  122. 歌曲名: *Way Back (feat. Cozi Zuehlsdorff)*; 歌手名: *Vicetone & Cozi Zuehlsdorff*; 专辑名: *Way Back*
+  123. 歌曲名: *Welcome to Planet Urf 欢迎来到海牛星*; 歌手名: *英雄联盟*; 专辑名: *Welcome to Planet Urf*
+  124. 歌曲名: *Welcome to the Rift*; 歌手名: *英雄联盟*; 专辑名: *歌曲合辑*
+  125. 歌曲名: *What Are Words*; 歌手名: *Chris Medina*; 专辑名: *What Are Words*
+  126. 歌曲名: *Whataya Want from Me*; 歌手名: *Adam Lambert*; 专辑名: *For Your Entertainment (Tour Edition)*
+  127. 歌曲名: *Whistle*; 歌手名: *Flo Rida*; 专辑名: *Wild Ones*
+  128. 歌曲名: *Wolves*; 歌手名: *Selena Gomez & Marshmello*; 专辑名: *Wolves*
+  129. 歌曲名: *Worth It*; 歌手名: *Fifth Harmony & Kid Ink*; 专辑名: *Reflection (Deluxe)*
+  130. 歌曲名: *You*; 歌手名: *Approaching Nirvana*; 专辑名: *Blocking the Sky*
+
+###### (21) **[Explosive]** Vocals/Explosive/Filipino:
+  1. 歌曲名: *Sayaw Mga Choy (Math Dance Challenge)*; 歌手名: *DjDanz Remix*; 专辑名: *Sayaw Mga Choy (Math Dance Challenge)*
+
+###### (22) **[Explosive]** Vocals/Explosive/French:
+  1. 歌曲名: *On écrit sur les murs*; 歌手名: *Kids United*; 专辑名: *Un monde meilleur*
+
+###### (23) **[Explosive]** Vocals/Explosive/German:
+  1. 歌曲名: *Aloha Heja He*; 歌手名: *Deutscher Schlager*; 专辑名: *Deutscher Schlager präsentiert - Die besten Party und Discofox Hits aus Deutschland 2015 bis 2016*
+
+###### (24) **[Explosive]** Vocals/Explosive/Indian:
+  1. 歌曲名: *Tunak Tunak Tun (Dubstep Remix)*; 歌手名: *Daler Mehndi & Nilesh P.*; 专辑名: *The Dance Project (Season 1: Episode 8)*
+
+###### (25) **[Explosive]** Vocals/Explosive/Japanese:
+  1.  歌曲名: *MY ALL*; 歌手名: *浜崎あゆみ*; 专辑名: *GUILTY (原罪)*
+  2.  歌曲名: *Only my railgun*; 歌手名: *fripSide*; 专辑名: *とある科学の超電磁砲*
+  3.  歌曲名: *Only my railgun*; 歌手名: *南条爱乃*; 专辑名: *とある科学の超電磁砲*
+  4.  歌曲名: *aLIEz*; 歌手名: *SawanoHiroyuki [nZk]*; 专辑名: *O1*
+  5.  歌曲名: *千本桜*; 歌手名: *初音ミク*; 专辑名: *EXIT TUNES PRESENTS Vocalodream (ボカロドリーム) feat. 初音ミク (エグジット・チューンズ・プレゼンツ ボカロドリーム フィーチャリング・はつねミク)*
+  6.  歌曲名: *忍者棒棒*; 歌手名: *卡莉怪妞*; 专辑名: *KPP BEST*
+  7.  歌曲名: *極楽浄土*; 歌手名: *GARNiDELiA*; 专辑名: *約束 -Promise code- (约定 -Promise code-)*
+  8.  歌曲名: *残酷な天使のテーゼ*; 歌手名: *高橋洋子*; 专辑名: *残酷天使的行动纲领/FLY ME TO THE MOON (残酷な天使のテーゼ / FLY ME TO THE MOON)*
+  9.  歌曲名: *阿纲觉醒*; 歌手名: *佐桥俊彦*; 专辑名: *家庭教師ヒットマンREBORN! オリジナル・サウンドトラック~標的2~ (家庭教师REBORN! 动画原声带~目标2~)*
+  10. 歌曲名: *鬼火的童*; 歌手名: *増田俊郎*; 专辑名: *神様はじめました 3 スペシャル特典CD (元气少女缘结神 BD第三卷 特典CD)*
+
+###### (26) **[Explosive]** Vocals/Explosive/Korean:
+  1.  歌曲名: *BBoom BBoom*; 歌手名: *MOMOLAND*; 专辑名: *2018 SORIBADA BEST-K MUSIC AWARDS Live*
+  2.  歌曲名: *Free Storm*; 歌手名: *影视原声*; 专辑名: *韩国综艺 & CF音乐合辑*
+  3.  歌曲名: *Gee*; 歌手名: *少女时代*; 专辑名: *The First Mini Album Gee*
+  4.  歌曲名: *LOSER*; 歌手名: *BIGBANG*; 专辑名: *MADE SERIES <M>*
+  5.  歌曲名: *SORRY, SORRY*; 歌手名: *SUPER JUNIOR*; 专辑名: *쏘리 쏘리 (SORRY, SORRY)*
+  6.  歌曲名: *Trouble Maker*; 歌手名: *泫雅 (현아) & 张贤胜*; 专辑名: *Trouble Maker*
+  7.  歌曲名: *와 (哇!)*; 歌手名: *李贞贤*; 专辑名: *Let's Go To My Star*
+  8.  歌曲名: *换掉*; 歌手名: *李贞贤*; 专辑名: *Let's Go To My Star*
+  9.  歌曲名: *江南Style*; 歌手名: *PSY*; 专辑名: *싸이6甲 Part.1 (PSY 6甲 Part.1)*
+  10. 歌曲名: *火花*; 歌手名: *高耀太*; 专辑名: *Koyote 6*
+  11. 歌曲名: *答对了*; 歌手名: *乌龟组合*; 专辑名: *韩国劲舞团金曲4*
+
+###### (27) **[Explosive]** Vocals/Explosive/Mongolian:
+  1. 歌曲名: *Hood (feat. TG, Gee, Desant)*; 歌手名: *VanQuish & TG & Gee & Desant*; 专辑名: *Hood (feat. TG, Gee & Desant)*
+
+###### (28) **[Explosive]** Vocals/Explosive/Others:
+  1. 歌曲名: *Ai Se Eu Te Pego (Ao Vivo)*; 歌手名: *Michel Telo*; 专辑名: *Ai Se Eu Te Pego (Ao Vivo)*
+  2. 歌曲名: *Ievan Polkka*; 歌手名: *Antonio Santos*; 专辑名: *The Comics Song 2017*
+
+###### (29) **[Explosive]** Vocals/Explosive/Russian:
+  1. 歌曲名: *колыбельная*; 歌手名: *Rauf & Faik*; 专辑名: *колыбельная*
+
+###### (30) **[Explosive]** Vocals/Explosive/Spanish:
+  1. 歌曲名: *Despacito*; 歌手名: *Luis Fonsi & Daddy Yankee*; 专辑名: *Pasito a pasito*
+
+###### (31) **[Explosive]** Vocals/Explosive/Thai:
+  1. 歌曲名: *ปูหนีบอีปิ*; 歌手名: *พร จันทพร*; 专辑名: *ปูหนีบอีปิ - Single*
+
+###### (32) **[Explosive]** Vocals/Explosive/Vietnamese:
+  1. 歌曲名: *Phut Hon (Remix)*; 歌手名: *DJ Carry*; 专辑名: *Dear john*
+
+###### (33) **[Pop]** Vocals/KTV/Chinese:
+  1. 歌曲名: *一曲相思*; 歌手名: *半阳*; 专辑名: *一曲相思*
+  2. 歌曲名: *曾经的你*; 歌手名: *许巍*; 专辑名: *每一刻都是崭新的*
+  3. 歌曲名: *王妃*; 歌手名: *萧敬腾*; 专辑名: *王妃*
+  4. 歌曲名: *笑纳*; 歌手名: *花僮*; 专辑名: *笑纳*
+  5. 歌曲名: *蓝莲花*; 歌手名: *许巍*; 专辑名: *时光·漫步*
+  6. 歌曲名: *魔鬼中的天使 (Live)*; 歌手名: *康树龙*; 专辑名: *2018中国好声音 第1期*
+
+###### (34) **[Pop]** Vocals/KTV/English:
+  1. 歌曲名: *Breathless*; 歌手名: *Shayne Ward*; 专辑名: *Breathless*
+  2. 歌曲名: *Let Her Go*; 歌手名: *Passenger*; 专辑名: *Bravo Hits, Vol. 81*
+  3. 歌曲名: *My Love*; 歌手名: *Westlife*; 专辑名: *Pure... Love*
+  4. 歌曲名: *Only Love*; 歌手名: *Trademark*; 专辑名: *#Love*
+  5. 歌曲名: *Someone Like You*; 歌手名: *Adele*; 专辑名: *21 (Explicit)*
+  6. 歌曲名: *Take Me To Your Heart*; 歌手名: *Michael Learns To Rock*; 专辑名: *For Fuld Musik*
+  7. 歌曲名: *The Day You Went Away*; 歌手名: *M2M*; 专辑名: *The Day You Went Away The Best Of M2M*
+
+###### (35) **[Pop]** Vocals/KTV/Singers/JJ:
+  1. 歌曲名: *一千年以后*; 歌手名: *林俊杰*; 专辑名: *编号89757*
+  2. 歌曲名: *曹操*; 歌手名: *林俊杰*; 专辑名: *曹操*
+  3. 歌曲名: *江南*; 歌手名: *林俊杰*; 专辑名: *第二天堂*
+  4. 歌曲名: *美人鱼*; 歌手名: *林俊杰*; 专辑名: *第二天堂*
+  5. 歌曲名: *西界*; 歌手名: *林俊杰*; 专辑名: *西界*
+
+###### (36) **[Pop]** Vocals/KTV/Singers/Jay Chou/Jay:
+  1.  歌曲名: *伊斯坦堡*; 歌手名: *周杰伦*; 专辑名: *Jay*
+  2.  歌曲名: *印第安老斑鸠*; 歌手名: *周杰伦*; 专辑名: *Jay*
+  3.  歌曲名: *反方向的钟*; 歌手名: *周杰伦*; 专辑名: *Jay*
+  4.  歌曲名: *可爱女人*; 歌手名: *周杰伦*; 专辑名: *Jay*
+  5.  歌曲名: *娘子*; 歌手名: *周杰伦*; 专辑名: *Jay*
+  6.  歌曲名: *完美主义*; 歌手名: *周杰伦*; 专辑名: *Jay*
+  7.  歌曲名: *斗牛*; 歌手名: *周杰伦*; 专辑名: *Jay*
+  8.  歌曲名: *星晴*; 歌手名: *周杰伦*; 专辑名: *Jay*
+  9.  歌曲名: *黑色幽默*; 歌手名: *周杰伦*; 专辑名: *Jay*
+  10. 歌曲名: *龙卷风*; 歌手名: *周杰伦*; 专辑名: *Jay*
+
+###### (37) **[Pop]** Vocals/KTV/Singers/Jay Chou/Mojito:
+  1. 歌曲名: *Mojito*; 歌手名: *周杰伦*; 专辑名: *Mojito*
+
+###### (38) **[Pop]** Vocals/KTV/Singers/Jay Chou/七里香:
+  1.  歌曲名: *七里香*; 歌手名: *周杰伦*; 专辑名: *七里香*
+  2.  歌曲名: *乱舞春秋*; 歌手名: *周杰伦*; 专辑名: *七里香*
+  3.  歌曲名: *借口*; 歌手名: *周杰伦*; 专辑名: *七里香*
+  4.  歌曲名: *园游会*; 歌手名: *周杰伦*; 专辑名: *七里香*
+  5.  歌曲名: *困兽之斗*; 歌手名: *周杰伦*; 专辑名: *七里香*
+  6.  歌曲名: *外婆*; 歌手名: *周杰伦*; 专辑名: *七里香*
+  7.  歌曲名: *将军*; 歌手名: *周杰伦*; 专辑名: *七里香*
+  8.  歌曲名: *我的地盘*; 歌手名: *周杰伦*; 专辑名: *七里香*
+  9.  歌曲名: *搁浅*; 歌手名: *周杰伦*; 专辑名: *七里香*
+  10. 歌曲名: *止战之殇*; 歌手名: *周杰伦*; 专辑名: *七里香*
+
+###### (39) **[Pop]** Vocals/KTV/Singers/Jay Chou/不爱我就拉倒:
+  1. 歌曲名: *不爱我就拉倒*; 歌手名: *周杰伦*; 专辑名: *不爱我就拉倒*
+
+###### (40) **[Pop]** Vocals/KTV/Singers/Jay Chou/不能说的秘密:
+  1. 歌曲名: *不能说的秘密*; 歌手名: *周杰伦*; 专辑名: *不能说的秘密*
+
+###### (41) **[Pop]** Vocals/KTV/Singers/Jay Chou/依然范特西:
+  1.  歌曲名: *千里之外*; 歌手名: *周杰伦 & 费玉清*; 专辑名: *依然范特西*
+  2.  歌曲名: *听妈妈的话*; 歌手名: *周杰伦*; 专辑名: *依然范特西*
+  3.  歌曲名: *夜的第七章*; 歌手名: *周杰伦 & 潘儿*; 专辑名: *依然范特西*
+  4.  歌曲名: *心雨*; 歌手名: *周杰伦*; 专辑名: *依然范特西*
+  5.  歌曲名: *本草纲目*; 歌手名: *周杰伦*; 专辑名: *依然范特西*
+  6.  歌曲名: *白色风车*; 歌手名: *周杰伦*; 专辑名: *依然范特西*
+  7.  歌曲名: *红模仿*; 歌手名: *周杰伦*; 专辑名: *依然范特西*
+  8.  歌曲名: *菊花台*; 歌手名: *周杰伦*; 专辑名: *依然范特西*
+  9.  歌曲名: *迷迭香*; 歌手名: *周杰伦*; 专辑名: *依然范特西*
+  10. 歌曲名: *退后*; 歌手名: *周杰伦*; 专辑名: *依然范特西*
+
+###### (42) **[Pop]** Vocals/KTV/Singers/Jay Chou/八度空间:
+  1.  歌曲名: *分裂*; 歌手名: *周杰伦*; 专辑名: *八度空间*
+  2.  歌曲名: *半兽人*; 歌手名: *周杰伦*; 专辑名: *八度空间*
+  3.  歌曲名: *半岛铁盒*; 歌手名: *周杰伦*; 专辑名: *八度空间*
+  4.  歌曲名: *回到过去*; 歌手名: *周杰伦*; 专辑名: *八度空间*
+  5.  歌曲名: *暗号*; 歌手名: *周杰伦*; 专辑名: *八度空间*
+  6.  歌曲名: *最后的战役*; 歌手名: *周杰伦*; 专辑名: *八度空间*
+  7.  歌曲名: *火车叨位去*; 歌手名: *周杰伦*; 专辑名: *八度空间*
+  8.  歌曲名: *爷爷泡的茶*; 歌手名: *周杰伦*; 专辑名: *八度空间*
+  9.  歌曲名: *米兰的小铁匠*; 歌手名: *周杰伦*; 专辑名: *八度空间*
+  10. 歌曲名: *龙拳*; 歌手名: *周杰伦*; 专辑名: *八度空间*
+
+###### (43) **[Pop]** Vocals/KTV/Singers/Jay Chou/十一月的萧邦:
+  1.  歌曲名: *一路向北*; 歌手名: *周杰伦*; 专辑名: *十一月的萧邦*
+  2.  歌曲名: *发如雪*; 歌手名: *周杰伦*; 专辑名: *十一月的萧邦*
+  3.  歌曲名: *四面楚歌*; 歌手名: *周杰伦 & 林迈可*; 专辑名: *十一月的萧邦*
+  4.  歌曲名: *夜曲*; 歌手名: *周杰伦*; 专辑名: *十一月的萧邦*
+  5.  歌曲名: *枫*; 歌手名: *周杰伦*; 专辑名: *十一月的萧邦*
+  6.  歌曲名: *浪漫手机*; 歌手名: *周杰伦*; 专辑名: *十一月的萧邦*
+  7.  歌曲名: *珊瑚海*; 歌手名: *周杰伦 & Lara梁心颐*; 专辑名: *十一月的萧邦*
+  8.  歌曲名: *蓝色风暴*; 歌手名: *周杰伦*; 专辑名: *十一月的萧邦*
+  9.  歌曲名: *逆鳞*; 歌手名: *周杰伦*; 专辑名: *十一月的萧邦*
+  10. 歌曲名: *飘移*; 歌手名: *周杰伦*; 专辑名: *十一月的萧邦*
+  11. 歌曲名: *麦芽糖*; 歌手名: *周杰伦*; 专辑名: *十一月的萧邦*
+  12. 歌曲名: *黑色毛衣*; 歌手名: *周杰伦*; 专辑名: *十一月的萧邦*
+
+###### (44) **[Pop]** Vocals/KTV/Singers/Jay Chou/十二新作:
+  1.  歌曲名: *乌克丽丽*; 歌手名: *周杰伦*; 专辑名: *十二新作*
+  2.  歌曲名: *傻笑*; 歌手名: *周杰伦 & 袁咏琳*; 专辑名: *十二新作*
+  3.  歌曲名: *公公偏头痛*; 歌手名: *周杰伦*; 专辑名: *十二新作*
+  4.  歌曲名: *哪里都是你*; 歌手名: *周杰伦*; 专辑名: *十二新作*
+  5.  歌曲名: *四季列车*; 歌手名: *周杰伦*; 专辑名: *十二新作*
+  6.  歌曲名: *大笨钟*; 歌手名: *周杰伦*; 专辑名: *十二新作*
+  7.  歌曲名: *手语*; 歌手名: *周杰伦*; 专辑名: *十二新作*
+  8.  歌曲名: *明明就*; 歌手名: *周杰伦*; 专辑名: *十二新作*
+  9.  歌曲名: *梦想启动*; 歌手名: *周杰伦*; 专辑名: *十二新作*
+  10. 歌曲名: *比较大的大提琴*; 歌手名: *周杰伦 & Lara梁心颐 & 杨瑞代*; 专辑名: *十二新作*
+  11. 歌曲名: *爱你没差*; 歌手名: *周杰伦*; 专辑名: *十二新作*
+  12. 歌曲名: *红尘客栈*; 歌手名: *周杰伦*; 专辑名: *十二新作*
+
+###### (45) **[Pop]** Vocals/KTV/Singers/Jay Chou/叶惠美:
+  1.  歌曲名: *三年二班*; 歌手名: *周杰伦*; 专辑名: *叶惠美*
+  2.  歌曲名: *东风破*; 歌手名: *周杰伦*; 专辑名: *叶惠美*
+  3.  歌曲名: *以父之名*; 歌手名: *周杰伦*; 专辑名: *叶惠美*
+  4.  歌曲名: *你听得到*; 歌手名: *周杰伦*; 专辑名: *叶惠美*
+  5.  歌曲名: *双刀*; 歌手名: *周杰伦*; 专辑名: *叶惠美*
+  6.  歌曲名: *同一种调调*; 歌手名: *周杰伦*; 专辑名: *叶惠美*
+  7.  歌曲名: *她的睫毛*; 歌手名: *周杰伦*; 专辑名: *叶惠美*
+  8.  歌曲名: *懦夫*; 歌手名: *周杰伦*; 专辑名: *叶惠美*
+  9.  歌曲名: *晴天*; 歌手名: *周杰伦*; 专辑名: *叶惠美*
+  10. 歌曲名: *梯田*; 歌手名: *周杰伦*; 专辑名: *叶惠美*
+  11. 歌曲名: *爱情悬崖*; 歌手名: *周杰伦*; 专辑名: *叶惠美*
+
+###### (46) **[Pop]** Vocals/KTV/Singers/Jay Chou/合作歌手:
+  1. 歌曲名: *Try*; 歌手名: *周杰伦 & 派伟俊*; 专辑名: *Try*
+  2. 歌曲名: *你是我的OK绷*; 歌手名: *浪花兄弟 & 周杰伦*; 专辑名: *浪花兄弟*
+  3. 歌曲名: *刀马旦*; 歌手名: *CoCo李玟 & 周杰伦*; 专辑名: *爱舞炫 盛装舞曲精选*
+  4. 歌曲名: *天地一斗*; 歌手名: *周杰伦 & Kobe Bryant*; 专辑名: *乐酷‧概念合辑*
+  5. 歌曲名: *屋顶*; 歌手名: *周杰伦 & 温岚*; 专辑名: *爱回温*
+  6. 歌曲名: *布拉格广场*; 歌手名: *蔡依林 & 周杰伦*; 专辑名: *看我72变*
+  7. 歌曲名: *画沙*; 歌手名: *周杰伦 & 袁咏琳*; 专辑名: *袁咏琳 Cindy*
+  8. 歌曲名: *骑士精神*; 歌手名: *蔡依林 & 周杰伦*; 专辑名: *看我72变*
+
+###### (47) **[Pop]** Vocals/KTV/Singers/Jay Chou/周杰伦的床边故事:
+  1.  歌曲名: *Now You See Me*; 歌手名: *周杰伦*; 专辑名: *周杰伦的床边故事*
+  2.  歌曲名: *一点点*; 歌手名: *周杰伦*; 专辑名: *周杰伦的床边故事*
+  3.  歌曲名: *不该 (with aMEI)*; 歌手名: *周杰伦*; 专辑名: *周杰伦的床边故事*
+  4.  歌曲名: *前世情人*; 歌手名: *周杰伦*; 专辑名: *周杰伦的床边故事*
+  5.  歌曲名: *告白气球*; 歌手名: *周杰伦*; 专辑名: *周杰伦的床边故事*
+  6.  歌曲名: *土耳其冰淇淋*; 歌手名: *周杰伦*; 专辑名: *周杰伦的床边故事*
+  7.  歌曲名: *床边故事*; 歌手名: *周杰伦*; 专辑名: *周杰伦的床边故事*
+  8.  歌曲名: *爱情废柴*; 歌手名: *周杰伦*; 专辑名: *周杰伦的床边故事*
+  9.  歌曲名: *英雄*; 歌手名: *周杰伦*; 专辑名: *周杰伦的床边故事*
+  10. 歌曲名: *说走就走*; 歌手名: *周杰伦*; 专辑名: *周杰伦的床边故事*
+
+###### (48) **[Pop]** Vocals/KTV/Singers/Jay Chou/哎呦，不错哦:
+  1.  歌曲名: *一口气全念对*; 歌手名: *周杰伦*; 专辑名: *哎呦, 不错哦*
+  2.  歌曲名: *听爸爸的话*; 歌手名: *周杰伦*; 专辑名: *哎呦, 不错哦*
+  3.  歌曲名: *听见下雨的声音*; 歌手名: *周杰伦*; 专辑名: *哎呦, 不错哦*
+  4.  歌曲名: *天涯过客*; 歌手名: *周杰伦*; 专辑名: *哎呦, 不错哦*
+  5.  歌曲名: *怎么了*; 歌手名: *周杰伦 & 袁咏琳*; 专辑名: *哎呦, 不错哦*
+  6.  歌曲名: *我要夏天*; 歌手名: *周杰伦 & 杨瑞代*; 专辑名: *哎呦, 不错哦*
+  7.  歌曲名: *手写的从前*; 歌手名: *周杰伦*; 专辑名: *哎呦, 不错哦*
+  8.  歌曲名: *窃爱*; 歌手名: *周杰伦*; 专辑名: *哎呦, 不错哦*
+  9.  歌曲名: *算什么男人*; 歌手名: *周杰伦*; 专辑名: *哎呦, 不错哦*
+  10. 歌曲名: *美人鱼*; 歌手名: *周杰伦*; 专辑名: *哎呦, 不错哦*
+  11. 歌曲名: *阳明山*; 歌手名: *周杰伦*; 专辑名: *哎呦, 不错哦*
+  12. 歌曲名: *鞋子特大号*; 歌手名: *周杰伦*; 专辑名: *哎呦, 不错哦*
+
+###### (49) **[Pop]** Vocals/KTV/Singers/Jay Chou/大灌篮:
+  1. 歌曲名: *周大侠*; 歌手名: *周杰伦*; 专辑名: *大灌篮*
+  2. 歌曲名: *战舞*; 歌手名: *周杰伦 & 沈懿*; 专辑名: *大灌篮*
+  3. 歌曲名: *秘密花园*; 歌手名: *周杰伦*; 专辑名: *大灌篮*
+
+###### (50) **[Pop]** Vocals/KTV/Singers/Jay Chou/寻找周杰伦:
+  1. 歌曲名: *断了的弦*; 歌手名: *周杰伦*; 专辑名: *寻找周杰伦*
+  2. 歌曲名: *轨迹*; 歌手名: *周杰伦*; 专辑名: *寻找周杰伦*
+
+###### (51) **[Pop]** Vocals/KTV/Singers/Jay Chou/惊叹号:
+  1.  歌曲名: *Mine Mine*; 歌手名: *周杰伦*; 专辑名: *惊叹号*
+  2.  歌曲名: *世界未末日*; 歌手名: *周杰伦*; 专辑名: *惊叹号*
+  3.  歌曲名: *你好吗*; 歌手名: *周杰伦*; 专辑名: *惊叹号*
+  4.  歌曲名: *公主病*; 歌手名: *周杰伦*; 专辑名: *惊叹号*
+  5.  歌曲名: *惊叹号*; 歌手名: *周杰伦*; 专辑名: *惊叹号*
+  6.  歌曲名: *水手怕水*; 歌手名: *周杰伦*; 专辑名: *惊叹号*
+  7.  歌曲名: *琴伤*; 歌手名: *周杰伦*; 专辑名: *惊叹号*
+  8.  歌曲名: *疗伤烧肉粽*; 歌手名: *周杰伦*; 专辑名: *惊叹号*
+  9.  歌曲名: *皮影戏*; 歌手名: *周杰伦*; 专辑名: *惊叹号*
+  10. 歌曲名: *超跑女神*; 歌手名: *周杰伦*; 专辑名: *惊叹号*
+  11. 歌曲名: *迷魂曲*; 歌手名: *周杰伦*; 专辑名: *惊叹号*
+
+###### (52) **[Pop]** Vocals/KTV/Singers/Jay Chou/我很忙:
+  1.  歌曲名: *彩虹*; 歌手名: *周杰伦*; 专辑名: *我很忙*
+  2.  歌曲名: *我不配*; 歌手名: *周杰伦*; 专辑名: *我很忙*
+  3.  歌曲名: *扯*; 歌手名: *周杰伦*; 专辑名: *我很忙*
+  4.  歌曲名: *无双*; 歌手名: *周杰伦*; 专辑名: *我很忙*
+  5.  歌曲名: *最长的电影*; 歌手名: *周杰伦*; 专辑名: *我很忙*
+  6.  歌曲名: *牛仔很忙*; 歌手名: *周杰伦*; 专辑名: *我很忙*
+  7.  歌曲名: *甜甜的*; 歌手名: *周杰伦*; 专辑名: *我很忙*
+  8.  歌曲名: *蒲公英的约定*; 歌手名: *周杰伦*; 专辑名: *我很忙*
+  9.  歌曲名: *阳光宅男*; 歌手名: *周杰伦*; 专辑名: *我很忙*
+  10. 歌曲名: *青花瓷*; 歌手名: *周杰伦*; 专辑名: *我很忙*
+
+###### (53) **[Pop]** Vocals/KTV/Singers/Jay Chou/我是如此相信:
+  1. 歌曲名: *我是如此相信*; 歌手名: *周杰伦*; 专辑名: *我是如此相信*
+
+###### (54) **[Pop]** Vocals/KTV/Singers/Jay Chou/等你下课:
+  1. 歌曲名: *等你下课 (with 杨瑞代)*; 歌手名: *周杰伦*; 专辑名: *等你下课*
+
+###### (55) **[Pop]** Vocals/KTV/Singers/Jay Chou/范特西:
+  1.  歌曲名: *上海一九四三*; 歌手名: *周杰伦*; 专辑名: *范特西*
+  2.  歌曲名: *双截棍*; 歌手名: *周杰伦*; 专辑名: *范特西*
+  3.  歌曲名: *威廉古堡*; 歌手名: *周杰伦*; 专辑名: *范特西*
+  4.  歌曲名: *安静*; 歌手名: *周杰伦*; 专辑名: *范特西*
+  5.  歌曲名: *对不起*; 歌手名: *周杰伦*; 专辑名: *范特西*
+  6.  歌曲名: *开不了口*; 歌手名: *周杰伦*; 专辑名: *范特西*
+  7.  歌曲名: *忍者*; 歌手名: *周杰伦*; 专辑名: *范特西*
+  8.  歌曲名: *爱在西元前*; 歌手名: *周杰伦*; 专辑名: *范特西*
+  9.  歌曲名: *爸, 我回来了*; 歌手名: *周杰伦*; 专辑名: *范特西*
+  10. 歌曲名: *简单爱*; 歌手名: *周杰伦*; 专辑名: *范特西*
+
+###### (56) **[Pop]** Vocals/KTV/Singers/Jay Chou/范特西PLUS:
+  1. 歌曲名: *世界末日 (Live)*; 歌手名: *周杰伦*; 专辑名: *范特西PLUS*
+  2. 歌曲名: *你比从前快乐 (Live)*; 歌手名: *周杰伦*; 专辑名: *范特西PLUS*
+  3. 歌曲名: *蜗牛 (Live)*; 歌手名: *周杰伦*; 专辑名: *范特西PLUS*
+
+###### (57) **[Pop]** Vocals/KTV/Singers/Jay Chou/说好不哭:
+  1. 歌曲名: *说好不哭 (with 五月天阿信)*; 歌手名: *周杰伦*; 专辑名: *说好不哭 (with 五月天阿信)*
+
+###### (58) **[Pop]** Vocals/KTV/Singers/Jay Chou/跨时代:
+  1.  歌曲名: *免费教学录影带*; 歌手名: *周杰伦*; 专辑名: *跨时代*
+  2.  歌曲名: *嘻哈空姐*; 歌手名: *周杰伦*; 专辑名: *跨时代*
+  3.  歌曲名: *好久不见*; 歌手名: *周杰伦*; 专辑名: *跨时代*
+  4.  歌曲名: *我落泪情绪零碎*; 歌手名: *周杰伦*; 专辑名: *跨时代*
+  5.  歌曲名: *烟花易冷*; 歌手名: *周杰伦*; 专辑名: *跨时代*
+  6.  歌曲名: *爱的飞行日记*; 歌手名: *周杰伦 & 杨瑞代*; 专辑名: *跨时代*
+  7.  歌曲名: *自导自演*; 歌手名: *周杰伦*; 专辑名: *跨时代*
+  8.  歌曲名: *说了再见*; 歌手名: *周杰伦*; 专辑名: *跨时代*
+  9.  歌曲名: *超人不会飞*; 歌手名: *周杰伦*; 专辑名: *跨时代*
+  10. 歌曲名: *跨时代*; 歌手名: *周杰伦*; 专辑名: *跨时代*
+  11. 歌曲名: *雨下一整晚*; 歌手名: *周杰伦*; 专辑名: *跨时代*
+
+###### (59) **[Pop]** Vocals/KTV/Singers/Jay Chou/霍元甲:
+  1. 歌曲名: *霍元甲*; 歌手名: *周杰伦*; 专辑名: *霍元甲*
+
+###### (60) **[Pop]** Vocals/KTV/Singers/Jay Chou/魔杰座:
+  1.  歌曲名: *乔克叔叔*; 歌手名: *周杰伦*; 专辑名: *魔杰座*
+  2.  歌曲名: *兰亭序*; 歌手名: *周杰伦*; 专辑名: *魔杰座*
+  3.  歌曲名: *时光机*; 歌手名: *周杰伦*; 专辑名: *魔杰座*
+  4.  歌曲名: *流浪诗人*; 歌手名: *周杰伦 & 杨瑞代*; 专辑名: *魔杰座*
+  5.  歌曲名: *稻香*; 歌手名: *周杰伦*; 专辑名: *魔杰座*
+  6.  歌曲名: *给我一首歌的时间*; 歌手名: *周杰伦*; 专辑名: *魔杰座*
+  7.  歌曲名: *花海*; 歌手名: *周杰伦*; 专辑名: *魔杰座*
+  8.  歌曲名: *蛇舞*; 歌手名: *周杰伦 & Lara梁心颐*; 专辑名: *魔杰座*
+  9.  歌曲名: *说好的幸福呢*; 歌手名: *周杰伦*; 专辑名: *魔杰座*
+  10. 歌曲名: *魔术先生*; 歌手名: *周杰伦*; 专辑名: *魔杰座*
+  11. 歌曲名: *龙战骑士*; 歌手名: *周杰伦*; 专辑名: *魔杰座*
+
+###### (61) **[Pop]** Vocals/KTV/Singers/Jay Chou/黄金甲:
+  1. 歌曲名: *黄金甲*; 歌手名: *周杰伦*; 专辑名: *黄金甲*
+
+###### (62) **[Pop]** Vocals/KTV/Singers/Leehom Wang:
+  1.  歌曲名: *Can You Feel My World*; 歌手名: *王力宏*; 专辑名: *不可思议*
+  2.  歌曲名: *你不知道的事*; 歌手名: *王力宏*; 专辑名: *十八般武艺*
+  3.  歌曲名: *你是我心内的一首歌*; 歌手名: *王力宏 & 任家萱Selina*; 专辑名: *改变自己*
+  4.  歌曲名: *唯一*; 歌手名: *王力宏*; 专辑名: *人海中遇见你 最佳婚礼歌曲精选*
+  5.  歌曲名: *大城小爱*; 歌手名: *王力宏*; 专辑名: *盖世英雄*
+  6.  歌曲名: *心中的日月*; 歌手名: *王力宏*; 专辑名: *心中的日月*
+  7.  歌曲名: *心跳*; 歌手名: *王力宏*; 专辑名: *心·跳*
+  8.  歌曲名: *我们的歌*; 歌手名: *王力宏*; 专辑名: *改变自己*
+  9.  歌曲名: *改变自己*; 歌手名: *王力宏*; 专辑名: *改变自己*
+  10. 歌曲名: *爱因为在心中*; 歌手名: *王力宏*; 专辑名: *盖世英雄*
+  11. 歌曲名: *缘分一道桥*; 歌手名: *王力宏 & 谭维维*; 专辑名: *A.I. 爱*
+  12. 歌曲名: *美*; 歌手名: *王力宏*; 专辑名: *十八般武艺*
+  13. 歌曲名: *花田错*; 歌手名: *王力宏*; 专辑名: *盖世英雄*
+  14. 歌曲名: *龙的传人*; 歌手名: *王力宏*; 专辑名: *永远的第一天*
+
+###### (63) **[Pop]** Vocals/KTV/Singers/Wilber Pan:
+  1.  歌曲名: *Coming Home*; 歌手名: *潘玮柏*; 专辑名: *illi异类*
+  2.  歌曲名: *不得不爱*; 歌手名: *潘玮柏 & 弦子*; 专辑名: *高手*
+  3.  歌曲名: *不要忘了我*; 歌手名: *潘玮柏*; 专辑名: *高手*
+  4.  歌曲名: *反转地球*; 歌手名: *潘玮柏*; 专辑名: *反转地球*
+  5.  歌曲名: *壁虎漫步*; 歌手名: *潘玮柏*; 专辑名: *U Love*
+  6.  歌曲名: *快乐崇拜*; 歌手名: *张韶涵 & 潘玮柏*; 专辑名: *欧若拉*
+  7.  歌曲名: *我想更懂你*; 歌手名: *潘玮柏 & 苏芮*; 专辑名: *反转地球*
+  8.  歌曲名: *我的麦克风*; 歌手名: *潘玮柏*; 专辑名: *我的麦克风*
+  9.  歌曲名: *禅舞不二*; 歌手名: *潘玮柏*; 专辑名: *高手*
+  10. 歌曲名: *高手*; 歌手名: *潘玮柏 & 张敖杰 (铁竹堂)*; 专辑名: *高手*
+
+###### (64) **[Pop]** Vocals/Orphean:
+  1. 歌曲名: *雨蝶 (Live)*; 歌手名: *G.E.M. 邓紫棋 & 张靓颖*; 专辑名: *王牌对王牌第三季 第8期*
+
+###### (65) **[Explosive]** Vocals/Others:
+  1. 歌曲名: *Let's Party*; 歌手名: *吴宣仪 & 和平精英*; 专辑名: *Let's Party*
+
+###### (66) **[Explosive]** Vocals/Platforms/Douyin:
+  1. 歌曲名: *Alcastar (全网最火版)*; 歌手名: *何友*; 专辑名: *倒车请注意*
+  2. 歌曲名: *Bboy Danny*; 歌手名: *新旭*; 专辑名: *Holy Bgm*
+  3. 歌曲名: *Lendo Calendo (抖音DJ热搜版)*; 歌手名: *水冰月*; 专辑名: *车载低音炮*
+  4. 歌曲名: *PDD洪荒之力*; 歌手名: *青稚m*; 专辑名: *PDD <洪荒之力>*
+  5. 歌曲名: *Tony lgy (抖音原版)*; 歌手名: *龙儿*; 专辑名: *La Banda*
+
+###### (67) **[Explosive]** Vocals/Varieties/Coltish Sisters:
+  1. 歌曲名: *大碗宽面 (Live)*; 歌手名: *郁可唯 & 孟佳 & 李斯丹妮 & 沈梦辰 & 金晨 & 王霏霏 & 张含韵*; 专辑名: *乘风破浪的姐姐 第3期*
+  2. 歌曲名: *龙虎人丹 (Live)*; 歌手名: *庞宽 & 张雨绮 & 张萌 & 郑希怡 & 伊能静 & 黄圣依 & 张含韵 & 吴昕*; 专辑名: *乘风破浪的姐姐 第9期*
+
+###### (68) **[Explosive]** Vocals/Varieties/Immediate Electronic:
+  1. 歌曲名: *猴子说 (Live)*; 歌手名: *齐奕同 & 董子龙*; 专辑名: *即刻电音 第2期*
+  2. 歌曲名: *真高兴*; 歌手名: *蒋亮的声音系统*; 专辑名: *即刻电音 第2期*
+
+###### (69) **[HipHop]** Vocals/Varieties/Rap of China:
+  1.  歌曲名: *Fight For Hiphop (Live)*; 歌手名: *欧阳靖 & Double Zhuo & 中国有嘻哈70强*; 专辑名: *中国有嘻哈 第12期*
+  2.  歌曲名: *Papillon (Live)*; 歌手名: *王嘉尔 & GAI周延*; 专辑名: *中国有嘻哈 第11期*
+  3.  歌曲名: *Rap Of China (Live)*; 歌手名: *Tizzy T*; 专辑名: *中国有嘻哈 第11期*
+  4.  歌曲名: *Street Fighter (Live)*; 歌手名: *GAI周延 & 艾福杰尼 & 黄旭 & 大笑*; 专辑名: *中国有嘻哈 第8期*
+  5.  歌曲名: *三年二班 (Live)*; 歌手名: *吴亦凡 & BrAnT.B & Tizzy T*; 专辑名: *中国有嘻哈 第9期*
+  6.  歌曲名: *凡人歌 (Live)*; 歌手名: *张震岳 & MC HotDog & 黄旭 & GAI周延*; 专辑名: *中国有嘻哈 第9期*
+  7.  歌曲名: *垃圾话*; 歌手名: *GAI周延*; 专辑名: *见字如面*
+  8.  歌曲名: *大一岁 (Live)*; 歌手名: *Tizzy T*; 专辑名: *中国有嘻哈 第9期*
+  9.  歌曲名: *头文字T (Live)*; 歌手名: *Tizzy T*; 专辑名: *中国有嘻哈 第10期*
+  10. 歌曲名: *找朋友 (Live)*; 歌手名: *布瑞吉Bridge & VaVa毛衍七 & 李大奔*; 专辑名: *中国有嘻哈 第8期*
+  11. 歌曲名: *攀登 (Live)*; 歌手名: *潘玮柏 & G.E.M. 邓紫棋 & 艾热*; 专辑名: *中国新说唱 第13期*
+  12. 歌曲名: *海啸*; 歌手名: *GAI周延 & 艾福杰尼 & 黄旭*; 专辑名: *中国有嘻哈 第8期*
+  13. 歌曲名: *空城计 (Live)*; 歌手名: *GAI周延*; 专辑名: *中国有嘻哈 第12期*
+  14. 歌曲名: *老大 (Live)*; 歌手名: *布瑞吉Bridge*; 专辑名: *中国有嘻哈 第2期*
+  15. 歌曲名: *重庆魂 (Live)*; 歌手名: *GAI周延*; 专辑名: *中国有嘻哈 第12期*
+  16. 歌曲名: *青春舞曲 (Live)*; 歌手名: *张震岳 & MC HotDog & 艾福杰尼*; 专辑名: *中国有嘻哈 第12期*

@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-07-05T02:03:54Z
+# Created Time: 2025-07-05T06:35:25Z
 
 # Total Steps: 20
 
@@ -245,7 +245,7 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (16/20):\n\n"
 
 ./audio-god operate tree \
-    --source='~/Music/Output' \
+    --source='~/Music/Output/Grouped' \
     --output='~/Music/Output/operate.tree.txt' \
     --log-level=WARNING \
     --log-file=stderr \
@@ -299,7 +299,7 @@ printf "%.0s-" {1..60}; printf "\n"
 echo "Step (20/20):\n\n"
 
 ./audio-god export plist \
-    --source='~/Music/Source/Mp3' \
+    --source='~/Music/iTunes/iTunes Media/Music' \
     --fields=ituned \
     --field-type=en \
     --output='~/Music/iTunes/Library.xml' \
