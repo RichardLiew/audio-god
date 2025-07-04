@@ -1819,6 +1819,23 @@ class AudioGod(OPTIONS):
 
 
     @classmethod
+    def optimize_invokes(cls):
+        methods = ['rewrite_parameters']
+        for method in methods:
+            if not hasattr(cls, method):
+                continue
+            func = getattr(cls, method)
+            if not callable(func):
+                continue
+            called_label = f'{cls.__name__}_{method}_called'
+            def new_func(self, *args, **kwargs):
+                if not getattr(cls, called_label, False):
+                    setattr(cls, called_label, True)
+                    func(self, *args, **kwargs)
+            setattr(cls, method, new_func)
+
+
+    @classmethod
     def redecorate_arguments(cls, arguments, public_arguments=PUBLIC_ARGUMENTS):
         for argument in arguments:
             public_argument = {}
@@ -7160,6 +7177,12 @@ def _get_valid_subclasses(cls):
     return ret
 
 
+def _optimize_invokes():
+    AudioGod.optimize_invokes()
+    for cls in _get_all_subclasses(AudioGod):
+        cls.optimize_invokes()
+
+
 def _decorate_actions():
     for cls in _get_valid_subclasses(AudioGod):
         cls.decorate()
@@ -7243,6 +7266,7 @@ def _render_actions():
 
 #-------------------------------------------------------------------------------
 
+_optimize_invokes()
 _decorate_actions()
 ACTIONS = _summarize_actions()
 ACTIONS_DEFAULTS = _summarize_actions_defaults()
