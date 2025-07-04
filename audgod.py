@@ -3673,6 +3673,7 @@ class FillPropertiesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
 
     def execute(self):
         self.analysis_note()
+        self.prime_sources()
         self.__fill_audio_properties()
         self.handle_output()
 
