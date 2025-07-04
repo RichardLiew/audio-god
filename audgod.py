@@ -1581,9 +1581,6 @@ class AudioGod(OPTIONS):
         _, separator = self.resolve_filename(source)
         filename, _ = os.path.splitext(os.path.basename(source))
 
-        print('AAAAAAAAAAAAAAAAAA', source, filename, separator)
-
-
         artist, title = self.split(
             filename, separator, escaped=True,
             del_blank=False, filt_empty=False, filt_repeated=False,
@@ -6486,9 +6483,6 @@ class Operate__BackupAction(OperateBaseAction):
                 'required': True,
             },
         },
-        'ignored_file': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
-        },
     }
 
     #---------------------------------------------------------------------------
@@ -6499,8 +6493,9 @@ class Operate__BackupAction(OperateBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        self.prime_sources()
-        self.backup(self.primed_sources)
+        items = self.expand_globbing(self.parameters['source'], recursive=True)
+        for item in items:
+            self.backup(item)
 
 #===============================================================================
 
@@ -6521,9 +6516,6 @@ class Operate__RemoveAction(OperateBaseAction):
                 'required': True,
             },
         },
-        'ignored_file': {
-            'use_public': AudioGod.ReplaceType.ENTIRE,
-        },
     }
 
     #---------------------------------------------------------------------------
@@ -6534,8 +6526,9 @@ class Operate__RemoveAction(OperateBaseAction):
     #---------------------------------------------------------------------------
 
     def execute(self):
-        self.prime_sources()
-        self.remove(self.primed_sources)
+        items = self.expand_globbing(self.parameters['source'], recursive=True)
+        for item in items:
+            self.remove(item)
 
 #===============================================================================
 
@@ -7159,11 +7152,9 @@ class Testing__GenerateScriptAction(GenerateScriptBaseAction, TestingBaseAction)
         )),
         (True, 'operate', 'backup', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.operate.backup.txt',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
         )),
         (True, 'operate', 'remove', dict(
             source=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.operate.remove.txt',
-            ignored_file=f'{TESTING_OPTIONS.AUDGOD_SOURCE}/testing.ignores.txt',
         )),
         (True, 'generate-script', 'start', dict(
             output=f'{TESTING_OPTIONS.AUDGOD_OUTPUT}/testing.start.zsh',

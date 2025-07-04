@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-07-04T11:41:08Z
+# Created Time: 2025-07-04T15:45:19Z
 
 # Total Steps: 32
 
@@ -454,7 +454,6 @@ echo "Step (29/32):\n\n"
 
 ./audio-god operate backup \
     --source=./test/Source/testing.operate.backup.txt \
-    --ignored-file=./test/Source/testing.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
@@ -465,7 +464,6 @@ echo "Step (30/32):\n\n"
 
 ./audio-god operate remove \
     --source=./test/Source/testing.operate.remove.txt \
-    --ignored-file=./test/Source/testing.ignores.txt \
     --log-level=WARNING \
     --log-file=stderr
 
