@@ -3354,6 +3354,9 @@ class MatchSourcesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
                 'default': f'{OPTIONS.AUDGOD_OUTPUT}/redecorate.note.txt',
             },
         },
+        'field_type': {
+            'use_public': AudioGod.ReplaceType.ENTIRE,
+        },
         'separators': {
             'use_public': AudioGod.ReplaceType.ENTIRE,
         },
