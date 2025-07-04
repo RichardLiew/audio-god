@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-07-04T23:42:35Z
+# Created Time: 2025-07-05T02:03:54Z
 
 # Total Steps: 20
 
@@ -72,19 +72,6 @@ echo "Step (4/20):\n\n"
 printf "%.0s-" {1..60}; printf "\n"
 echo "Step (5/20):\n\n"
 
-./audio-god merge notes \
-    --document='~/Music/Source/origin.songs.note.txt' \
-    --field-type=auto \
-    --another='~/Music/Source/another.origin.songs.note.txt' \
-    --output='~/Music/Output/merge.notes.txt' \
-    --log-level=WARNING \
-    --log-file=stderr
-
-#-----------------------------------------------------------------------------
-
-printf "%.0s-" {1..60}; printf "\n"
-echo "Step (6/20):\n\n"
-
 ./audio-god sift-sources \
     --source='~/Music/Source/Mp3' \
     --extensions=mp3,aac \
@@ -98,7 +85,7 @@ echo "Step (6/20):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
-echo "Step (7/20):\n\n"
+echo "Step (6/20):\n\n"
 
 ./audio-god pick sources \
     --source='~/Music/Source/Mp3' \
@@ -114,7 +101,37 @@ echo "Step (7/20):\n\n"
 #-----------------------------------------------------------------------------
 
 printf "%.0s-" {1..60}; printf "\n"
+echo "Step (7/20):\n\n"
+
+./audio-god match-sources \
+    --source='~/Music/Source/Mp3' \
+    --extensions=mp3,aac \
+    --recursive \
+    --ignored-file='~/Music/Source/ignores.txt' \
+    --document='~/Music/Output/redecorate.note.txt' \
+    --field-type=auto \
+    --separators='-,#' \
+    --output='~/Music/Output/match.sources.txt' \
+    --log-level=WARNING \
+    --log-file=stderr
+
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
 echo "Step (8/20):\n\n"
+
+./audio-god merge notes \
+    --document='~/Music/Source/origin.songs.note.txt' \
+    --field-type=auto \
+    --another='~/Music/Source/another.origin.songs.note.txt' \
+    --output='~/Music/Output/merge.notes.txt' \
+    --log-level=WARNING \
+    --log-file=stderr
+
+#-----------------------------------------------------------------------------
+
+printf "%.0s-" {1..60}; printf "\n"
+echo "Step (9/20):\n\n"
 
 ./audio-god merge sources \
     --source='~/Music/Source/Mp3' \
@@ -124,22 +141,6 @@ echo "Step (8/20):\n\n"
     --separators='-,#' \
     --another='~/Music/Source/Another' \
     --output='~/Music/Output/merge.sources.txt' \
-    --log-level=WARNING \
-    --log-file=stderr
-
-#-----------------------------------------------------------------------------
-
-printf "%.0s-" {1..60}; printf "\n"
-echo "Step (9/20):\n\n"
-
-./audio-god match-sources \
-    --source='~/Music/Source/Mp3' \
-    --extensions=mp3,aac \
-    --recursive \
-    --ignored-file='~/Music/Source/ignores.txt' \
-    --document='~/Music/Output/redecorate.note.txt' \
-    --separators='-,#' \
-    --output='~/Music/Output/match.sources.txt' \
     --log-level=WARNING \
     --log-file=stderr
 

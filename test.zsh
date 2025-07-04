@@ -2,7 +2,7 @@
 
 ##############################################################################
 
-# Created Time: 2025-07-04T23:42:43Z
+# Created Time: 2025-07-05T02:04:02Z
 
 # Total Steps: 39
 
@@ -147,6 +147,7 @@ echo "Step (10/39):\n\n"
     --recursive \
     --ignored-file=./test/Source/testing.ignores.txt \
     --document=./test/Output/testing.redecorate.note.txt \
+    --field-type=auto \
     --separators='-,#' \
     --output=./test/Output/testing.match.sources.txt \
     --log-level=WARNING \
@@ -220,6 +221,7 @@ echo "Step (15/39):\n\n"
     --recursive \
     --ignored-file=./test/Source/testing.ignores.txt \
     --document=./test/Output/testing.another.redecorate.note.txt \
+    --field-type=auto \
     --separators='-,#' \
     --output=./test/Output/testing.another.match.sources.txt \
     --log-level=WARNING \
@@ -294,6 +296,7 @@ echo "Step (20/39):\n\n"
     --recursive \
     --ignored-file=./test/Source/testing.ignores.txt \
     --document=./test/Output/testing.merge.notes.txt \
+    --field-type=auto \
     --separators='-,#' \
     --output=./test/Output/testing.merge.match.sources.txt \
     --log-level=WARNING \
