@@ -5147,12 +5147,8 @@ class Organize__GroupedAction(OrganizeBaseAction):
             target = self.abspath(
                 self.parameters['output'], groups[0], os.path.basename(audio),
             )
-            if '禅舞不二' in audio:
-                print('0      AAAAAAAAAAAAAAAAAAA', audio, grouping, groups)
             if target != audio:
                 os.makedirs(os.path.dirname(target), exist_ok=True)
-                if '禅舞不二' in audio:
-                    print('1      AAAAAAAAAAAAAAAAAAA', target)
                 self.duplicate(audio, target)
                 ao = self.prime_audio(target)
                 self.save(
@@ -5167,8 +5163,6 @@ class Organize__GroupedAction(OrganizeBaseAction):
                 os.makedirs(os.path.dirname(link), exist_ok=True)
                 if os.path.exists(link):
                     self.remove(link)
-                if '禅舞不二' in audio:
-                    print('2      AAAAAAAAAAAAAAAAAAA', link)
                 self.duplicate(target, link)
                 ao = self.prime_audio(link)
                 self.save(
