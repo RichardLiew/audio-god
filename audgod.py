@@ -1039,7 +1039,7 @@ class AudioGod(OPTIONS):
     def format_title(cls, title):
         if title is None:
             return None
-        ret = title
+        ret = re.sub(r'\s*&\s*', r', ', title)
         return cls.unify_format(ret)
 
     @classmethod
