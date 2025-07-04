@@ -691,6 +691,16 @@ class AudioGod(OPTIONS):
                 'help': 'files or directories you want to process',
             },
         },
+        'another': {
+            'args': ['-z'],
+            'kwargs': {
+                'action': 'store',
+                'type': str,
+                'required': True,
+                'default': '',
+                'help': 'another item to merge',
+            },
+        },
         'root': {
             'args': ['-d'],
             'kwargs': {
@@ -922,6 +932,15 @@ class AudioGod(OPTIONS):
             if not os.path.isfile(self.parameters['document']):
                 self.logger.fatal(f'<{self.parameters["document"]}> is not file!')
                 return
+
+        if 'another' in self.parameters:
+            self.parameters['another'] = self.abspath(
+                self.parameters['another'],
+            )
+            if self.parameters['another']:
+                if not os.path.exists(self.parameters['another']):
+                    self.logger.fatal(f'Another <{self.parameters["another"]}> not exists!')
+                    return
 
         if 'ignored_file' in self.parameters:
             self.parameters['ignored_file'] = self.abspath(
@@ -2384,47 +2403,6 @@ class SummarizeRelatedBaseAction(AudioGod):
 #===============================================================================
 
 @AudioGod.auto_extend
-class MergeRelatedBaseAction(AudioGod):
-    ACTIVE = True
-
-    #---------------------------------------------------------------------------
-
-    KWARGS = None
-    ARGUMENTS = None
-
-    PUBLIC_ARGUMENTS = {
-        'another': {
-            'args': ['-z'],
-            'kwargs': {
-                'action': 'store',
-                'type': str,
-                'required': True,
-                'default': '',
-                'help': 'another item to merge',
-            },
-        },
-    }
-
-    #---------------------------------------------------------------------------
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    #---------------------------------------------------------------------------
-
-    def rewrite_parameters(self):
-        if 'another' in self.parameters:
-            self.parameters['another'] = self.abspath(
-                self.parameters['another'],
-            )
-            if self.parameters['another']:
-                if not os.path.exists(self.parameters['another']):
-                    self.logger.fatal(f'Another <{self.parameters["another"]}> not exists!')
-                    return
-
-#===============================================================================
-
-@AudioGod.auto_extend
 class NoteRelatedBaseAction(SummarizeRelatedBaseAction):
     ACTIVE = True
 
@@ -3261,7 +3239,7 @@ class Pick__NoteAction(
 #===============================================================================
 
 @AudioGod.auto_extend
-class Pick__SourcesAction(PickBaseAction, MergeRelatedBaseAction):
+class Pick__SourcesAction(PickBaseAction):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
@@ -3456,7 +3434,7 @@ class MatchSourcesAction(NoteRelatedBaseAction, ExportRelatedBaseAction):
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-class MergeBaseAction(MergeRelatedBaseAction):
+class MergeBaseAction(AudioGod):
     ACTIVE = True
 
     #---------------------------------------------------------------------------
