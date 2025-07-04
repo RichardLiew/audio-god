@@ -1580,6 +1580,10 @@ class AudioGod(OPTIONS):
     def generate_key_by_filename(self, source):
         _, separator = self.resolve_filename(source)
         filename, _ = os.path.splitext(os.path.basename(source))
+
+        print('AAAAAAAAAAAAAAAAAA', source, filename, separator)
+
+
         artist, title = self.split(
             filename, separator, escaped=True,
             del_blank=False, filt_empty=False, filt_repeated=False,
@@ -1784,10 +1788,7 @@ class AudioGod(OPTIONS):
         for member, redecorated in members:
             if not hasattr(class_, member):
                 continue
-            current_value = getattr(class_, member)
-            if current_value is None:
-                continue
-            result = {}
+            result, current_value = {}, getattr(class_, member)
             for base in reversed(class_.__bases__):
                 if not hasattr(base, member):
                     continue
@@ -1803,18 +1804,21 @@ class AudioGod(OPTIONS):
         for method in methods:
             if not hasattr(class_, method):
                 continue
-            def create_func(func):
+            def create_wrapper(mtd, func):
+                @functools.wraps(func)
                 def wrapper(self, *args, **kwargs):
                     for base in reversed(class_.__bases__):
-                        if not hasattr(base, method):
+                        if not hasattr(base, mtd):
                             continue
-                        base_func = getattr(base, method)
+                        base_func = getattr(base, mtd)
                         if not callable(base_func):
                             continue
                         base_func(self, *args, **kwargs)
-                    func(self, *args, **kwargs)
+                    if mtd in class_.__dict__:
+                        func(self, *args, **kwargs)
                 return wrapper
-            setattr(class_, method, create_func(getattr(class_, method)))
+            if method in class_.__dict__:
+                setattr(class_, method, create_wrapper(method, getattr(class_, method)))
         return class_
 
 
@@ -1824,15 +1828,19 @@ class AudioGod(OPTIONS):
         for method in methods:
             if not hasattr(cls, method):
                 continue
-            func = getattr(cls, method)
-            if not callable(func):
+            original_func = getattr(cls, method)
+            if not callable(original_func):
                 continue
-            called_label = f'{cls.__name__}_{method}_called'
-            def new_func(self, *args, **kwargs):
-                if not getattr(cls, called_label, False):
-                    setattr(cls, called_label, True)
-                    func(self, *args, **kwargs)
-            setattr(cls, method, new_func)
+            def create_wrapper(func, mtd):
+                def wrapper(self, *args, **kwargs):
+                    label = f'_{cls.__name__}_{mtd}_called'
+                    if not getattr(cls, label, False):
+                        if mtd in cls.__dict__:
+                            func(self, *args, **kwargs)
+                        setattr(cls, label, True)
+                return wrapper
+            if method in cls.__dict__:
+                setattr(cls, method, create_wrapper(original_func, method))
 
 
     @classmethod
@@ -2949,19 +2957,28 @@ class SiftSourcesAction(AudioGod):
         self.__sifted_sources = ([], [], {}, [])
 
     #---------------------------------------------------------------------------
+
     @property
     def valid_sources(self):
         return self.__sifted_sources[0]
+
+
     @property
     def invalid_sources(self):
         return self.__sifted_sources[1]
+
+
     @property
     def repeated_sources(self):
         return self.__sifted_sources[2]
+
+
     @property
     def formatted_sources(self):
         return self.__sifted_sources[3]
+
     #---------------------------------------------------------------------------
+
     def pack_output(self):
         content = 'Total sources: {total}, Valid sources: {valid}\n\n'.format(
             total=sum([
@@ -3022,11 +3039,11 @@ class SiftSourcesAction(AudioGod):
                 self.formatted_sources.append((
                     source,
                     os.path.join(
-                        os.path.dirname(source), f'{formatted_filename}.{ext}',
+                        os.path.dirname(source), f'{formatted_filename}{ext.lower()}',
                     ),
                 ))
                 filename = formatted_filename
-            value = os.path.join(os.path.dirname(source), f'{filename}.{ext}')
+            value = os.path.join(os.path.dirname(source), f'{filename}{ext.lower()}')
             if filename not in unique_sources:
                 unique_sources[filename] = [value]
             else:
