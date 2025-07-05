@@ -340,7 +340,6 @@ def log_decorator(func):
             if instance.__class__.NAME:
                 func_name = f'{instance.__class__.NAME}.{func_name}'
         start_time = time.time()
-        #print_func('*' * 78 + '\n')
         print_func(f'(###) Starting <{func_name}> ...\n')
         try:
             result = func(*args, **kwargs)
@@ -349,46 +348,6 @@ def log_decorator(func):
             cost_time = time.time() - start_time
             print_func(f'\n(###) <{func_name}> finished, cost {cost_time:.2f} seconds.\n')
     return wrapper
-
-
-def with_progress(iter_arg=None, total=None, **tqdm_kwargs):
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            bound_args = inspect.signature(func).bind(*args, **kwargs)
-            bound_args.apply_defaults()
-
-            if iter_arg is not None:
-                if iter_arg not in bound_args.arguments:
-                    raise ValueError(f"Iteration argument '{iter_arg}' not found")
-                iterable = bound_args.arguments[iter_arg]
-            else:
-                iterable = next(
-                    (v for v in bound_args.arguments.values() 
-                     if hasattr(v, '__iter__') and not isinstance(v, str)),
-                    None
-                )
-                if iterable is None:
-                    raise ValueError("No iterable argument found")
-
-            actual_total = total
-            if actual_total is None:
-                try:
-                    actual_total = len(iterable)
-                except TypeError:
-                    actual_total = None
-
-            with tqdm(iterable, total=actual_total, **tqdm_kwargs) as pbar:
-                if iter_arg is not None:
-                    bound_args.arguments[iter_arg] = pbar
-                else:
-                    for name, val in bound_args.arguments.items():
-                        if val is iterable:
-                            bound_args.arguments[name] = pbar
-                            break
-                return func(*bound_args.args, **bound_args.kwargs)
-        return wrapper
-    return decorator
 
 ################################################################################
 #                                                                              #
@@ -1651,6 +1610,11 @@ class AudioGod(OPTIONS):
             dict_[new_key] = value
         return dict_
 
+
+    @staticmethod
+    def hyphen_to_camel(s):
+        return re.sub(r'-([a-z])', lambda m: m.group(1).upper(), s)
+
     #---------------------------------------------------------------------------
 
     # Successful for zsh, failed for bash.
@@ -2038,6 +2002,22 @@ class AudioGod(OPTIONS):
         if field in cls.FIELDS['all']:
             return field
         return None
+
+    #---------------------------------------------------------------------------
+
+    @classmethod
+    def with_progressbar(cls, items, process_func, start=1):
+        with alive_bar(
+            len(items), 
+            title=cls.hyphen_to_camel(cls.NAME), 
+            bar='blocks', 
+            spinner='twirls',
+        ) as bar:
+            for i, item in enumerate(items, start=start):
+                process_func(i, item)
+                if i % 1 == 0:
+                    bar.text(f'Processing: {item}')
+                bar()
 
     #---------------------------------------------------------------------------
 
