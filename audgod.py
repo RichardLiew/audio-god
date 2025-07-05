@@ -1620,7 +1620,7 @@ class AudioGod(OPTIONS):
         if ret:
             ret = ret[0].upper() + ret[1:]
         return ret
-        
+
     #---------------------------------------------------------------------------
 
     # Successful for zsh, failed for bash.
@@ -6191,10 +6191,11 @@ class ConvertMediaBaseAction(ConvertBaseAction):
 
     def execute(self):
         self.prime_sources()
-        
-        self.process_with_bar(self.primed_sources, lambda i, item: self.convert(item), start=1)
-        #for src in self.primed_sources:
-        #    self.convert(src)
+        self.process_with_bar(
+            self.primed_sources,
+            lambda i, item: self.convert(item),
+            start=1,
+        )
 
 #===============================================================================
 
