@@ -12,7 +12,7 @@ eyed3 = "==0.9.7"
 mdutils = "==1.6.0"
 pyfiglet = "==1.0.3"
 pydub = "==0.25.1"
-alive-progress = "==3.2.0"
+tqdm = "==4.67.1"
 
 [dev-packages]
 pylint = "==3.3.6"

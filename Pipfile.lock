@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "9e09614b56eb0f8240451d5f1ade936717d5d8a43bde91baef0da93eb76a1aa3"
+            "sha256": "67a222427434124b1801c9d71aa39d8678971f76dde9b2efeab6e49bfef6d4c5"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,22 +16,6 @@
         ]
     },
     "default": {
-        "about-time": {
-            "hashes": [
-                "sha256:6a538862d33ce67d997429d14998310e1dbfda6cb7d9bbfbf799c4709847fece",
-                "sha256:8bbf4c75fe13cbd3d72f49a03b02c5c7dca32169b6d49117c257e7eb3eaee341"
-            ],
-            "markers": "python_version >= '3.7' and python_version < '4'",
-            "version": "==4.2.1"
-        },
-        "alive-progress": {
-            "hashes": [
-                "sha256:0677929f8d3202572e9d142f08170b34dbbe256cc6d2afbf75ef187c7da964a8",
-                "sha256:ede29d046ff454fe56b941f686f89dd9389430c4a5b7658e445cb0b80e0e4deb"
-            ],
-            "index": "pypi",
-            "version": "==3.2.0"
-        },
         "coverage": {
             "extras": [
                 "toml"
@@ -123,12 +107,6 @@
             ],
             "version": "==1.2.0"
         },
-        "grapheme": {
-            "hashes": [
-                "sha256:44c2b9f21bbe77cfb05835fec230bd435954275267fea1858013b102f8603cca"
-            ],
-            "version": "==0.6.0"
-        },
         "mdutils": {
             "hashes": [
                 "sha256:647f3cf00df39fee6c57fa6738dc1160fce1788276b5530c87d43a70cdefdaf1"
@@ -198,6 +176,14 @@
                 "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"
             ],
             "version": "==0.10.2"
+        },
+        "tqdm": {
+            "hashes": [
+                "sha256:26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2",
+                "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2"
+            ],
+            "index": "pypi",
+            "version": "==4.67.1"
         },
         "treelib": {
             "hashes": [

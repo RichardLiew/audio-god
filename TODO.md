@@ -1,13 +1,10 @@
 Processing:
-抓包 Mac 酷我下载音乐的链接，然后集成到脚本中自动下载
 steps in usage需要和generate script以及cleanup, 以及所有的actions和branches都要覆盖到里 同步更新, start和test都要同步
 有一个地想不起来了，和 cls.NAME? output? 有关
 
 
 
 
-
-在每一个调用 for in sources 里，都记得输出处理日志，并带有 23/136 这样的处理进度，最好同时额外带一个进度条，看看日志和进度条是线程的全d吗
 
 
 
@@ -22,6 +19,7 @@ Useful Paths:
 
 
 Relax:
+在每一个调用 for in sources 里，都记得输出处理日志，并带有 23/136 这样的处理进度，最好同时额外带一个进度条，看看日志和进度条是线程的全d吗
 详细梳理增量更新的逻辑，并写在usage里
 mgg文件解密（意义不大，因为tencent会定期更换mgg的加密算法，windows下生成的是mgg，而mac下是qmc，很好解密）
 -a -b -c 参数重新分配

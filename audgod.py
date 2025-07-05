@@ -61,7 +61,7 @@
 #       mdutils = "==1.6.0"
 #       pyfiglet = "==1.0.3"
 #       pydub = "==0.25.1"
-#       alive-progress = "==3.2.0"
+#       tqdm = "==4.67.1"
 #
 #       [dev-packages]
 #       pylint = "==3.3.6"
@@ -146,7 +146,6 @@ import random
 import urllib
 import shutil
 import logging
-import inspect
 import argparse
 import plistlib
 import datetime
@@ -162,10 +161,10 @@ from collections import ChainMap
 import psutil
 import pyfiglet
 
-from treelib import Tree
+from tqdm import tqdm
 from enumx import StringEnum
+from treelib.tree import Tree
 from prettytable import PrettyTable
-from alive_progress import alive_bar
 
 import eyed3
 from eyed3.id3 import Genre, frames
@@ -1613,8 +1612,15 @@ class AudioGod(OPTIONS):
 
     @staticmethod
     def hyphen_to_camel(s):
-        return re.sub(r'-([a-z])', lambda m: m.group(1).upper(), s)
-
+        ret = re.sub(
+            r'(?:-|\.)([a-z])',
+            lambda m: m.group(1).upper(),
+            s,
+        )
+        if ret:
+            ret = ret[0].upper() + ret[1:]
+        return ret
+        
     #---------------------------------------------------------------------------
 
     # Successful for zsh, failed for bash.
@@ -2006,18 +2012,36 @@ class AudioGod(OPTIONS):
     #---------------------------------------------------------------------------
 
     @classmethod
-    def with_progressbar(cls, items, process_func, start=1):
-        with alive_bar(
-            len(items), 
-            title=cls.hyphen_to_camel(cls.NAME), 
-            bar='blocks', 
-            spinner='twirls',
+    def process_with_bar(cls, items, process_func, /, start=1, kwargs={}):
+        with tqdm(
+            items, 
+            desc=cls.hyphen_to_camel(cls.NAME), 
+            ncols=100,
+            bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}] {postfix}',
         ) as bar:
-            for i, item in enumerate(items, start=start):
-                process_func(i, item)
-                if i % 1 == 0:
-                    bar.text(f'Processing: {item}')
-                bar()
+            colours = ['red', 'yellow', 'green']
+            phases = ['Initial 😐', 'Mid 😃', 'Final 😁']
+            for i, item in enumerate(bar, start=start):
+                tqdm.write(f'▶ Processing {item} ...')
+                process_func(i, item, **kwargs)
+                index = min(2, i//(len(items) // 3 + (1 if len(items)%3 else 0)))
+                bar.colour = colours[index]
+                bar.set_postfix({'▶ Phase': phases[index]})
+
+
+    #@classmethod
+    #def process_with_bar(cls, items, process_func, /, start=1, kwargs={}):
+    #    with alive_bar(
+    #        len(items), 
+    #        title=cls.hyphen_to_camel(cls.NAME), 
+    #        bar='blocks', 
+    #        spinner='twirls',
+    #    ) as bar:
+    #        for i, item in enumerate(items, start=start):
+    #            process_func(i, item, **kwargs)
+    #            if i % 1 == 0:
+    #                bar.text(f'Processing: {item}')
+    #            bar()
 
     #---------------------------------------------------------------------------
 
@@ -6167,8 +6191,10 @@ class ConvertMediaBaseAction(ConvertBaseAction):
 
     def execute(self):
         self.prime_sources()
-        for src in self.primed_sources:
-            self.convert(src)
+        
+        self.process_with_bar(self.primed_sources, lambda i, item: self.convert(item), start=1)
+        #for src in self.primed_sources:
+        #    self.convert(src)
 
 #===============================================================================
 
