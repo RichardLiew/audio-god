@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright (c) 2022 Anebit Inc.
+# Copyright (c) 2025 Anebit Inc.
 # All rights reserved.
 #
 # "Audio God" version 1.0
@@ -34,7 +34,7 @@
 #
 # ---
 # Author:  Richard
-# Created: 2022-08-30 10:46:00
+# Created: 2025-06-30 10:46:00
 # E-mail:  richard.zen.liew@gmail.com
 #
 # ---
