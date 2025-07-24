@@ -355,7 +355,7 @@ def log_decorator(func):
 ################################################################################
 
 class BASEOPTIONS(object):
-    ARTIST_SEPARATOR = '&'
+    ARTIST_SEPARATOR = '/'
     GROUPING_SEPARATOR = '|'
 
 #===============================================================================
@@ -1003,7 +1003,7 @@ class AudioGod(OPTIONS):
     def format_title(cls, title):
         if title is None:
             return None
-        ret = re.sub(r'\s*&\s*', r', ', title)
+        #ret = re.sub(r'\s*&\s*', r', ', title)
         return cls.unify_format(ret)
 
     @classmethod
@@ -1011,9 +1011,9 @@ class AudioGod(OPTIONS):
         if artist is None:
             return None
         ret = cls.unify_format(artist)
-        ret = re.sub(r'[、，/,]', cls.ARTIST_SEPARATOR, ret)
+        ret = re.sub(r'[/,&]', cls.ARTIST_SEPARATOR, ret)
         ret = re.sub(fr'{cls.ARTIST_SEPARATOR}', f' {cls.ARTIST_SEPARATOR} ', ret)
-        ret = re.sub(fr'\s*{cls.ARTIST_SEPARATOR}\s*', f' {cls.ARTIST_SEPARATOR} ', ret)
+        ret = re.sub(fr'\s*{cls.ARTIST_SEPARATOR}\s*', f'{cls.ARTIST_SEPARATOR}', ret)
         #ret = re.sub(r'([a-zA-Z]\.){2,}', lambda m: m.group(0).replace(' ', ''), ret)
         return ret
 
@@ -1290,7 +1290,7 @@ class AudioGod(OPTIONS):
         ret = re.sub(r'([\(\[])\s+', r'\1', ret)
         ret = re.sub(r'\s+([\)\]])', r'\1', ret)
         ret = re.sub(r'\s+', r' ', ret).strip()
-        ret = re.sub(r'([\)\]\>\|]) ([:,;\.\!\?])', r'\1\2', ret)
+        ret = re.sub(r'([\)\]\>\|])\s+([:,;\.\!\?])', r'\1\2', ret)
         return ret
 
 
@@ -7647,7 +7647,7 @@ class PerfectArgumentParser(argparse.ArgumentParser):
                 # list fonts: "pipenv run python -m pyfiglet -l"
                 font=random.choice([
                     'slant',
-                    #'standard',
+                    #'standard'u
                     #'banner3-D',
                     #'starwars',
                     #'script',
