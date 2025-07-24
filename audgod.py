@@ -355,7 +355,7 @@ def log_decorator(func):
 ################################################################################
 
 class BASEOPTIONS(object):
-    ARTIST_SEPARATOR = '&'
+    ARTIST_SEPARATOR = ','
     GROUPING_SEPARATOR = '|'
 
 #===============================================================================
@@ -1011,9 +1011,9 @@ class AudioGod(OPTIONS):
         if artist is None:
             return None
         ret = cls.unify_format(artist)
-        ret = re.sub(r'[、，/,]', cls.ARTIST_SEPARATOR, ret)
-        ret = re.sub(fr'{cls.ARTIST_SEPARATOR}', f' {cls.ARTIST_SEPARATOR} ', ret)
-        ret = re.sub(fr'\s*{cls.ARTIST_SEPARATOR}\s*', f' {cls.ARTIST_SEPARATOR} ', ret)
+        ret = re.sub(r'[&/,]', cls.ARTIST_SEPARATOR, ret)
+        #ret = re.sub(fr'{cls.ARTIST_SEPARATOR}', f' {cls.ARTIST_SEPARATOR} ', ret)
+        ret = re.sub(fr'\s*{cls.ARTIST_SEPARATOR}\s*', f'{cls.ARTIST_SEPARATOR}', ret)
         #ret = re.sub(r'([a-zA-Z]\.){2,}', lambda m: m.group(0).replace(' ', ''), ret)
         return ret
 

@@ -1,7 +1,8 @@
 Processing:
 steps in usage需要和generate script以及cleanup, 以及所有的actions和branches都要覆盖到里 同步更新, start和test都要同步
 有一个地想不起来了，和 cls.NAME? output? 有关
-
+添加歌曲图片、专辑图片、歌手图片、滚动歌词和静态歌词
+把添加图片和歌词的步骤，写入usage里
 
 有必要将各个Action拆分成多个文件吗？然后 main.py 自动识别加载？
 
